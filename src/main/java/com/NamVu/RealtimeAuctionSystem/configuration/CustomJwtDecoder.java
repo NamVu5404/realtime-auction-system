@@ -1,8 +1,8 @@
-package com.NamVu.TeamTaskManager.configuration;
+package com.NamVu.realtimeauctionsystem.configuration;
 
-import com.NamVu.TeamTaskManager.dto.request.auth.IntrospectRequest;
-import com.NamVu.TeamTaskManager.dto.response.auth.IntrospectResponse;
-import com.NamVu.TeamTaskManager.service.AuthenticationService;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.IntrospectRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

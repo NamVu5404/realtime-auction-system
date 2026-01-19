@@ -1,8 +1,8 @@
-package com.NamVu.TeamTaskManager.controller;
+package com.NamVu.realtimeauctionsystem.controller;
 
-import com.NamVu.TeamTaskManager.dto.ApiResponse;
-import com.NamVu.TeamTaskManager.dto.response.auth.AuthenticationResponse;
-import com.NamVu.TeamTaskManager.service.OutboundAuthenticationService;
+import com.NamVu.realtimeauctionsystem.dto.ApiResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.AuthenticationResponse;
+import com.NamVu.realtimeauctionsystem.service.OutboundAuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

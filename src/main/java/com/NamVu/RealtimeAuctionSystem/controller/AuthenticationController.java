@@ -1,14 +1,14 @@
-package com.NamVu.TeamTaskManager.controller;
+package com.NamVu.realtimeauctionsystem.controller;
 
-import com.NamVu.TeamTaskManager.dto.ApiResponse;
-import com.NamVu.TeamTaskManager.dto.request.auth.AuthenticationRequest;
-import com.NamVu.TeamTaskManager.dto.request.auth.IntrospectRequest;
-import com.NamVu.TeamTaskManager.dto.request.auth.LogoutRequest;
-import com.NamVu.TeamTaskManager.dto.request.auth.RefreshRequest;
-import com.NamVu.TeamTaskManager.dto.response.auth.AuthenticationResponse;
-import com.NamVu.TeamTaskManager.dto.response.auth.IntrospectResponse;
-import com.NamVu.TeamTaskManager.dto.response.auth.RefreshResponse;
-import com.NamVu.TeamTaskManager.service.AuthenticationService;
+import com.NamVu.realtimeauctionsystem.dto.ApiResponse;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.AuthenticationRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.IntrospectRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.LogoutRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.RefreshRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.AuthenticationResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.RefreshResponse;
+import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,17 +23,16 @@ import java.text.ParseException;
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationController {
 
-    AuthenticationService authenticationService;
+    private final AuthenticationService authenticationService;
 
-    @PostMapping("/login")
-    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
-        return ApiResponse.<AuthenticationResponse>builder()
-                .result(authenticationService.authenticate(request))
-                .build();
-    }
+//    @PostMapping("/login")
+//    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request) {
+//        return ApiResponse.<AuthenticationResponse>builder()
+//                .result(authenticationService.authenticate(request))
+//                .build();
+//    }
 
     @PostMapping("/introspect")
     ApiResponse<IntrospectResponse> introspect(@RequestBody IntrospectRequest request)

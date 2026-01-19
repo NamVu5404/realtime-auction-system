@@ -1,4 +1,4 @@
-package com.NamVu.TeamTaskManager.dto;
+package com.NamVu.realtimeauctionsystem.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

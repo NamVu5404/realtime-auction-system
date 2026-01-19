@@ -1,7 +1,6 @@
-package com.NamVu.TeamTaskManager.service;
+package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.TeamTaskManager.entity.User;
-import com.NamVu.entity.User;
+import com.NamVu.realtimeauctionsystem.entity.User;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 

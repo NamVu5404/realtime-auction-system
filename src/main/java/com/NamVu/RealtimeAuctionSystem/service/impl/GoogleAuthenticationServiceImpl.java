@@ -1,15 +1,15 @@
-package com.NamVu.TeamTaskManager.service.impl;
+package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.TeamTaskManager.dto.request.auth.ExchangeTokenRequest;
-import com.NamVu.TeamTaskManager.dto.response.auth.AuthenticationResponse;
-import com.NamVu.TeamTaskManager.dto.response.auth.ExchangeTokenResponse;
-import com.NamVu.TeamTaskManager.dto.response.auth.OutboundUserResponse;
-import com.NamVu.TeamTaskManager.entity.User;
-import com.NamVu.TeamTaskManager.httpclient.GoogleAuthClient;
-import com.NamVu.TeamTaskManager.httpclient.GoogleUserClient;
-import com.NamVu.TeamTaskManager.service.OutboundAuthenticationService;
-import com.NamVu.TeamTaskManager.service.OutboundUserService;
-import com.NamVu.TeamTaskManager.service.TokenService;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.ExchangeTokenRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.AuthenticationResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.ExchangeTokenResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.OutboundUserResponse;
+import com.NamVu.realtimeauctionsystem.entity.User;
+import com.NamVu.realtimeauctionsystem.httpclient.GoogleAuthClient;
+import com.NamVu.realtimeauctionsystem.httpclient.GoogleUserClient;
+import com.NamVu.realtimeauctionsystem.service.OutboundAuthenticationService;
+import com.NamVu.realtimeauctionsystem.service.OutboundUserService;
+import com.NamVu.realtimeauctionsystem.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

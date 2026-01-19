@@ -1,9 +1,10 @@
-package com.NamVu.TeamTaskManager.service.impl;
+package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.TeamTaskManager.dto.response.auth.OutboundUserResponse;
-import com.NamVu.TeamTaskManager.entity.User;
-import com.NamVu.TeamTaskManager.repository.UserRepository;
-import com.NamVu.TeamTaskManager.service.OutboundUserService;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.OutboundUserResponse;
+import com.NamVu.realtimeauctionsystem.entity.User;
+import com.NamVu.realtimeauctionsystem.enums.UserStatus;
+import com.NamVu.realtimeauctionsystem.repository.UserRepository;
+import com.NamVu.realtimeauctionsystem.service.OutboundUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +15,11 @@ public class OutboundUserServiceImpl implements OutboundUserService {
 
     @Override
     public User onboardUser(OutboundUserResponse userInfo) {
-        return userRepository.findByUsername(userInfo.getEmail()).orElseGet(
+        return userRepository.findByEmail(userInfo.getEmail()).orElseGet(
                 () -> userRepository.save(
                         User.builder()
-                                .username(userInfo.getEmail())
-                                .fullName(userInfo.getName())
-                                .isActive((byte) 1)
+                                .email(userInfo.getEmail())
+                                .status(UserStatus.ACTIVE)
                                 .build()
                 )
         );

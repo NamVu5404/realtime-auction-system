@@ -1,4 +1,4 @@
-package com.NamVu.TeamTaskManager.entity;
+package com.NamVu.realtimeauctionsystem.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -16,7 +16,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class InvalidatedToken {
     @Id
-    private String id;
+    private String id; // jwt id
 
     private Date expiryTime;
 }

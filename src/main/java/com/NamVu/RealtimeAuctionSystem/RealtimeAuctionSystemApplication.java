@@ -1,11 +1,13 @@
-package com.NamVu.TeamTaskManager;
+package com.NamVu.realtimeauctionsystem;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
-public class TeamTaskManagerApplication {
+@EnableFeignClients
+public class RealtimeAuctionSystemApplication {
 
 	public static void main(String[] args) {
 
@@ -17,7 +19,6 @@ public class TeamTaskManagerApplication {
                 System.setProperty(entry.getKey(), entry.getValue())
         );
 
-		SpringApplication.run(TeamTaskManagerApplication.class, args);
+		SpringApplication.run(RealtimeAuctionSystemApplication.class, args);
 	}
-
 }

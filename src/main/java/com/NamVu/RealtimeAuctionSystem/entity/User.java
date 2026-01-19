@@ -1,37 +1,55 @@
-package com.NamVu.TeamTaskManager.entity;
+package com.NamVu.realtimeauctionsystem.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import com.NamVu.realtimeauctionsystem.enums.Role;
+import com.NamVu.realtimeauctionsystem.enums.UserStatus;
+import jakarta.persistence.*;
+import lombok.*;
 
-import java.time.LocalDate;
+import java.time.Instant;
 
 @Entity
-@Table(name = "`user`")
+@Table(name = "users")
 @Getter
 @Setter
-@SuperBuilder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends BaseEntity {
-    @Column(unique = true, nullable = false)
-    private String username;
+public class User {
 
-    private String password;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(nullable = false)
-    private String fullName;
+    @Column(nullable = false, unique = true)
+    private String email;
 
-    @Column(length = 10)
-    private String phone;
+    @Column(name = "avatar_url")
+    private String avatarUrl;
 
-    private LocalDate dob;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Role role;
 
-    @Column(nullable = false)
-    private byte isGuest;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private UserStatus status;
+
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+        this.updatedAt = this.createdAt;
+        this.status = UserStatus.ACTIVE;
+        this.role = Role.USER;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
 }

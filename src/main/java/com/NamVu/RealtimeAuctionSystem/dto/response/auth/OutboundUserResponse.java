@@ -1,4 +1,4 @@
-package com.NamVu.TeamTaskManager.dto.response.auth;
+package com.NamVu.realtimeauctionsystem.dto.response.auth;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

@@ -1,4 +1,4 @@
-package com.NamVu.TeamTaskManager.dto;
+package com.NamVu.realtimeauctionsystem.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

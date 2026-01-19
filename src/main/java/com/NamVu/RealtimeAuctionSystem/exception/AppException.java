@@ -1,4 +1,4 @@
-package com.NamVu.TeamTaskManager.exception;
+package com.NamVu.realtimeauctionsystem.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

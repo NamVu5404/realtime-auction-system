@@ -1,27 +1,26 @@
-package com.NamVu.TeamTaskManager.service.impl;
+package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.TeamTaskManager.constant.StatusConstant;
-import com.NamVu.TeamTaskManager.dto.request.auth.AuthenticationRequest;
-import com.NamVu.TeamTaskManager.dto.request.auth.IntrospectRequest;
-import com.NamVu.TeamTaskManager.dto.request.auth.LogoutRequest;
-import com.NamVu.TeamTaskManager.dto.request.auth.RefreshRequest;
-import com.NamVu.TeamTaskManager.dto.response.auth.AuthenticationResponse;
-import com.NamVu.TeamTaskManager.dto.response.auth.IntrospectResponse;
-import com.NamVu.TeamTaskManager.dto.response.auth.RefreshResponse;
-import com.NamVu.TeamTaskManager.entity.InvalidatedToken;
-import com.NamVu.TeamTaskManager.entity.User;
-import com.NamVu.TeamTaskManager.exception.AppException;
-import com.NamVu.TeamTaskManager.exception.ErrorCode;
-import com.NamVu.TeamTaskManager.repository.InvalidatedTokenRepository;
-import com.NamVu.TeamTaskManager.repository.UserRepository;
-import com.NamVu.TeamTaskManager.service.AuthenticationService;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.AuthenticationRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.IntrospectRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.LogoutRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.auth.RefreshRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.AuthenticationResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.RefreshResponse;
+import com.NamVu.realtimeauctionsystem.entity.InvalidatedToken;
+import com.NamVu.realtimeauctionsystem.entity.User;
+import com.NamVu.realtimeauctionsystem.enums.UserStatus;
+import com.NamVu.realtimeauctionsystem.exception.AppException;
+import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
+import com.NamVu.realtimeauctionsystem.repository.InvalidatedTokenRepository;
+import com.NamVu.realtimeauctionsystem.repository.UserRepository;
+import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
+import com.NamVu.realtimeauctionsystem.service.TokenService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.token.TokenService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -36,29 +35,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserRepository userRepository;
     private final TokenService tokenService;
-    private final PasswordEncoder passwordEncoder;
+//    private final PasswordEncoder passwordEncoder;
     private final InvalidatedTokenRepository invalidatedTokenRepository;
 
-    @NonFinal
     @Value("${jwt.refreshable-duration}")
-    Long REFRESHABLE_DURATION;
+    private Long REFRESHABLE_DURATION;
 
-    @Override
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        User user = userRepository.findByUsernameAndIsActive(request.getUsername(), StatusConstant.ACTIVE)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
-
-        if (!authenticated)
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-
-        String token = tokenService.generateToken(user);
-
-        return AuthenticationResponse.builder()
-                .token(token)
-                .build();
-    }
+//    @Override
+//    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+//        User user = userRepository.findByUsernameAndIsActive(request.getUsername(), UserStatus.ACTIVE.name())
+//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+//
+//        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+//
+//        if (!authenticated)
+//            throw new AppException(ErrorCode.UNAUTHENTICATED);
+//
+//        String token = tokenService.generateToken(user);
+//
+//        return AuthenticationResponse.builder()
+//                .token(token)
+//                .build();
+//    }
 
     @Override
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
@@ -112,9 +110,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build());
 
         // tạo token mới dựa vào subject
-        String username = signedJWT.getJWTClaimsSet().getSubject();
+        String email = signedJWT.getJWTClaimsSet().getSubject();
 
-        User user = userRepository.findByUsernameAndIsActive(username, StatusConstant.ACTIVE)
+        User user = userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE.name())
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
         return RefreshResponse.builder()

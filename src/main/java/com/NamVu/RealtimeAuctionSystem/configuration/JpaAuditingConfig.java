@@ -1,4 +1,4 @@
-package com.NamVu.TeamTaskManager.configuration;
+package com.NamVu.realtimeauctionsystem.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

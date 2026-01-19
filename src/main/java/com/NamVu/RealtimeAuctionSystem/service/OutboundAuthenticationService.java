@@ -1,6 +1,6 @@
-package com.NamVu.TeamTaskManager.service;
+package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.TeamTaskManager.dto.response.auth.AuthenticationResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.auth.AuthenticationResponse;
 
 public interface OutboundAuthenticationService {
     AuthenticationResponse outboundAuthentication(String code);

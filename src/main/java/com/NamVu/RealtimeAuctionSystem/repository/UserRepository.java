@@ -1,17 +1,18 @@
-package com.NamVu.TeamTaskManager.repository;
+package com.NamVu.realtimeauctionsystem.repository;
 
-import com.NamVu.TeamTaskManager.entity.User;
+import com.NamVu.realtimeauctionsystem.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, String> {
-    Optional<User> findByUsername(String username);
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
 
-    Optional<User> findByUsernameAndIsActive(String username, byte status);
+    Optional<User> findByEmailAndStatus(String email, String status);
 
-    Optional<User> findByIdAndIsActive(String id, byte status);
+    Optional<User> findByIdAndStatus(Long id, String status);
 
-    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
 }

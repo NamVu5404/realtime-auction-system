@@ -1,10 +1,10 @@
-package com.NamVu.TeamTaskManager.service.impl;
+package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.TeamTaskManager.entity.User;
-import com.NamVu.TeamTaskManager.exception.AppException;
-import com.NamVu.TeamTaskManager.exception.ErrorCode;
-import com.NamVu.TeamTaskManager.repository.InvalidatedTokenRepository;
-import com.NamVu.TeamTaskManager.service.TokenService;
+import com.NamVu.realtimeauctionsystem.entity.User;
+import com.NamVu.realtimeauctionsystem.exception.AppException;
+import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
+import com.NamVu.realtimeauctionsystem.repository.InvalidatedTokenRepository;
+import com.NamVu.realtimeauctionsystem.service.TokenService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -42,7 +42,7 @@ public class TokenServiceImpl implements TokenService {
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .issuer("javaweb.com")
                 .claim("userId", user.getId())
-                .subject(user.getUsername())
+                .subject(user.getEmail())
 //                .claim("scope", buildScope(user.getRoles()))
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString())

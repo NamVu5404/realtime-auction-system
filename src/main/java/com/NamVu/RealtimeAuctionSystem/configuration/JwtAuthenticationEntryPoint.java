@@ -1,7 +1,7 @@
-package com.NamVu.TeamTaskManager.configuration;
+package com.NamVu.realtimeauctionsystem.configuration;
 
-import com.NamVu.TeamTaskManager.dto.ApiResponse;
-import com.NamVu.TeamTaskManager.exception.ErrorCode;
+import com.NamVu.realtimeauctionsystem.dto.ApiResponse;
+import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

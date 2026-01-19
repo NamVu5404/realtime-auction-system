@@ -1,4 +1,4 @@
-package com.NamVu.TeamTaskManager.dto.response.auth;
+package com.NamVu.realtimeauctionsystem.dto.response.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
