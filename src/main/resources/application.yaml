@@ -1,10 +1,10 @@
 spring:
   application:
-    name: TeamTaskManager
+    name: RealtimeAuctionSystem
   datasource:
-    url: "${DB_URL}"
-    username: "${DB_USERNAME}"
-    password: "${DB_PASSWORD}"
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -14,6 +14,16 @@ spring:
         enable_lazy_load_no_trans: true
         format_sql: true
     show-sql: false
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    timeout: 3000
+    lettuce:
+      pool:
+        max-active: 50
+        max-idle: 10
+        min-idle: 5
 
 server:
   port: 8080
@@ -23,10 +33,10 @@ server:
 outbound:
   redirect-uri: "http://localhost:3000/authenticate"
   google:
-    client-id: "${GOOGLE_CLIENT_ID}"
-    client-secret: "${GOOGLE_CLIENT_SECRET}"
+    client-id: ${GOOGLE_CLIENT_ID}
+    client-secret: ${GOOGLE_CLIENT_SECRET}
 
 jwt:
-  signer-key: "${JWT_SIGNER_KEY}"
+  signer-key: ${JWT_SIGNER_KEY}
   valid-duration: 2 # in hours
   refreshable-duration: 168 # in hours

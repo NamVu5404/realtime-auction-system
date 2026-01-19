@@ -1,12 +1,11 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.request.auth.AuthenticationRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.IntrospectRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.LogoutRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.RefreshRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.AuthenticationResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.IntrospectResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.RefreshResponse;
+
+import com.NamVu.realtimeauctionsystem.dto.request.IntrospectRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.LogoutRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.RefreshRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.RefreshResponse;
 import com.nimbusds.jose.JOSEException;
 
 import java.text.ParseException;

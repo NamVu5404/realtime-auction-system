@@ -1,7 +1,7 @@
 package com.NamVu.realtimeauctionsystem.httpclient;
 
-import com.NamVu.realtimeauctionsystem.dto.request.auth.ExchangeTokenRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.ExchangeTokenResponse;
+import com.NamVu.realtimeauctionsystem.dto.request.ExchangeTokenRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.ExchangeTokenResponse;
 import feign.QueryMap;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;

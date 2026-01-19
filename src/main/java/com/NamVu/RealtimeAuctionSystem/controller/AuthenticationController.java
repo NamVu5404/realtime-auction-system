@@ -1,18 +1,14 @@
 package com.NamVu.realtimeauctionsystem.controller;
 
-import com.NamVu.realtimeauctionsystem.dto.ApiResponse;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.AuthenticationRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.IntrospectRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.LogoutRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.RefreshRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.AuthenticationResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.IntrospectResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.RefreshResponse;
+import com.NamVu.realtimeauctionsystem.dto.request.IntrospectRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.LogoutRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.RefreshRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.ApiResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.RefreshResponse;
 import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

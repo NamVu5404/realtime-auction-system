@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.request.auth;
+package com.NamVu.realtimeauctionsystem.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.response.auth;
+package com.NamVu.realtimeauctionsystem.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RefreshResponse {
+public class IntrospectRequest {
     private String token;
 }

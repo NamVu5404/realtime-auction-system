@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.response.auth.OutboundUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.OutboundUserResponse;
 import com.NamVu.realtimeauctionsystem.entity.User;
 
 public interface OutboundUserService {

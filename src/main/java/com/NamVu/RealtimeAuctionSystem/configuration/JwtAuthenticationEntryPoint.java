@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.configuration;
 
-import com.NamVu.realtimeauctionsystem.dto.ApiResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.ApiResponse;
 import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,12 +1,10 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.request.auth.AuthenticationRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.IntrospectRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.LogoutRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.auth.RefreshRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.AuthenticationResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.IntrospectResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.RefreshResponse;
+import com.NamVu.realtimeauctionsystem.dto.request.IntrospectRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.LogoutRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.RefreshRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.RefreshResponse;
 import com.NamVu.realtimeauctionsystem.entity.InvalidatedToken;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.enums.UserStatus;
@@ -21,7 +19,6 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
@@ -35,7 +32,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserRepository userRepository;
     private final TokenService tokenService;
-//    private final PasswordEncoder passwordEncoder;
+    //    private final PasswordEncoder passwordEncoder;
     private final InvalidatedTokenRepository invalidatedTokenRepository;
 
     @Value("${jwt.refreshable-duration}")

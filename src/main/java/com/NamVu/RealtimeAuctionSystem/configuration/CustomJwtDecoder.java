@@ -1,7 +1,7 @@
 package com.NamVu.realtimeauctionsystem.configuration;
 
-import com.NamVu.realtimeauctionsystem.dto.request.auth.IntrospectRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.auth.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.dto.request.IntrospectRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
 import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;

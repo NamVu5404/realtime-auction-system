@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients
 public class RealtimeAuctionSystemApplication {
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 
         Dotenv dotenv = Dotenv.configure()
                 .directory("./")
@@ -19,6 +19,6 @@ public class RealtimeAuctionSystemApplication {
                 System.setProperty(entry.getKey(), entry.getValue())
         );
 
-		SpringApplication.run(RealtimeAuctionSystemApplication.class, args);
-	}
+        SpringApplication.run(RealtimeAuctionSystemApplication.class, args);
+    }
 }

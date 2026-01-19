@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.exception;
 
-import com.NamVu.realtimeauctionsystem.dto.ApiResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.ApiResponse;
 import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

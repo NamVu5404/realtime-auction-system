@@ -27,6 +27,9 @@ public class Auction {
     @Column(nullable = false)
     private String title;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal startPrice;
 
@@ -53,6 +56,12 @@ public class Auction {
 
     @Column(name = "end_time", nullable = false)
     private Instant endTime;
+
+    @Column(name = "anti_snipe_seconds")
+    private Integer antiSnipeSeconds = 60; // X giây
+
+    @Column(name = "extension_seconds")
+    private Integer extensionSeconds = 30; // Y giây
 
     @Version
     private Long version;
