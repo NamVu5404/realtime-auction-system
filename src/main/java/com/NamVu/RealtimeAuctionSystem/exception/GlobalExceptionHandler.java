@@ -21,14 +21,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<ApiResponse<?>> exceptionHandler(Exception e) {
         ApiResponse<?> apiResponse = ApiResponse.builder()
-                .code(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode())
-                .message(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage())
+                .code(ErrorCode.INTERNAL_ERROR.getCode())
+                .message(ErrorCode.INTERNAL_ERROR.getMessage())
                 .build();
 
         log.error("error message: {}", e.getMessage());
 
         return ResponseEntity
-                .status(ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode())
+                .status(ErrorCode.INTERNAL_ERROR.getStatusCode())
                 .body(apiResponse);
     }
 

@@ -64,6 +64,7 @@ public class Auction {
     private Integer extensionSeconds = 30; // Y giây
 
     @Version
+    @Column(name = "version")
     private Long version;
 
     @Column(name = "created_at", updatable = false)

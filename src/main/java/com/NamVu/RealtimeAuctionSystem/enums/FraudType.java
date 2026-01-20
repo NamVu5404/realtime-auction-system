@@ -1,9 +1,9 @@
 package com.NamVu.realtimeauctionsystem.enums;
 
 public enum FraudType {
+    SELF_BIDDING,
     RATE_LIMIT,
     PRICE_SPIKE,
     BOT_BEHAVIOR,
-    SELF_BIDDING,
     LAST_SECOND_SNIPING
 }

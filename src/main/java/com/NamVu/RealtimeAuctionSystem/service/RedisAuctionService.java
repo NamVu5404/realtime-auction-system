@@ -1,15 +1,15 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.response.AuctionRedisData;
+import com.NamVu.realtimeauctionsystem.dto.AuctionRedisData;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 public interface RedisAuctionService {
-    void initAuction(Long auctionId, BigDecimal startPrice, Long sellerId, Instant endTime);
+    void initAuction(Long auctionId, BigDecimal startPrice, BigDecimal minStep, Long sellerId, Instant endTime, Integer antiSnipeSeconds, Integer extensionSeconds);
 
-    boolean updateBidWithLock(Long auctionId, Long bidderId, BigDecimal newPrice);
+    void updateBidWithLock(Long auctionId, Long bidderId, BigDecimal newPrice);
 
     BigDecimal getCurrentPrice(Long auctionId);
 

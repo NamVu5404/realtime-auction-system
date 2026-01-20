@@ -1,7 +1,9 @@
 package com.NamVu.realtimeauctionsystem.repository;
 
 import com.NamVu.realtimeauctionsystem.entity.User;
+import com.NamVu.realtimeauctionsystem.enums.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -15,4 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByIdAndStatus(Long id, String status);
 
     boolean existsByEmail(String email);
+
+    boolean existsByIdAndStatus(Long id, UserStatus status);
 }
