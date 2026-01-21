@@ -22,7 +22,7 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
                         @Param("auctionId") Long auctionId,
                         @Param("since") Instant since);
 
-    // THÊM MỚI: Lấy bids gần nhất để phát hiện bot
+    // Lấy bids gần nhất để phát hiện bot
     @Query("SELECT b FROM Bid b WHERE b.bidder.id = :bidderId " +
             "AND b.auction.id = :auctionId ORDER BY b.createdAt DESC")
     List<Bid> findTop10ByBidderIdAndAuctionIdOrderByCreatedAtDesc(

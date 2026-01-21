@@ -1,5 +1,6 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
+import com.NamVu.realtimeauctionsystem.dto.AuctionRedisData;
 import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
 import com.NamVu.realtimeauctionsystem.dto.FraudCheckResult;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
@@ -15,12 +16,14 @@ import com.NamVu.realtimeauctionsystem.repository.BidRepository;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.AuctionDbSyncService;
 import com.NamVu.realtimeauctionsystem.service.FraudDetectionService;
+import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -32,6 +35,7 @@ public class AuctionDbSyncServiceImpl implements AuctionDbSyncService {
     private final UserRepository userRepository;
     private final BidRepository bidRepository;
     private final FraudDetectionService fraudDetectionService;
+    private final RedisAuctionService redisAuctionService;
 
     private static final int MAX_AUTO_RETRY = 5;
 
@@ -61,9 +65,19 @@ public class AuctionDbSyncServiceImpl implements AuctionDbSyncService {
                     throw new AppException(ErrorCode.USER_BLOCKED);
                 }
 
+                BigDecimal currentPrice = auction.getCurrentPrice();
+
                 // Update auction (optimistic lock sẽ check version)
                 auction.setCurrentPrice(event.getAmount());
                 auction.setHighestBidder(bidder);
+
+                if (event.isExtended()) {
+                    AuctionRedisData redisData = redisAuctionService.getAuctionData(event.getAuctionId());
+                    if (redisData != null) {
+                        auction.setEndTime(redisData.getEndTime());
+                    }
+                }
+
                 auction = auctionRepository.save(auction);
 
                 // Create bid record
@@ -75,7 +89,7 @@ public class AuctionDbSyncServiceImpl implements AuctionDbSyncService {
                         .build();
 
                 // FRAUD DETECTION - Chỉ gán cờ FLAGGED nếu vi phạm
-                FraudCheckResult fraudCheck = fraudDetectionService.checkBid(bid, auction);
+                FraudCheckResult fraudCheck = fraudDetectionService.checkBid(bid, auction, currentPrice);
 
                 if (fraudCheck.isHighRisk() || fraudCheck.isMediumRisk()) {
                     bid.setStatus(BidStatus.FLAGGED);

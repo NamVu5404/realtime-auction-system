@@ -2,6 +2,7 @@ package com.NamVu.realtimeauctionsystem.service.impl;
 
 import com.NamVu.realtimeauctionsystem.dto.AuctionRedisData;
 import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
+import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 import com.NamVu.realtimeauctionsystem.enums.UserStatus;
 import com.NamVu.realtimeauctionsystem.exception.AppException;
@@ -57,7 +58,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         data.put("status", "LIVE");
         data.put("antiSnipeSeconds", antiSnipeSeconds.toString());
         data.put("extensionSeconds", extensionSeconds.toString());
-        data.put("extensionCount", 0);
+        data.put("extensionCount", "0");
         data.put("version", 0);
 
         redisTemplate.opsForHash().putAll(key, data);
@@ -70,7 +71,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
      * Cập nhật bid với distributed lock để đảm bảo tính nhất quán
      */
     @Override
-    public void updateBidWithLock(Long auctionId, Long bidderId, BigDecimal newPrice) {
+    public BidUpdateResult updateBidWithLock(Long auctionId, Long bidderId, BigDecimal newPrice) {
         boolean isUserBlocked = userRepository.existsByIdAndStatus(bidderId, UserStatus.BLOCKED);
 
         if (isUserBlocked) {
@@ -86,7 +87,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
 
             if (!acquired) {
                 log.warn("Failed to acquire lock for auction {}", auctionId);
-                throw new AppException(ErrorCode.AUCTION_BUSY);
+                return BidUpdateResult.failure("System is busy, please try again");
             }
 
             String key = AUCTION_KEY_PREFIX + auctionId;
@@ -94,20 +95,20 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
             // Kiểm tra auction có tồn tại không
             if (!redisTemplate.hasKey(key)) {
                 log.warn("Auction {} not found in Redis", auctionId);
-                throw new AppException(ErrorCode.AUCTION_NOT_FOUND);
+                return BidUpdateResult.failure("Auction not found");
             }
 
             // Status check
             String status = (String) redisTemplate.opsForHash().get(key, "status");
             if (!"LIVE".equals(status)) {
-                throw new AppException(ErrorCode.AUCTION_CLOSED);
+                return BidUpdateResult.failure("Auction closed");
             }
 
             // Lấy giá hiện tại
             String currentPriceStr = (String) redisTemplate.opsForHash().get(key, "currentPrice");
             if (currentPriceStr == null) {
                 log.error("Current price not found for auction {}", auctionId);
-                throw new AppException(ErrorCode.AUCTION_CONFIG_MISSING);
+                return BidUpdateResult.failure("Invalid auction state");
             }
             BigDecimal currentPrice = new BigDecimal(currentPriceStr);
 
@@ -115,35 +116,44 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
             String minStepStr = (String) redisTemplate.opsForHash().get(key, "minStep");
             if (minStepStr == null) {
                 log.error("Min step not found for auction {}", auctionId);
-                throw new AppException(ErrorCode.AUCTION_CONFIG_MISSING);
+                return BidUpdateResult.failure("Invalid auction state");
             }
             BigDecimal minStep = new BigDecimal(minStepStr);
+            BigDecimal minValidPrice = currentPrice.add(minStep);
 
             // Kiểm tra giá mới phải lớn hơn giá hiện tại + min step
-            if (newPrice.compareTo(currentPrice.add(minStep)) < 0) {
-                log.info("Bid rejected: new price {} <= current price {} add min step {} for auction {}",
-                        newPrice, currentPrice, minStep, auctionId);
-                throw new AppException(ErrorCode.BID_REJECTED);
+            if (newPrice.compareTo(minValidPrice) < 0) {
+                log.info("Bid rejected: new price {} < min valid price {} for auction {}",
+                        newPrice, minValidPrice, auctionId);
+                return BidUpdateResult.failure(
+                        String.format("Bid must be at least %s", minValidPrice)
+                );
             }
 
             // Anti-sniping
             antiSniping(key, auctionId);
 
             // Atomic Update
+            Instant now = Instant.now();
             redisTemplate.opsForHash().put(key, "currentPrice", newPrice.toString());
             redisTemplate.opsForHash().put(key, "highestBidderId", bidderId.toString());
             redisTemplate.opsForHash().increment(key, "bidCount", 1);
-            redisTemplate.opsForHash().put(key, "lastBidTime", Instant.now().toString());
+            redisTemplate.opsForHash().put(key, "lastBidTime", now.toString());
 
             // Increment version (OPTIMISTIC LOCK)
             redisTemplate.opsForHash().increment(key, "version", 1);
 
-            log.info("Successfully updated bid for auction {}: price={}, bidder={}", auctionId, newPrice, bidderId);
+            boolean extended = checkAndExtendAuction(auctionId, now);
 
+            // Publish Kafka event
+            publishBidEvent(auctionId, bidderId, newPrice, now, extended);
+
+            log.info("Successfully updated bid for auction {}: price={}, bidder={}", auctionId, newPrice, bidderId);
+            return BidUpdateResult.success(newPrice, bidderId, null);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("Interrupted while acquiring lock for auction {}", auctionId, e);
-            throw new AppException(ErrorCode.INTERNAL_ERROR);
+            return BidUpdateResult.failure("Operation interrupted");
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -248,6 +258,40 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     }
 
     /**
+     * Check và thêm thời gian nếu phát hiện sniping
+     */
+    @Override
+    public boolean checkAndExtendAuction(Long auctionId, Instant bidTime) {
+        String key = AUCTION_KEY_PREFIX + auctionId;
+
+        String endTimeStr = (String) redisTemplate.opsForHash().get(key, "endTime");
+        String antiSnipeSecondsStr = (String) redisTemplate.opsForHash().get(key, "antiSnipeSeconds");
+        String extensionSecondsStr = (String) redisTemplate.opsForHash().get(key, "extensionSeconds");
+
+        if (endTimeStr == null || antiSnipeSecondsStr == null) {
+            throw new AppException(ErrorCode.AUCTION_CONFIG_MISSING);
+        }
+
+        Instant endTime = Instant.parse(endTimeStr);
+        int antiSnipeSeconds = Integer.parseInt(antiSnipeSecondsStr);
+        int extensionSeconds = extensionSecondsStr != null ? Integer.parseInt(extensionSecondsStr) : 30;
+
+        long secondsUntilEnd = Duration.between(bidTime, endTime).getSeconds();
+
+        if (secondsUntilEnd <= antiSnipeSeconds) {
+            Instant newEndTime = endTime.plusSeconds(extensionSeconds);
+
+            // Update Redis
+            redisTemplate.opsForHash().put(key, "endTime", newEndTime.toString());
+
+            log.info("Auction {} extended to {}", auctionId, newEndTime);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Đồng bộ dữ liệu từ DB lên Redis
      */
     @Override
@@ -294,12 +338,13 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     /**
      * Publish event vào Kafka để DB sync service xử lý
      */
-    private void publishBidEvent(Long auctionId, Long bidderId, BigDecimal price, Instant timestamp) {
+    private void publishBidEvent(Long auctionId, Long bidderId, BigDecimal price, Instant timestamp, boolean extended) {
         BidPlacedEvent event = BidPlacedEvent.builder()
                 .auctionId(auctionId)
                 .bidderId(bidderId)
                 .amount(price)
                 .timestamp(timestamp)
+                .extended(extended)
                 .build();
 
         kafkaTemplate.send(KAFKA_TOPIC, auctionId.toString(), event)

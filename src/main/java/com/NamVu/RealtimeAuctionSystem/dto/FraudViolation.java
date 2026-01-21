@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-class FraudViolation {
+public class FraudViolation {
     private FraudType type;
     private int score;
 }

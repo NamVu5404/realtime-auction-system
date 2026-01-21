@@ -17,4 +17,5 @@ public class BidPlacedEvent {
     private Long bidderId;
     private BigDecimal amount;
     private Instant timestamp;
+    private boolean extended;
 }

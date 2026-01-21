@@ -28,7 +28,7 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
     private final FraudLogRepository fraudLogRepository;
 
     @Override
-    public FraudCheckResult checkBid(Bid bid, Auction auction) {
+    public FraudCheckResult checkBid(Bid bid, Auction auction, BigDecimal currentPrice) {
         FraudCheckResult result = new FraudCheckResult();
 
         // RULE 1: Self-bidding (người bán tự đặt giá)
@@ -48,18 +48,18 @@ public class FraudDetectionServiceImpl implements FraudDetectionService {
             result.addViolation(FraudType.RATE_LIMIT, 80);
         }
 
-        // RULE 3: Price spike (giá tăng đột biến)
-        BigDecimal priceDiff = bid.getAmount().subtract(auction.getCurrentPrice());
-        BigDecimal threshold = auction.getMinStep().multiply(BigDecimal.valueOf(10));
+        // RULE 3: Price spike (giá tăng đột biến, giá mới > 1.5x giá cũ)
+        BigDecimal bidAmount = bid.getAmount();
+        BigDecimal threshold = currentPrice.multiply(BigDecimal.valueOf(1.5));
 
-        if (priceDiff.compareTo(threshold) > 0) {
+        if (bidAmount.compareTo(threshold) > 0) {
             result.addViolation(FraudType.PRICE_SPIKE, 50);
         }
 
         // RULE 4: Last second sniping (đặt giá phút chót)
         if (auction.getEndTime() != null) {
             long secondsUntilEnd = Duration.between(Instant.now(), auction.getEndTime()).getSeconds();
-            if (secondsUntilEnd < 5) {
+            if (secondsUntilEnd < auction.getAntiSnipeSeconds()) {
                 result.addViolation(FraudType.LAST_SECOND_SNIPING, 30);
             }
         }
