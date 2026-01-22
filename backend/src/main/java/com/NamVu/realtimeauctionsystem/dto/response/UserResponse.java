@@ -1,5 +1,6 @@
 package com.NamVu.realtimeauctionsystem.dto.response;
 
+import com.NamVu.realtimeauctionsystem.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,8 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuthenticationResponse {
-    private String accessToken;
-    private String refreshToken;
-    private UserResponse user;
+public class UserResponse {
+    private Long id;
+    private String email;
+    private String name;
+    private Role role;
+    private String avatarUrl;
 }

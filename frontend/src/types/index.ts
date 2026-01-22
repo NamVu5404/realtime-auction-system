@@ -1,10 +1,10 @@
 export enum AuctionStatus {
-  DRAFT = 'DRAFT',
-  SCHEDULED = 'SCHEDULED',
-  LIVE = 'LIVE',
-  ENDED = 'ENDED',
-  SETTLED = 'SETTLED',
-  CANCELLED = 'CANCELLED',
+  DRAFT = "DRAFT",
+  SCHEDULED = "SCHEDULED",
+  LIVE = "LIVE",
+  ENDED = "ENDED",
+  SETTLED = "SETTLED",
+  CANCELLED = "CANCELLED",
 }
 
 export interface AuctionItem {
@@ -40,17 +40,38 @@ export interface ExchangeTokenRequest {
   code: string;
 }
 
+export interface UserResponse {
+  id: number;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+  role: "USER" | "ADMIN";
+}
+export interface AuthenticationResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: UserResponse;
+}
+
+export interface ApiResponse<T> {
+  code: number;
+  message: string;
+  result: T;
+}
+
+export interface UserInfo {
+  id: string;
+  email: string;
+  name: string;
+  avatarUrl?: string;
+  role: "USER" | "ADMIN";
+}
+
 export interface ExchangeTokenResponse {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    avatar?: string;
-    role: 'USER' | 'ADMIN';
-  };
+  user: UserInfo;
 }
 
 export interface RefreshTokenRequest {
@@ -60,7 +81,7 @@ export interface RefreshTokenRequest {
 export interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
-  user: ExchangeTokenResponse['user'] | null;
+  user: ExchangeTokenResponse["user"] | null;
   isAuthenticated: boolean;
 }
 

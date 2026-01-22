@@ -12,6 +12,7 @@ import {
   Spin,
   Tag,
   message,
+  notification,
 } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -19,7 +20,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { auctionApi } from "../api/auctionApi";
 import Countdown from "../features/auction/Countdown";
 import { useWebSocket } from "../hooks/useWebSocket";
+import { useAuth } from "../hooks/useAuth";
 import { AuctionItem } from "../types";
+import LoginModal from "../components/LoginModal";
 
 const DEFAULT_IMAGE =
   "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
@@ -27,10 +30,12 @@ const DEFAULT_IMAGE =
 export const AuctionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [auction, setAuction] = useState<AuctionItem | null>(null);
   const [bidAmount, setBidAmount] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [bidLoading, setBidLoading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const { isConnected } = useWebSocket({
     onPriceUpdate: (event) => {
@@ -101,6 +106,12 @@ export const AuctionDetailPage = () => {
     auction.imageUrl && !auction.imageUrl.includes("via.placeholder.com");
 
   const handlePlaceBid = async () => {
+    // Check authentication status before processing bid
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+
     const bidAmountNum = parseFloat(bidAmount);
 
     if (!bidAmount || isNaN(bidAmountNum)) {
@@ -126,9 +137,18 @@ export const AuctionDetailPage = () => {
         // Auction state will be updated via WebSocket
       }
     } catch (error) {
-      message.error(
-        error instanceof Error ? error.message : "Failed to place bid",
-      );
+      // Extract error message from backend response if available
+      let errorMessage = "Failed to place bid";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      notification.error({
+        message: "Bid Submission Failed",
+        description: errorMessage || "An error occurred while placing your bid. Please try again.",
+        duration: 3,
+      });
     } finally {
       setBidLoading(false);
     }
@@ -335,6 +355,13 @@ export const AuctionDetailPage = () => {
           </Col>
         </Row>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal
+        visible={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onLoginClick={() => {}}
+      />
     </div>
   );
 };

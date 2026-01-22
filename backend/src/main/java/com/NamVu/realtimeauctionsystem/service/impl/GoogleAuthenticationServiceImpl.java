@@ -4,6 +4,7 @@ import com.NamVu.realtimeauctionsystem.dto.request.ExchangeTokenRequest;
 import com.NamVu.realtimeauctionsystem.dto.response.AuthenticationResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.ExchangeTokenResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.OutboundUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.UserResponse;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.httpclient.GoogleAuthClient;
 import com.NamVu.realtimeauctionsystem.httpclient.GoogleUserClient;
@@ -49,10 +50,19 @@ public class GoogleAuthenticationServiceImpl implements OutboundAuthenticationSe
         User user = outboundUserService.onboardUser(userInfo);
 
         // Generate JWT
-        String token = tokenService.generateToken(user);
+        String accessToken = tokenService.generateToken(user, "ACCESS");
+        String refreshToken = tokenService.generateToken(user, "REFRESH");
 
         return AuthenticationResponse.builder()
-                .token(token)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .user(UserResponse.builder()
+                        .id(user.getId())
+                        .email(user.getEmail())
+                        .role(user.getRole())
+                        .avatarUrl(user.getAvatarUrl())
+                        .name(user.getName())
+                        .build())
                 .build();
     }
 

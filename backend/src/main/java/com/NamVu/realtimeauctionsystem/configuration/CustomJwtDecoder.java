@@ -2,6 +2,8 @@ package com.NamVu.realtimeauctionsystem.configuration;
 
 import com.NamVu.realtimeauctionsystem.dto.request.IntrospectRequest;
 import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.exception.AppException;
+import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +38,7 @@ public class CustomJwtDecoder implements JwtDecoder {
             IntrospectResponse response = authenticationService.introspect(
                     IntrospectRequest.builder().token(token).build());
 
-            if (!response.isValid()) throw new JwtException("Token invalid");
+            if (!response.isValid()) throw new AppException(ErrorCode.TOKEN_INVALID);
         } catch (JOSEException | ParseException e) {
             throw new JwtException(e.getMessage());
         }
