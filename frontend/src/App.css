@@ -1,0 +1,83 @@
+/* Global Dark Theme Styles */
+
+:root {
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #0a0a0a;
+  --color-card: #141414;
+  --color-border: #262626;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: #ffffff;
+}
+
+html {
+  background-color: var(--color-bg-primary);
+}
+
+/* Container Utilities */
+.container {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Dark Mode Card Styling */
+:where(.ant-card) {
+  background-color: var(--color-card);
+  border-color: var(--color-border);
+}
+
+:where(.ant-tabs) {
+  color: #ffffff;
+}
+
+:where(.ant-tabs-tab) {
+  color: #b0b0b0 !important;
+}
+
+:where(.ant-tabs-tab.ant-tabs-tab-active) {
+  color: #ffffff !important;
+}
+
+/* Input Styling */
+:where(.ant-input) {
+  background-color: #1f1f1f !important;
+  border-color: #3f3f3f !important;
+  color: #ffffff !important;
+}
+
+:where(.ant-input::placeholder) {
+  color: #8b8b8b;
+}
+
+/* Button Styling */
+:where(.ant-btn-text) {
+  color: #b0b0b0;
+}
+
+:where(.ant-btn-text:hover) {
+  color: #ffffff;
+}
+
+/* Divider */
+:where(.ant-divider) {
+  border-color: var(--color-border);
+}
+
+/* Tag */
+:where(.ant-tag) {
+  background-color: #1f1f1f;
+  border-color: #3f3f3f;
+  color: #ffffff;
+}
+
+/* Additional Ant Design Component Overrides */
+:where(.ant-empty-description) {
+  color: #b0b0b0;
+}
+
+:where(.ant-spin-text) {
+  color: #b0b0b0;
+}
