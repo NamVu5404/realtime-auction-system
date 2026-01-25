@@ -1,74 +1,94 @@
 import { useEffect, useState } from 'react';
 import { Tag, Statistic } from 'antd';
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
-import utc from 'dayjs/plugin/utc';
-
-dayjs.extend(duration);
-dayjs.extend(utc);
+import { getTimeRemaining, formatCountdown } from '../../utils/dateUtils';
 
 interface CountdownProps {
-  endTime: string;
-  onEnded?: () => void;
+  targetTime: string; // ISO 8601 UTC string from backend
+  onFinish?: () => void;
   isLive?: boolean;
 }
 
-export const Countdown = ({ endTime, onEnded, isLive = false }: CountdownProps) => {
-  const [timeLeft, setTimeLeft] = useState<string>('');
-  const [isEnded, setIsEnded] = useState(false);
+/**
+ * Countdown Timer Component
+ * 
+ * Features:
+ * - Converts UTC time to local timezone automatically
+ * - Updates every second
+ * - Triggers callback when countdown reaches 00:00:00
+ * - Shows visual warning when < 1 minute remains
+ * - Color coding: Green for "Starts In" (upcoming), Blue for "Ends In" (live)
+ * 
+ * @param targetTime - ISO 8601 UTC time string (e.g., auction.endTime or auction.startTime)
+ * @param onFinish - Called when countdown completes
+ * @param isLive - If true, countdown is for end time (Blue/Cyan); if false, for start time (Green)
+ */
+export const Countdown = ({ targetTime, onFinish, isLive = false }: CountdownProps) => {
+  const [timeLeft, setTimeLeft] = useState<string>('00:00:00');
+  const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
+    // Update countdown every second
     const interval = setInterval(() => {
-      const now = dayjs();
-      const end = dayjs(endTime);
-      const diff = end.diff(now);
+      const remainingMs = getTimeRemaining(targetTime);
 
-      if (diff <= 0) {
+      // Format and display remaining time
+      const formatted = formatCountdown(remainingMs);
+      setTimeLeft(formatted);
+
+      // Check if countdown finished
+      if (remainingMs <= 0) {
         setTimeLeft('00:00:00');
-        setIsEnded(true);
-        onEnded?.();
+        setIsFinished(true);
+        onFinish?.();
         clearInterval(interval);
-        return;
-      }
-
-      const dur = dayjs.duration(diff);
-      const hours = String(Math.floor(dur.asHours())).padStart(2, '0');
-      const minutes = String(dur.minutes()).padStart(2, '0');
-      const seconds = String(dur.seconds()).padStart(2, '0');
-
-      setTimeLeft(`${hours}:${minutes}:${seconds}`);
-
-      // Trigger warning when less than 1 minute
-      if (diff < 60000 && diff > 0) {
-        setIsEnded(false);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [endTime, onEnded]);
+  }, [targetTime, onFinish]);
 
-  if (isEnded) {
+  // Show "Ended" tag when countdown completes
+  if (isFinished) {
     return (
       <Tag color="error" className="text-lg px-4 py-2">
-        Ended
+        Time Reached
       </Tag>
     );
   }
 
-  const showWarning = timeLeft.startsWith('00:0') && timeLeft !== '00:00:00';
+  // Check if less than 1 minute remaining (warning state)
+  const [hours, minutes, seconds] = timeLeft.split(':').map(Number);
+  const showWarning = hours === 0 && minutes === 0 && seconds < 60 && seconds > 0;
+
+  // Color logic:
+  // - Upcoming (Starts In): Green
+  // - Live (Ends In): Blue/Cyan
+  // - Warning: Orange-red (last minute)
+  const getCountdownColor = () => {
+    if (showWarning) {
+      return '#e84749'; // Orange-red for warning
+    }
+    if (isLive) {
+      return '#00C853'; // Cyan/Sky blue for live countdown
+    }
+    return '#3c89e8'; // Green for upcoming countdown
+  };
 
   return (
     <div className="text-center">
-      <p className="text-sm text-gray-500 mt-1">
+      <p className={`text-sm mb-2 ${
+        isLive ? 'text-green-400' : 'text-green-400'
+      }`}>
         {isLive ? 'Ends in' : 'Starts in'}
       </p>
       <Statistic
         value={timeLeft}
         valueStyle={{
-          color: showWarning ? '#1890ff' : isLive ? '#ff4d4f' : '#52c41a',
+          color: getCountdownColor(),
           fontSize: '24px',
           fontWeight: 'bold',
           fontFamily: 'monospace',
+          letterSpacing: '2px',
         }}
       />
     </div>

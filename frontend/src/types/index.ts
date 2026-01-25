@@ -1,62 +1,27 @@
-export enum AuctionStatus {
-  DRAFT = "DRAFT",
-  SCHEDULED = "SCHEDULED",
-  LIVE = "LIVE",
-  ENDED = "ENDED",
-  SETTLED = "SETTLED",
-  CANCELLED = "CANCELLED",
-}
+/**
+ * Central Types File
+ * 
+ * This file re-exports types from api/types.ts for backward compatibility
+ * New types are defined in api/types.ts based on backend analysis
+ */
 
-export interface AuctionItem {
-  id: string;
-  title: string;
-  description: string;
-  startTime: string; // ISO 8601 format
-  endTime: string; // ISO 8601 format
-  startPrice: number;
-  currentPrice: number;
-  minStep: number;
-  status: AuctionStatus;
-  sellerId: string;
-  sellerName: string;
-  imageUrl?: string;
-  highestBidderId?: string;
-  highestBidderName?: string;
-}
+// Re-export types generated from backend analysis
+export {
+  AuctionStatus,
+  UserRole,
+  User,
+  Auction,
+  PageResponse,
+  ApiResponse,
+  PaginatedAuctions,
+  SingleAuctionResponse,
+  CreateAuctionRequest,
+  AuthenticationResponse,
+} from '../api/types';
 
-export interface BidRequest {
-  auctionId: string;
-  bidAmount: number;
-}
-
-export interface BidResponse {
-  success: boolean;
-  message: string;
-  currentPrice?: number;
-  bidId?: string;
-}
-
+// Legacy types for authentication and WebSocket (keep for now)
 export interface ExchangeTokenRequest {
   code: string;
-}
-
-export interface UserResponse {
-  id: number;
-  email: string;
-  name: string;
-  avatarUrl?: string;
-  role: "USER" | "ADMIN";
-}
-export interface AuthenticationResponse {
-  accessToken: string;
-  refreshToken: string;
-  user: UserResponse;
-}
-
-export interface ApiResponse<T> {
-  code: number;
-  message: string;
-  result: T;
 }
 
 export interface UserInfo {
@@ -64,7 +29,7 @@ export interface UserInfo {
   email: string;
   name: string;
   avatarUrl?: string;
-  role: "USER" | "ADMIN";
+  role: 'USER' | 'ADMIN';
 }
 
 export interface ExchangeTokenResponse {
@@ -81,14 +46,29 @@ export interface RefreshTokenRequest {
 export interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
-  user: ExchangeTokenResponse["user"] | null;
+  user: ExchangeTokenResponse['user'] | null;
   isAuthenticated: boolean;
 }
 
-export interface PricePingEvent {
+/**
+ * WebSocket Event Types
+ */
+export interface BidUpdateMessage {
   auctionId: string;
   currentPrice: number;
   highestBidderId: string;
   highestBidderName: string;
   timestamp: string;
+}
+
+export interface BidRequest {
+  auctionId: string;
+  bidAmount: number;
+}
+
+export interface BidResponse {
+  success: boolean;
+  message: string;
+  currentPrice?: number;
+  bidId?: string;
 }

@@ -13,6 +13,8 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         enable_lazy_load_no_trans: true
         format_sql: true
+        jdbc:
+          time_zone: UTC
     show-sql: false
   redis:
     host: localhost

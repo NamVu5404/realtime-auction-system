@@ -43,6 +43,7 @@ public class SecurityConfig {
         httpSecurity
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(requests -> requests
+                                .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                                 .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
 //                                .anyRequest().authenticated()
@@ -67,6 +68,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         CorsConfiguration config = new CorsConfiguration();
+        config.setAllowCredentials(true);
         config.addAllowedOrigin("http://localhost:5173");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");

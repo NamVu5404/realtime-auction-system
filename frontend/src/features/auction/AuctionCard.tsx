@@ -1,38 +1,81 @@
-import { useNavigate } from "react-router-dom";
-import { Card, Image, Empty, Tag } from "antd";
-import dayjs from "dayjs";
-import { AuctionItem } from "../../types";
-import Countdown from "./Countdown";
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { Card, Image, Tag, Empty } from 'antd';
+import { useState } from 'react';
+import { Auction, AuctionStatus } from '../../api/types';
+import { 
+  convertUTCToLocal, 
+  formatAuctionTime, 
+  getTimeRemaining,
+  hasAuctionStarted 
+} from '../../utils/dateUtils';
+import Countdown from './Countdown';
 
 const DEFAULT_IMAGE =
-  "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
+  'https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg';
 
 interface AuctionCardProps {
-  auction: AuctionItem;
+  auction: Auction;
+  onCountdownComplete?: () => void;
 }
 
-export const AuctionCard = ({ auction }: AuctionCardProps) => {
+/**
+ * Auction Card Component
+ * 
+ * Displays:
+ * - Auction image with placeholder fallback
+ * - Status badge (LIVE, STARTING SOON, UPCOMING, ENDED)
+ * - Title and description
+ * - Price display (conditional based on status)
+ * - Countdown timer (for LIVE and STARTING SOON)
+ * - Timing information in local timezone
+ * - Seller information
+ * 
+ * Events:
+ * - onCountdownComplete: Triggered when countdown reaches 00:00:00
+ *   This should refetch auctions to sync status changes
+ */
+export const AuctionCard = ({ auction, onCountdownComplete }: AuctionCardProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [countdownStarted, setCountdownStarted] = useState(false);
 
-  const isLive = auction.status === "LIVE";
-  const isScheduled = auction.status === "SCHEDULED";
-  const isEnded = auction.status === "ENDED";
+  const isLive = auction.status === AuctionStatus.LIVE;
+  const isScheduled = auction.status === AuctionStatus.SCHEDULED;
+  const isEnded = auction.status === AuctionStatus.ENDED;
 
-  const now = dayjs();
-  const startTime = dayjs(auction.startTime);
-  const endTime = dayjs(auction.endTime);
-  const timeTilStart = startTime.diff(now);
+  // Convert UTC times to local timezone
+  const startTimeLocal = convertUTCToLocal(auction.startTime);
+  const endTimeLocal = convertUTCToLocal(auction.endTime);
 
-  // Show countdown ONLY IF: status is LIVE OR status is SCHEDULED but < 1 hour to start
+  // Calculate time until start
+  const timeTilStart = getTimeRemaining(auction.startTime);
+  const oneHourMs = 3600000;
+
+  // Show countdown if:
+  // 1. Auction is LIVE and hasn't ended, OR
+  // 2. Auction is SCHEDULED and starts within 1 hour
   const shouldShowCountdown =
-    isLive || (isScheduled && timeTilStart > 0 && timeTilStart < 3600000);
+    isLive || (isScheduled && timeTilStart > 0 && timeTilStart < oneHourMs);
 
   const handleCardClick = () => {
     navigate(`/auction/${auction.id}`);
   };
 
-  const isValidImage =
-    auction.imageUrl && !auction.imageUrl.includes("via.placeholder.com");
+  const isValidImage = auction.image && !auction.image.includes('placeholder');
+
+  // Handle countdown completion
+  const handleCountdownFinish = () => {
+    console.log(`Countdown finished for auction ${auction.id}`);
+    // If countdown was for start time, mark auction as started
+    if (isScheduled) {
+      setCountdownStarted(true);
+      // Invalidate queries to fetch updated LIVE status from backend
+      queryClient.invalidateQueries({ queryKey: ['auctions'] });
+    }
+    // Trigger refetch to sync UI with backend scheduler status changes
+    onCountdownComplete?.();
+  };
 
   return (
     <Card
@@ -41,21 +84,22 @@ export const AuctionCard = ({ auction }: AuctionCardProps) => {
       className="h-full flex flex-col cursor-pointer transition-all duration-300 bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:shadow-lg hover:scale-105"
       cover={
         <Image
-          src={isValidImage ? auction.imageUrl : DEFAULT_IMAGE}
+          src={isValidImage ? auction.image : DEFAULT_IMAGE}
           alt={auction.title}
           preview={false}
           className="h-48 object-cover"
+          fallback={DEFAULT_IMAGE}
         />
       }
     >
       <div className="flex flex-col flex-grow">
         {/* Status Badge */}
         <div className="mb-3">
-          {isLive && <Tag color="red">LIVE</Tag>}
-          {isScheduled && timeTilStart < 3600000 && (
+          {(isLive || countdownStarted) && <Tag color="red">LIVE</Tag>}
+          {isScheduled && !countdownStarted && timeTilStart < oneHourMs && (
             <Tag color="orange">STARTING SOON</Tag>
           )}
-          {isScheduled && timeTilStart >= 3600000 && (
+          {isScheduled && !countdownStarted && timeTilStart >= oneHourMs && (
             <Tag color="blue">UPCOMING</Tag>
           )}
           {isEnded && <Tag color="default">ENDED</Tag>}
@@ -71,57 +115,64 @@ export const AuctionCard = ({ auction }: AuctionCardProps) => {
           {auction.description}
         </p>
 
-        {/* Price Display - Conditional */}
+        {/* Price Display - Conditional based on status */}
         <div className="bg-zinc-800 p-3 rounded-lg mb-4">
-          {isLive ? (
+          {(isLive || countdownStarted) ? (
             <div>
               <div className="text-xs text-gray-400 mb-1">Current Price</div>
               <div className="text-2xl font-bold text-green-400">
-                ${auction.currentPrice}
+                ${auction.currentPrice.toFixed(2)}
               </div>
             </div>
           ) : isEnded ? (
             <div>
               <div className="text-xs text-gray-400 mb-1">Final Price</div>
               <div className="text-2xl font-bold text-gray-300">
-                ${auction.currentPrice}
+                ${auction.currentPrice.toFixed(2)}
               </div>
             </div>
           ) : (
             <div>
               <div className="text-xs text-gray-400 mb-1">Starting Price</div>
               <div className="text-2xl font-bold text-yellow-500">
-                ${auction.startPrice}
+                ${auction.startPrice.toFixed(2)}
               </div>
             </div>
           )}
         </div>
 
-        {/* Countdown - Show only if within 1 hour of start or LIVE */}
+        {/* Countdown Timer - Shows for LIVE or STARTING SOON */}
         {shouldShowCountdown && (
           <div className="mb-4">
-            {isLive ? (
-              <Countdown endTime={auction.endTime} isLive />
+            {(isLive || countdownStarted) ? (
+              <Countdown 
+                targetTime={auction.endTime}
+                isLive 
+                onFinish={handleCountdownFinish}
+              />
             ) : isScheduled && timeTilStart > 0 ? (
-              <Countdown endTime={auction.startTime} />
+              <Countdown 
+                targetTime={auction.startTime}
+                onFinish={handleCountdownFinish}
+              />
             ) : null}
           </div>
         )}
 
-        {/* Timing Info - Always show */}
+        {/* Timing Information - Shows times in user's local timezone */}
         <div className="bg-zinc-800 p-3 rounded-lg mb-4">
           <div className="text-xs text-gray-400 mb-1">Timing</div>
-          <div className="text-xs text-gray-300">
-            <div>Start: {dayjs(auction.startTime).format("MMM DD, HH:mm")}</div>
-            <div>End: {dayjs(auction.endTime).format("MMM DD, HH:mm")}</div>
+          <div className="text-xs text-gray-300 space-y-1">
+            <div>Start: {formatAuctionTime(auction.startTime)}</div>
+            <div>End: {formatAuctionTime(auction.endTime)}</div>
           </div>
         </div>
 
-        {/* Seller Info */}
+        {/* Seller Information */}
         <p className="text-xs text-gray-500 mt-auto">
-          Seller:{" "}
+          Seller:{' '}
           <span className="font-medium text-gray-300">
-            {auction.sellerName}
+            {auction.seller?.name || 'Unknown'}
           </span>
         </p>
       </div>

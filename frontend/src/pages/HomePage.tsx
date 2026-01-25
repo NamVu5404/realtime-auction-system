@@ -1,109 +1,139 @@
-import { useState, useEffect } from 'react';
-import { Tabs, Spin, message, Button, Space } from 'antd';
+import { useState } from 'react';
+import { Tabs, Button, Space, Empty, Spin } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
-import { AuctionItem } from '../types';
-import { auctionApi } from '../api/auctionApi';
+import { useQueryClient } from '@tanstack/react-query';
+import { AuctionStatus } from '../api/types';
+import { useAuctions } from '../hooks/useAuctions';
 import { useWebSocket } from '../hooks/useWebSocket';
 import AuctionList from '../features/auction/AuctionList';
 
+/**
+ * Home Page Component
+ * 
+ * Features:
+ * - Tab-based filtering: LIVE, UPCOMING (SCHEDULED), ENDED
+ * - Pagination support with React Query
+ * - Real-time updates via WebSocket
+ * - Automatic refetch when countdown reaches 00:00:00
+ * 
+ * Tab Logic (Backend Driven):
+ * - Tab "LIVE" → calls API with status=LIVE
+ * - Tab "UPCOMING" → calls API with status=SCHEDULED  
+ * - Tab "ENDED" → calls API with status=ENDED
+ * 
+ * Page indices: Frontend uses 1-based, Backend converts via Pageable
+ */
 export const HomePage = () => {
-  const [allAuctions, setAllAuctions] = useState<AuctionItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('live');
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<string>('live');
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
 
+  // Map tab keys to backend status parameters
+  const statusMap: Record<string, AuctionStatus> = {
+    live: AuctionStatus.LIVE,
+    scheduled: AuctionStatus.SCHEDULED,
+    ended: AuctionStatus.ENDED,
+  };
+
+  const currentStatus = statusMap[activeTab] || AuctionStatus.LIVE;
+
+  // Fetch auctions with React Query
+  const { data, isLoading, error, refetch } = useAuctions(
+    currentStatus,
+    page,
+    pageSize
+  );
+
+  // Reset to page 1 when changing tabs
+  const handleTabChange = (key: string) => {
+    setActiveTab(key);
+    setPage(1);
+  };
+
+  // WebSocket connection for real-time price updates
   const { isConnected } = useWebSocket({
-    onPriceUpdate: (event) => {
-      console.log('Price update received:', event);
-      // Update local state with new price
-      setAllAuctions(prev =>
-        prev.map(auction =>
-          auction.id === event.auctionId
-            ? { ...auction, currentPrice: event.currentPrice, highestBidderId: event.highestBidderId }
-            : auction
-        )
-      );
+    onPriceUpdate: () => {
+      // Refetch to sync with latest data
+      refetch();
     },
   });
 
-  const fetchAuctions = async () => {
-    setLoading(true);
-    try {
-      const data = await auctionApi.getAllAuctions();
-      setAllAuctions(data);
-    } catch (error) {
-      message.error('Failed to fetch auctions');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+  // Manual refresh button
+  const handleRefresh = async () => {
+    await refetch();
   };
 
-  useEffect(() => {
-    fetchAuctions();
-  }, []);
-
-  // Filter logic for different tabs
-  const getLiveAuctions = () => {
-    const now = dayjs();
-    return allAuctions.filter(auction => {
-      if (auction.status === 'LIVE') return true;
-      // Include SCHEDULED auctions that start within 1 hour
-      if (auction.status === 'SCHEDULED') {
-        const timeTilStart = dayjs(auction.startTime).diff(now);
-        return timeTilStart > 0 && timeTilStart < 3600000; // < 1 hour in ms
-      }
-      return false;
-    });
+  // Callback for when countdown reaches 00:00:00
+  // Called from AuctionCard component
+  const handleCountdownComplete = () => {
+    // Invalidate the auctions query to trigger a refetch
+    // This ensures UI stays in sync with backend scheduler state transitions
+    queryClient.invalidateQueries({ queryKey: ['auctions'] });
   };
 
-  const getUpcomingAuctions = () => {
-    const now = dayjs();
-    return allAuctions.filter(auction => {
-      if (auction.status !== 'SCHEDULED') return false;
-      const timeTilStart = dayjs(auction.startTime).diff(now);
-      return timeTilStart >= 3600000; // >= 1 hour
-    });
-  };
+  // Expose refetch handler globally for countdown events
+  // (Alternative approach if using ref/context)
+  (window as any).handleCountdownComplete = handleCountdownComplete;
 
-  const getEndedAuctions = () => {
-    return allAuctions.filter(
-      auction => auction.status === 'ENDED' || auction.status === 'SETTLED'
-    );
-  };
-
+  // Tab definitions with dynamic labels
+  // Only show count badge for the active tab
   const tabs = [
     {
       key: 'live',
-      label: `LIVE (${getLiveAuctions().length})`,
+      label: activeTab === 'live' ? `LIVE (${data?.totalElements || 0})` : 'LIVE',
       children: (
-        <AuctionList
-          auctions={getLiveAuctions()}
-          loading={loading}
-          emptyMessage="No live or starting soon auctions"
-        />
+        <Spin spinning={isLoading}>
+          {!isLoading && data?.data && data.data.length > 0 ? (
+            <>
+              <AuctionList 
+                auctions={data.data} 
+                onCountdownComplete={handleCountdownComplete}
+              />
+              {/* Pagination would go here if implementing pagination UI */}
+            </>
+          ) : (
+            <Empty description="No live auctions" />
+          )}
+        </Spin>
       ),
     },
     {
-      key: 'upcoming',
-      label: `UPCOMING (${getUpcomingAuctions().length})`,
+      key: 'scheduled',
+      label: activeTab === 'scheduled' ? `UPCOMING (${data?.totalElements || 0})` : 'UPCOMING',
       children: (
-        <AuctionList
-          auctions={getUpcomingAuctions()}
-          loading={loading}
-          emptyMessage="No upcoming auctions"
-        />
+        <Spin spinning={isLoading}>
+          {!isLoading && data?.data && data.data.length > 0 ? (
+            <>
+              <AuctionList 
+                auctions={data.data}
+                onCountdownComplete={handleCountdownComplete}
+              />
+              {/* Pagination would go here */}
+            </>
+          ) : (
+            <Empty description="No upcoming auctions" />
+          )}
+        </Spin>
       ),
     },
     {
       key: 'ended',
-      label: `ENDED (${getEndedAuctions().length})`,
+      label: activeTab === 'ended' ? `ENDED (${data?.totalElements || 0})` : 'ENDED',
       children: (
-        <AuctionList
-          auctions={getEndedAuctions()}
-          loading={loading}
-          emptyMessage="No ended auctions"
-        />
+        <Spin spinning={isLoading}>
+          {!isLoading && data?.data && data.data.length > 0 ? (
+            <>
+              <AuctionList 
+                auctions={data.data}
+                onCountdownComplete={handleCountdownComplete}
+              />
+              {/* Pagination would go here */}
+            </>
+          ) : (
+            <Empty description="No ended auctions" />
+          )}
+        </Spin>
       ),
     },
   ];
@@ -111,6 +141,7 @@ export const HomePage = () => {
   return (
     <div className="bg-black min-h-screen py-8">
       <div className="container max-w-7xl mx-auto px-4">
+        {/* Header */}
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h1 className="text-4xl font-bold mb-2 text-white">⚡ Auction Dashboard</h1>
@@ -125,8 +156,8 @@ export const HomePage = () => {
           <Space>
             <Button
               icon={<ReloadOutlined />}
-              onClick={fetchAuctions}
-              loading={loading}
+              onClick={handleRefresh}
+              loading={isLoading}
               size="large"
             >
               Refresh
@@ -134,9 +165,17 @@ export const HomePage = () => {
           </Space>
         </div>
 
+        {/* Error Display */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-900 text-red-200 rounded-lg">
+            Failed to load auctions: {error.message}
+          </div>
+        )}
+
+        {/* Tabs */}
         <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
+          activeKey={Object.keys(statusMap).find(k => statusMap[k] === currentStatus) || 'live'}
+          onChange={handleTabChange}
           items={tabs}
           size="large"
           className="auction-tabs"
