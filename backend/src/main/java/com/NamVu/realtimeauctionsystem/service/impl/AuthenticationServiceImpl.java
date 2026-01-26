@@ -48,10 +48,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //        if (!authenticated)
 //            throw new AppException(ErrorCode.UNAUTHENTICATED);
 //
-//        String token = tokenService.generateToken(user);
+//        String accessToken = tokenService.generateToken(user, "ACCESS");
+//        String refreshToken = tokenService.generateToken(user, "REFRESH");
 //
 //        return AuthenticationResponse.builder()
-//                .token(token)
+//                .accessToken(accessToken)
+//                .refreshToken(refreshToken)
 //                .build();
 //    }
 
@@ -113,7 +115,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
         return RefreshResponse.builder()
-                .token(tokenService.generateToken(user))
+                .token(tokenService.generateToken(user, "ACCESS"))
                 .build();
     }
 }

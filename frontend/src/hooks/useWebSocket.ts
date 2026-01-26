@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { Client, Message } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { PricePingEvent } from '../types';
@@ -13,6 +13,7 @@ interface UseWebSocketOptions {
 export const useWebSocket = (options: UseWebSocketOptions = {}) => {
   const clientRef = useRef<Client | null>(null);
   const connectingRef = useRef(false);
+  const [isConnected, setIsConnected] = useState(false);
 
   const connect = useCallback(() => {
     if (clientRef.current?.connected || connectingRef.current) {
@@ -23,7 +24,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
 
     const client = new Client({
       webSocketFactory: () => {
-        const wsUrl = (import.meta as any).env.VITE_WS_URL || 'http://localhost:8080/ws';
+        const wsUrl = (import.meta as any).env.VITE_WS_URL || 'http://localhost:8080/api/v1/ws';
         return new SockJS(wsUrl);
       },
       connectHeaders: {
@@ -37,6 +38,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
       heartbeatOutgoing: 4000,
       onConnect: () => {
         connectingRef.current = false;
+        setIsConnected(true);
         console.log('WebSocket connected');
 
         // Subscribe to auction price updates
@@ -63,12 +65,14 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
       },
       onStompError: (frame) => {
         connectingRef.current = false;
+        setIsConnected(false);
         const errorMsg = `Broker reported error: ${frame.headers['message']}`;
         console.error(errorMsg);
         options.onError?.(errorMsg);
       },
       onWebSocketClose: () => {
         connectingRef.current = false;
+        setIsConnected(false);
         console.log('WebSocket closed');
         options.onDisconnect?.();
       },
@@ -82,6 +86,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
     if (clientRef.current?.connected) {
       clientRef.current.deactivate();
       clientRef.current = null;
+      setIsConnected(false);
       options.onDisconnect?.();
     }
   }, [options]);
@@ -120,7 +125,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
   }, [connect, disconnect]);
 
   return {
-    isConnected: clientRef.current?.connected ?? false,
+    isConnected,
     connect,
     disconnect,
     subscribe,

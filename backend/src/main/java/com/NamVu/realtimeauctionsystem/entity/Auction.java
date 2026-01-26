@@ -10,8 +10,9 @@ import java.time.Instant;
 @Entity
 @Table(name = "auctions",
         indexes = {
-                @Index(name = "idx_auction_status", columnList = "status"),
-                @Index(name = "idx_auction_end_time", columnList = "end_time")
+                @Index(name = "idx_auction_status_time", columnList = "status, start_time"),
+                @Index(name = "idx_auction_end_time", columnList = "end_time"),
+                @Index(name = "idx_auction_status_end", columnList = "status, end_time")
         })
 @Getter
 @Setter
@@ -29,6 +30,9 @@ public class Auction {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(columnDefinition = "TEXT")
+    private String image;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal startPrice;
@@ -77,6 +81,7 @@ public class Auction {
     void prePersist() {
         createdAt = Instant.now();
         updatedAt = createdAt;
+        currentPrice = startPrice;
     }
 
     @PreUpdate

@@ -19,4 +19,5 @@ public class OutboundUserResponse {
     private String name;
     private String phoneNumber;
     private LocalDate birthday;
+    private String picture;
 }

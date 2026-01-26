@@ -26,7 +26,5 @@ public interface RedisAuctionService {
 
     boolean exists(Long auctionId);
 
-    boolean checkAndExtendAuction(Long auctionId, Instant bidTime);
-
     void syncFromDatabase(Auction auction);
 }

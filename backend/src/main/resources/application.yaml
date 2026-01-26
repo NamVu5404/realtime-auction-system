@@ -13,6 +13,8 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
         enable_lazy_load_no_trans: true
         format_sql: true
+        jdbc:
+          time_zone: UTC
     show-sql: false
   redis:
     host: localhost
@@ -44,7 +46,7 @@ server:
     context-path: /api/v1
 
 outbound:
-  redirect-uri: "http://localhost:3000/authenticate"
+  redirect-uri: http://localhost:5173/auth/callback
   google:
     client-id: ${GOOGLE_CLIENT_ID}
     client-secret: ${GOOGLE_CLIENT_SECRET}
@@ -52,4 +54,4 @@ outbound:
 jwt:
   signer-key: ${JWT_SIGNER_KEY}
   valid-duration: 2 # in hours
-  refreshable-duration: 168 # in hours
+  refreshable-duration: 48 # in hours

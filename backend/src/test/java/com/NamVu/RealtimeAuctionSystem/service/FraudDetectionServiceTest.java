@@ -1,4 +1,4 @@
-package com.NamVu.RealtimeAuctionSystem.service;
+package com.NamVu.realtimeauctionsystem.service;
 
 import com.NamVu.realtimeauctionsystem.dto.FraudCheckResult;
 import com.NamVu.realtimeauctionsystem.entity.Auction;

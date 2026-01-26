@@ -36,19 +36,20 @@ public class TokenServiceImpl implements TokenService {
     private Long REFRESHABLE_DURATION;
 
     @Override
-    public String generateToken(User user) {
+    public String generateToken(User user, String type) {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .issuer("javaweb.com")
-                .claim("userId", user.getId())
+                .issuer("NamVu.com")
                 .subject(user.getEmail())
-//                .claim("scope", buildScope(user.getRoles()))
+                .claim("name", user.getName())
+                .claim("scope", user.getRole())
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString())
-                .expirationTime(Date.from(
-                        Instant.now().plus(VALID_DURATION, ChronoUnit.HOURS)
-                ))
+                .expirationTime("ACCESS".equals(type)
+                        ? Date.from(Instant.now().plus(VALID_DURATION, ChronoUnit.HOURS))
+                        : Date.from(Instant.now().plus(REFRESHABLE_DURATION, ChronoUnit.HOURS))
+                )
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -85,18 +86,4 @@ public class TokenServiceImpl implements TokenService {
 
         return signedJWT;
     }
-
-//    private String buildScope(List<Role> roles) {
-//        StringJoiner scope = new StringJoiner(" ");
-//
-//        roles.forEach(role -> {
-//            scope.add("ROLE_" + role.getCode());
-//
-//            role.getPermissions().forEach(permission ->
-//                    scope.add(permission.getCode())
-//            );
-//        });
-//
-//        return scope.toString();
-//    }
 }

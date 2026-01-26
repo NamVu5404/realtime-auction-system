@@ -23,6 +23,7 @@ public enum ErrorCode {
     MAX_RETRIES_EXCEEDED(1012, "Max retries exceeded", HttpStatus.INTERNAL_SERVER_ERROR),
     INTERRUPTED_DURING_RETRY(1013, "Interrupted during retry", HttpStatus.INTERNAL_SERVER_ERROR),
     USER_BLOCKED(1014, "Tài khoản đã bị cấm", HttpStatus.BAD_REQUEST),
+    TOKEN_INVALID(1015, "Token invalid", HttpStatus.UNAUTHORIZED),
     ;
 
     private final int code;

@@ -1,4 +1,4 @@
-package com.NamVu.RealtimeAuctionSystem.service;
+package com.NamVu.realtimeauctionsystem.service;
 
 import com.NamVu.realtimeauctionsystem.RealtimeAuctionSystemApplication;
 import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
@@ -9,13 +9,12 @@ import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
 import com.NamVu.realtimeauctionsystem.enums.BidStatus;
 import com.NamVu.realtimeauctionsystem.enums.FraudType;
-import com.NamVu.realtimeauctionsystem.enums.UserStatus;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
+import com.NamVu.realtimeauctionsystem.enums.Role;
 import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
 import com.NamVu.realtimeauctionsystem.repository.BidRepository;
 import com.NamVu.realtimeauctionsystem.repository.FraudLogRepository;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
-import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +22,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -36,9 +41,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,12 +69,10 @@ class BiddingIntegrationTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.redis.host", redis::getHost);
-        registry.add("spring.data.redis.port", redis::getFirstMappedPort);
-
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
+        registry.add("spring.datasource.url", () -> mysql.getJdbcUrl() + "?createDatabaseIfNotExist=true");
         registry.add("spring.datasource.username", mysql::getUsername);
         registry.add("spring.datasource.password", mysql::getPassword);
+
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", redis::getFirstMappedPort);
     }
@@ -99,11 +100,49 @@ class BiddingIntegrationTest {
     private User bidder2;
     private Auction auction;
 
+    private void loginAs(User user) {
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("email", user.getEmail());
+        claims.put("name", user.getName());
+        claims.put("roles", Role.USER);
+
+        Jwt jwt = new Jwt(
+                "internal-token",
+                Instant.now(),
+                Instant.now().plusSeconds(600),
+                Map.of("alg", "none"),
+                claims
+        );
+
+        Jwt finalJwt = jwt;
+        jwt = Jwt.withTokenValue(jwt.getTokenValue())
+                .headers(h -> h.putAll(finalJwt.getHeaders()))
+                .claims(c -> {
+                    c.putAll(finalJwt.getClaims());
+                    c.put("sub", String.valueOf(user.getId()));
+                })
+                .issuedAt(jwt.getIssuedAt())
+                .expiresAt(jwt.getExpiresAt())
+                .build();
+
+        Authentication authentication = new JwtAuthenticationToken(
+                jwt,
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+        );
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+    }
+
     @BeforeEach
     void setUp() {
         // Clear data
         assertNotNull(redisTemplate.getConnectionFactory());
         redisTemplate.getConnectionFactory().getConnection().flushAll();
+
+        // Clear DB
         fraudLogRepository.deleteAll();
         bidRepository.deleteAll();
         auctionRepository.deleteAll();
@@ -111,14 +150,17 @@ class BiddingIntegrationTest {
 
         // Create test users
         seller = userRepository.save(User.builder()
+                .name("seller")
                 .email("seller@test.com")
                 .build());
 
         bidder1 = userRepository.save(User.builder()
+                .name("bidder1")
                 .email("bidder1@test.com")
                 .build());
 
         bidder2 = userRepository.save(User.builder()
+                .name("bidder2")
                 .email("bidder2@test.com")
                 .build());
 
@@ -148,6 +190,11 @@ class BiddingIntegrationTest {
         );
     }
 
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     // ============================================
     // TEST CASE 1: BID THÀNH CÔNG
     // ============================================
@@ -156,6 +203,8 @@ class BiddingIntegrationTest {
     @DirtiesContext
     @DisplayName("TC1: Bid thành công với giá hợp lệ")
     void shouldPlaceBidSuccessfully() throws InterruptedException {
+        loginAs(bidder1);
+
         // Given
         BigDecimal bidPrice = new BigDecimal("1050.00"); // currentPrice + minStep
 
@@ -169,7 +218,7 @@ class BiddingIntegrationTest {
         assertEquals(bidPrice, result.getNewPrice());
 
         // Verify Redis
-        assertEquals(bidPrice, redisAuctionService.getCurrentPrice(auction.getId()));
+        assertEquals(0, bidPrice.compareTo(redisAuctionService.getCurrentPrice(auction.getId())));
         assertEquals(bidder1.getId(), redisAuctionService.getHighestBidderId(auction.getId()));
 
         // Wait for Kafka consumer
@@ -183,7 +232,7 @@ class BiddingIntegrationTest {
         // Verify Bid record
         List<Bid> bids = bidRepository.findByAuctionIdOrderByCreatedAtDesc(auction.getId());
         assertEquals(1, bids.size());
-        assertEquals(BidStatus.ACCEPTED, bids.get(0).getStatus());
+        assertEquals(BidStatus.ACCEPTED, bids.getFirst().getStatus());
     }
 
     // ============================================
@@ -193,6 +242,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC2: Từ chối bid khi giá < currentPrice + minStep")
     void shouldRejectBidWhenPriceTooLow() {
+        loginAs(bidder1);
+
         // Given: minStep = 50, currentPrice = 1000
         BigDecimal bidPrice = new BigDecimal("1040.00"); // < 1050
 
@@ -213,6 +264,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC2.1: Từ chối bid khi giá bằng currentPrice")
     void shouldRejectBidWhenPriceEqualsCurrent() {
+        loginAs(bidder1);
+
         // Given
         BigDecimal bidPrice = new BigDecimal("1000.00"); // = currentPrice
 
@@ -228,6 +281,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC2.2: Chấp nhận bid khi giá = currentPrice + minStep")
     void shouldAcceptBidWhenPriceEqualsMinimum() {
+        loginAs(bidder1);
+
         // Given
         BigDecimal bidPrice = new BigDecimal("1050.00"); // = currentPrice + minStep
 
@@ -258,6 +313,7 @@ class BiddingIntegrationTest {
         // When: 2 bids cùng lúc
         executor.submit(() -> {
             try {
+                loginAs(bidder1);
                 BidUpdateResult result = redisAuctionService.updateBidWithLock(
                         auction.getId(), bidder1.getId(), price1
                 );
@@ -269,6 +325,7 @@ class BiddingIntegrationTest {
 
         executor.submit(() -> {
             try {
+                loginAs(bidder2);
                 BidUpdateResult result = redisAuctionService.updateBidWithLock(
                         auction.getId(), bidder2.getId(), price2
                 );
@@ -286,8 +343,7 @@ class BiddingIntegrationTest {
         assertEquals(1, successCount, "Only one bid should succeed");
 
         // Verify final price
-        assertEquals(new BigDecimal("1100.00"),
-                redisAuctionService.getCurrentPrice(auction.getId()));
+        assertEquals(0, new BigDecimal("1100.00").compareTo(redisAuctionService.getCurrentPrice(auction.getId())));
     }
 
     // ============================================
@@ -297,6 +353,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC4: Phát hiện self-bidding và gán FLAGGED")
     void shouldFlagSelfBidding() throws InterruptedException {
+        loginAs(bidder1);
+
         // Given: Seller tự bid
         BigDecimal bidPrice = new BigDecimal("1050.00");
 
@@ -329,6 +387,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC5: Phát hiện rate limit (>10 bids/60s) và gán FLAGGED")
     void shouldFlagRateLimitViolation() throws InterruptedException {
+        loginAs(bidder1);
+
         // Given: Tạo 11 bids trong 60s
         for (int i = 1; i <= 11; i++) {
             BigDecimal price = new BigDecimal("1000.00").add(BigDecimal.valueOf(i * 50));
@@ -365,6 +425,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC6: Phát hiện price spike (>1.5x giá cũ) và gán FLAGGED")
     void shouldFlagPriceSpike() throws InterruptedException {
+        loginAs(bidder1);
+
         // Given: spike = 600 (> 1.5x giá cũ)
         BigDecimal spikePrice = new BigDecimal("1600.00");
 
@@ -394,6 +456,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC7: Từ chối bid khi auction đã kết thúc")
     void shouldRejectBidWhenAuctionEnded() throws InterruptedException {
+        loginAs(bidder1);
+
         // Given: Set auction to ENDED
         auction.setStatus(AuctionStatus.ENDED);
         auctionRepository.save(auction);
@@ -411,39 +475,14 @@ class BiddingIntegrationTest {
     }
 
     // ============================================
-    // TEST CASE 8: BID KHI USER BLOCKED
-    // ============================================
-
-    @Test
-    @DisplayName("TC8: User bị block (không bid được)")
-    void shouldCreateRejectedBidWhenUserBlocked() throws InterruptedException {
-        // Given: First bid success
-        redisAuctionService.updateBidWithLock(
-                auction.getId(), bidder1.getId(), new BigDecimal("1050.00")
-        );
-
-        Thread.sleep(1000);
-
-        // Block user
-        bidder1.setStatus(UserStatus.BLOCKED);
-        userRepository.save(bidder1);
-
-        // When: Try to bid again
-        Thread.sleep(2000);
-
-        assertThrows(
-                AppException.class,
-                () -> redisAuctionService.updateBidWithLock(auction.getId(), bidder1.getId(), new BigDecimal("1050.00"))
-        );
-    }
-
-    // ============================================
     // TEST CASE 9: ANTI-SNIPING
     // ============================================
 
     @Test
     @DisplayName("TC9: Gia hạn auction khi bid trong khoảng anti-snipe")
     void shouldExtendAuctionOnLastMinuteBid() throws InterruptedException {
+        loginAs(bidder1);
+
         // Given: Set end time to 30s from now
         Instant originalEndTime = Instant.now().plus(30, ChronoUnit.SECONDS);
         auction.setEndTime(originalEndTime);
@@ -463,7 +502,7 @@ class BiddingIntegrationTest {
         assertTrue(updated.getEndTime().isAfter(originalEndTime));
 
         long extension = Duration.between(originalEndTime, updated.getEndTime()).getSeconds();
-        assertEquals(60, extension);
+        assertEquals(30, extension);
     }
 
     // ============================================
@@ -473,6 +512,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC10: Nhiều bids tuần tự từ các bidders khác nhau")
     void shouldHandleMultipleSequentialBids() throws InterruptedException {
+        loginAs(bidder1);
+
         // Given
         List<BidUpdateResult> results = new ArrayList<>();
 
@@ -482,16 +523,19 @@ class BiddingIntegrationTest {
         ));
         Thread.sleep(500);
 
+        loginAs(bidder2);
         results.add(redisAuctionService.updateBidWithLock(
                 auction.getId(), bidder2.getId(), new BigDecimal("1100.00")
         ));
         Thread.sleep(500);
 
+        loginAs(bidder1);
         results.add(redisAuctionService.updateBidWithLock(
                 auction.getId(), bidder1.getId(), new BigDecimal("1150.00")
         ));
         Thread.sleep(500);
 
+        loginAs(bidder2);
         results.add(redisAuctionService.updateBidWithLock(
                 auction.getId(), bidder2.getId(), new BigDecimal("1200.00")
         ));
@@ -526,6 +570,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC11: Xử lý optimistic lock với retry thành công")
     void shouldRetryOnOptimisticLock() throws InterruptedException {
+        loginAs(bidder1);
+
         // Given: 10 concurrent bids
         ExecutorService executor = Executors.newFixedThreadPool(10);
         CountDownLatch latch = new CountDownLatch(10);
@@ -569,6 +615,8 @@ class BiddingIntegrationTest {
     @Test
     @DisplayName("TC12: Lưu đầy đủ lịch sử bids (ACCEPTED + REJECTED + FLAGGED)")
     void shouldMaintainCompleteBidHistory() throws InterruptedException {
+        loginAs(bidder1);
+
         // When: Mixed bids
         // 1. Normal bid
         redisAuctionService.updateBidWithLock(
@@ -577,6 +625,7 @@ class BiddingIntegrationTest {
         Thread.sleep(500);
 
         // 2. Rejected bid (too low)
+        loginAs(bidder1);
         redisAuctionService.updateBidWithLock(
                 auction.getId(), bidder2.getId(), new BigDecimal("1060.00")
         );

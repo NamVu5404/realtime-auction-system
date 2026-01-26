@@ -65,7 +65,7 @@ export const Header = () => {
               <Avatar
                 size="large"
                 icon={<UserOutlined />}
-                src={user.avatar}
+                src={user.avatarUrl}
                 alt={user.name}
               />
               <div className="hidden sm:block">
