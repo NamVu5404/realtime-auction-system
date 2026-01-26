@@ -22,12 +22,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final String[] PUBLIC_GET_ENDPOINTS = {
-
-    };
-
-    private final String[] PUBLIC_POST_ENDPOINTS = {
-
+    private final String[] PUBLIC_ENDPOINTS = {
+        "/auth/**", "/auctions", "/auctions/*"
     };
 
     @Autowired
@@ -44,10 +40,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(requests -> requests
                                 .requestMatchers("/ws/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
-                                .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
-//                                .anyRequest().authenticated()
-                                .anyRequest().permitAll()
+                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                                .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable);
 
@@ -72,6 +66,7 @@ public class SecurityConfig {
         config.addAllowedOrigin("http://localhost:5173");
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
+        config.setMaxAge(3600L);
 
         source.registerCorsConfiguration("/**", config);
 

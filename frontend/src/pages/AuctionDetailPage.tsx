@@ -1,4 +1,9 @@
-import { ArrowLeftOutlined, RiseOutlined, WifiOutlined, DisconnectOutlined } from "@ant-design/icons";
+import {
+  ArrowLeftOutlined,
+  RiseOutlined,
+  WifiOutlined,
+  DisconnectOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -15,10 +20,15 @@ import {
   notification,
 } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { auctionApi } from "../api/auctionApi";
-import { Auction, AuctionStatus, BidUpdateMessage, UserRole } from "../api/types";
+import {
+  Auction,
+  AuctionStatus,
+  BidUpdateMessage,
+  UserRole,
+} from "../api/types";
 import LoginModal from "../components/LoginModal";
 import Countdown from "../features/auction/Countdown";
 import { useAuth } from "../hooks/useAuth";
@@ -27,6 +37,137 @@ import { formatAuctionTime, getTimeRemaining } from "../utils/dateUtils";
 
 const DEFAULT_IMAGE =
   "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
+
+// Tách phần bidding form ra component riêng với state nội bộ
+const BiddingSection = memo(
+  ({
+    isLive,
+    isCountdownStarted,
+    isCountdownFinished,
+    isConnected,
+    isReconnecting,
+    isAuthenticated,
+    minimumBid,
+    minStep,
+    isBidDisabled,
+    bidLoading,
+    onPlaceBid,
+  }: {
+    isLive: boolean;
+    isCountdownStarted: boolean;
+    isCountdownFinished: boolean;
+    isConnected: boolean;
+    isReconnecting: boolean;
+    isAuthenticated: boolean;
+    minimumBid: number;
+    minStep: number;
+    isBidDisabled: boolean;
+    bidLoading: boolean;
+    onPlaceBid: (amount: string) => void;
+  }) => {
+    // State nội bộ - KHÔNG nhận từ props để tránh re-render
+    const [localBidAmount, setLocalBidAmount] = useState<string>("");
+
+    if (!((isLive || isCountdownStarted) && !isCountdownFinished)) {
+      return (
+        <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
+          <p className="text-gray-400">
+            {!isCountdownStarted
+              ? "Bidding opens when auction goes live"
+              : "This auction has ended"}
+          </p>
+        </div>
+      );
+    }
+
+    const handleSubmit = () => {
+      onPlaceBid(localBidAmount);
+      setLocalBidAmount(""); // Clear sau khi submit
+    };
+
+    return (
+      <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
+        <h3 className="text-white font-semibold mb-4 text-lg">
+          Place Your Bid
+        </h3>
+
+        {!isConnected && !isReconnecting && (
+          <div className="mb-4 p-3 bg-red-900/30 border border-red-700/50 rounded text-red-400 text-sm">
+            Real-time connection lost. Bidding is temporarily unavailable.
+          </div>
+        )}
+
+        {isReconnecting && (
+          <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded text-yellow-400 text-sm">
+            Connecting to real-time updates... Please wait.
+          </div>
+        )}
+
+        <Space.Compact className="w-full">
+          <Input
+            autoFocus
+            type="text"
+            inputMode="decimal"
+            placeholder={`Min: $${minimumBid.toFixed(2)}`}
+            value={localBidAmount}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                setLocalBidAmount(val);
+              }
+            }}
+            onPressEnter={handleSubmit}
+            disabled={isBidDisabled}
+            className="bg-zinc-800 border-zinc-700 text-white"
+          />
+          <Tooltip
+            title={
+              !isAuthenticated
+                ? "Sign in to place bids"
+                : !isConnected
+                  ? "Waiting for real-time connection"
+                  : isReconnecting
+                    ? "Reconnecting..."
+                    : isCountdownFinished
+                      ? "Auction has ended"
+                      : "Place your bid"
+            }
+          >
+            <Button
+              type="primary"
+              icon={<RiseOutlined />}
+              onClick={handleSubmit}
+              loading={bidLoading}
+              disabled={isBidDisabled}
+              style={{
+                background: isBidDisabled
+                  ? "linear-gradient(135deg, #6B7280 0%, #4B5563 50%)"
+                  : "linear-gradient(135deg, #FFD700 0%, #FF8C00 50%)",
+                border: "none",
+                fontWeight: "bold",
+                color: isBidDisabled ? "#9CA3AF" : "#000",
+              }}
+              className="flex items-center justify-center hover:opacity-90 hover:scale-105 transition-all duration-300"
+            >
+              Place Bid
+            </Button>
+          </Tooltip>
+        </Space.Compact>
+
+        {!isAuthenticated && (
+          <p className="text-xs text-gray-400 mt-2">Sign in to place bids</p>
+        )}
+        {isCountdownFinished && (
+          <p className="text-xs text-red-400 mt-2">
+            Auction has ended - bidding is closed
+          </p>
+        )}
+      </div>
+    );
+  },
+);
+
+BiddingSection.displayName = "BiddingSection";
 
 /**
  * Auction Detail Page
@@ -45,7 +186,6 @@ export const AuctionDetailPage = () => {
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
   const [auction, setAuction] = useState<Auction | null>(null);
-  const [bidAmount, setBidAmount] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [bidLoading, setBidLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -73,7 +213,7 @@ export const AuctionDetailPage = () => {
                   role: UserRole.USER,
                 },
               }
-            : null
+            : null,
         );
       }
     },
@@ -86,16 +226,16 @@ export const AuctionDetailPage = () => {
               ...prev,
               endTime: newEndTime,
             }
-          : null
+          : null,
       );
       // Reset extension flag after animation
       setTimeout(() => setHasTimeExtension(false), 3000);
     },
     onConnect: () => {
-      console.log('Auction WebSocket connected');
+      console.log("Auction WebSocket connected");
     },
     onDisconnect: () => {
-      console.log('Auction WebSocket disconnected');
+      console.log("Auction WebSocket disconnected");
     },
   });
 
@@ -162,7 +302,7 @@ export const AuctionDetailPage = () => {
     !isLive;
 
   // Handle bid placement with improved error handling and state management
-  const handlePlaceBid = async () => {
+  const handlePlaceBid = async (amount: string) => {
     // Check authentication first
     if (!isAuthenticated) {
       setShowLoginModal(true);
@@ -175,9 +315,9 @@ export const AuctionDetailPage = () => {
       return;
     }
 
-    const bidAmountNum = parseFloat(bidAmount);
+    const bidAmountNum = parseFloat(amount);
 
-    if (!bidAmount || isNaN(bidAmountNum)) {
+    if (!amount || isNaN(bidAmountNum)) {
       message.error("Please enter a valid bid amount");
       return;
     }
@@ -197,10 +337,13 @@ export const AuctionDetailPage = () => {
       }
 
       // Place bid using updated endpoint
-      const response = await auctionApi.placeBid(auction.id, bidderId, bidAmountNum);
-      
+      const response = await auctionApi.placeBid(
+        auction.id,
+        bidderId,
+        bidAmountNum,
+      );
+
       if (response.success) {
-        setBidAmount("");
         message.success(response.message || "Bid placed successfully!");
         // Price will be updated via WebSocket immediately
       } else {
@@ -251,7 +394,7 @@ export const AuctionDetailPage = () => {
           >
             Back to Auctions
           </Button>
-          
+
           {/* Connection Status Indicator */}
           <div className="flex items-center gap-2">
             {isReconnecting ? (
@@ -302,7 +445,7 @@ export const AuctionDetailPage = () => {
                   </Tag>
                 )}
                 {isEnded && <Tag className="text-base px-3 py-1">ENDED</Tag>}
-                
+
                 {/* Time Extension Badge */}
                 {hasTimeExtension && (
                   <Tag
@@ -338,90 +481,20 @@ export const AuctionDetailPage = () => {
           {/* Right Column - Auction Info & Bidding */}
           <Col xs={24} lg={12}>
             <div className="space-y-6">
-              {/* Bidding Form - Only for LIVE auctions or when countdown start reaches 0 */}
-              {(isLive || isCountdownStarted) && !isCountdownFinished ? (
-                <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
-                  <h3 className="text-white font-semibold mb-4 text-lg">
-                    Place Your Bid
-                  </h3>
-                  
-                  {/* Connection warning */}
-                  {!isConnected && !isReconnecting && (
-                    <div className="mb-4 p-3 bg-red-900/30 border border-red-700/50 rounded text-red-400 text-sm">
-                      Real-time connection lost. Bidding is temporarily unavailable.
-                    </div>
-                  )}
-                  
-                  {isReconnecting && (
-                    <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded text-yellow-400 text-sm">
-                      Connecting to real-time updates... Please wait.
-                    </div>
-                  )}
-
-                  <Space.Compact className="w-full">
-                    <Input
-                      type="number"
-                      placeholder={`Min: $${minimumBid.toFixed(2)}`}
-                      value={bidAmount}
-                      onChange={(e) => setBidAmount(e.target.value)}
-                      min={minimumBid}
-                      step={auction.minStep}
-                      disabled={isBidDisabled}
-                      className="bg-zinc-800 border-zinc-700 text-white"
-                    />
-                    <Tooltip
-                      title={
-                        !isAuthenticated
-                          ? "Sign in to place bids"
-                          : !isConnected
-                            ? "Waiting for real-time connection"
-                            : isReconnecting
-                              ? "Reconnecting..."
-                              : isCountdownFinished
-                                ? "Auction has ended"
-                                : "Place your bid"
-                      }
-                    >
-                      <Button
-                        type="primary"
-                        icon={<RiseOutlined />}
-                        onClick={handlePlaceBid}
-                        loading={bidLoading}
-                        disabled={isBidDisabled}
-                        style={{
-                          background: isBidDisabled
-                            ? "linear-gradient(135deg, #6B7280 0%, #4B5563 50%)"
-                            : "linear-gradient(135deg, #FFD700 0%, #FF8C00 50%)",
-                          border: "none",
-                          fontWeight: "bold",
-                          color: isBidDisabled ? "#9CA3AF" : "#000",
-                        }}
-                        className="flex items-center justify-center hover:opacity-90 hover:scale-105 transition-all duration-300"
-                      >
-                        Place Bid
-                      </Button>
-                    </Tooltip>
-                  </Space.Compact>
-                  {!isAuthenticated && (
-                    <p className="text-xs text-gray-400 mt-2">
-                      Sign in to place bids
-                    </p>
-                  )}
-                  {isCountdownFinished && (
-                    <p className="text-xs text-red-400 mt-2">
-                      Auction has ended - bidding is closed
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
-                  <p className="text-gray-400">
-                    {isScheduled && !isCountdownStarted
-                      ? "Bidding opens when auction goes live"
-                      : "This auction has ended"}
-                  </p>
-                </div>
-              )}
+              {/* Bidding Form - Sử dụng BiddingSection component */}
+              <BiddingSection
+                isLive={isLive}
+                isCountdownStarted={isCountdownStarted}
+                isCountdownFinished={isCountdownFinished}
+                isConnected={isConnected}
+                isReconnecting={isReconnecting}
+                isAuthenticated={isAuthenticated}
+                minimumBid={minimumBid}
+                minStep={auction.minStep}
+                isBidDisabled={isBidDisabled}
+                bidLoading={bidLoading}
+                onPlaceBid={handlePlaceBid}
+              />
 
               {/* Countdown Timer */}
               {shouldShowCountdown && (
@@ -526,9 +599,30 @@ export const AuctionDetailPage = () => {
                         <div className="text-gray-400 text-sm mb-3">
                           Highest Bidder
                         </div>
-                        <div className="font-semibold text-white">
-                          {auction.highestBidder.name}
-                        </div>
+                        {!isEnded ? (
+                          <div className="font-semibold text-white">
+                            {auction.highestBidder.name}
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-3">
+                            {auction.highestBidder?.avatarUrl && (
+                              <Image
+                                src={auction.highestBidder.avatarUrl}
+                                alt={auction.highestBidder.name}
+                                className="w-10 h-10 rounded-full"
+                                preview={false}
+                              />
+                            )}
+                            <div>
+                              <div className="font-medium text-white">
+                                {auction.highestBidder?.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {auction.highestBidder?.email}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </Col>
                   )}

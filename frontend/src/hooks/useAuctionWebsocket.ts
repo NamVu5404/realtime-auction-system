@@ -72,6 +72,7 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
 
           // Show visual alert for time extension
           notification.info({
+            key: `extend-${auctionId}`,
             message: 'Time Extended!',
             description: `Auction time extended due to new bid!`,
             duration: 3,
@@ -84,6 +85,7 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
 
         // Show global notification for new bid with Vietnamese message
         notification.success({
+          key: `bid-${auctionId}`,
           message: 'New Bid Placed',
           description: `${bidUpdate.highestBidderName} đã đặt giá $${bidUpdate.currentPrice.toFixed(2)}!`,
           duration: 3,
@@ -100,9 +102,9 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
    * Uses useMemo to prevent recreating client instance on every render
    */
   const client = useMemo(() => {
-    // Hard-coded WebSocket URL for consistency
-    // Matches backend configuration: http://localhost:8080/ws
-    const wsUrl = 'http://localhost:8080/ws';
+    // WebSocket URL. Prefer environment variable, fallback to backend path
+    // Backend uses context-path '/api/v1' so endpoint is /api/v1/ws
+    const wsUrl = (import.meta as any).env?.VITE_WS_URL || 'http://localhost:8080/api/v1/ws';
 
     return new Client({
       // Use SockJS factory for better browser compatibility

@@ -3,11 +3,7 @@ package com.NamVu.realtimeauctionsystem.service.impl;
 import com.NamVu.realtimeauctionsystem.dto.AuctionRedisData;
 import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
 import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
-import com.NamVu.realtimeauctionsystem.dto.CustomUserDetails;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.enums.UserStatus;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +13,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -75,11 +72,12 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
      */
     @Override
     public BidUpdateResult updateBidWithLock(Long auctionId, Long bidderId, BigDecimal newPrice) {
-        CustomUserDetails user = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (user.getStatus() == UserStatus.BLOCKED) {
-            throw new AppException(ErrorCode.USER_BLOCKED);
-        }
-        String bidderName = user.getName();
+        Jwt jwt = (Jwt) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        String bidderName = jwt.getClaim("name");
 
         String lockKey = LOCK_KEY_PREFIX + auctionId;
         RLock lock = redissonClient.getLock(lockKey);
