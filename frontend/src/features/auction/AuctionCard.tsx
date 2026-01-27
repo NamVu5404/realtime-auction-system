@@ -10,6 +10,7 @@ import {
   hasAuctionStarted 
 } from '../../utils/dateUtils';
 import Countdown from './Countdown';
+import { formatCurrency } from '../../utils/format';
 
 const DEFAULT_IMAGE =
   'https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg';
@@ -121,21 +122,21 @@ export const AuctionCard = ({ auction, onCountdownComplete }: AuctionCardProps) 
             <div>
               <div className="text-xs text-gray-400 mb-1">Current Price</div>
               <div className="text-2xl font-bold text-green-400">
-                ${auction.currentPrice.toFixed(2)}
+                {formatCurrency(auction.currentPrice)}
               </div>
             </div>
           ) : isEnded ? (
             <div>
               <div className="text-xs text-gray-400 mb-1">Final Price</div>
               <div className="text-2xl font-bold text-gray-300">
-                ${auction.currentPrice.toFixed(2)}
+                {formatCurrency(auction.currentPrice)}
               </div>
             </div>
           ) : (
             <div>
               <div className="text-xs text-gray-400 mb-1">Starting Price</div>
               <div className="text-2xl font-bold text-yellow-500">
-                ${auction.startPrice.toFixed(2)}
+                {formatCurrency(auction.startPrice)}
               </div>
             </div>
           )}

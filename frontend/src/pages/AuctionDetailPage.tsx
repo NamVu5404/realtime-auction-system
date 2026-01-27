@@ -34,6 +34,7 @@ import Countdown from "../features/auction/Countdown";
 import { useAuth } from "../hooks/useAuth";
 import { useAuctionWebsocket } from "../hooks/useAuctionWebsocket";
 import { formatAuctionTime, getTimeRemaining } from "../utils/dateUtils";
+import { formatCurrency } from "../utils/format";
 
 const DEFAULT_IMAGE =
   "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
@@ -537,7 +538,7 @@ export const AuctionDetailPage = () => {
                           : "text-gray-300"
                       }`}
                     >
-                      ${auction.currentPrice.toFixed(2)}
+                      {formatCurrency(auction.currentPrice)}
                     </div>
                   </div>
 
@@ -549,7 +550,7 @@ export const AuctionDetailPage = () => {
                           Starting Price
                         </div>
                         <div className="text-lg font-bold text-yellow-500">
-                          ${auction.startPrice.toFixed(2)}
+                          {formatCurrency(auction.startPrice)}
                         </div>
                       </div>
                     </Col>
@@ -559,7 +560,7 @@ export const AuctionDetailPage = () => {
                           Min Bid Step
                         </div>
                         <div className="text-lg font-bold text-blue-400">
-                          ${auction.minStep.toFixed(2)}
+                          {formatCurrency(auction.minStep)}
                         </div>
                       </div>
                     </Col>

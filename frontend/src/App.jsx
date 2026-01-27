@@ -6,6 +6,7 @@ import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import HomePage from './pages/HomePage';
 import AuctionDetailPage from './pages/AuctionDetailPage';
+import MyBidsPage from './pages/MyBidsPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import AdminDashboard from './pages/AdminDashboard';
 import NotFound from './pages/NotFound';
@@ -38,6 +39,14 @@ function App() {
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/auction/:id" element={<AuctionDetailPage />} />
+                <Route
+                  path="/my-bids"
+                  element={
+                    <ProtectedRoute>
+                      <MyBidsPage />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route
                   path="/admin"

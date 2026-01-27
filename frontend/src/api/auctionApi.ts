@@ -28,7 +28,8 @@ export const auctionApi = {
         {
           params: {
             status,
-            page,
+            // Send frontend page as-is (1-indexed) per latest change request
+            page: page,
             size,
           },
         }
