@@ -1,5 +1,6 @@
 import {
   DashboardOutlined,
+  HistoryOutlined,
   LogoutOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -40,6 +41,12 @@ export const Header = () => {
 
     ...(user?.role === "ADMIN" ? [{ type: "divider" as const }] : []),
 
+    {
+      key: "bid-history",
+      label: "My Bids",
+      icon: <HistoryOutlined />,
+      onClick: () => navigate("/my-bids"),
+    },
     {
       key: "logout",
       label: "Logout",

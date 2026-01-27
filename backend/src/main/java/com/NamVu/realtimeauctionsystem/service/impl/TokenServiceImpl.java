@@ -42,6 +42,7 @@ public class TokenServiceImpl implements TokenService {
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .issuer("NamVu.com")
                 .subject(user.getEmail())
+                .claim("uid", user.getId())
                 .claim("name", user.getName())
                 .claim("scope", user.getRole())
                 .issueTime(new Date())

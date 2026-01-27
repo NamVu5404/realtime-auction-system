@@ -26,7 +26,12 @@ import AuctionList from '../features/auction/AuctionList';
 export const HomePage = () => {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>('live');
-  const [page, setPage] = useState(1);
+  // Manage page per tab to preserve position when switching
+  const [pages, setPages] = useState<Record<string, number>>({
+    live: 1,
+    scheduled: 1,
+    ended: 1,
+  });
   const pageSize = 20;
 
   // Map tab keys to backend status parameters
@@ -37,18 +42,24 @@ export const HomePage = () => {
   };
 
   const currentStatus = statusMap[activeTab] || AuctionStatus.LIVE;
+  const currentPage = pages[activeTab] || 1;
 
   // Fetch auctions with React Query
   const { data, isLoading, error, refetch } = useAuctions(
     currentStatus,
-    page,
+    currentPage,
     pageSize
   );
 
   // Reset to page 1 when changing tabs
   const handleTabChange = (key: string) => {
     setActiveTab(key);
-    setPage(1);
+    // reset page for the newly selected tab to 1
+    setPages((prev) => ({ ...prev, [key]: 1 }));
+  };
+
+  const handlePageChange = (p: number) => {
+    setPages((prev) => ({ ...prev, [activeTab]: p }));
   };
 
   // WebSocket connection for real-time price updates
@@ -86,9 +97,13 @@ export const HomePage = () => {
         <Spin spinning={isLoading}>
           {!isLoading && data?.data && data.data.length > 0 ? (
             <>
-              <AuctionList 
-                auctions={data.data} 
+              <AuctionList
+                auctions={data.data}
                 onCountdownComplete={handleCountdownComplete}
+                currentPage={data.currentPage}
+                pageSize={data.pageSize}
+                totalElements={data.totalElements}
+                onPageChange={handlePageChange}
               />
               {/* Pagination would go here if implementing pagination UI */}
             </>
@@ -105,9 +120,13 @@ export const HomePage = () => {
         <Spin spinning={isLoading}>
           {!isLoading && data?.data && data.data.length > 0 ? (
             <>
-              <AuctionList 
+              <AuctionList
                 auctions={data.data}
                 onCountdownComplete={handleCountdownComplete}
+                currentPage={data.currentPage}
+                pageSize={data.pageSize}
+                totalElements={data.totalElements}
+                onPageChange={handlePageChange}
               />
               {/* Pagination would go here */}
             </>
@@ -124,9 +143,13 @@ export const HomePage = () => {
         <Spin spinning={isLoading}>
           {!isLoading && data?.data && data.data.length > 0 ? (
             <>
-              <AuctionList 
+              <AuctionList
                 auctions={data.data}
                 onCountdownComplete={handleCountdownComplete}
+                currentPage={data.currentPage}
+                pageSize={data.pageSize}
+                totalElements={data.totalElements}
+                onPageChange={handlePageChange}
               />
               {/* Pagination would go here */}
             </>

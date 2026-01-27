@@ -26,6 +26,15 @@ export enum UserRole {
 }
 
 /**
+ * Bid Status Enum - Derived from BidStatus.java
+ */
+export enum BidStatus {
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED',
+  FLAGGED = 'FLAGGED',
+}
+
+/**
  * User Response - Derived from UserResponse.java
  */
 export interface User {
@@ -139,4 +148,18 @@ export interface BidUpdateMessage {
   extended: boolean; // Whether this bid triggered time extension
   timestamp: string; // ISO 8601 UTC string
   newEndTime?: string; // Updated end time if extended
+}
+
+/**
+ * My Bid History Response - Derived from MyBidHistoryResponse.java
+ * All timestamps are ISO 8601 strings in UTC format from backend
+ */
+export interface MyBidHistoryResponse {
+  auctionId: number;
+  auctionTitle: string;
+  auctionStatus: AuctionStatus;
+  amount: number; // BigDecimal from Java
+  currentPrice: number; // BigDecimal from Java - auction's current/final price
+  status: BidStatus;
+  createdAt: string; // ISO 8601 UTC string - will be converted to local time in UI
 }
