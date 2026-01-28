@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Card, Empty } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/useAuthStore';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -15,8 +15,8 @@ export const AdminDashboard = () => {
   }, [user, navigate]);
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6 text-white">Admin Dashboard</h1>
+    <div>
+      <h1 className="text-2xl font-bold text-white mb-6">Admin Dashboard</h1>
       
       <Card>
         <Empty

@@ -40,7 +40,11 @@ export interface ExchangeTokenResponse {
 }
 
 export interface RefreshTokenRequest {
-  refreshToken: string;
+  token: string;
+}
+
+export interface LogoutRequest {
+  token: string;
 }
 
 export interface AuthState {

@@ -5,7 +5,7 @@ import { AuthState } from '../types';
 interface AuthStoreState extends AuthState {
   setTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: AuthState['user']) => void;
-  logout: () => void;
+  logout: (accessToken: string) => void;
 }
 
 export const useAuthStore = create<AuthStoreState>()(
@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthStoreState>()(
           isAuthenticated: !!user,
         }),
 
-      logout: () =>
+      logout: (accessToken: AuthState['accessToken']) =>
         set({
           accessToken: null,
           refreshToken: null,

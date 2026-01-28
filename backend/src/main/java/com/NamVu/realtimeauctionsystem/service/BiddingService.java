@@ -9,4 +9,6 @@ public interface BiddingService {
     void createRejectedBidRecord(BidPlacedEvent event);
 
     PageResponse<MyBidHistoryResponse> getMyBidHistory(Pageable pageable);
+
+    PageResponse<MyBidHistoryResponse> getBidHistoryForAdmin(Long userId, Pageable pageable);
 }

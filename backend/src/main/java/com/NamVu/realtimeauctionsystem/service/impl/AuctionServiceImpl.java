@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -67,6 +68,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
     public AuctionResponse createAuction(CreateAuctionRequest request) {
         Auction auction = auctionMapper.mapToEntity(request);
 

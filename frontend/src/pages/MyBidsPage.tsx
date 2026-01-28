@@ -1,11 +1,12 @@
 import { CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Empty, notification, Table } from "antd";
+import { Button, Empty, notification, Table, Tag } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import bidApi from "../api/bidApi";
 import {
   AuctionStatus,
+  BidStatus,
   MyBidHistoryResponse,
   PageResponse,
 } from "../api/types";
@@ -72,7 +73,7 @@ const MyBidsPage = () => {
       ),
     },
     {
-      title: "Auction Price",
+      title: "Current Price",
       key: "auctionPrice",
       render: (record: MyBidHistoryResponse) => {
         const isLive = record.auctionStatus === AuctionStatus.LIVE;
@@ -87,29 +88,16 @@ const MyBidsPage = () => {
       },
     },
     {
-      title: "Result",
-      key: "result",
-      render: (record: MyBidHistoryResponse) => {
-        if (record.auctionStatus !== AuctionStatus.ENDED)
-          return (
-            <div className="flex items-center gap-1">
-              <span className="text-blue-400">Live</span>
-            </div>
-          );
-        const isWinner = record.amount === record.currentPrice;
-        return (
-          <div className="flex items-center gap-1">
-            {isWinner ? (
-              <>
-                <span className="text-green-400">Won</span>
-              </>
-            ) : (
-              <>
-                <span className="text-red-400">Lost</span>
-              </>
-            )}
-          </div>
-        );
+      title: "Bid Status",
+      dataIndex: "status",
+      key: "bidStatus",
+      render: (status: BidStatus) => {
+        const colorMap: Record<BidStatus, string> = {
+          [BidStatus.ACCEPTED]: "green",
+          [BidStatus.REJECTED]: "red",
+          [BidStatus.FLAGGED]: "orange",
+        };
+        return <Tag color={colorMap[status]}>{status}</Tag>;
       },
     },
     {
@@ -121,10 +109,18 @@ const MyBidsPage = () => {
       ),
     },
     {
-      title: "Status",
+      title: "Auction Status",
       dataIndex: "auctionStatus",
       key: "auctionStatus",
-      render: (s: any) => <span className="text-gray-300">{s}</span>,
+      render: (status: AuctionStatus) => {
+        const colorMap: Partial<Record<AuctionStatus, string>> = {
+          [AuctionStatus.LIVE]: "blue",
+          [AuctionStatus.ENDED]: "white",
+        };
+        return (
+          <span style={{ color: colorMap[status] ?? "#fff" }}>{status}</span>
+        );
+      },
     },
   ];
 

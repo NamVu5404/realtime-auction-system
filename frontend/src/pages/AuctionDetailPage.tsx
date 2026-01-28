@@ -300,7 +300,7 @@ export const AuctionDetailPage = () => {
     isReconnecting ||
     isCountdownFinished ||
     !isAuthenticated ||
-    !isLive;
+    (!isLive && !isCountdownStarted);
 
   // Handle bid placement with improved error handling and state management
   const handlePlaceBid = async (amount: string) => {
@@ -368,16 +368,50 @@ export const AuctionDetailPage = () => {
   };
 
   // Handle countdown completion
-  const handleCountdownComplete = () => {
+  const handleCountdownComplete = async () => {
     console.log(`Countdown completed for auction ${auction.id}`);
 
     if (isLive) {
       // Countdown for end time → auction finished
       setIsCountdownFinished(true);
+      message.info("Auction has ended - bidding is closed");
     } else if (isScheduled) {
       // Countdown for start time → auction started
       setIsCountdownStarted(true);
-      // Invalidate queries to fetch updated LIVE status from backend
+
+      // Show notification that auction is live
+      message.success("Auction is now LIVE! Start bidding!");
+
+      try {
+        // Fetch updated auction data to sync status with backend
+        const updatedAuction = await auctionApi.getAuctionDetail(auction.id);
+        setAuction(updatedAuction);
+
+        // If backend still shows SCHEDULED, update locally to LIVE for better UX
+        if (updatedAuction.status === AuctionStatus.SCHEDULED) {
+          setAuction((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  status: AuctionStatus.LIVE,
+                }
+              : null,
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch updated auction:", error);
+        // Fallback: Update status locally even if fetch fails
+        setAuction((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: AuctionStatus.LIVE,
+              }
+            : null,
+        );
+      }
+
+      // Invalidate queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["auctions"] });
     }
   };

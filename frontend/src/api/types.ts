@@ -34,6 +34,16 @@ export enum BidStatus {
   FLAGGED = 'FLAGGED',
 }
 
+export enum UserActionType {
+  CREATED = 'CREATED',
+  UPDATED = 'UPDATED',
+  LOGIN = 'LOGIN',
+  LOGOUT = 'LOGOUT',
+  BLOCKED = 'BLOCKED',
+  UNBLOCKED = 'UNBLOCKED',
+  FRAUD = 'FRAUD',
+}
+
 /**
  * User Response - Derived from UserResponse.java
  */
@@ -43,6 +53,7 @@ export interface User {
   name: string;
   role: UserRole;
   avatarUrl?: string;
+  status?: 'ACTIVE' | 'BLOCKED';
 }
 
 /**
@@ -162,4 +173,15 @@ export interface MyBidHistoryResponse {
   currentPrice: number; // BigDecimal from Java - auction's current/final price
   status: BidStatus;
   createdAt: string; // ISO 8601 UTC string - will be converted to local time in UI
+}
+/**
+ * User Tracking Response - Account tracking/audit history
+ * Derived from UserTrackingResponse.java
+ * Details is a flexible Map that varies by action type
+ */
+export interface UserTrackingResponse {
+  id: number;
+  actionType: UserActionType;
+  details: Record<string, any>; // Flexible map from backend (fraudType, bidId, reason, by, etc.)
+  createdAt: string; // ISO 8601 UTC string
 }

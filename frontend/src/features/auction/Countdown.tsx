@@ -50,9 +50,11 @@ export const Countdown = ({ targetTime, onFinish, isLive = false }: CountdownPro
   // Show "Ended" tag when countdown completes
   if (isFinished) {
     return (
-      <Tag color="error" className="text-lg px-4 py-2">
-        Time Reached
-      </Tag>
+      <div className="text-center">
+        <Tag color="success" className="text-lg px-4 py-2 animate-pulse">
+          ✓ Now Live!
+        </Tag>
+      </div>
     );
   }
 

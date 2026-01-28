@@ -18,8 +18,8 @@ public class MyBidHistoryResponse {
     private Long auctionId;
     private String auctionTitle;
     private AuctionStatus auctionStatus;
-    private BigDecimal currentPrice;
-    private BigDecimal amount;
+    private BigDecimal currentPrice; // auction
+    private BigDecimal amount; // bidder
     private BidStatus status;
     private Instant createdAt;
 }

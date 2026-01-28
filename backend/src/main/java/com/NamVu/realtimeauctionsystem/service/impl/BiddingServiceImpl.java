@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -74,6 +75,16 @@ public class BiddingServiceImpl implements BiddingService {
 
         Long userId = jwt.getClaim("uid");
 
+        return getBidHistory(userId, pageable);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public PageResponse<MyBidHistoryResponse> getBidHistoryForAdmin(Long userId, Pageable pageable) {
+        return getBidHistory(userId, pageable);
+    }
+
+    private PageResponse<MyBidHistoryResponse> getBidHistory(Long userId, Pageable pageable) {
         Page<Bid> bidPage =  bidRepository.findByBidderIdOrderByCreatedAtDesc(userId, pageable);
 
         List<MyBidHistoryResponse> data = bidPage.stream()

@@ -55,13 +55,15 @@ export const useAuth = () => {
 
   const logout = useCallback(async () => {
     try {
-      await authApi.logout();
+      if (accessToken) {
+        await authApi.logout({ token: accessToken });
+      }
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
       logoutStore();
     }
-  }, [logoutStore]);
+  }, [logoutStore, accessToken]);
 
   return {
     accessToken,
