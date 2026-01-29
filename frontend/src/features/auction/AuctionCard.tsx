@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, Image, Tag, Empty } from 'antd';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Auction, AuctionStatus } from '../../api/types';
 import { 
   convertUTCToLocal, 
@@ -36,18 +36,19 @@ interface AuctionCardProps {
  * - onCountdownComplete: Triggered when countdown reaches 00:00:00
  *   This should refetch auctions to sync status changes
  */
-export const AuctionCard = ({ auction, onCountdownComplete }: AuctionCardProps) => {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [countdownStarted, setCountdownStarted] = useState(false);
+export const AuctionCard = memo(
+  ({ auction, onCountdownComplete }: AuctionCardProps) => {
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const [countdownStarted, setCountdownStarted] = useState(false);
 
-  const isLive = auction.status === AuctionStatus.LIVE;
-  const isScheduled = auction.status === AuctionStatus.SCHEDULED;
-  const isEnded = auction.status === AuctionStatus.ENDED;
+    const isLive = auction.status === AuctionStatus.LIVE;
+    const isScheduled = auction.status === AuctionStatus.SCHEDULED;
+    const isEnded = auction.status === AuctionStatus.ENDED;
 
-  // Convert UTC times to local timezone
-  const startTimeLocal = convertUTCToLocal(auction.startTime);
-  const endTimeLocal = convertUTCToLocal(auction.endTime);
+    // Convert UTC times to local timezone
+    const startTimeLocal = convertUTCToLocal(auction.startTime);
+    const endTimeLocal = convertUTCToLocal(auction.endTime);
 
   // Calculate time until start
   const timeTilStart = getTimeRemaining(auction.startTime);
@@ -179,6 +180,9 @@ export const AuctionCard = ({ auction, onCountdownComplete }: AuctionCardProps) 
       </div>
     </Card>
   );
-};
+  }
+);
+
+AuctionCard.displayName = 'AuctionCard';
 
 export default AuctionCard;

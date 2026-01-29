@@ -10,19 +10,19 @@ import java.time.Instant;
 import java.util.Map;
 
 @Entity
-@Table(name = "user_tracking")
+@Table(name = "user_audit")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserTracking {
+public class UserAudit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 

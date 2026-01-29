@@ -4,6 +4,8 @@ import com.NamVu.realtimeauctionsystem.dto.BidUpdateMessage;
 import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
 import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.response.AuctionResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.PlaceBidResponse;
@@ -23,7 +25,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -69,16 +74,120 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
-    public AuctionResponse createAuction(CreateAuctionRequest request) {
+    @Transactional
+    public AuctionResponse saveDraft(CreateAuctionRequest request) {
         Auction auction = auctionMapper.mapToEntity(request);
+        auction.setStatus(AuctionStatus.DRAFT);
 
-        auction.setStatus(AuctionStatus.SCHEDULED);
-
-        User seller = userRepository.findById(request.getSellerId())
+        Long sellerId = getCurrentUserId();
+        User seller = userRepository.findById(sellerId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         auction.setSeller(seller);
 
         auction = auctionRepository.save(auction);
+        return auctionMapper.mapToResponse(auction);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Transactional
+    public AuctionResponse scheduleAuction(CreateAuctionRequest request) {
+        Instant now = Instant.now();
+        Instant startTime = request.getStartTime();
+        Instant endTime = request.getEndTime();
+
+        if (startTime.isBefore(now.plusSeconds(30)) || endTime.isBefore(startTime)) {
+            throw new AppException(ErrorCode.START_END_TIME_INVALID);
+        }
+
+        Auction auction;
+
+        if (request.getId() != null) {
+            auction = auctionRepository.findById(request.getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+
+            if (auction.getStatus() != null && auction.getStatus() != AuctionStatus.DRAFT) {
+                throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+            }
+
+            auctionMapper.updateEntity(request, auction);
+        } else {
+            auction = auctionMapper.mapToEntity(request);
+        }
+
+        auction.setStatus(AuctionStatus.SCHEDULED);
+
+        if (auction.getSeller() == null) {
+            Long sellerId = getCurrentUserId();
+            User seller = userRepository.findById(sellerId)
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            auction.setSeller(seller);
+        }
+
+        auction = auctionRepository.save(auction);
+        return auctionMapper.mapToResponse(auction);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Transactional
+    public AuctionResponse updateDraftAuction(Long id, UpdateDraftAuctionRequest request) {
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+
+        if (auction.getStatus() != AuctionStatus.DRAFT) {
+            throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+        }
+
+        auctionMapper.updateEntity(request, auction);
+        auction = auctionRepository.save(auction);
+
+        return auctionMapper.mapToResponse(auction);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Transactional
+    public AuctionResponse updateScheduledAuction(Long id, UpdateScheduledAuctionRequest request) {
+        Instant now = Instant.now();
+        Instant startTime = request.getStartTime();
+        Instant endTime = request.getEndTime();
+
+        if (startTime.isBefore(now.plusMillis(1)) || endTime.isBefore(startTime)) {
+            throw new AppException(ErrorCode.START_END_TIME_INVALID);
+        }
+
+        Auction auction = auctionRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+
+        if (auction.getStatus() != AuctionStatus.SCHEDULED) {
+            throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+        }
+
+        auctionMapper.updateEntity(request, auction);
+        auction = auctionRepository.save(auction);
+
+        return auctionMapper.mapToResponse(auction);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    @Transactional
+    public AuctionResponse cancelAuction(Long id) {
+        Auction auction = auctionRepository.findByIdWithLock(id)
+                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+
+        if (auction.getStatus() != AuctionStatus.DRAFT && auction.getStatus() != AuctionStatus.SCHEDULED) {
+            throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+        }
+
+        if (auction.getStatus() == AuctionStatus.SCHEDULED && auction.getStartTime().isBefore(Instant.now())) {
+            throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+        }
+
+        auction.setStatus(AuctionStatus.CANCELLED);
+        auction = auctionRepository.save(auction);
+
         return auctionMapper.mapToResponse(auction);
     }
 
@@ -113,5 +222,34 @@ public class AuctionServiceImpl implements AuctionService {
                 .timestamp(result.getTimestamp())
                 .extended(result.isExtended())
                 .build();
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public PageResponse<AuctionResponse> filterAuction(String keyword, Instant startTime, Instant endTime,
+                                                       AuctionStatus status, Pageable pageable) {
+        String statusStr = (status == null) ? AuctionStatus.ALL.name() : status.name();
+        Page<Auction> auctionPage = auctionRepository.filterAuctions(keyword, startTime, endTime, status, statusStr, pageable);
+
+        List<AuctionResponse> responses = auctionPage.getContent().stream()
+                .map(auctionMapper::mapToResponse)
+                .toList();
+
+        return PageResponse.<AuctionResponse>builder()
+                .currentPage(pageable.getPageNumber() + 1)
+                .pageSize(pageable.getPageSize())
+                .totalPage(auctionPage.getTotalPages())
+                .totalElements(auctionPage.getTotalElements())
+                .data(responses)
+                .build();
+    }
+
+    private Long getCurrentUserId() {
+        Jwt jwt = (Jwt) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        return jwt.getClaim("uid");
     }
 }

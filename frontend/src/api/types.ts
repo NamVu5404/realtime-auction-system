@@ -10,6 +10,7 @@
  * ENDED = ENDED
  */
 export enum AuctionStatus {
+  ALL = 'ALL',
   DRAFT = 'DRAFT',
   SCHEDULED = 'SCHEDULED',
   LIVE = 'LIVE',
@@ -175,11 +176,11 @@ export interface MyBidHistoryResponse {
   createdAt: string; // ISO 8601 UTC string - will be converted to local time in UI
 }
 /**
- * User Tracking Response - Account tracking/audit history
- * Derived from UserTrackingResponse.java
+ * User Audit Response - Account audit history
+ * Derived from UserAuditResponse.java
  * Details is a flexible Map that varies by action type
  */
-export interface UserTrackingResponse {
+export interface UserAuditResponse {
   id: number;
   actionType: UserActionType;
   details: Record<string, any>; // Flexible map from backend (fraudType, bidId, reason, by, etc.)

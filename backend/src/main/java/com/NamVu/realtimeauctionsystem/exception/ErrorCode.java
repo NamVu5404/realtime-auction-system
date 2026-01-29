@@ -25,6 +25,9 @@ public enum ErrorCode {
     USER_BLOCKED(1014, "Tài khoản đã bị cấm", HttpStatus.BAD_REQUEST),
     USER_ACTIVE(1015, "Tài khoản đang hoạt động", HttpStatus.BAD_REQUEST),
     TOKEN_INVALID(1016, "Token invalid", HttpStatus.UNAUTHORIZED),
+    AUCTION_STATUS_INVALID(1017, "Auction status invalid", HttpStatus.BAD_REQUEST),
+    INVALID_INPUT(1018, "Input invalid", HttpStatus.BAD_REQUEST),
+    START_END_TIME_INVALID(1019, "Start time or end time invalid", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

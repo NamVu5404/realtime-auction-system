@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   Drawer,
   Tabs,
@@ -11,12 +11,13 @@ import {
   Empty,
   Descriptions,
   Image as AntImage,
-} from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
-import { Auction, AuctionStatus, BidUpdateMessage } from '../../api/types';
-import { formatCurrency, formatDateTime } from '../../utils/format';
-import { useAuctionWebsocket } from '../../hooks/useAuctionWebsocket';
-import dayjs from 'dayjs';
+} from "antd";
+import { CloseOutlined } from "@ant-design/icons";
+import { Auction, AuctionStatus, BidUpdateMessage } from "../../api/types";
+import { formatCurrency, formatDateTime } from "../../utils/format";
+import { useAuctionWebsocket } from "../../hooks/useAuctionWebsocket";
+import { getStatusColor } from "../../utils/statusUtils";
+import dayjs from "dayjs";
 
 interface AuctionDetailDrawerProps {
   auction?: Auction;
@@ -39,28 +40,32 @@ export const AuctionDetailDrawer = ({
 }: AuctionDetailDrawerProps) => {
   const [bidLogs, setBidLogs] = useState<BidLog[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const websocketRef = useRef<any>(null);
 
-  // Only initialize WebSocket if auction is LIVE and drawer is visible
-  const shouldConnect = visible && auction?.status === AuctionStatus.LIVE;
+  // ✅ FIX: Stabilize auctionId with useMemo
+  // Only change when actual ID value or connection status changes
+  const stableAuctionId = useMemo(
+    () =>
+      visible && auction?.status === AuctionStatus.LIVE ? auction?.id || 0 : 0,
+    [visible, auction?.id, auction?.status],
+  );
 
-  // Call the hook at the top level (Rules of Hooks)
+  // ✅ FIX: Stabilize callback so hook doesn't recreate on every render
+  const onBidUpdate = useCallback((message: BidUpdateMessage) => {
+    const newBid: BidLog = {
+      id: `${message.highestBidderId}-${Date.now()}`,
+      bidderName: message.highestBidderName || "Anonymous Bidder",
+      bidderAvatar: undefined,
+      amount: message.currentPrice,
+      timestamp: message.timestamp,
+    };
+    setBidLogs((prev) => [newBid, ...prev]);
+  }, []);
+
   const { isConnected } = useAuctionWebsocket({
-    auctionId: auction?.id || 0,
-    onBidUpdate: (message: BidUpdateMessage) => {
-      // Only process if drawer is visible and auction is LIVE
-      if (shouldConnect) {
-        const newBid: BidLog = {
-          id: `${message.highestBidderId}-${Date.now()}`,
-          bidderName: message.highestBidderName || 'Anonymous Bidder',
-          bidderAvatar: undefined,
-          amount: message.currentPrice,
-          timestamp: message.timestamp,
-        };
-        setBidLogs(prev => [newBid, ...prev]);
-      }
-    },
+    auctionId: stableAuctionId,
+    onBidUpdate,
   });
 
   // Reset bid logs when drawer closes or auction changes
@@ -76,22 +81,22 @@ export const AuctionDetailDrawer = ({
         const startPrice = auction.startPrice || 0;
         setBidLogs([
           {
-            id: '1',
-            bidderName: 'Bidder A',
+            id: "1",
+            bidderName: "Bidder A",
             amount: auction.currentPrice,
-            timestamp: dayjs().subtract(2, 'minutes').toISOString(),
+            timestamp: dayjs().subtract(2, "minutes").toISOString(),
           },
           {
-            id: '2',
-            bidderName: 'Bidder B',
+            id: "2",
+            bidderName: "Bidder B",
             amount: startPrice + 5000,
-            timestamp: dayjs().subtract(8, 'minutes').toISOString(),
+            timestamp: dayjs().subtract(8, "minutes").toISOString(),
           },
           {
-            id: '3',
-            bidderName: 'Bidder C',
+            id: "3",
+            bidderName: "Bidder C",
             amount: startPrice + 2000,
-            timestamp: dayjs().subtract(15, 'minutes').toISOString(),
+            timestamp: dayjs().subtract(15, "minutes").toISOString(),
           },
         ]);
         setIsLoadingLogs(false);
@@ -101,32 +106,36 @@ export const AuctionDetailDrawer = ({
 
   const bidColumns = [
     {
-      title: 'Time',
-      dataIndex: 'timestamp',
-      key: 'timestamp',
+      title: "Time",
+      dataIndex: "timestamp",
+      key: "timestamp",
       render: (timestamp: string) => formatDateTime(timestamp),
-      width: '30%',
+      width: "30%",
     },
     {
-      title: 'Bidder',
-      dataIndex: 'bidderName',
-      key: 'bidderName',
+      title: "Bidder",
+      dataIndex: "bidderName",
+      key: "bidderName",
       render: (name: string, record: BidLog) => (
         <Space>
-          {record.bidderAvatar && <Avatar src={record.bidderAvatar} size="small" />}
+          {record.bidderAvatar && (
+            <Avatar src={record.bidderAvatar} size="small" />
+          )}
           <span className="text-white">{name}</span>
         </Space>
       ),
-      width: '40%',
+      width: "40%",
     },
     {
-      title: 'Amount',
-      dataIndex: 'amount',
-      key: 'amount',
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
       render: (amount: number) => (
-        <span className="text-green-400 font-semibold">{formatCurrency(amount)}</span>
+        <span className="text-green-400 font-semibold">
+          {formatCurrency(amount)}
+        </span>
       ),
-      width: '30%',
+      width: "30%",
     },
   ];
 
@@ -149,16 +158,21 @@ export const AuctionDetailDrawer = ({
       }
       onClose={onClose}
       open={visible}
-      width={720}
-      bodyStyle={{ backgroundColor: '#1a1a1a', padding: '24px' }}
+      size={720}
+      styles={{
+        body: {
+          backgroundColor: "#1a1a1a",
+          padding: "24px",
+        },
+      }}
     >
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
         items={[
           {
-            key: 'overview',
-            label: 'Overview',
+            key: "overview",
+            label: "Overview",
             children: (
               <div className="space-y-6">
                 {/* Gallery */}
@@ -167,7 +181,11 @@ export const AuctionDetailDrawer = ({
                     <AntImage
                       src={auction.image}
                       alt={auction.title}
-                      style={{ maxHeight: '300px', width: '100%', objectFit: 'cover' }}
+                      style={{
+                        maxHeight: "300px",
+                        width: "100%",
+                        objectFit: "cover",
+                      }}
                     />
                   </div>
                 )}
@@ -177,23 +195,13 @@ export const AuctionDetailDrawer = ({
                   column={1}
                   size="small"
                   className="bg-zinc-900 rounded"
-                  labelStyle={{ color: '#9ca3af', fontWeight: 600 }}
-                  contentStyle={{ color: '#fff' }}
+                  styles={{
+                    label: { color: "#9ca3af", fontWeight: 600 },
+                    content: { color: "#fff" },
+                  }}
                 >
                   <Descriptions.Item label="Status">
-                    <Tag
-                      color={
-                        auction.status === AuctionStatus.LIVE
-                          ? 'green'
-                          : auction.status === AuctionStatus.SCHEDULED
-                          ? 'blue'
-                          : auction.status === AuctionStatus.DRAFT
-                          ? 'orange'
-                          : auction.status === AuctionStatus.ENDED
-                          ? 'red'
-                          : 'default'
-                      }
-                    >
+                    <Tag color={getStatusColor(auction.status)}>
                       {auction.status}
                     </Tag>
                   </Descriptions.Item>
@@ -203,7 +211,9 @@ export const AuctionDetailDrawer = ({
                       {auction.seller?.avatarUrl && (
                         <Avatar src={auction.seller.avatarUrl} />
                       )}
-                      <span className="text-white">{auction.seller?.name || 'Unknown'}</span>
+                      <span className="text-white">
+                        {auction.seller?.name || "Unknown"}
+                      </span>
                     </Space>
                   </Descriptions.Item>
 
@@ -246,11 +256,13 @@ export const AuctionDetailDrawer = ({
                       <Space>
                         <div
                           className={`w-3 h-3 rounded-full ${
-                            isConnected ? 'bg-green-500' : 'bg-red-500'
+                            isConnected ? "bg-green-500" : "bg-red-500"
                           }`}
                         />
                         <span className="text-sm">
-                          {isConnected ? 'Connected (Live Updates)' : 'Connecting...'}
+                          {isConnected
+                            ? "Connected (Live Updates)"
+                            : "Connecting..."}
                         </span>
                       </Space>
                     </Descriptions.Item>
@@ -260,14 +272,14 @@ export const AuctionDetailDrawer = ({
             ),
           },
           {
-            key: 'logs',
-            label: 'Bid Logs',
+            key: "logs",
+            label: "Bid Logs",
             children: (
               <div className="space-y-4">
                 {auction.status === AuctionStatus.LIVE && (
                   <div className="bg-blue-900 bg-opacity-20 border border-blue-500 rounded p-3">
                     <p className="text-sm text-blue-300">
-                      🔄 Live bidding in progress. New bids appear in real-time.
+                      Live bidding in progress. New bids appear in real-time.
                     </p>
                   </div>
                 )}

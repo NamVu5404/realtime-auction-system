@@ -5,7 +5,7 @@ import com.NamVu.realtimeauctionsystem.dto.response.*;
 import com.NamVu.realtimeauctionsystem.enums.Role;
 import com.NamVu.realtimeauctionsystem.enums.UserStatus;
 import com.NamVu.realtimeauctionsystem.service.UserService;
-import com.NamVu.realtimeauctionsystem.service.UserTrackingService;
+import com.NamVu.realtimeauctionsystem.service.UserAuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    private final UserTrackingService trackingService;
+    private final UserAuditService auditService;
 
     @GetMapping
     public ApiResponse<PageResponse<ManagerUserResponse>> getUsers(
@@ -48,16 +48,16 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("/{userId}/tracking")
-    public ApiResponse<PageResponse<UserTrackingResponse>> getTrackingUser(
+    @GetMapping("/{userId}/audit")
+    public ApiResponse<PageResponse<UserAuditResponse>> getUserAudit(
             @PathVariable Long userId,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        return ApiResponse.<PageResponse<UserTrackingResponse>>builder()
-                .result(trackingService.getTrackingUser(userId, pageable))
+        return ApiResponse.<PageResponse<UserAuditResponse>>builder()
+                .result(auditService.getUserAudit(userId, pageable))
                 .build();
     }
 }

@@ -34,13 +34,13 @@ public class Auction {
     @Column(columnDefinition = "TEXT")
     private String image;
 
-    @Column(nullable = false, precision = 15, scale = 2)
+    @Column(precision = 15, scale = 2)
     private BigDecimal startPrice;
 
-    @Column(nullable = false, precision = 15, scale = 2)
+    @Column(precision = 15, scale = 2)
     private BigDecimal currentPrice;
 
-    @Column(nullable = false, precision = 15, scale = 2)
+    @Column(precision = 15, scale = 2)
     private BigDecimal minStep;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -55,16 +55,18 @@ public class Auction {
     @Column(nullable = false)
     private AuctionStatus status;
 
-    @Column(name = "start_time", nullable = false)
+    @Column(name = "start_time")
     private Instant startTime;
 
-    @Column(name = "end_time", nullable = false)
+    @Column(name = "end_time")
     private Instant endTime;
 
     @Column(name = "anti_snipe_seconds")
+    @Builder.Default
     private Integer antiSnipeSeconds = 60; // X giây
 
     @Column(name = "extension_seconds")
+    @Builder.Default
     private Integer extensionSeconds = 30; // Y giây
 
     @Version

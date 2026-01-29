@@ -2,20 +2,20 @@ package com.NamVu.realtimeauctionsystem.service.impl;
 
 import com.NamVu.realtimeauctionsystem.dto.request.BlockUserRequest;
 import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.UserTrackingResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.UserAuditResponse;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 import com.NamVu.realtimeauctionsystem.entity.Bid;
 import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.entity.UserTracking;
+import com.NamVu.realtimeauctionsystem.entity.UserAudit;
 import com.NamVu.realtimeauctionsystem.enums.FraudType;
 import com.NamVu.realtimeauctionsystem.enums.UserActionType;
 import com.NamVu.realtimeauctionsystem.enums.UserStatus;
 import com.NamVu.realtimeauctionsystem.exception.AppException;
 import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.mapper.UserTrackingMapper;
+import com.NamVu.realtimeauctionsystem.mapper.UserAuditMapper;
+import com.NamVu.realtimeauctionsystem.repository.UserAuditRepository;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
-import com.NamVu.realtimeauctionsystem.repository.UserTrackingRepository;
-import com.NamVu.realtimeauctionsystem.service.UserTrackingService;
+import com.NamVu.realtimeauctionsystem.service.UserAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,14 +32,14 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UserTrackingImpl implements UserTrackingService {
+public class UserAuditImpl implements UserAuditService {
 
-    private final UserTrackingRepository trackingRepository;
+    private final UserAuditRepository auditRepository;
     private final UserRepository userRepository;
-    private final UserTrackingMapper mapper;
+    private final UserAuditMapper auditMapper;
 
     @Override
-    public void blockTracking(Long userId, BlockUserRequest request) {
+    public void blockAudit(Long userId, BlockUserRequest request) {
         Jwt jwt = (Jwt) SecurityContextHolder
                 .getContext()
                 .getAuthentication()
@@ -55,7 +55,7 @@ public class UserTrackingImpl implements UserTrackingService {
         details.put("by", by);
         details.put("reason", request.getReason());
 
-        trackingRepository.save(UserTracking.builder()
+        auditRepository.save(UserAudit.builder()
                 .user(user)
                 .actionType(user.getStatus() == UserStatus.BLOCKED
                         ? UserActionType.BLOCKED
@@ -65,7 +65,7 @@ public class UserTrackingImpl implements UserTrackingService {
     }
 
     @Override
-    public void fraudTracking(Bid bid, Auction auction, FraudType type, String reason) {
+    public void fraudAudit(Bid bid, Auction auction, FraudType type, String reason) {
         Map<String, Object> details = new HashMap<>();
         details.put("user", bid.getBidder().getEmail());
         details.put("bidId", bid.getId());
@@ -73,7 +73,7 @@ public class UserTrackingImpl implements UserTrackingService {
         details.put("fraudType", type);
         details.put("reason", reason);
 
-        trackingRepository.save(UserTracking.builder()
+        auditRepository.save(UserAudit.builder()
                 .user(bid.getBidder())
                 .actionType(UserActionType.FRAUD)
                 .details(details)
@@ -82,14 +82,14 @@ public class UserTrackingImpl implements UserTrackingService {
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
-    public PageResponse<UserTrackingResponse> getTrackingUser(Long userId, Pageable pageable) {
-        Page<UserTracking> userTrackingPage = trackingRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
+    public PageResponse<UserAuditResponse> getUserAudit(Long userId, Pageable pageable) {
+        Page<UserAudit> userTrackingPage = auditRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
 
-        List<UserTrackingResponse> data = userTrackingPage.stream()
-                .map(mapper::mapToResponse)
+        List<UserAuditResponse> data = userTrackingPage.stream()
+                .map(auditMapper::mapToResponse)
                 .toList();
 
-        return PageResponse.<UserTrackingResponse>builder()
+        return PageResponse.<UserAuditResponse>builder()
                 .data(data)
                 .currentPage(pageable.getPageNumber() + 1)
                 .pageSize(pageable.getPageSize())

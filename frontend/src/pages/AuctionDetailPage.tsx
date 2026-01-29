@@ -20,7 +20,7 @@ import {
   notification,
 } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, memo } from "react";
+import { useEffect, useState, memo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { auctionApi } from "../api/auctionApi";
 import {
@@ -196,48 +196,47 @@ export const AuctionDetailPage = () => {
 
   const auctionId = id ? parseInt(id, 10) : null;
 
+  // ✅ FIX: Stabilize callbacks to prevent unnecessary WebSocket reconnections
+  const onBidUpdate = useCallback((message: BidUpdateMessage) => {
+    setAuction((prev) =>
+      prev && prev.id === message.auctionId
+        ? {
+            ...prev,
+            currentPrice: message.currentPrice,
+            highestBidder: {
+              id: message.highestBidderId,
+              name: message.highestBidderName,
+              email: "",
+              role: UserRole.USER,
+            },
+          }
+        : prev,
+    );
+  }, []);
+
+  const onTimeExtended = useCallback((newEndTime: string) => {
+    setHasTimeExtension(true);
+    setAuction((prev) =>
+      prev ? { ...prev, endTime: newEndTime } : null,
+    );
+    setTimeout(() => setHasTimeExtension(false), 3000);
+  }, []);
+
+  const onConnect = useCallback(() => {
+    console.log("Auction WebSocket connected");
+  }, []);
+
+  const onDisconnect = useCallback(() => {
+    console.log("Auction WebSocket disconnected");
+  }, []);
+
   // Real-time WebSocket updates with reconnection and time extension handling
   const { isConnected, isReconnecting } = useAuctionWebsocket({
     auctionId: auctionId || 0,
-    onBidUpdate: (message: BidUpdateMessage) => {
-      // Update local auction state with latest bid info
-      if (auction?.id === message.auctionId) {
-        setAuction((prev) =>
-          prev
-            ? {
-                ...prev,
-                currentPrice: message.currentPrice,
-                highestBidder: {
-                  id: message.highestBidderId,
-                  name: message.highestBidderName,
-                  email: "",
-                  role: UserRole.USER,
-                },
-              }
-            : null,
-        );
-      }
-    },
-    onTimeExtended: (newEndTime: string) => {
-      // Update endTime state when time is extended
-      setHasTimeExtension(true);
-      setAuction((prev) =>
-        prev
-          ? {
-              ...prev,
-              endTime: newEndTime,
-            }
-          : null,
-      );
-      // Reset extension flag after animation
-      setTimeout(() => setHasTimeExtension(false), 3000);
-    },
-    onConnect: () => {
-      console.log("Auction WebSocket connected");
-    },
-    onDisconnect: () => {
-      console.log("Auction WebSocket disconnected");
-    },
+    onBidUpdate,
+    onTimeExtended,
+    onConnect,
+    onDisconnect,
   });
 
   // Fetch auction details on mount

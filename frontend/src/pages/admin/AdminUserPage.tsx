@@ -55,8 +55,8 @@ const AdminUserPage = () => {
   const [unblockReason, setUnblockReason] = useState("");
   const queryClient = useQueryClient();
 
-  // Debounce the keyword input (500ms delay)
-  const debouncedKeyword = useDebounce(keyword, 500);
+  // Debounce the keyword input (300ms delay)
+  const debouncedKeyword = useDebounce(keyword, 300);
 
   const { data, isLoading } = useQuery<PageResponse<User>>({
     queryKey: ["admin-users", page, debouncedKeyword, role, status],
@@ -188,9 +188,9 @@ const AdminUserPage = () => {
                   }),
               },
               {
-                key: "account-tracking",
+                key: "user-audit",
                 icon: <EyeOutlined />,
-                label: "View Account Tracking",
+                label: "View User Audit",
                 onClick: () => {
                   setSelectedUser(record);
                   setTrackingPage(1);
@@ -285,7 +285,7 @@ const AdminUserPage = () => {
       key: "auctionStatus",
       render: (status: AuctionStatus) => {
         const colorMap: Partial<Record<AuctionStatus, string>> = {
-          [AuctionStatus.LIVE]: "blue",
+          [AuctionStatus.LIVE]: "green",
           [AuctionStatus.ENDED]: "white",
         };
         return (
@@ -384,8 +384,8 @@ const AdminUserPage = () => {
           historyDrawer.type === "bid"
             ? "Bid History"
             : historyDrawer.type === "tracking"
-              ? `Account Tracking: ${selectedUser?.email}`
-              : "Account Tracking"
+              ? `User Audit: ${selectedUser?.email}`
+              : "User Audit"
         }
         open={historyDrawer.visible && historyDrawer.type !== "tracking"}
         onClose={() => {
@@ -461,17 +461,6 @@ const AdminUserPage = () => {
           },
         }}
         styles={{
-          mask: { backgroundColor: "rgba(0, 0, 0, 0.75)" },
-          // content: { backgroundColor: "#181818" },
-          header: {
-            backgroundColor: "#181818",
-            borderBottom: "1px solid #404040",
-          },
-          body: { backgroundColor: "#181818" },
-          footer: {
-            backgroundColor: "#181818",
-            borderTop: "1px solid #404040",
-          },
           title: { color: "#ffffff" },
         }}
       >
@@ -481,7 +470,6 @@ const AdminUserPage = () => {
               display: "block",
               marginBottom: 8,
               fontWeight: 500,
-              color: "#e0e0e0",
             }}
           >
             Reason for blocking:
@@ -523,17 +511,6 @@ const AdminUserPage = () => {
           },
         }}
         styles={{
-          mask: { backgroundColor: "rgba(0, 0, 0, 0.75)" },
-          // content: { backgroundColor: "#181818" },
-          header: {
-            backgroundColor: "#181818",
-            borderBottom: "1px solid #404040",
-          },
-          body: { backgroundColor: "#181818" },
-          footer: {
-            backgroundColor: "#181818",
-            borderTop: "1px solid #404040",
-          },
           title: { color: "#ffffff" },
         }}
       >

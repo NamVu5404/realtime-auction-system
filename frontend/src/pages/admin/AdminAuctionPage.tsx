@@ -1,35 +1,38 @@
-import { useState } from "react";
 import {
-  Table,
-  Input,
-  Tabs,
-  Button,
-  Space,
-  Tag,
-  Modal,
-  Form,
-  DatePicker,
-  Upload,
-  message,
-  Image,
-  Dropdown,
-} from "antd";
-import {
-  SearchOutlined,
-  PlusOutlined,
-  EyeOutlined,
-  StopOutlined,
-  UploadOutlined,
   DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
   MoreOutlined,
+  PlusOutlined,
+  SearchOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Auction, AuctionStatus, PageResponse } from "../../api/types";
-import adminApi from "../../api/adminApi";
-import { formatCurrency, formatDateTime } from "../../utils/format";
-import { useDebounce } from "../../hooks/useDebounce";
-import AuctionDetailDrawer from "../../components/admin/AuctionDetailDrawer";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Button,
+  DatePicker,
+  Dropdown,
+  Form,
+  Image,
+  Input,
+  Modal,
+  Space,
+  Table,
+  Tabs,
+  Tag,
+  message,
+} from "antd";
 import dayjs from "dayjs";
+import { useEffect, useState } from "react";
+import adminApi from "../../api/adminApi";
+import { Auction, AuctionStatus, PageResponse } from "../../api/types";
+import AuctionDetailDrawer from "../../components/admin/AuctionDetailDrawer";
+import CancelAuctionModal from "../../components/admin/CancelAuctionModal";
+import AuctionForm from "../../features/auction/AuctionForm";
+import { useDebounce } from "../../hooks/useDebounce";
+import { convertUTCToLocal } from "../../utils/dateUtils";
+import { formatDateTime } from "../../utils/format";
+import { getStatusColor } from "../../utils/statusUtils";
 
 const DEFAULT_IMAGE =
   "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
@@ -46,18 +49,28 @@ const AdminAuctionPage = () => {
     auction?: Auction;
   }>({ visible: false });
   const [createModal, setCreateModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState("");
+  const [editModal, setEditModal] = useState<{
+    visible: boolean;
+    auction?: Auction;
+  }>({ visible: false });
+  const [cancelModal, setCancelModal] = useState<{
+    visible: boolean;
+    auctionId?: number;
+    auctionTitle?: string;
+  }>({ visible: false });
+  const [liveAuctions, setLiveAuctions] = useState<Set<number>>(new Set());
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
   const queryClient = useQueryClient();
 
-  // Debounce the keyword input (500ms delay)
-  const debouncedKeyword = useDebounce(keyword, 500);
+  // Debounce the keyword input (300ms delay)
+  const debouncedKeyword = useDebounce(keyword, 300);
 
   // Manual trigger for search - initial query with LIVE status
   const { data, isLoading, refetch } = useQuery<PageResponse<Auction>>({
     queryKey: ["admin-auctions", page, debouncedKeyword, status, dateRange],
     queryFn: () =>
-      adminApi.getAuctions(
+      adminApi.filterAuctions(
         page,
         20,
         debouncedKeyword,
@@ -68,8 +81,32 @@ const AdminAuctionPage = () => {
     enabled: true,
   });
 
+  // 1-second interval check: Disable Edit/Cancel if now() >= startTime
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = dayjs();
+      const updated = new Set<number>();
+
+      if (data?.data) {
+        data.data.forEach((auction) => {
+          if (auction.status === AuctionStatus.SCHEDULED) {
+            const startTimeLocal = convertUTCToLocal(auction.startTime);
+            // If current time >= startTime, mark as LIVE (auction has started)
+            if (now.isAfter(startTimeLocal) || now.isSame(startTimeLocal)) {
+              updated.add(auction.id);
+            }
+          }
+        });
+      }
+
+      setLiveAuctions(updated);
+    }, 1000); // Check every 1 second
+
+    return () => clearInterval(interval);
+  }, [data?.data]);
+
   const createMutation = useMutation({
-    mutationFn: adminApi.createAuction,
+    mutationFn: adminApi.scheduleAuction,
     onSuccess: () => {
       message.success("Auction created successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
@@ -80,11 +117,31 @@ const AdminAuctionPage = () => {
     onError: () => message.error("Failed to create auction"),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      if (editModal.auction?.status === AuctionStatus.DRAFT) {
+        return adminApi.updateDraftAuction(id, data);
+      } else if (editModal.auction?.status === AuctionStatus.SCHEDULED) {
+        return adminApi.updateScheduledAuction(id, data);
+      }
+      throw new Error("Unknown auction status");
+    },
+    onSuccess: () => {
+      message.success("Auction updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
+      setEditModal({ visible: false });
+      editForm.resetFields();
+      refetch();
+    },
+    onError: () => message.error("Failed to update auction"),
+  });
+
   const cancelMutation = useMutation({
     mutationFn: adminApi.cancelAuction,
     onSuccess: () => {
       message.success("Auction cancelled successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
+      setCancelModal({ visible: false });
       refetch();
     },
     onError: () => message.error("Failed to cancel auction"),
@@ -103,72 +160,36 @@ const AdminAuctionPage = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
   };
 
-  const handleCreate = (values: any) => {
-    const formData = new FormData();
-
-    // Convert DatePicker values to ISO strings with minute precision
-    let startTimeStr = "";
-    let endTimeStr = "";
-
-    if (values.startTime) {
-      startTimeStr = values.startTime.toISOString();
-    }
-    if (values.endTime) {
-      endTimeStr = values.endTime.toISOString();
-    }
-
-    Object.keys(values).forEach((key) => {
-      if (key === "image" && values[key]?.[0]) {
-        formData.append(key, values[key][0].originFileObj);
-      } else if (key === "startTime") {
-        formData.append(key, startTimeStr);
-      } else if (key === "endTime") {
-        formData.append(key, endTimeStr);
-      } else {
-        formData.append(key, values[key]);
-      }
-    });
-    createMutation.mutate(formData);
+  const handleCreateSuccess = () => {
+    setCreateModal(false);
+    form.resetFields();
+    refetch();
   };
 
-  const handleCancel = (auctionId: number) => {
-    Modal.confirm({
-      title: "Cancel Auction",
-      content: (
-        <Form layout="vertical">
-          <Form.Item label="Cancellation Reason (Optional)">
-            <Input.TextArea
-              rows={3}
-              placeholder="Enter reason for cancellation..."
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-            />
-          </Form.Item>
-        </Form>
-      ),
-      onOk: () => {
-        cancelMutation.mutate(auctionId);
-        setCancelReason("");
-      },
-      onCancel: () => setCancelReason(""),
-    });
+  const handleEditSuccess = () => {
+    setEditModal({ visible: false });
+    editForm.resetFields();
+    refetch();
   };
 
-  const getStatusColor = (status: AuctionStatus): string => {
-    switch (status) {
-      case AuctionStatus.LIVE:
-        return "green";
-      case AuctionStatus.SCHEDULED:
-        return "blue";
-      case AuctionStatus.DRAFT:
-        return "orange";
-      case AuctionStatus.ENDED:
-        return "red";
-      case AuctionStatus.CANCELLED:
-        return "default";
-      default:
-        return "default";
+  const handleCancelClick = (auction: Auction) => {
+    // Check if auction is still cancellable (not already live/ended)
+    const now = dayjs();
+    const startTimeLocal = convertUTCToLocal(auction.startTime);
+
+    if (
+      auction.status === AuctionStatus.SCHEDULED &&
+      now.isAfter(startTimeLocal)
+    ) {
+      message.error("Cannot cancel: Auction has already started");
+      return;
     }
+
+    setCancelModal({
+      visible: true,
+      auctionId: auction.id,
+      auctionTitle: auction.title,
+    });
   };
 
   const columns = [
@@ -216,6 +237,15 @@ const AdminAuctionPage = () => {
       key: "actions",
       render: (record: Auction) => {
         const menuItems = [];
+        const isLiveNow = liveAuctions.has(record.id);
+        const canEdit =
+          (record.status === AuctionStatus.DRAFT ||
+            record.status === AuctionStatus.SCHEDULED) &&
+          !isLiveNow;
+        const canCancel =
+          (record.status === AuctionStatus.DRAFT ||
+            record.status === AuctionStatus.SCHEDULED) &&
+          !isLiveNow;
 
         // Always show View Detail
         menuItems.push({
@@ -225,17 +255,26 @@ const AdminAuctionPage = () => {
           onClick: () => setDetailDrawer({ visible: true, auction: record }),
         });
 
-        // Show Cancel only for DRAFT or SCHEDULED
-        if (
-          record.status === AuctionStatus.DRAFT ||
-          record.status === AuctionStatus.SCHEDULED
-        ) {
+        // Show Edit only for editable statuses
+        if (canEdit) {
+          menuItems.push({
+            key: "edit",
+            icon: <EditOutlined />,
+            label: "Edit",
+            onClick: () => {
+              setEditModal({ visible: true, auction: record });
+            },
+          });
+        }
+
+        // Show Cancel only for cancellable statuses
+        if (canCancel) {
           menuItems.push({
             key: "cancel",
             icon: <StopOutlined />,
             label: "Cancel",
             danger: true,
-            onClick: () => handleCancel(record.id),
+            onClick: () => handleCancelClick(record),
           });
         }
 
@@ -274,30 +313,12 @@ const AdminAuctionPage = () => {
         </Button>
       </div>
 
-      {/* Tabs for Status Filter */}
-      <div className="mb-6">
-        <Tabs
-          activeKey={status}
-          onChange={(key) => {
-            setStatus(key as AuctionStatus);
-            setPage(1);
-          }}
-          items={[
-            { label: "LIVE", key: AuctionStatus.LIVE },
-            { label: "DRAFT", key: AuctionStatus.DRAFT },
-            { label: "SCHEDULED", key: AuctionStatus.SCHEDULED },
-            { label: "ENDED", key: AuctionStatus.ENDED },
-            { label: "CANCELLED", key: AuctionStatus.CANCELLED },
-          ]}
-        />
-      </div>
-
       {/* Search Form with Manual Trigger */}
       <Form layout="vertical" className="mb-6 bg-zinc-900 p-4 rounded">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Form.Item label="Search">
             <Input
-              placeholder="Search ID, Title, Description"
+              placeholder="Search by Title, Description, Seller"
               prefix={<SearchOutlined />}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
@@ -331,6 +352,25 @@ const AdminAuctionPage = () => {
         </Form.Item>
       </Form>
 
+      {/* Tabs for Status Filter */}
+      <div>
+        <Tabs
+          activeKey={status}
+          onChange={(key) => {
+            setStatus(key as AuctionStatus);
+            setPage(1);
+          }}
+          items={[
+            { label: "ALL", key: AuctionStatus.ALL },
+            { label: "LIVE", key: AuctionStatus.LIVE },
+            { label: "DRAFT", key: AuctionStatus.DRAFT },
+            { label: "SCHEDULED", key: AuctionStatus.SCHEDULED },
+            { label: "ENDED", key: AuctionStatus.ENDED },
+            { label: "CANCELLED", key: AuctionStatus.CANCELLED },
+          ]}
+        />
+      </div>
+
       <Table
         columns={columns}
         dataSource={data?.data}
@@ -346,127 +386,62 @@ const AdminAuctionPage = () => {
         className="bg-zinc-900"
       />
 
-      <AuctionDetailDrawer
-        auction={detailDrawer.auction}
-        visible={detailDrawer.visible}
-        onClose={() => setDetailDrawer({ visible: false })}
+      {detailDrawer.visible && detailDrawer.auction && (
+        <AuctionDetailDrawer
+          key={detailDrawer.auction.id}
+          auction={detailDrawer.auction}
+          visible={detailDrawer.visible}
+          onClose={() => setDetailDrawer({ visible: false })}
+        />
+      )}
+
+      <CancelAuctionModal
+        visible={cancelModal.visible}
+        auctionId={cancelModal.auctionId}
+        auctionTitle={cancelModal.auctionTitle}
+        onCancel={() => setCancelModal({ visible: false })}
+        onSuccess={() => {
+          setCancelModal({ visible: false });
+          refetch();
+        }}
       />
 
+      {/* Create Auction Modal */}
       <Modal
         title="Create Auction"
         open={createModal}
         onCancel={() => setCreateModal(false)}
         footer={null}
         width={600}
+        centered
       >
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item
-            name="title"
-            label="Title"
-            rules={[{ required: true, message: "Title is required" }]}
-          >
-            <Input placeholder="Enter auction title" />
-          </Form.Item>
-          <Form.Item
-            name="description"
-            label="Description"
-            rules={[{ required: true, message: "Description is required" }]}
-          >
-            <Input.TextArea rows={4} placeholder="Enter auction description" />
-          </Form.Item>
-          <Form.Item
-            name="startPrice"
-            label="Start Price"
-            rules={[{ required: true, message: "Start price is required" }]}
-          >
-            <Input type="number" placeholder="0.00" />
-          </Form.Item>
-          <Form.Item
-            name="minStep"
-            label="Minimum Step (Bid Increment)"
-            rules={[{ required: true, message: "Step is required" }]}
-          >
-            <Input type="number" placeholder="0.00" />
-          </Form.Item>
-          <Form.Item
-            name="startTime"
-            label="Start Time (Minute Precision)"
-            rules={[
-              { required: true, message: "Start time is required" },
-              {
-                validator: (_, value) => {
-                  if (!value) return Promise.resolve();
-                  if (value.isAfter(dayjs())) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error("Start time must be in the future"),
-                  );
-                },
-              },
-            ]}
-          >
-            <DatePicker showTime format="YYYY-MM-DD HH:mm" />
-          </Form.Item>
-          <Form.Item
-            name="endTime"
-            label="End Time (Minute Precision)"
-            rules={[
-              { required: true, message: "End time is required" },
-              {
-                validator: (_, value) => {
-                  if (!value) return Promise.resolve();
-                  const startTime = form.getFieldValue("startTime");
-                  if (!startTime) {
-                    return Promise.reject(new Error("Set start time first"));
-                  }
-                  if (value.isAfter(startTime)) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(
-                    new Error("End time must be after start time"),
-                  );
-                },
-              },
-            ]}
-          >
-            <DatePicker showTime format="YYYY-MM-DD HH:mm" />
-          </Form.Item>
-          <Form.Item
-            name="image"
-            label="Image"
-            rules={[{ required: true, message: "Image is required" }]}
-          >
-            <Upload listType="picture-card" maxCount={1} accept="image/*">
-              <div>
-                <UploadOutlined />
-                <div className="mt-2">Upload</div>
-              </div>
-            </Upload>
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button
-                onClick={() => {
-                  form.setFieldsValue({ status: AuctionStatus.DRAFT });
-                  handleCreate(form.getFieldsValue());
-                }}
-              >
-                Save as Draft
-              </Button>
-              <Button
-                type="primary"
-                htmlType="submit"
-                onClick={() =>
-                  form.setFieldsValue({ status: AuctionStatus.SCHEDULED })
-                }
-              >
-                Publish
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
+        <AuctionForm
+          form={form}
+          mode="create"
+          onSuccess={handleCreateSuccess}
+          onCancel={() => setCreateModal(false)}
+        />
       </Modal>
+
+      {/* Edit Auction Modal */}
+      {editModal.auction && (
+        <Modal
+          title={`Edit Auction: "${editModal.auction.title}"`}
+          open={editModal.visible}
+          onCancel={() => setEditModal({ visible: false })}
+          footer={null}
+          width={600}
+          centered
+        >
+          <AuctionForm
+            form={editForm}
+            auction={editModal.auction}
+            mode="edit"
+            onSuccess={handleEditSuccess}
+            onCancel={() => setEditModal({ visible: false })}
+          />
+        </Modal>
+      )}
     </div>
   );
 };

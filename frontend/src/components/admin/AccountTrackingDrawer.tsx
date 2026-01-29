@@ -1,14 +1,14 @@
 import {
   AlertOutlined,
+  CheckCircleOutlined,
   LockOutlined,
   UnlockOutlined,
-  CheckCircleOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Card, Drawer, Empty, Pagination, Skeleton, Tag, Timeline } from "antd";
 import dayjs from "dayjs";
 import adminApi from "../../api/adminApi";
-import { PageResponse, User, UserTrackingResponse } from "../../api/types";
+import { PageResponse, User, UserAuditResponse } from "../../api/types";
 
 interface AccountTrackingDrawerProps {
   visible: boolean;
@@ -22,7 +22,7 @@ interface AccountTrackingDrawerProps {
 /**
  * Create Timeline Item Config
  */
-const createTimelineItem = (tracking: UserTrackingResponse) => {
+const createTimelineItem = (tracking: UserAuditResponse) => {
   const { actionType, details, createdAt } = tracking;
 
   // Format timestamp to local time
@@ -62,8 +62,8 @@ const createTimelineItem = (tracking: UserTrackingResponse) => {
 
   return {
     color,
-    dot: icon,
-    children: (
+    icon: icon,
+    content: (
       <>
         <div style={{ marginBottom: "8px" }}>
           <span style={{ color: "#9ca3af", fontSize: "12px" }}>
@@ -146,17 +146,15 @@ export const AccountTrackingDrawer = ({
 }: AccountTrackingDrawerProps) => {
   // Fetch tracking data with pagination
   // API already unwraps response.data.result, so we get PageResponse directly
-  const { data, isLoading, error } = useQuery<
-    PageResponse<UserTrackingResponse>
-  >({
+  const { data, isLoading, error } = useQuery<PageResponse<UserAuditResponse>>({
     queryKey: ["user-tracking", userId, page],
-    queryFn: () => adminApi.getTrackingUser(userId!, page, 20),
+    queryFn: () => adminApi.getUserAudit(userId!, page, 20),
     enabled: visible && !!userId,
   });
 
   return (
     <Drawer
-      title="Account Tracking"
+      title="User Audit"
       placement="right"
       onClose={onClose}
       open={visible}

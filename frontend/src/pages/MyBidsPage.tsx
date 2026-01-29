@@ -114,7 +114,7 @@ const MyBidsPage = () => {
       key: "auctionStatus",
       render: (status: AuctionStatus) => {
         const colorMap: Partial<Record<AuctionStatus, string>> = {
-          [AuctionStatus.LIVE]: "blue",
+          [AuctionStatus.LIVE]: "green",
           [AuctionStatus.ENDED]: "white",
         };
         return (

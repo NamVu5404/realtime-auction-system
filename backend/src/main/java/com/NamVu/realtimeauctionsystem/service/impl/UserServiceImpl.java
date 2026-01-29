@@ -12,7 +12,7 @@ import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.NamVu.realtimeauctionsystem.mapper.UserMapper;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.UserService;
-import com.NamVu.realtimeauctionsystem.service.UserTrackingService;
+import com.NamVu.realtimeauctionsystem.service.UserAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,7 +30,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final UserTrackingService trackingService;
+    private final UserAuditService auditService;
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
         int rowsAffected = userRepository.updateStatus(userId, UserStatus.BLOCKED, now);
 
         if (rowsAffected > 0) {
-            trackingService.blockTracking(userId, request);
+            auditService.blockAudit(userId, request);
         } else {
             log.info("User {} already blocked", userId);
             throw new AppException(ErrorCode.USER_BLOCKED);
@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
         int rowsAffected = userRepository.updateStatus(userId, UserStatus.ACTIVE, now);
 
         if (rowsAffected > 0) {
-            trackingService.blockTracking(userId, request);
+            auditService.blockAudit(userId, request);
         } else {
             log.info("User {} already active", userId);
             throw new AppException(ErrorCode.USER_ACTIVE);

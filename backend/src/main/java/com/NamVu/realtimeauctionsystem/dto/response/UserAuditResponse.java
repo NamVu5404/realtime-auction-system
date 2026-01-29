@@ -8,7 +8,7 @@ import java.util.Map;
 
 @Data
 @Builder
-public class UserTrackingResponse {
+public class UserAuditResponse {
     private Long id;
     private String actionType;
     private Instant createdAt;
