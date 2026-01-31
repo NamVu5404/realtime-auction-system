@@ -1,4 +1,8 @@
-import { TrophyOutlined } from "@ant-design/icons";
+import {
+  TrophyOutlined,
+  WifiOutlined,
+  DisconnectOutlined,
+} from "@ant-design/icons";
 import {
   Image as AntImage,
   Card,
@@ -12,15 +16,19 @@ import {
   Tabs,
   Tag,
   message,
+  Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { auctionApi } from "../../../api/auctionApi"; // Import auctionApi for other uses if any, or remove if unused. Keep for now.
 import {
   Auction,
   AuctionStatus,
   AuctionHistoryResponse,
+  BidUpdateMessage,
+  BidStatus,
 } from "../../../api/types";
+import { useAuctionWebsocket } from "../../../hooks/useAuctionWebsocket";
 import { useAuctionHistory } from "../../../hooks/useAuctions"; // Import hook
 import Countdown from "../../../features/auction/Countdown";
 import { formatAuctionTime, getTimeRemaining } from "../../../utils/dateUtils";
@@ -64,7 +72,49 @@ export const AuctionDetailDrawer = ({
     shouldFetchLogs,
   );
 
-  const bidLogs = bidLogsData?.data || [];
+  // Local state for bid logs to handle real-time updates without refetching
+  const [bidLogs, setBidLogs] = useState<AuctionHistoryResponse[]>([]);
+
+  // Sync local state with fetched data
+  useEffect(() => {
+    if (bidLogsData?.data) {
+      setBidLogs(bidLogsData.data);
+    }
+  }, [bidLogsData]);
+
+  // Handle real-time bid updates
+  // Callback must be memoized to prevent WebSocket reconnection loops
+  const onBidUpdate = useCallback((message: BidUpdateMessage) => {
+    // Only update if we are on the first page to avoid confusion
+    setBidLogs((prev) => {
+      // Check for duplicate updates to be safe
+      if (
+        prev.some(
+          (bid) =>
+            bid.timestamp === new Date().toISOString() &&
+            bid.amount === message.currentPrice,
+        )
+      )
+        return prev;
+
+      const newBid: AuctionHistoryResponse = {
+        bidderId: message.highestBidderId,
+        bidderEmail: message.highestBidderName, // Map name to email field for display
+        amount: message.currentPrice,
+        timestamp: new Date().toISOString(),
+        status: "ACCEPTED" as BidStatus,
+      };
+      return [newBid, ...prev];
+    });
+  }, []);
+
+  // Connect to WebSocket only when drawer is visible and auction is LIVE
+  const shouldConnectSocket = visible && auction?.status === AuctionStatus.LIVE;
+
+  const { isConnected } = useAuctionWebsocket({
+    auctionId: shouldConnectSocket && auction?.id ? auction.id : 0,
+    onBidUpdate,
+  });
 
   if (!auction) {
     return null;
@@ -157,6 +207,21 @@ export const AuctionDetailDrawer = ({
             >
               {auction.status}
             </Tag>
+
+            {/* Connection Status Indicator */}
+            {auction.status === AuctionStatus.LIVE && (
+              <div className="ml-2 flex items-center">
+                {isConnected ? (
+                  <Tooltip title="Realtime updates active">
+                    <WifiOutlined className="text-green-500 animate-pulse" />
+                  </Tooltip>
+                ) : (
+                  <Tooltip title="Disconnected">
+                    <DisconnectOutlined className="text-red-500" />
+                  </Tooltip>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-6">
