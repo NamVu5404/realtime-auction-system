@@ -1,5 +1,13 @@
-import axiosClient from './axiosClient';
-import { Auction, ApiResponse, PaginatedAuctions, AuctionStatus, PlaceBidResponse } from './types';
+import axiosClient from "./axiosClient";
+import {
+  Auction,
+  ApiResponse,
+  PaginatedAuctions,
+  AuctionStatus,
+  PlaceBidResponse,
+  PageResponse,
+  AuctionHistoryResponse,
+} from "./types";
 
 /**
  * Auction API Service
@@ -11,7 +19,7 @@ export const auctionApi = {
   /**
    * Fetch paginated auctions by status
    * Backend converts frontend page (1-indexed) to Pageable offset (0-indexed)
-   * 
+   *
    * @param status - Auction status: LIVE, SCHEDULED, ENDED
    * @param page - Page number (1-indexed, frontend convention)
    * @param size - Items per page (default: 20)
@@ -20,11 +28,11 @@ export const auctionApi = {
   getAuctionsByStatus: async (
     status: AuctionStatus,
     page: number = 1,
-    size: number = 20
+    size: number = 20,
   ): Promise<PaginatedAuctions> => {
     try {
       const response = await axiosClient.get<ApiResponse<PaginatedAuctions>>(
-        '/auctions',
+        "/auctions",
         {
           params: {
             status,
@@ -32,29 +40,29 @@ export const auctionApi = {
             page: page,
             size,
           },
-        }
+        },
       );
       return response.data.result;
     } catch (error) {
-      console.error('Failed to fetch auctions by status:', error);
+      console.error("Failed to fetch auctions by status:", error);
       throw error;
     }
   },
 
   /**
    * Fetch single auction details
-   * 
+   *
    * @param auctionId - Auction ID
    * @returns Promise with auction details
    */
   getAuctionDetail: async (auctionId: number): Promise<Auction> => {
     try {
       const response = await axiosClient.get<ApiResponse<Auction>>(
-        `/auctions/${auctionId}`
+        `/auctions/${auctionId}`,
       );
       return response.data.result;
     } catch (error) {
-      console.error('Failed to fetch auction detail:', error);
+      console.error("Failed to fetch auction detail:", error);
       throw error;
     }
   },
@@ -63,13 +71,17 @@ export const auctionApi = {
    * Place a bid on an auction
    * Requires authentication token in header
    * Backend Endpoint: POST /api/v1/auctions/{auctionId}/bids
-   * 
+   *
    * @param auctionId - Auction ID in URL path
    * @param bidderId - ID of the bidder
    * @param amount - Bid amount
    * @returns Promise with PlaceBidResponse
    */
-  placeBid: async (auctionId: number, bidderId: number, amount: number): Promise<PlaceBidResponse> => {
+  placeBid: async (
+    auctionId: number,
+    bidderId: number,
+    amount: number,
+  ): Promise<PlaceBidResponse> => {
     try {
       const response = await axiosClient.post<ApiResponse<PlaceBidResponse>>(
         `/auctions/${auctionId}/bids`,
@@ -77,11 +89,40 @@ export const auctionApi = {
           auctionId,
           bidderId,
           amount,
-        }
+        },
       );
       return response.data.result;
     } catch (error) {
-      console.error('Failed to place bid:', error);
+      console.error("Failed to place bid:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch auction history (bid logs)
+   *
+   * @param auctionId - Auction ID
+   * @param page - Page number (1-indexed)
+   * @param size - Items per page
+   * @returns Promise with paginated auction history
+   */
+  getAuctionHistory: async (
+    auctionId: number,
+    page: number = 1,
+    size: number = 20,
+  ): Promise<PageResponse<AuctionHistoryResponse>> => {
+    try {
+      const response = await axiosClient.get<
+        ApiResponse<PageResponse<AuctionHistoryResponse>>
+      >(`/auctions/${auctionId}/history`, {
+        params: {
+          page,
+          size,
+        },
+      });
+      return response.data.result;
+    } catch (error) {
+      console.error("Failed to fetch auction history:", error);
       throw error;
     }
   },

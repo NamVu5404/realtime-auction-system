@@ -1,14 +1,14 @@
-import axios from "axios";
-import axiosClient from "./axiosClient";
+import axios, { AxiosError } from "axios";
 import {
+  ApiResponse,
+  AuthenticationResponse,
   ExchangeTokenRequest,
   ExchangeTokenResponse,
+  LogoutRequest,
   RefreshTokenRequest,
-  AuthenticationResponse,
-  ApiResponse,
   UserInfo,
 } from "../types";
-import { AxiosError } from "axios";
+import axiosClient from "./axiosClient";
 
 const API_BASE_URL = "http://localhost:8080/api/v1";
 
@@ -55,7 +55,7 @@ export const authApi = {
       const response = await axios.post<ApiResponse<AuthenticationResponse>>(
         `${API_BASE_URL}/auth/outbound/authentication?code=${encodeURIComponent(request.code)}`,
         {},
-        { signal: controller.signal }
+        { signal: controller.signal },
       );
 
       clearTimeout(timeoutId);
@@ -85,11 +85,11 @@ export const authApi = {
       };
     } catch (error) {
       const errorMessage = extractErrorMessage(error);
-      
-      if (error instanceof Error && error.name === 'AbortError') {
+
+      if (error instanceof Error && error.name === "AbortError") {
         throw new Error("Request timeout - server took too long to respond");
       }
-      
+
       throw new Error(errorMessage);
     }
   },
@@ -100,9 +100,9 @@ export const authApi = {
     request: RefreshTokenRequest,
   ): Promise<ExchangeTokenResponse> => {
     return axiosClient
-      .post<
-        ApiResponse<AuthenticationResponse>
-      >(`/auth/refresh`, { refreshToken: request.refreshToken })
+      .post<ApiResponse<AuthenticationResponse>>(`/auth/refresh`, {
+        token: request.token,
+      })
       .then((response) => {
         if (response.data.code !== 1000) {
           throw new Error(response.data.message || "Token refresh failed");
@@ -131,9 +131,11 @@ export const authApi = {
   },
 
   // Logout - revoke tokens and clear session
-  logout: async (): Promise<void> => {
+  logout: async (request: LogoutRequest): Promise<void> => {
     try {
-      await axiosClient.post("/auth/logout");
+      await axiosClient.post("/auth/logout", {
+        token: request.token,
+      });
     } catch (error) {
       console.error("Logout error:", error);
     }

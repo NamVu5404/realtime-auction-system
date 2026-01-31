@@ -17,6 +17,7 @@ import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.AuctionDbSyncService;
 import com.NamVu.realtimeauctionsystem.service.FraudDetectionService;
 import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
+import com.NamVu.realtimeauctionsystem.service.UserAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -36,6 +37,7 @@ public class AuctionDbSyncServiceImpl implements AuctionDbSyncService {
     private final BidRepository bidRepository;
     private final FraudDetectionService fraudDetectionService;
     private final RedisAuctionService redisAuctionService;
+    private final UserAuditService auditService;
 
     private static final int MAX_AUTO_RETRY = 5;
 
@@ -107,6 +109,8 @@ public class AuctionDbSyncServiceImpl implements AuctionDbSyncService {
                 }
 
                 bidRepository.save(bid);
+
+                auditService.fraudAudit(bid, auction, fraudCheck.getPrimaryViolation(), fraudCheck.getReason());
 
                 log.info("DB synced: auction={}, price={}, bidder={}, version={}",
                         event.getAuctionId(), event.getAmount(), event.getBidderId(), auction.getVersion());

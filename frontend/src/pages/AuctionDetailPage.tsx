@@ -20,7 +20,7 @@ import {
   notification,
 } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, memo } from "react";
+import { useEffect, useState, memo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { auctionApi } from "../api/auctionApi";
 import {
@@ -196,48 +196,47 @@ export const AuctionDetailPage = () => {
 
   const auctionId = id ? parseInt(id, 10) : null;
 
+  // ✅ FIX: Stabilize callbacks to prevent unnecessary WebSocket reconnections
+  const onBidUpdate = useCallback((message: BidUpdateMessage) => {
+    setAuction((prev) =>
+      prev && prev.id === message.auctionId
+        ? {
+            ...prev,
+            currentPrice: message.currentPrice,
+            highestBidder: {
+              id: message.highestBidderId,
+              name: message.highestBidderName,
+              email: "",
+              role: UserRole.USER,
+            },
+          }
+        : prev,
+    );
+  }, []);
+
+  const onTimeExtended = useCallback((newEndTime: string) => {
+    setHasTimeExtension(true);
+    setAuction((prev) =>
+      prev ? { ...prev, endTime: newEndTime } : null,
+    );
+    setTimeout(() => setHasTimeExtension(false), 3000);
+  }, []);
+
+  const onConnect = useCallback(() => {
+    console.log("Auction WebSocket connected");
+  }, []);
+
+  const onDisconnect = useCallback(() => {
+    console.log("Auction WebSocket disconnected");
+  }, []);
+
   // Real-time WebSocket updates with reconnection and time extension handling
   const { isConnected, isReconnecting } = useAuctionWebsocket({
     auctionId: auctionId || 0,
-    onBidUpdate: (message: BidUpdateMessage) => {
-      // Update local auction state with latest bid info
-      if (auction?.id === message.auctionId) {
-        setAuction((prev) =>
-          prev
-            ? {
-                ...prev,
-                currentPrice: message.currentPrice,
-                highestBidder: {
-                  id: message.highestBidderId,
-                  name: message.highestBidderName,
-                  email: "",
-                  role: UserRole.USER,
-                },
-              }
-            : null,
-        );
-      }
-    },
-    onTimeExtended: (newEndTime: string) => {
-      // Update endTime state when time is extended
-      setHasTimeExtension(true);
-      setAuction((prev) =>
-        prev
-          ? {
-              ...prev,
-              endTime: newEndTime,
-            }
-          : null,
-      );
-      // Reset extension flag after animation
-      setTimeout(() => setHasTimeExtension(false), 3000);
-    },
-    onConnect: () => {
-      console.log("Auction WebSocket connected");
-    },
-    onDisconnect: () => {
-      console.log("Auction WebSocket disconnected");
-    },
+    onBidUpdate,
+    onTimeExtended,
+    onConnect,
+    onDisconnect,
   });
 
   // Fetch auction details on mount
@@ -300,7 +299,7 @@ export const AuctionDetailPage = () => {
     isReconnecting ||
     isCountdownFinished ||
     !isAuthenticated ||
-    !isLive;
+    (!isLive && !isCountdownStarted);
 
   // Handle bid placement with improved error handling and state management
   const handlePlaceBid = async (amount: string) => {
@@ -368,16 +367,50 @@ export const AuctionDetailPage = () => {
   };
 
   // Handle countdown completion
-  const handleCountdownComplete = () => {
+  const handleCountdownComplete = async () => {
     console.log(`Countdown completed for auction ${auction.id}`);
 
     if (isLive) {
       // Countdown for end time → auction finished
       setIsCountdownFinished(true);
+      message.info("Auction has ended - bidding is closed");
     } else if (isScheduled) {
       // Countdown for start time → auction started
       setIsCountdownStarted(true);
-      // Invalidate queries to fetch updated LIVE status from backend
+
+      // Show notification that auction is live
+      message.success("Auction is now LIVE! Start bidding!");
+
+      try {
+        // Fetch updated auction data to sync status with backend
+        const updatedAuction = await auctionApi.getAuctionDetail(auction.id);
+        setAuction(updatedAuction);
+
+        // If backend still shows SCHEDULED, update locally to LIVE for better UX
+        if (updatedAuction.status === AuctionStatus.SCHEDULED) {
+          setAuction((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  status: AuctionStatus.LIVE,
+                }
+              : null,
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch updated auction:", error);
+        // Fallback: Update status locally even if fetch fails
+        setAuction((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: AuctionStatus.LIVE,
+              }
+            : null,
+        );
+      }
+
+      // Invalidate queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["auctions"] });
     }
   };

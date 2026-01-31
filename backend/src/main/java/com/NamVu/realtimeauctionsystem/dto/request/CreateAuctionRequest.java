@@ -1,6 +1,9 @@
 package com.NamVu.realtimeauctionsystem.dto.request;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,37 +16,31 @@ import java.time.Instant;
 @AllArgsConstructor
 public class CreateAuctionRequest {
 
-    @NotBlank(message = "Title is required")
+    private Long id;
+
+    @NotBlank(groups = {Draft.class, Scheduler.class}, message = "INVALID_INPUT")
     private String title;
 
     private String description;
 
     private String image;
 
-    @NotNull
-    @DecimalMin(value = "0.01")
+    @NotNull(groups = Scheduler.class, message = "INVALID_INPUT")
+    @DecimalMin(value = "0.01", groups = Scheduler.class, message = "INVALID_INPUT")
     private BigDecimal startPrice;
 
-    @NotNull
-    @DecimalMin(value = "0.01")
+    @NotNull(groups = Scheduler.class, message = "INVALID_INPUT")
+    @DecimalMin(value = "0.01", groups = Scheduler.class, message = "INVALID_INPUT")
     private BigDecimal minStep;
 
-    @NotNull
-    private Long sellerId;
-
-    @NotNull(message = "Start time is required")
-    @Future(message = "Start time must be in the future")
+    @NotNull(groups = Scheduler.class, message = "INVALID_INPUT")
+    @Future(groups = Scheduler.class, message = "INVALID_INPUT")
     private Instant startTime;
 
-    @NotNull(message = "End time is required")
-    @Future(message = "End time must be in the future")
+    @NotNull(groups = Scheduler.class, message = "INVALID_INPUT")
+    @Future(groups = Scheduler.class, message = "INVALID_INPUT")
     private Instant endTime;
 
-    private Integer antiSnipeSeconds = 60;
-    private Integer extensionSeconds = 30;
-
-    @AssertTrue(message = "End time must be after start time")
-    private boolean isEndTimeValid() {
-        return endTime.isAfter(startTime);
-    }
+    public interface Draft {}
+    public interface Scheduler {}
 }

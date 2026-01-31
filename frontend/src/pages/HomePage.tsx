@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Tabs, Button, Space, Empty, Spin } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
@@ -51,41 +51,39 @@ export const HomePage = () => {
     pageSize
   );
 
-  // Reset to page 1 when changing tabs
-  const handleTabChange = (key: string) => {
-    setActiveTab(key);
-    // reset page for the newly selected tab to 1
-    setPages((prev) => ({ ...prev, [key]: 1 }));
-  };
-
-  const handlePageChange = (p: number) => {
-    setPages((prev) => ({ ...prev, [activeTab]: p }));
-  };
+  // ✅ FIX: Stabilize callback WITHOUT depending on refetch (which changes on every render)
+  const onPriceUpdate = useCallback(() => {
+    // Use queryClient to invalidate instead of refetch
+    queryClient.invalidateQueries({ queryKey: ['auctions'] });
+  }, [queryClient]);
 
   // WebSocket connection for real-time price updates
   const { isConnected } = useWebSocket({
-    onPriceUpdate: () => {
-      // Refetch to sync with latest data
-      refetch();
-    },
+    onPriceUpdate,
   });
 
   // Manual refresh button
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     await refetch();
-  };
+  }, [refetch]);
 
   // Callback for when countdown reaches 00:00:00
   // Called from AuctionCard component
-  const handleCountdownComplete = () => {
+  const handleCountdownComplete = useCallback(() => {
     // Invalidate the auctions query to trigger a refetch
     // This ensures UI stays in sync with backend scheduler state transitions
     queryClient.invalidateQueries({ queryKey: ['auctions'] });
-  };
+  }, [queryClient]);
 
-  // Expose refetch handler globally for countdown events
-  // (Alternative approach if using ref/context)
-  (window as any).handleCountdownComplete = handleCountdownComplete;
+  // Tab and page handlers with stable references
+  const handleTabChange = useCallback((key: string) => {
+    setActiveTab(key);
+    setPages((prev) => ({ ...prev, [key]: 1 }));
+  }, []);
+
+  const handlePageChange = useCallback((p: number) => {
+    setPages((prev) => ({ ...prev, [activeTab]: p }));
+  }, [activeTab]);
 
   // Tab definitions with dynamic labels
   // Only show count badge for the active tab
@@ -195,13 +193,14 @@ export const HomePage = () => {
           </div>
         )}
 
-        {/* Tabs */}
+        {/* Tabs - Disable animation to prevent lag when switching tabs */}
         <Tabs
           activeKey={Object.keys(statusMap).find(k => statusMap[k] === currentStatus) || 'live'}
           onChange={handleTabChange}
           items={tabs}
           size="large"
           className="auction-tabs"
+          animated={false}
         />
       </div>
     </div>

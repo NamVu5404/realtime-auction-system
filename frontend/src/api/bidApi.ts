@@ -29,6 +29,35 @@ export const bidApi = {
 			throw error;
 		}
 	},
+
+	/**
+	 * Fetch bid history for a specific user (admin only)
+	 * @param userId - The user ID to fetch history for
+	 * @param page - Page number (1-indexed)
+	 * @param size - Page size
+	 */
+	getBidHistoryForAdmin: async (
+		userId: number,
+		page: number = 1,
+		size: number = 20
+	): Promise<PageResponse<MyBidHistoryResponse>> => {
+		try {
+			const response = await axiosClient.get<ApiResponse<PageResponse<MyBidHistoryResponse>>>(
+				`/bids/users/${userId}/history`,
+				{
+					params: {
+						page,
+						size,
+					},
+				}
+			);
+
+			return response.data.result;
+		} catch (error) {
+			console.error(`Failed to fetch bid history for user ${userId}`, error);
+			throw error;
+		}
+	},
 };
 
 export default bidApi;

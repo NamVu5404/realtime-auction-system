@@ -1,19 +1,22 @@
 package com.NamVu.realtimeauctionsystem.entity;
 
-import com.NamVu.realtimeauctionsystem.enums.AuctionEventType;
+import com.NamVu.realtimeauctionsystem.enums.AuctionActionType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
+import java.util.Map;
 
 @Entity
-@Table(name = "auction_event_logs")
+@Table(name = "auction_audit")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuctionEventLog {
+public class AuctionAudit {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +27,16 @@ public class AuctionEventLog {
     private Auction auction;
 
     @Enumerated(EnumType.STRING)
-    private AuctionEventType eventType;
+    @Column(nullable = false)
+    private AuctionActionType actionType;
 
-    @Column(columnDefinition = "TEXT")
-    private String eventData; // JSON
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> details;
 
     private Instant createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+    }
 }

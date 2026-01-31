@@ -36,6 +36,9 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     @EntityGraph(attributePaths = {"auction"})
     Page<Bid> findByBidderIdOrderByCreatedAtDesc(Long bidderId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"bidder"})
+    Page<Bid> findByAuctionIdOrderByCreatedAtDesc(Long auctionId, Pageable pageable);
+
     // Helper method
     default List<Bid> findTop10ByBidderIdAndAuctionIdOrderByCreatedAtDesc(Long bidderId, Long auctionId) {
         return findTop10ByBidderIdAndAuctionIdOrderByCreatedAtDesc(

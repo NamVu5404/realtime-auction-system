@@ -1,51 +1,58 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
 import { Client, Message } from '@stomp/stompjs';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+// @ts-ignore - sockjs-client doesn't have TypeScript definitions
 import SockJS from 'sockjs-client';
-import { PricePingEvent } from '../types';
+import type { BidUpdateMessage } from '../api/types';
 
 interface UseWebSocketOptions {
-  onPriceUpdate?: (event: PricePingEvent) => void;
+  onPriceUpdate?: (event: BidUpdateMessage) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
   onError?: (error: string) => void;
 }
 
 export const useWebSocket = (options: UseWebSocketOptions = {}) => {
-  const clientRef = useRef<Client | null>(null);
-  const connectingRef = useRef(false);
+  const {
+    onPriceUpdate,
+    onConnect,
+    onDisconnect,
+    onError,
+  } = options;
+
+  const subscriptionRef = useRef<any | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-  const connect = useCallback(() => {
-    if (clientRef.current?.connected || connectingRef.current) {
-      return;
-    }
+  /**
+   * Create STOMP client with useMemo to prevent recreating on every render
+   * Only depend on individual callbacks, not the options object
+   */
+  const client = useMemo(() => {
+    const wsUrl = (import.meta as any).env.VITE_WS_URL || 'http://localhost:8080/api/v1/ws';
 
-    connectingRef.current = true;
-
-    const client = new Client({
+    return new Client({
       webSocketFactory: () => {
-        const wsUrl = (import.meta as any).env.VITE_WS_URL || 'http://localhost:8080/api/v1/ws';
         return new SockJS(wsUrl);
       },
       connectHeaders: {
         'Content-Type': 'application/json',
       },
       debug: (str) => {
-        console.log('STOMP: ' + str);
+        if (str.includes('CONNECT') || str.includes('DISCONNECT')) {
+          console.log('[STOMP]', str);
+        }
       },
       reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
       onConnect: () => {
-        connectingRef.current = false;
         setIsConnected(true);
         console.log('WebSocket connected');
 
         // Subscribe to auction price updates
-        client.subscribe('/topic/auctions', (message: Message) => {
+        subscriptionRef.current = client.subscribe('/topic/auctions', (message: Message) => {
           try {
-            const event = JSON.parse(message.body) as PricePingEvent;
-            options.onPriceUpdate?.(event);
+            const event = JSON.parse(message.body) as BidUpdateMessage;
+            onPriceUpdate?.(event);
           } catch (error) {
             console.error('Failed to parse message:', error);
           }
@@ -61,51 +68,55 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
           }
         });
 
-        options.onConnect?.();
+        onConnect?.();
       },
       onStompError: (frame) => {
-        connectingRef.current = false;
         setIsConnected(false);
         const errorMsg = `Broker reported error: ${frame.headers['message']}`;
         console.error(errorMsg);
-        options.onError?.(errorMsg);
+        onError?.(errorMsg);
       },
       onWebSocketClose: () => {
-        connectingRef.current = false;
         setIsConnected(false);
         console.log('WebSocket closed');
-        options.onDisconnect?.();
+        onDisconnect?.();
+      },
+      onWebSocketError: (event: Event) => {
+        setIsConnected(false);
+        console.error('WebSocket error:', event);
+        onError?.('WebSocket connection error');
       },
     });
+  }, [onPriceUpdate, onConnect, onDisconnect, onError]);
 
-    clientRef.current = client;
-    client.activate();
-  }, [options]);
+  const connect = useCallback(() => {
+    if (!client.connected) {
+      client.activate();
+    }
+  }, [client]);
 
   const disconnect = useCallback(() => {
-    if (clientRef.current?.connected) {
-      clientRef.current.deactivate();
-      clientRef.current = null;
+    if (client.connected) {
+      client.deactivate();
       setIsConnected(false);
-      options.onDisconnect?.();
     }
-  }, [options]);
+  }, [client]);
 
   const subscribe = useCallback(
     (destination: string, callback: (message: Message) => void) => {
-      if (clientRef.current?.connected) {
-        return clientRef.current.subscribe(destination, callback);
+      if (client.connected) {
+        return client.subscribe(destination, callback);
       }
       console.warn('WebSocket not connected. Cannot subscribe to', destination);
       return null;
     },
-    []
+    [client]
   );
 
   const publish = useCallback(
     (destination: string, body: Record<string, any>) => {
-      if (clientRef.current?.connected) {
-        clientRef.current.publish({
+      if (client.connected) {
+        client.publish({
           destination,
           body: JSON.stringify(body),
         });
@@ -113,7 +124,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
         console.warn('WebSocket not connected. Cannot publish to', destination);
       }
     },
-    []
+    [client]
   );
 
   useEffect(() => {

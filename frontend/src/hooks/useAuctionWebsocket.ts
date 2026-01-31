@@ -5,6 +5,7 @@ import SockJS from 'sockjs-client';
 import { useQueryClient } from '@tanstack/react-query';
 import { notification } from 'antd';
 import { BidUpdateMessage } from '../api/types';
+import formatCurrency from '../utils/format';
 
 interface UseAuctionWebsocketOptions {
   auctionId: number;
@@ -86,8 +87,8 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
         // Show global notification for new bid with Vietnamese message
         notification.success({
           key: `bid-${auctionId}`,
-          message: 'New Bid Placed',
-          description: `${bidUpdate.highestBidderName} đã đặt giá $${bidUpdate.currentPrice.toFixed(2)}!`,
+          title: 'New Bid Placed',
+          description: `${bidUpdate.highestBidderName} đã đặt giá ${formatCurrency(bidUpdate.currentPrice)}!`,
           duration: 3,
         });
       } catch (error) {
