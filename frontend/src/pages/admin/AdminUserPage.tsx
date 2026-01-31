@@ -2,6 +2,7 @@ import {
   CheckCircleOutlined,
   DeleteOutlined,
   EyeOutlined,
+  HistoryOutlined,
   MoreOutlined,
   SearchOutlined,
   StopOutlined,
@@ -189,8 +190,8 @@ const AdminUserPage = () => {
               },
               {
                 key: "user-audit",
-                icon: <EyeOutlined />,
-                label: "View User Audit",
+                icon: <HistoryOutlined />,
+                label: "Audit Logs",
                 onClick: () => {
                   setSelectedUser(record);
                   setTrackingPage(1);
@@ -384,8 +385,8 @@ const AdminUserPage = () => {
           historyDrawer.type === "bid"
             ? "Bid History"
             : historyDrawer.type === "tracking"
-              ? `User Audit: ${selectedUser?.email}`
-              : "User Audit"
+              ? `User Audit Logs`
+              : "User Audit Logs"
         }
         open={historyDrawer.visible && historyDrawer.type !== "tracking"}
         onClose={() => {

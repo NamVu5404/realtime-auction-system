@@ -27,10 +27,29 @@ export const Countdown = ({
   onFinish,
   isLive = false,
 }: CountdownProps) => {
-  const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
+  const calculateTimeLeft = () => {
+    const remainingMs = getTimeRemaining(targetTime);
+    if (remainingMs <= 0) {
+      return "00:00:00";
+    }
+    return formatCountdown(remainingMs);
+  };
+
+  const [timeLeft, setTimeLeft] = useState<string>(calculateTimeLeft());
   const [isFinished, setIsFinished] = useState(false);
 
   useEffect(() => {
+    // Initial check
+    const initialRemaining = getTimeRemaining(targetTime);
+    if (initialRemaining <= 0) {
+      setIsFinished(true);
+      setTimeLeft("00:00:00");
+      onFinish?.();
+      return;
+    }
+
+    setTimeLeft(formatCountdown(initialRemaining));
+
     // Update countdown every second
     const interval = setInterval(() => {
       const remainingMs = getTimeRemaining(targetTime);

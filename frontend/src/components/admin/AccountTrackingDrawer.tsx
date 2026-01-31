@@ -154,7 +154,22 @@ export const AccountTrackingDrawer = ({
 
   return (
     <Drawer
-      title="User Audit"
+      title={
+        <div>
+          <div
+            style={{ fontSize: "16px", fontWeight: 600, marginBottom: "4px" }}
+          >
+            User Audit Logs
+          </div>
+          {user?.email && (
+            <div
+              style={{ fontSize: "13px", color: "#9ca3af", fontWeight: 400 }}
+            >
+              {user.email}
+            </div>
+          )}
+        </div>
+      }
       placement="right"
       onClose={onClose}
       open={visible}

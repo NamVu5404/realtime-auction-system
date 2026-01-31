@@ -10,39 +10,39 @@
  * ENDED = ENDED
  */
 export enum AuctionStatus {
-  ALL = 'ALL',
-  DRAFT = 'DRAFT',
-  SCHEDULED = 'SCHEDULED',
-  LIVE = 'LIVE',
-  ENDED = 'ENDED',
-  CANCELLED = 'CANCELLED',
+  ALL = "ALL",
+  DRAFT = "DRAFT",
+  SCHEDULED = "SCHEDULED",
+  LIVE = "LIVE",
+  ENDED = "ENDED",
+  CANCELLED = "CANCELLED",
 }
 
 /**
  * User Role Enum
  */
 export enum UserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
+  USER = "USER",
+  ADMIN = "ADMIN",
 }
 
 /**
  * Bid Status Enum - Derived from BidStatus.java
  */
 export enum BidStatus {
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-  FLAGGED = 'FLAGGED',
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+  FLAGGED = "FLAGGED",
 }
 
 export enum UserActionType {
-  CREATED = 'CREATED',
-  UPDATED = 'UPDATED',
-  LOGIN = 'LOGIN',
-  LOGOUT = 'LOGOUT',
-  BLOCKED = 'BLOCKED',
-  UNBLOCKED = 'UNBLOCKED',
-  FRAUD = 'FRAUD',
+  CREATED = "CREATED",
+  UPDATED = "UPDATED",
+  LOGIN = "LOGIN",
+  LOGOUT = "LOGOUT",
+  BLOCKED = "BLOCKED",
+  UNBLOCKED = "UNBLOCKED",
+  FRAUD = "FRAUD",
 }
 
 /**
@@ -54,7 +54,7 @@ export interface User {
   name: string;
   role: UserRole;
   avatarUrl?: string;
-  status?: 'ACTIVE' | 'BLOCKED';
+  status?: "ACTIVE" | "BLOCKED";
 }
 
 /**
@@ -185,4 +185,15 @@ export interface UserAuditResponse {
   actionType: UserActionType;
   details: Record<string, any>; // Flexible map from backend (fraudType, bidId, reason, by, etc.)
   createdAt: string; // ISO 8601 UTC string
+}
+
+/**
+ * Auction History Response - Derived from AuctionHistoryResponse.java
+ */
+export interface AuctionHistoryResponse {
+  bidderId: number;
+  bidderEmail: string;
+  amount: number; // BigDecimal from Java
+  timestamp: string; // ISO 8601 UTC string
+  status: BidStatus;
 }

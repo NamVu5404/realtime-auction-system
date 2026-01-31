@@ -4,10 +4,7 @@ import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.ApiResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.AuctionResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PlaceBidResponse;
+import com.NamVu.realtimeauctionsystem.dto.response.*;
 import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
 import com.NamVu.realtimeauctionsystem.service.AuctionService;
 import jakarta.validation.Valid;
@@ -107,6 +104,19 @@ public class AuctionController {
 
         return ApiResponse.<PageResponse<AuctionResponse>>builder()
                 .result(auctionService.filterAuction(keyword, startTime, endTime, status, pageable))
+                .build();
+    }
+
+    @GetMapping("/{id}/history")
+    public ApiResponse<PageResponse<AuctionHistoryResponse>> getAuctionHistory(
+            @PathVariable Long id,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        return ApiResponse.<PageResponse<AuctionHistoryResponse>>builder()
+                .result(auctionService.getAuctionHistory(id, pageable))
                 .build();
     }
 }

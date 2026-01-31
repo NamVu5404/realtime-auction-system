@@ -4,11 +4,13 @@ import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.AuctionHistoryResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.AuctionResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.PlaceBidResponse;
 import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.Instant;
 
@@ -31,4 +33,6 @@ public interface AuctionService {
 
     PageResponse<AuctionResponse> filterAuction(String keyword, Instant startTime, Instant endTime,
                                                 AuctionStatus status, Pageable pageable);
+
+    PageResponse<AuctionHistoryResponse> getAuctionHistory(Long id, Pageable pageable);
 }

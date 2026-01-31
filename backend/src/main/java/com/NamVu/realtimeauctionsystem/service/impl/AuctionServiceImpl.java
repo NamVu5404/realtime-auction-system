@@ -6,16 +6,19 @@ import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
+import com.NamVu.realtimeauctionsystem.dto.response.AuctionHistoryResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.AuctionResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.PlaceBidResponse;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
+import com.NamVu.realtimeauctionsystem.entity.Bid;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
 import com.NamVu.realtimeauctionsystem.exception.AppException;
 import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.NamVu.realtimeauctionsystem.mapper.AuctionMapper;
 import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
+import com.NamVu.realtimeauctionsystem.repository.BidRepository;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.AuctionService;
 import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
@@ -44,6 +47,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final UserRepository userRepository;
     private final RedisAuctionService redisAuctionService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final BidRepository bidRepository;
 
     @Override
     public PageResponse<AuctionResponse> getAuctionsByStatus(AuctionStatus status, Pageable pageable) {
@@ -116,6 +120,7 @@ public class AuctionServiceImpl implements AuctionService {
         }
 
         auction.setStatus(AuctionStatus.SCHEDULED);
+        auction.setCurrentPrice(auction.getStartPrice());
 
         if (auction.getSeller() == null) {
             Long sellerId = getCurrentUserId();
@@ -241,6 +246,33 @@ public class AuctionServiceImpl implements AuctionService {
                 .totalPage(auctionPage.getTotalPages())
                 .totalElements(auctionPage.getTotalElements())
                 .data(responses)
+                .build();
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public PageResponse<AuctionHistoryResponse> getAuctionHistory(Long id, Pageable pageable) {
+        Page<Bid> bidPage = bidRepository.findByAuctionIdOrderByCreatedAtDesc(id, pageable);
+
+        List<AuctionHistoryResponse> data = bidPage.stream()
+                .map(bid -> {
+                    User bidder = bid.getBidder();
+                    return AuctionHistoryResponse.builder()
+                            .bidderId(bidder.getId())
+                            .bidderEmail(bidder.getEmail())
+                            .amount(bid.getAmount())
+                            .status(bid.getStatus())
+                            .timestamp(bid.getCreatedAt())
+                            .build();
+                })
+                .toList();
+
+        return PageResponse.<AuctionHistoryResponse>builder()
+                .currentPage(pageable.getPageNumber() + 1)
+                .pageSize(pageable.getPageSize())
+                .totalPage(bidPage.getTotalPages())
+                .totalElements(bidPage.getTotalElements())
+                .data(data)
                 .build();
     }
 

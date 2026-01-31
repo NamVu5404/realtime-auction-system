@@ -2,6 +2,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
+  HistoryOutlined,
   MoreOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -26,13 +27,14 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import adminApi from "../../api/adminApi";
 import { Auction, AuctionStatus, PageResponse } from "../../api/types";
-import AuctionDetailDrawer from "../../components/admin/AuctionDetailDrawer";
 import CancelAuctionModal from "../../components/admin/CancelAuctionModal";
 import AuctionForm from "../../features/auction/AuctionForm";
 import { useDebounce } from "../../hooks/useDebounce";
 import { convertUTCToLocal } from "../../utils/dateUtils";
 import { formatDateTime } from "../../utils/format";
 import { getStatusColor } from "../../utils/statusUtils";
+import AuctionAuditDrawer from "./drawers/AuctionAuditDrawer";
+import AuctionDetailDrawer from "./drawers/AuctionDetailDrawer";
 
 const DEFAULT_IMAGE =
   "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
@@ -47,6 +49,11 @@ const AdminAuctionPage = () => {
   const [detailDrawer, setDetailDrawer] = useState<{
     visible: boolean;
     auction?: Auction;
+  }>({ visible: false });
+  const [auditDrawer, setAuditDrawer] = useState<{
+    visible: boolean;
+    auctionId?: number;
+    auctionTitle?: string;
   }>({ visible: false });
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState<{
@@ -207,7 +214,7 @@ const AdminAuctionPage = () => {
       key: "title",
     },
     {
-      title: "Creator",
+      title: "Seller",
       dataIndex: "seller",
       key: "seller",
       render: (seller: any) => seller?.name,
@@ -255,6 +262,19 @@ const AdminAuctionPage = () => {
           onClick: () => setDetailDrawer({ visible: true, auction: record }),
         });
 
+        // Show Audit Logs
+        menuItems.push({
+          key: "audit-logs",
+          icon: <HistoryOutlined />,
+          label: "Audit Logs",
+          onClick: () =>
+            setAuditDrawer({
+              visible: true,
+              auctionId: record.id,
+              auctionTitle: record.title,
+            }),
+        });
+
         // Show Edit only for editable statuses
         if (canEdit) {
           menuItems.push({
@@ -275,19 +295,6 @@ const AdminAuctionPage = () => {
             label: "Cancel",
             danger: true,
             onClick: () => handleCancelClick(record),
-          });
-        }
-
-        // Show View Logs only for LIVE or ENDED
-        if (
-          record.status === AuctionStatus.LIVE ||
-          record.status === AuctionStatus.ENDED
-        ) {
-          menuItems.push({
-            key: "view-logs",
-            icon: <EyeOutlined />,
-            label: "View Logs",
-            onClick: () => setDetailDrawer({ visible: true, auction: record }),
           });
         }
 
@@ -394,6 +401,13 @@ const AdminAuctionPage = () => {
           onClose={() => setDetailDrawer({ visible: false })}
         />
       )}
+
+      <AuctionAuditDrawer
+        visible={auditDrawer.visible}
+        auctionId={auditDrawer.auctionId || null}
+        auctionTitle={auditDrawer.auctionTitle}
+        onClose={() => setAuditDrawer({ visible: false })}
+      />
 
       <CancelAuctionModal
         visible={cancelModal.visible}
