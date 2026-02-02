@@ -80,7 +80,9 @@ axiosClient.interceptors.response.use(
         const refreshToken = authStore.refreshToken;
 
         if (!refreshToken) {
-          authStore.logout();
+          if (authStore.accessToken) {
+            authStore.logout(authStore.accessToken);
+          }
           return Promise.reject(error);
         }
 
@@ -99,7 +101,9 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (err) {
         const authStore = useAuthStore.getState();
-        authStore.logout();
+        if (authStore.accessToken) {
+          authStore.logout(authStore.accessToken);
+        }
         processQueue(error as AxiosError, null);
         return Promise.reject(err);
       } finally {

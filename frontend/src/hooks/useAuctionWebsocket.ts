@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
-import { Client, Message } from '@stomp/stompjs';
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { Client, Message } from "@stomp/stompjs";
 // @ts-ignore - sockjs-client doesn't have TypeScript definitions
-import SockJS from 'sockjs-client';
-import { useQueryClient } from '@tanstack/react-query';
-import { notification } from 'antd';
-import { BidUpdateMessage } from '../api/types';
-import formatCurrency from '../utils/format';
+import SockJS from "sockjs-client";
+import { useQueryClient } from "@tanstack/react-query";
+import { notification } from "antd";
+import { BidUpdateMessage } from "../api/types";
+import formatCurrency from "../utils/format";
 
 interface UseAuctionWebsocketOptions {
   auctionId: number;
@@ -24,7 +24,7 @@ interface UseAuctionWebsocketReturn {
 
 /**
  * Custom hook for managing WebSocket connections to auction bidding updates
- * 
+ *
  * Features:
  * - STOMP over SockJS connection to /topic/auction/{auctionId}
  * - Heartbeat monitoring (incoming/outgoing every 10s)
@@ -32,7 +32,7 @@ interface UseAuctionWebsocketReturn {
  * - Cache invalidation on reconnect to sync with server state
  * - Time extension handling with UI notifications
  * - Real-time bid update notifications
- * 
+ *
  * @param options - Configuration options including auctionId and callbacks
  * @returns Object with connection status and last bid timestamp
  */
@@ -60,7 +60,7 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
       try {
         const bidUpdate = JSON.parse(message.body) as BidUpdateMessage;
 
-        console.log('Bid update received:', bidUpdate);
+        console.log("Bid update received:", bidUpdate);
         setLastBidTime(Date.now());
 
         // Call user-provided callback
@@ -68,18 +68,21 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
 
         // Handle time extension
         if (bidUpdate.extended && bidUpdate.newEndTime) {
-          console.log(`Auction ${auctionId} time extended to:`, bidUpdate.newEndTime);
+          console.log(
+            `Auction ${auctionId} time extended to:`,
+            bidUpdate.newEndTime,
+          );
           onTimeExtended?.(bidUpdate.newEndTime);
 
           // Show visual alert for time extension
           notification.info({
             key: `extend-${auctionId}`,
-            message: 'Time Extended!',
+            message: "Time Extended!",
             description: `Auction time extended due to new bid!`,
             duration: 3,
             style: {
-              backgroundColor: '#FFC107',
-              color: '#000',
+              backgroundColor: "#FFC107",
+              color: "#000",
             },
           });
         }
@@ -87,15 +90,15 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
         // Show global notification for new bid with Vietnamese message
         notification.success({
           key: `bid-${auctionId}`,
-          title: 'New Bid Placed',
+          title: "New Bid Placed",
           description: `${bidUpdate.highestBidderName} đã đặt giá ${formatCurrency(bidUpdate.currentPrice)}!`,
           duration: 3,
         });
       } catch (error) {
-        console.error('Failed to parse bid update message:', error);
+        console.error("Failed to parse bid update message:", error);
       }
     },
-    [auctionId, onBidUpdate, onTimeExtended]
+    [auctionId, onBidUpdate, onTimeExtended],
   );
 
   /**
@@ -104,22 +107,23 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
    */
   const client = useMemo(() => {
     // WebSocket URL. Prefer environment variable, fallback to backend path
-    // Backend uses context-path '/api/v1' so endpoint is /api/v1/ws
-    const wsUrl = (import.meta as any).env?.VITE_WS_URL || 'http://localhost:8080/api/v1/ws';
+    // Backend uses context-path '/api/v1' so endpoint is /api/ws
+    const wsUrl =
+      (import.meta as any).env?.VITE_WS_URL || "http://localhost:8080/api/ws";
 
     return new Client({
       // Use SockJS factory for better browser compatibility
       webSocketFactory: () => new SockJS(wsUrl),
-      
+
       // Connect headers
       connectHeaders: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
 
       // Debug logging (only important messages)
       debug: (str) => {
-        if (str.includes('CONNECT') || str.includes('DISCONNECT')) {
-          console.log('[STOMP]', str);
+        if (str.includes("CONNECT") || str.includes("DISCONNECT")) {
+          console.log("[STOMP]", str);
         }
       },
 
@@ -143,7 +147,7 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
 
         // Sync local state with server by invalidating queries
         queryClient.invalidateQueries({
-          queryKey: ['auction', auctionId],
+          queryKey: ["auction", auctionId],
         });
 
         onConnect?.();
@@ -151,7 +155,7 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
 
       // STOMP protocol error handler
       onStompError: (frame) => {
-        const errorMsg = `STOMP error for auction ${auctionId}: ${frame.headers['message']}`;
+        const errorMsg = `STOMP error for auction ${auctionId}: ${frame.headers["message"]}`;
         console.error(errorMsg);
         setIsConnected(false);
         setIsReconnecting(true);
@@ -175,7 +179,14 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
         onError?.(errorMsg);
       },
     });
-  }, [auctionId, queryClient, handleBidUpdate, onConnect, onDisconnect, onError]);
+  }, [
+    auctionId,
+    queryClient,
+    handleBidUpdate,
+    onConnect,
+    onDisconnect,
+    onError,
+  ]);
 
   /**
    * Effect: Activate client on mount, deactivate on unmount

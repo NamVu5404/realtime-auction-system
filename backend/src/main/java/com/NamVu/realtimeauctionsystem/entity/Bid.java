@@ -8,12 +8,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
-@Table(name = "bids",
-        indexes = {
-                @Index(name = "idx_bid_auction", columnList = "auction_id"),
-                @Index(name = "idx_bid_bidder", columnList = "bidder_id"),
-                @Index(name = "idx_bid_created_at", columnList = "created_at")
-        })
+@Table(name = "bids")
 @Getter
 @Setter
 @NoArgsConstructor

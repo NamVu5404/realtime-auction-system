@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 
 @RestController
-@RequestMapping("/auctions")
+@RequestMapping("/v1/auctions")
 @RequiredArgsConstructor
-public class AuctionController {
+public class AuctionControllerV1 {
 
     private final AuctionService auctionService;
 

@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/bids")
+@RequestMapping("/v1/bids")
 @RequiredArgsConstructor
 public class BidController {
 
