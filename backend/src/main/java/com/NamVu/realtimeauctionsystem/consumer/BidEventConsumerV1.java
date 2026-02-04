@@ -3,7 +3,7 @@ package com.NamVu.realtimeauctionsystem.consumer;
 import com.NamVu.realtimeauctionsystem.dto.BidFailureMessage;
 import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
 import com.NamVu.realtimeauctionsystem.service.AuctionDbSyncService;
-import com.NamVu.realtimeauctionsystem.service.BiddingService;
+import com.NamVu.realtimeauctionsystem.service.BidService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,10 +16,10 @@ import java.time.Instant;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class BidEventConsumer {
+public class BidEventConsumerV1 {
 
     private final AuctionDbSyncService dbSyncService;
-    private final BiddingService biddingService;
+    private final BidService bidService;
     private final SimpMessagingTemplate messagingTemplate;
 
     @KafkaListener(
@@ -41,7 +41,7 @@ public class BidEventConsumer {
             log.error("DB sync failed for auction {}, sending to DLQ", event.getAuctionId(), e);
 
             // Tạo bid REJECTED record
-            biddingService.createRejectedBidRecord(event);
+            bidService.createRejectedBidRecord(event);
 
             // Gửi thông báo lỗi cho bidder qua WebSocket
             notifyBidderFailure(event, e);

@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class FraudDetectionServiceTest {
+class FraudDetectionServiceV1Test {
 
     @Mock
     private BidRepository bidRepository;

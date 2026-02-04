@@ -1,6 +1,7 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
 import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
+import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
 import com.NamVu.realtimeauctionsystem.dto.response.MyBidHistoryResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
@@ -12,27 +13,78 @@ import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
 import com.NamVu.realtimeauctionsystem.repository.BidRepository;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
-import com.NamVu.realtimeauctionsystem.service.BiddingService;
+import com.NamVu.realtimeauctionsystem.service.BidService;
+import com.NamVu.realtimeauctionsystem.service.OutboxService;
+import com.NamVu.realtimeauctionsystem.service.RedisLuaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class BiddingServiceImpl implements BiddingService {
+public class BidServiceImpl implements BidService {
+
+    private static final int MAX_EXTENSION = 3;
 
     private final AuctionRepository auctionRepository;
     private final UserRepository userRepository;
     private final BidRepository bidRepository;
+    private final RedisLuaService redisLuaService;
+    private final OutboxService outboxService;
+
+    /**
+     * Place bid V2
+     */
+    @Override
+    @Transactional
+    public BidUpdateResult placeBid(Long auctionId, Long bidderId, BigDecimal newPrice) {
+        Instant now = Instant.now();
+
+        // 1. Execute Lua Script (atomic)
+        List<?> result = redisLuaService.executePlaceBid(
+                auctionId,
+                newPrice,
+                bidderId,
+                now.getEpochSecond(),
+                MAX_EXTENSION);
+
+        Long status = (Long) result.get(0);
+        String message = (String) result.get(1);
+
+        // 2. Lua reject
+        if (status == 0L) {
+            return BidUpdateResult.failure(message, now);
+        }
+
+        // 3. Parse result từ Lua
+        String extendedFlag = (String) result.get(2);  // "extended" | "normal"
+        boolean extended = "extended".equals(extendedFlag);
+
+        // 4. Ghi MySQL + Outbox (trong 1 transaction)
+        Bid bid = Bid.builder()
+                .auction(auctionRepository.getReferenceById(auctionId))
+                .bidder(userRepository.getReferenceById(bidderId))
+                .amount(newPrice)
+                .createdAt(now)
+                .build();
+
+        bidRepository.save(bid);
+        outboxService.save(auctionId, bid, extended);
+
+        // 5. Return success
+        return BidUpdateResult.success(newPrice, bidderId, now, extended);
+    }
 
     /**
      * Tạo Bid record với status REJECTED khi DB sync fail

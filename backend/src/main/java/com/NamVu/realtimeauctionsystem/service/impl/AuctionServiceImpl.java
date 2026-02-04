@@ -198,6 +198,9 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public PlaceBidResponse placeBids(PlaceBidRequest request) {
+        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String name = jwt.getClaim("name");
+
         BidUpdateResult result = redisAuctionService
                 .updateBidWithLock(request.getAuctionId(), request.getBidderId(), request.getAmount());
 
@@ -207,7 +210,7 @@ public class AuctionServiceImpl implements AuctionService {
                     .auctionId(request.getAuctionId())
                     .currentPrice(result.getNewPrice())
                     .highestBidderId(result.getHighestBidderId())
-                    .highestBidderName(result.getHighestBidderName())
+                    .highestBidderName(name)
                     .timestamp(result.getTimestamp())
                     .extended(result.isExtended())
                     .build();
@@ -223,7 +226,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .message(result.getMessage())
                 .currentPrice(result.getNewPrice())
                 .highestBidderId(result.getHighestBidderId())
-                .highestBidderName(result.getHighestBidderName())
+                .highestBidderName(name)
                 .timestamp(result.getTimestamp())
                 .extended(result.isExtended())
                 .build();

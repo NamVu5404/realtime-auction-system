@@ -84,6 +84,10 @@ public class AuctionControllerV1 {
                 .build();
     }
 
+    /**
+     *  Flow: Distributed lock ở Redis -> Kafka push event cập nhật DB
+     *  Chậm, tắc cổ chai nếu nhiều bids cùng lúc, không Atomic
+     */
     @PostMapping("/{auctionId}/bids")
     public ApiResponse<PlaceBidResponse> placeBids(@RequestBody @Valid PlaceBidRequest request) {
         return ApiResponse.<PlaceBidResponse>builder()

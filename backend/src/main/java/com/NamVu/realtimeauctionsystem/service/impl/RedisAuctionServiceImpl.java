@@ -12,8 +12,6 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -68,17 +66,11 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     }
 
     /**
+     * Place bid V1
      * Cập nhật bid với distributed lock để đảm bảo tính nhất quán
      */
     @Override
     public BidUpdateResult updateBidWithLock(Long auctionId, Long bidderId, BigDecimal newPrice) {
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        String bidderName = jwt.getClaim("name");
-
         String lockKey = LOCK_KEY_PREFIX + auctionId;
         RLock lock = redissonClient.getLock(lockKey);
         BidUpdateResult result;
@@ -137,7 +129,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
                 redisTemplate.opsForHash().put(key, "extensionCount", auctionData.get("extensionCount"));
             }
 
-            result = BidUpdateResult.success(newPrice, bidderId, bidderName, now, extended);
+            result = BidUpdateResult.success(newPrice, bidderId, now, extended);
             log.info("Successfully updated bid for auction {}: price={}, bidder={}", auctionId, newPrice, bidderId);
 
         } catch (InterruptedException e) {
