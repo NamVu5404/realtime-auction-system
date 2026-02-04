@@ -82,6 +82,14 @@ public class BidServiceImpl implements BidService {
         bidRepository.save(bid);
         outboxService.save(auctionId, bid, extended);
 
+        // Update auction
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+
+        auction.setCurrentPrice(newPrice);
+        auction.setHighestBidder(userRepository.getReferenceById(bidderId));
+        auctionRepository.save(auction);
+
         // 5. Return success
         return BidUpdateResult.success(newPrice, bidderId, now, extended);
     }
