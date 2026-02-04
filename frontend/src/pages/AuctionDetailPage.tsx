@@ -20,7 +20,7 @@ import {
   notification,
 } from "antd";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, memo, useCallback } from "react";
+import { useEffect, useState, memo, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { auctionApi } from "../api/auctionApi";
 import {
@@ -35,6 +35,7 @@ import { useAuth } from "../hooks/useAuth";
 import { useAuctionWebsocket } from "../hooks/useAuctionWebsocket";
 import { formatAuctionTime, getTimeRemaining } from "../utils/dateUtils";
 import { formatCurrency } from "../utils/format";
+import { useUIStore } from "../store/useUIStore";
 
 const DEFAULT_IMAGE =
   "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
@@ -186,6 +187,7 @@ export const AuctionDetailPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
+  const { isMaintenanceMode, setMaintenanceMode } = useUIStore();
   const [auction, setAuction] = useState<Auction | null>(null);
   const [loading, setLoading] = useState(true);
   const [bidLoading, setBidLoading] = useState(false);
@@ -198,16 +200,29 @@ export const AuctionDetailPage = () => {
 
   // ✅ FIX: Stabilize callbacks to prevent unnecessary WebSocket reconnections
   const onBidUpdate = useCallback((message: BidUpdateMessage) => {
+    // Update lastActive whenever a message is received
+    setLastActive(Date.now());
+    // Reset polling interval on recovery
+    setPollingInterval(2000);
+
     setAuction((prev) =>
       prev && prev.id === message.auctionId
         ? {
             ...prev,
-            currentPrice: message.currentPrice,
+            currentPrice:
+              message.currentPrice || message.amount || prev.currentPrice,
             highestBidder: {
-              id: message.highestBidderId,
-              name: message.highestBidderName,
-              email: "",
-              role: UserRole.USER,
+              id:
+                message.highestBidderId ||
+                message.bidderId ||
+                prev.highestBidder?.id ||
+                0,
+              name:
+                message.highestBidderName ||
+                prev.highestBidder?.name ||
+                "Người đấu giá",
+              email: prev.highestBidder?.email || "",
+              role: prev.highestBidder?.role || UserRole.USER,
             },
           }
         : prev,
@@ -216,9 +231,7 @@ export const AuctionDetailPage = () => {
 
   const onTimeExtended = useCallback((newEndTime: string) => {
     setHasTimeExtension(true);
-    setAuction((prev) =>
-      prev ? { ...prev, endTime: newEndTime } : null,
-    );
+    setAuction((prev) => (prev ? { ...prev, endTime: newEndTime } : null));
     setTimeout(() => setHasTimeExtension(false), 3000);
   }, []);
 
@@ -238,6 +251,91 @@ export const AuctionDetailPage = () => {
     onConnect,
     onDisconnect,
   });
+
+  // --- Smart Fallback Logic (Polling) ---
+  const [lastActive, setLastActive] = useState<number>(Date.now());
+  const [pollingInterval, setPollingInterval] = useState<number>(2000);
+  const isFetchingRef = useRef<boolean>(false);
+  const lastPollTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (!auction || auction.status !== AuctionStatus.LIVE || !auctionId) return;
+
+    const silenceDetector = setInterval(async () => {
+      const now = Date.now();
+      const timeSinceLastActive = now - lastActive;
+      const timeSinceLastPoll = now - lastPollTimeRef.current;
+
+      // Maintenance Mode Recovery Probe:
+      // Even in maintenance mode, we poll to see if service is back
+      const pollerInterval = isMaintenanceMode ? 5000 : pollingInterval;
+
+      // Silence Detection: more than 2 seconds of silence FROM WEBSOCKET
+      // OR if we are in Maintenance Mode (active probing)
+      // AND respect the current dynamic pollingInterval for the NEXT API call
+      if (
+        (timeSinceLastActive > 2000 || isMaintenanceMode) &&
+        timeSinceLastPoll >= pollerInterval &&
+        !isFetchingRef.current
+      ) {
+        console.log(
+          `Silence/Maintenance detected. Polling API (Interval: ${pollerInterval}ms)...`,
+        );
+        isFetchingRef.current = true;
+        lastPollTimeRef.current = now;
+
+        try {
+          const apiPrice = await auctionApi.getCurrentPrice(auctionId);
+          isFetchingRef.current = false;
+
+          // If we are here, the API call was successful (no 1020 or 503)
+          if (isMaintenanceMode) {
+            console.log("System recovered from Maintenance Mode!");
+            setMaintenanceMode(false);
+            setPollingInterval(2000); // Reset frequency
+          }
+
+          setAuction((prev) => {
+            if (!prev) return null;
+
+            // Scenario A: Kafka/Websocket Failure (apiPrice > currentPrice)
+            if (apiPrice > prev.currentPrice) {
+              setPollingInterval(2000); // Maintain high frequency
+              return {
+                ...prev,
+                currentPrice: apiPrice,
+                // We keep the existing highestBidder as the API only returns price
+              };
+            }
+
+            // Scenario B: No new bids (apiPrice <= currentPrice)
+            // Apply Exponential Backoff: +1s, max 10s
+            // Only backoff if NOT in maintenance mode (maintenance mode has fixed 5s interval)
+            if (!isMaintenanceMode) {
+              setPollingInterval((current) => Math.min(10000, current + 1000));
+            }
+            return prev;
+          });
+        } catch (error) {
+          console.error("Fallback polling failed:", error);
+          isFetchingRef.current = false;
+          // On error, also backoff if not in maintenance mode
+          if (!isMaintenanceMode) {
+            setPollingInterval((current) => Math.min(10000, current + 1000));
+          }
+        }
+      }
+    }, 1000); // Check silence status every second
+
+    return () => clearInterval(silenceDetector);
+  }, [
+    auction?.status,
+    auctionId,
+    lastActive,
+    pollingInterval,
+    isMaintenanceMode,
+  ]);
+  // --- End Smart Fallback Logic ---
 
   // Fetch auction details on mount
   useEffect(() => {
@@ -299,6 +397,7 @@ export const AuctionDetailPage = () => {
     isReconnecting ||
     isCountdownFinished ||
     !isAuthenticated ||
+    isMaintenanceMode ||
     (!isLive && !isCountdownStarted);
 
   // Handle bid placement with improved error handling and state management
@@ -336,16 +435,26 @@ export const AuctionDetailPage = () => {
         return;
       }
 
-      // Place bid using updated endpoint
-      const response = await auctionApi.placeBid(
-        auction.id,
-        bidderId,
-        bidAmountNum,
-      );
+      // Place bid using updated endpoint (V2)
+      const response = await auctionApi.placeBidV2(auction.id, bidAmountNum);
 
       if (response.success) {
         message.success(response.message || "Bid placed successfully!");
-        // Price will be updated via WebSocket immediately
+        // Update locally for instant feedback
+        setAuction((prev) =>
+          prev && prev.id === auction.id
+            ? {
+                ...prev,
+                currentPrice: response.newPrice,
+                highestBidder: {
+                  id: response.highestBidderId,
+                  name: response.highestBidderName,
+                  email: prev.highestBidder?.email || "",
+                  role: prev.highestBidder?.role || UserRole.USER,
+                },
+              }
+            : prev,
+        );
       } else {
         message.error(response.message || "Failed to place bid");
       }
@@ -418,6 +527,32 @@ export const AuctionDetailPage = () => {
   return (
     <div className="bg-black min-h-screen py-8">
       <div className="container max-w-7xl mx-auto px-4">
+        {/* Maintenance Banner */}
+        {isMaintenanceMode && (
+          <div className="mb-6 animate-pulse">
+            <div className="bg-red-900/40 border-2 border-red-500 rounded-lg p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">⚠️</span>
+                <div>
+                  <h3 className="text-red-400 font-bold m-0 p-0">
+                    System Interruption Detected
+                  </h3>
+                  <p className="text-red-300 text-sm m-0 p-0">
+                    Redis is currently down. Bidding is temporarily disabled. We
+                    are attempting to recover...
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Spin size="small" />
+                <span className="text-red-400 text-xs font-mono">
+                  PROBING...
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Back Button */}
         <div className="flex justify-between items-center mb-6">
           <Button

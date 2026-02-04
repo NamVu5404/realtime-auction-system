@@ -1,10 +1,10 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { AuthState } from '../types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { AuthState } from "../types";
 
 interface AuthStoreState extends AuthState {
   setTokens: (accessToken: string, refreshToken: string) => void;
-  setUser: (user: AuthState['user']) => void;
+  setUser: (user: AuthState["user"]) => void;
   logout: (accessToken: string) => void;
 }
 
@@ -22,13 +22,13 @@ export const useAuthStore = create<AuthStoreState>()(
           refreshToken,
         }),
 
-      setUser: (user: AuthState['user']) =>
+      setUser: (user: AuthState["user"]) =>
         set({
           user,
           isAuthenticated: !!user,
         }),
 
-      logout: (accessToken: AuthState['accessToken']) =>
+      logout: (accessToken: AuthState["accessToken"]) =>
         set({
           accessToken: null,
           refreshToken: null,
@@ -37,13 +37,13 @@ export const useAuthStore = create<AuthStoreState>()(
         }),
     }),
     {
-      name: 'auth-store', // localStorage key
+      name: "auth-store", // localStorage key
       partialize: (state) => ({
         accessToken: state.accessToken,
         refreshToken: state.refreshToken,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
-    }
-  )
+    },
+  ),
 );

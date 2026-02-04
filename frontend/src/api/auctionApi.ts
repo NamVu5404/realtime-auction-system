@@ -7,6 +7,7 @@ import {
   PlaceBidResponse,
   PageResponse,
   AuctionHistoryResponse,
+  PlaceBidResponseV2,
 } from "./types";
 
 /**
@@ -99,6 +100,34 @@ export const auctionApi = {
   },
 
   /**
+   * Place a bid on an auction (V2)
+   * Requires authentication token in header
+   * Backend Endpoint: POST /api/v2/auctions/{auctionId}/bids
+   *
+   * @param auctionId - Auction ID in URL path
+   * @param amount - Bid amount
+   * @returns Promise with PlaceBidResponseV2
+   */
+  placeBidV2: async (
+    auctionId: number,
+    amount: number,
+  ): Promise<PlaceBidResponseV2> => {
+    try {
+      // NOTE: We manually override baseURL for V2 endpoint
+      const response = await axiosClient.post<ApiResponse<PlaceBidResponseV2>>(
+        `http://localhost:8080/api/v2/auctions/${auctionId}/bids`,
+        {
+          amount,
+        },
+      );
+      return response.data.result;
+    } catch (error) {
+      console.error("Failed to place bid (V2):", error);
+      throw error;
+    }
+  },
+
+  /**
    * Fetch auction history (bid logs)
    *
    * @param auctionId - Auction ID
@@ -123,6 +152,24 @@ export const auctionApi = {
       return response.data.result;
     } catch (error) {
       console.error("Failed to fetch auction history:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Fetch current price directly from Redis (Smart Fallback API)
+   *
+   * @param auctionId - Auction ID
+   * @returns Promise with current price and bidder info
+   */
+  getCurrentPrice: async (auctionId: number): Promise<number> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<number>>(
+        `/auctions/${auctionId}/current-price`,
+      );
+      return response.data.result;
+    } catch (error) {
+      console.error("Failed to fetch current price:", error);
       throw error;
     }
   },

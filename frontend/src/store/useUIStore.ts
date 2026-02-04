@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface UIStoreState {
   darkMode: boolean;
@@ -6,6 +6,8 @@ interface UIStoreState {
   setDarkMode: (dark: boolean) => void;
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
+  isMaintenanceMode: boolean;
+  setMaintenanceMode: (status: boolean) => void;
 }
 
 export const useUIStore = create<UIStoreState>((set) => ({
@@ -13,5 +15,8 @@ export const useUIStore = create<UIStoreState>((set) => ({
   toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
   setDarkMode: (dark: boolean) => set({ darkMode: dark }),
   sidebarCollapsed: false,
-  toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+  toggleSidebar: () =>
+    set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+  isMaintenanceMode: false,
+  setMaintenanceMode: (status: boolean) => set({ isMaintenanceMode: status }),
 }));

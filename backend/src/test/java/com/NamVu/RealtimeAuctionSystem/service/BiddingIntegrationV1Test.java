@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.*;
 )
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class BiddingIntegrationTest {
+class BiddingIntegrationV1Test {
 
     @Container
     static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")

@@ -1,12 +1,13 @@
 package com.NamVu.realtimeauctionsystem.controller;
 
 import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequestV1;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.response.*;
 import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
 import com.NamVu.realtimeauctionsystem.service.AuctionService;
+import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -14,14 +15,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @RestController
-@RequestMapping("/auctions")
+@RequestMapping("/v1/auctions")
 @RequiredArgsConstructor
-public class AuctionController {
+public class AuctionControllerV1 {
 
     private final AuctionService auctionService;
+    private final RedisAuctionService redisAuctionService;
 
     // LIVE = LIVE + SCHEDULED (startTime - now <= 1h)
     // UPCOMING = SCHEDULED (startTime - now > 1h)
@@ -84,8 +87,12 @@ public class AuctionController {
                 .build();
     }
 
+    /**
+     *  Flow: Distributed lock ở Redis -> Kafka push event cập nhật DB
+     *  Chậm, tắc cổ chai nếu nhiều bids cùng lúc, không Atomic
+     */
     @PostMapping("/{auctionId}/bids")
-    public ApiResponse<PlaceBidResponse> placeBids(@RequestBody @Valid PlaceBidRequest request) {
+    public ApiResponse<PlaceBidResponse> placeBids(@RequestBody @Valid PlaceBidRequestV1 request) {
         return ApiResponse.<PlaceBidResponse>builder()
                 .result(auctionService.placeBids(request))
                 .build();
@@ -119,4 +126,12 @@ public class AuctionController {
                 .result(auctionService.getAuctionHistory(id, pageable))
                 .build();
     }
+
+    @GetMapping("/{id}/current-price")
+    public ApiResponse<BigDecimal> getCurrentPrice(@PathVariable Long id) {
+        return ApiResponse.<BigDecimal>builder()
+                .result(redisAuctionService.getCurrentPrice(id))
+                .build();
+    }
+
 }

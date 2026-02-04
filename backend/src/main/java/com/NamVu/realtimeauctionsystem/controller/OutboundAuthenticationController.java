@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth/outbound")
+@RequestMapping("/v1/auth/outbound")
 @RequiredArgsConstructor
 public class OutboundAuthenticationController {
 

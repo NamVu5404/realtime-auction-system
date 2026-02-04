@@ -3,18 +3,18 @@ package com.NamVu.realtimeauctionsystem.controller;
 import com.NamVu.realtimeauctionsystem.dto.response.ApiResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.MyBidHistoryResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
-import com.NamVu.realtimeauctionsystem.service.BiddingService;
+import com.NamVu.realtimeauctionsystem.service.BidService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/bids")
+@RequestMapping("/v1/bids")
 @RequiredArgsConstructor
 public class BidController {
 
-    private final BiddingService biddingService;
+    private final BidService bidService;
 
     @GetMapping("/my-history")
     public ApiResponse<PageResponse<MyBidHistoryResponse>> getMyBidHistory(
@@ -24,7 +24,7 @@ public class BidController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         return ApiResponse.<PageResponse<MyBidHistoryResponse>>builder()
-                .result(biddingService.getMyBidHistory(pageable))
+                .result(bidService.getMyBidHistory(pageable))
                 .build();
     }
 
@@ -37,7 +37,7 @@ public class BidController {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         return ApiResponse.<PageResponse<MyBidHistoryResponse>>builder()
-                .result(biddingService.getBidHistoryForAdmin(userId, pageable))
+                .result(bidService.getBidHistoryForAdmin(userId, pageable))
                 .build();
     }
 }

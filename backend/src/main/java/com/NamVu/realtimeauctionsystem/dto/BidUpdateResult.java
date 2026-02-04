@@ -17,18 +17,16 @@ public class BidUpdateResult {
     private String message;
     private BigDecimal newPrice;
     private Long highestBidderId;
-    private String highestBidderName;
     private Instant timestamp;
     private boolean extended;
     private Long version; // Version của Auction entity sau khi update
 
-    public static BidUpdateResult success(BigDecimal price, Long bidderId, String bidderName, Instant timestamp, boolean extended) {
+    public static BidUpdateResult success(BigDecimal price, Long bidderId, Instant timestamp, boolean extended) {
         return BidUpdateResult.builder()
                 .success(true)
                 .message("Bid placed successfully")
                 .newPrice(price)
                 .highestBidderId(bidderId)
-                .highestBidderName(bidderName)
                 .timestamp(timestamp)
                 .extended(extended)
                 .build();

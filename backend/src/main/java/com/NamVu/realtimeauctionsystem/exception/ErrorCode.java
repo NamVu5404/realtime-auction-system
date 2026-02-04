@@ -28,6 +28,7 @@ public enum ErrorCode {
     AUCTION_STATUS_INVALID(1017, "Auction status invalid", HttpStatus.BAD_REQUEST),
     INVALID_INPUT(1018, "Input invalid", HttpStatus.BAD_REQUEST),
     START_END_TIME_INVALID(1019, "Start time or end time invalid", HttpStatus.BAD_REQUEST),
+    REDIS_DOWN(1020, "Redis is down", HttpStatus.SERVICE_UNAVAILABLE),
     ;
 
     private final int code;
