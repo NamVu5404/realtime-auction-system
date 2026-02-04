@@ -5,6 +5,7 @@ import axios, {
   AxiosResponse,
 } from "axios";
 import { useAuthStore } from "../store/useAuthStore";
+import { useUIStore } from "../store/useUIStore";
 
 const API_BASE_URL = "http://localhost:8080/api/v1";
 
@@ -109,6 +110,15 @@ axiosClient.interceptors.response.use(
       } finally {
         isRefreshing = false;
       }
+    }
+
+    // Detect Redis Down (Maintenance Mode)
+    if (
+      error.response?.status === 503 ||
+      (error.response?.data as any)?.code === 1020
+    ) {
+      const { setMaintenanceMode } = useUIStore.getState();
+      setMaintenanceMode(true);
     }
 
     // Return the error with full response data intact

@@ -155,4 +155,22 @@ export const auctionApi = {
       throw error;
     }
   },
+
+  /**
+   * Fetch current price directly from Redis (Smart Fallback API)
+   *
+   * @param auctionId - Auction ID
+   * @returns Promise with current price and bidder info
+   */
+  getCurrentPrice: async (auctionId: number): Promise<number> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<number>>(
+        `/auctions/${auctionId}/current-price`,
+      );
+      return response.data.result;
+    } catch (error) {
+      console.error("Failed to fetch current price:", error);
+      throw error;
+    }
+  },
 };

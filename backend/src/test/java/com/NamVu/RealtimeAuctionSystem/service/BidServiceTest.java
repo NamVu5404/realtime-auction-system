@@ -72,12 +72,22 @@ public class BidServiceTest {
         when(redisLuaService.executePlaceBid(any(), any(), any(), anyLong(), anyInt()))
                 .thenAnswer(invocation -> List.of(1L, "Success", "normal", "1234567890"));
 
+        when(auctionRepository.updateAuctionPrice(anyLong(), any(), anyLong()))
+                .thenReturn(1);
+
         BidUpdateResult result = bidService.placeBid(AUCTION_ID, BIDDER_ID, new BigDecimal("1200"));
 
         assertTrue(result.isSuccess());
-        verify(auctionRepository, times(1)).save(any(Auction.class)); // Kiểm tra update auction
+
+        verify(auctionRepository, times(1)).updateAuctionPrice(
+                eq(AUCTION_ID),
+                eq(new BigDecimal("1200")),
+                eq(BIDDER_ID)
+        );
+
         verify(bidRepository, times(1)).save(any());
         verify(outboxService, times(1)).save(any(), any(), anyBoolean());
+        verify(auctionRepository, times(1)).getReferenceById(AUCTION_ID);
     }
 
     // ❌ Test Lua reject
@@ -99,6 +109,9 @@ public class BidServiceTest {
     void testPlaceBidExtended() throws JsonProcessingException {
         when(redisLuaService.executePlaceBid(any(), any(), any(), anyLong(), anyInt()))
                 .thenAnswer(invocation -> List.of(1L, "Success", "extended", "1234567890"));
+
+        when(auctionRepository.updateAuctionPrice(anyLong(), any(), anyLong()))
+                .thenReturn(1);
 
         BidUpdateResult result = bidService.placeBid(AUCTION_ID, BIDDER_ID, new BigDecimal("1200"));
 

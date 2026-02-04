@@ -23,7 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final String[] PUBLIC_ENDPOINTS = {
-        "/v1/auth/**", "/v1/auctions", "/v1/auctions/*"
+        "/v1/auth/**", "/v1/auctions", "/v1/auctions/*", "/v1/auctions/*/current-price"
     };
 
     @Autowired

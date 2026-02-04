@@ -53,12 +53,18 @@ public class BidServiceImpl implements BidService {
         Instant now = Instant.now();
 
         // 1. Execute Lua Script (atomic)
-        List<?> result = redisLuaService.executePlaceBid(
-                auctionId,
-                newPrice,
-                bidderId,
-                now.getEpochSecond(),
-                MAX_EXTENSION);
+        List<?> result;
+
+        try {
+            result = redisLuaService.executePlaceBid(
+                    auctionId,
+                    newPrice,
+                    bidderId,
+                    now.getEpochSecond(),
+                    MAX_EXTENSION);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.REDIS_DOWN);
+        }
 
         Long status = (Long) result.get(0);
         String message = (String) result.get(1);
@@ -85,12 +91,10 @@ public class BidServiceImpl implements BidService {
         outboxService.save(auctionId, bid, extended);
 
         // Update auction
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
-
-        auction.setCurrentPrice(newPrice);
-        auction.setHighestBidder(userRepository.getReferenceById(bidderId));
-        auctionRepository.save(auction);
+        int updatedRows = auctionRepository.updateAuctionPrice(auctionId, newPrice, bidderId);
+        if (updatedRows == 0) {
+            throw new AppException(ErrorCode.AUCTION_NOT_FOUND);
+        }
 
         // 5. Return success
         return BidUpdateResult.success(newPrice, bidderId, now, extended);

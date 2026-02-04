@@ -4,6 +4,8 @@ import com.NamVu.realtimeauctionsystem.dto.AuctionRedisData;
 import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
 import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
+import com.NamVu.realtimeauctionsystem.exception.AppException;
+import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
 import lombok.RequiredArgsConstructor;
@@ -160,15 +162,19 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
      */
     @Override
     public BigDecimal getCurrentPrice(Long auctionId) {
-        String key = AUCTION_KEY_PREFIX + auctionId;
-        Object priceObj = stringRedisTemplate.opsForHash().get(key, "currentPrice");
+        try {
+            String key = AUCTION_KEY_PREFIX + auctionId;
+            Object priceObj = stringRedisTemplate.opsForHash().get(key, "currentPrice");
 
-        if (priceObj == null) {
-            log.warn("Current price not found for auction {}", auctionId);
-            return null;
+            if (priceObj == null) {
+                log.warn("Current price not found for auction {}", auctionId);
+                return null;
+            }
+
+            return new BigDecimal(String.valueOf(priceObj));
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.REDIS_DOWN);
         }
-
-        return new BigDecimal(String.valueOf(priceObj));
     }
 
     /**

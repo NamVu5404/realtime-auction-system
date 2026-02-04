@@ -7,10 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -63,4 +65,12 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Auction a WHERE a.id = :id")
     Optional<Auction> findByIdWithLock(Long id);
+
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Auction a SET a.currentPrice = :newPrice, a.highestBidder.id = :bidderId WHERE a.id = :auctionId")
+    int updateAuctionPrice(
+            @Param("auctionId") Long auctionId,
+            @Param("newPrice") BigDecimal newPrice,
+            @Param("bidderId") Long bidderId
+    );
 }

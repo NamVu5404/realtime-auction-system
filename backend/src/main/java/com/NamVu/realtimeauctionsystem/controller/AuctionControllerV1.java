@@ -7,6 +7,7 @@ import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest
 import com.NamVu.realtimeauctionsystem.dto.response.*;
 import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
 import com.NamVu.realtimeauctionsystem.service.AuctionService;
+import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @RestController
@@ -22,6 +24,7 @@ import java.time.Instant;
 public class AuctionControllerV1 {
 
     private final AuctionService auctionService;
+    private final RedisAuctionService redisAuctionService;
 
     // LIVE = LIVE + SCHEDULED (startTime - now <= 1h)
     // UPCOMING = SCHEDULED (startTime - now > 1h)
@@ -123,4 +126,12 @@ public class AuctionControllerV1 {
                 .result(auctionService.getAuctionHistory(id, pageable))
                 .build();
     }
+
+    @GetMapping("/{id}/current-price")
+    public ApiResponse<BigDecimal> getCurrentPrice(@PathVariable Long id) {
+        return ApiResponse.<BigDecimal>builder()
+                .result(redisAuctionService.getCurrentPrice(id))
+                .build();
+    }
+
 }
