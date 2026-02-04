@@ -40,7 +40,7 @@ public class OutboxPollerTest {
                 .id(1L)
                 .eventType(OutboxEventType.BID_PLACED)
                 .auctionId(1L)
-                .payload(Map.of("auctionId", 1))
+                .payload("{\"auctionId\":1}")
                 .status(OutboxStatus.PENDING)
                 .createdAt(Instant.now())
                 .build();
@@ -63,7 +63,7 @@ public class OutboxPollerTest {
                 .id(1L)
                 .eventType(OutboxEventType.BID_PLACED)
                 .auctionId(1L)
-                .payload(Map.of("auctionId", 1))
+                .payload("{\"auctionId\":1}")
                 .status(OutboxStatus.PENDING)
                 .retryCount(0)
                 .createdAt(Instant.now())
@@ -89,7 +89,7 @@ public class OutboxPollerTest {
                 .id(1L)
                 .eventType(OutboxEventType.BID_PLACED)
                 .auctionId(1L)
-                .payload(Map.of("auctionId", 1))
+                .payload("{\"auctionId\":1}")
                 .status(OutboxStatus.PENDING)
                 .retryCount(4)                              // Lần thử thứ 5 sắp diễn ra
                 .createdAt(Instant.now())

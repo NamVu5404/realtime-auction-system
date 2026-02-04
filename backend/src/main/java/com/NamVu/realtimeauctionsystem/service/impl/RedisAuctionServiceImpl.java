@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -27,14 +27,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RedisAuctionServiceImpl implements RedisAuctionService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final UserRepository userRepository;
 
     private static final String AUCTION_KEY_PREFIX = "auction:";
     private static final String LOCK_KEY_PREFIX = "lock:auction:";
-    private static final Duration DEFAULT_TTL = Duration.ofDays(7);
     private static final int MAX_EXTENSION = 3;
     private static final String KAFKA_TOPIC = "auction.bid.events";
 
@@ -45,22 +44,27 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     public void initAuction(Long auctionId, BigDecimal startPrice, BigDecimal minStep, Long sellerId, Instant endTime, Integer antiSnipeSeconds, Integer extensionSeconds) {
         String key = AUCTION_KEY_PREFIX + auctionId;
 
-        Map<String, Object> data = new HashMap<>();
+        Map<String, String> data = new HashMap<>();
         data.put("currentPrice", startPrice.toString());
         data.put("minStep", minStep.toString());
-        data.put("highestBidderId", null);
+        data.put("highestBidderId", "");
         data.put("sellerId", sellerId.toString());
-        data.put("bidCount", 0);
-        data.put("lastBidTime", null);
-        data.put("endTime", endTime.toString());
+        data.put("bidCount", "0");
+        data.put("lastBidTime", "");
+        data.put("endTime", String.valueOf(endTime.getEpochSecond()));
         data.put("status", "LIVE");
         data.put("antiSnipeSeconds", antiSnipeSeconds.toString());
         data.put("extensionSeconds", extensionSeconds.toString());
         data.put("extensionCount", "0");
-        data.put("version", 0);
+        data.put("version", "0");
 
-        redisTemplate.opsForHash().putAll(key, data);
-        redisTemplate.expire(key, DEFAULT_TTL);
+        stringRedisTemplate.opsForHash().putAll(key, data);
+
+        long secondsUntilEnd = Duration.between(Instant.now(), endTime).getSeconds();
+        long bufferSeconds = 24 * 60 * 60;
+        long finalTtl = Math.max(secondsUntilEnd + bufferSeconds, 3600);
+
+        stringRedisTemplate.expire(key, Duration.ofSeconds(finalTtl));
 
         log.info("Initialized auction {} in Redis with start price {}", auctionId, startPrice);
     }
@@ -87,7 +91,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
 
             String key = AUCTION_KEY_PREFIX + auctionId;
 
-            Map<Object, Object> auctionData = redisTemplate.opsForHash().entries(key);
+            Map<Object, Object> auctionData = stringRedisTemplate.opsForHash().entries(key);
 
             if (auctionData.isEmpty()) {
                 return BidUpdateResult.failure("Auction not found", now);
@@ -117,16 +121,16 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
             extended = antiSniping(auctionId, now, auctionData);
 
             // Atomic update
-            redisTemplate.opsForHash().put(key, "currentPrice", newPrice.toString());
-            redisTemplate.opsForHash().put(key, "highestBidderId", bidderId.toString());
-            redisTemplate.opsForHash().increment(key, "bidCount", 1);
-            redisTemplate.opsForHash().put(key, "lastBidTime", now.toString());
-            redisTemplate.opsForHash().increment(key, "version", 1);
+            stringRedisTemplate.opsForHash().put(key, "currentPrice", newPrice.toString());
+            stringRedisTemplate.opsForHash().put(key, "highestBidderId", bidderId.toString());
+            stringRedisTemplate.opsForHash().increment(key, "bidCount", 1);
+            stringRedisTemplate.opsForHash().put(key, "lastBidTime", now.toString());
+            stringRedisTemplate.opsForHash().increment(key, "version", 1);
 
             // Gia hạn thời gian
             if (extended) {
-                redisTemplate.opsForHash().put(key, "endTime", auctionData.get("endTime"));
-                redisTemplate.opsForHash().put(key, "extensionCount", auctionData.get("extensionCount"));
+                stringRedisTemplate.opsForHash().put(key, "endTime", auctionData.get("endTime"));
+                stringRedisTemplate.opsForHash().put(key, "extensionCount", auctionData.get("extensionCount"));
             }
 
             result = BidUpdateResult.success(newPrice, bidderId, now, extended);
@@ -157,7 +161,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     @Override
     public BigDecimal getCurrentPrice(Long auctionId) {
         String key = AUCTION_KEY_PREFIX + auctionId;
-        Object priceObj = redisTemplate.opsForHash().get(key, "currentPrice");
+        Object priceObj = stringRedisTemplate.opsForHash().get(key, "currentPrice");
 
         if (priceObj == null) {
             log.warn("Current price not found for auction {}", auctionId);
@@ -173,7 +177,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     @Override
     public Long getHighestBidderId(Long auctionId) {
         String key = AUCTION_KEY_PREFIX + auctionId;
-        Object bidderIdObj = redisTemplate.opsForHash().get(key, "highestBidderId");
+        Object bidderIdObj = stringRedisTemplate.opsForHash().get(key, "highestBidderId");
 
         if (bidderIdObj == null) {
             return null;
@@ -188,7 +192,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     @Override
     public AuctionRedisData getAuctionData(Long auctionId) {
         String key = AUCTION_KEY_PREFIX + auctionId;
-        Map<Object, Object> data = redisTemplate.opsForHash().entries(key);
+        Map<Object, Object> data = stringRedisTemplate.opsForHash().entries(key);
 
         if (data.isEmpty()) {
             return null;
@@ -214,7 +218,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     @Override
     public void updateEndTime(Long auctionId, Instant newEndTime) {
         String key = AUCTION_KEY_PREFIX + auctionId;
-        redisTemplate.opsForHash().put(key, "endTime", newEndTime.toString());
+        stringRedisTemplate.opsForHash().put(key, "endTime", newEndTime.toString());
         log.info("Updated end time for auction {} to {}", auctionId, newEndTime);
     }
 
@@ -224,7 +228,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     @Override
     public void updateStatus(Long auctionId, String status) {
         String key = AUCTION_KEY_PREFIX + auctionId;
-        redisTemplate.opsForHash().put(key, "status", status);
+        stringRedisTemplate.opsForHash().put(key, "status", status);
         log.info("Updated status for auction {} to {}", auctionId, status);
     }
 
@@ -234,7 +238,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     @Override
     public void deleteAuction(Long auctionId) {
         String key = AUCTION_KEY_PREFIX + auctionId;
-        redisTemplate.delete(key);
+        stringRedisTemplate.delete(key);
         log.info("Deleted auction {} from Redis", auctionId);
     }
 
@@ -244,7 +248,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     @Override
     public boolean exists(Long auctionId) {
         String key = AUCTION_KEY_PREFIX + auctionId;
-        return redisTemplate.hasKey(key);
+        return stringRedisTemplate.hasKey(key);
     }
 
     /**

@@ -149,17 +149,34 @@ export interface PlaceBidResponse {
 }
 
 /**
+ * Place Bid Response V2 - from backend POST /v2/auctions/{auctionId}/bids
+ */
+export interface PlaceBidResponseV2 {
+  success: boolean;
+  message: string;
+  newPrice: number;
+  highestBidderId: number;
+  highestBidderName: string; // Added by user
+  timestamp: string | number; // ISO 8601 UTC string or Epoch seconds
+  extended: boolean;
+  version: number;
+}
+
+/**
  * Bid Update Message - WebSocket message from /topic/auction/{auctionId}
  */
 export interface BidUpdateMessage {
   auctionId: number;
-  currentPrice: number;
-  highestBidderId: number;
-  highestBidderName: string;
-  bidCount: number;
-  extended: boolean; // Whether this bid triggered time extension
-  timestamp: string; // ISO 8601 UTC string
-  newEndTime?: string; // Updated end time if extended
+  currentPrice?: number;
+  amount?: number; // V2 field
+  highestBidderId?: number;
+  bidderId?: number; // V2 field
+  highestBidderName?: string;
+  bidderName?: string; // Matching V2 backend field
+  bidCount?: number;
+  extended: boolean;
+  timestamp: string | number;
+  newEndTime?: string;
 }
 
 /**

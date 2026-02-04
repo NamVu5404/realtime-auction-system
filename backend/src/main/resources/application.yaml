@@ -42,6 +42,11 @@ spring:
       compression-type: snappy
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        linger.ms: 50
+        request.timeout.ms: 1000
+        delivery.timeout.ms: 4000
+        retry.backoff.ms: 200
     consumer:
       group-id: auction-db-sync-group
       auto-offset-reset: earliest

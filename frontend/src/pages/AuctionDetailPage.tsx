@@ -202,12 +202,20 @@ export const AuctionDetailPage = () => {
       prev && prev.id === message.auctionId
         ? {
             ...prev,
-            currentPrice: message.currentPrice,
+            currentPrice:
+              message.currentPrice || message.amount || prev.currentPrice,
             highestBidder: {
-              id: message.highestBidderId,
-              name: message.highestBidderName,
-              email: "",
-              role: UserRole.USER,
+              id:
+                message.highestBidderId ||
+                message.bidderId ||
+                prev.highestBidder?.id ||
+                0,
+              name:
+                message.highestBidderName ||
+                prev.highestBidder?.name ||
+                "Người đấu giá",
+              email: prev.highestBidder?.email || "",
+              role: prev.highestBidder?.role || UserRole.USER,
             },
           }
         : prev,
@@ -216,9 +224,7 @@ export const AuctionDetailPage = () => {
 
   const onTimeExtended = useCallback((newEndTime: string) => {
     setHasTimeExtension(true);
-    setAuction((prev) =>
-      prev ? { ...prev, endTime: newEndTime } : null,
-    );
+    setAuction((prev) => (prev ? { ...prev, endTime: newEndTime } : null));
     setTimeout(() => setHasTimeExtension(false), 3000);
   }, []);
 
@@ -336,16 +342,26 @@ export const AuctionDetailPage = () => {
         return;
       }
 
-      // Place bid using updated endpoint
-      const response = await auctionApi.placeBid(
-        auction.id,
-        bidderId,
-        bidAmountNum,
-      );
+      // Place bid using updated endpoint (V2)
+      const response = await auctionApi.placeBidV2(auction.id, bidAmountNum);
 
       if (response.success) {
         message.success(response.message || "Bid placed successfully!");
-        // Price will be updated via WebSocket immediately
+        // Update locally for instant feedback
+        setAuction((prev) =>
+          prev && prev.id === auction.id
+            ? {
+                ...prev,
+                currentPrice: response.newPrice,
+                highestBidder: {
+                  id: response.highestBidderId,
+                  name: response.highestBidderName,
+                  email: prev.highestBidder?.email || "",
+                  role: prev.highestBidder?.role || UserRole.USER,
+                },
+              }
+            : prev,
+        );
       } else {
         message.error(response.message || "Failed to place bid");
       }

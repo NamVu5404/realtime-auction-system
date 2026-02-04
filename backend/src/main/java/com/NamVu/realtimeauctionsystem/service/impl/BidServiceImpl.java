@@ -16,6 +16,7 @@ import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.BidService;
 import com.NamVu.realtimeauctionsystem.service.OutboxService;
 import com.NamVu.realtimeauctionsystem.service.RedisLuaService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -44,11 +45,11 @@ public class BidServiceImpl implements BidService {
     private final OutboxService outboxService;
 
     /**
-     * Place bid V2
+     * Place bid V2: Lua Script + Outbox Pattern
      */
     @Override
     @Transactional
-    public BidUpdateResult placeBid(Long auctionId, Long bidderId, BigDecimal newPrice) {
+    public BidUpdateResult placeBid(Long auctionId, Long bidderId, BigDecimal newPrice) throws JsonProcessingException {
         Instant now = Instant.now();
 
         // 1. Execute Lua Script (atomic)
@@ -76,6 +77,7 @@ public class BidServiceImpl implements BidService {
                 .auction(auctionRepository.getReferenceById(auctionId))
                 .bidder(userRepository.getReferenceById(bidderId))
                 .amount(newPrice)
+                .status(BidStatus.ACCEPTED)
                 .createdAt(now)
                 .build();
 

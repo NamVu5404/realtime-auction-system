@@ -4,11 +4,8 @@ import com.NamVu.realtimeauctionsystem.enums.OutboxEventType;
 import com.NamVu.realtimeauctionsystem.enums.OutboxStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
-import java.util.Map;
 
 @Entity
 @Table(name = "outbox", indexes = {
@@ -32,8 +29,8 @@ public class Outbox {
     @Column(name = "auction_id", nullable = false)
     private Long auctionId;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    private Map<String, Object> payload;
+    @Column(name = "payload", nullable = false, columnDefinition = "TEXT")
+    private String payload;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 10)

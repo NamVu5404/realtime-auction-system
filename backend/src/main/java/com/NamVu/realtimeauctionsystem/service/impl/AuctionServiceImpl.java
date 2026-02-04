@@ -3,7 +3,7 @@ package com.NamVu.realtimeauctionsystem.service.impl;
 import com.NamVu.realtimeauctionsystem.dto.BidUpdateMessage;
 import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
 import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequestV1;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.response.AuctionHistoryResponse;
@@ -197,7 +197,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    public PlaceBidResponse placeBids(PlaceBidRequest request) {
+    public PlaceBidResponse placeBids(PlaceBidRequestV1 request) {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String name = jwt.getClaim("name");
 

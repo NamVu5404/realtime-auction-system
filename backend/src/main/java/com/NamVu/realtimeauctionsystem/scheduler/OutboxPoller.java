@@ -23,7 +23,7 @@ public class OutboxPoller {
     private static final String TOPIC = "bid-events";
     private static final int BATCH_SIZE = 100;
 
-    @Scheduled(fixedDelay = 1000) // Poll mỗi 1 giây
+    @Scheduled(fixedDelay = 500) // Poll mỗi 500ms
     public void pollAndPublish() {
         List<Outbox> pendingEvents = outboxRepository.findByStatusOrderByCreatedAtAsc(
                 OutboxStatus.PENDING,
@@ -33,20 +33,17 @@ public class OutboxPoller {
         if (pendingEvents.isEmpty()) return;
 
         for (Outbox outbox : pendingEvents) {
-            try {
-                kafkaTemplate.send(
-                        TOPIC,
-                        String.valueOf(outbox.getAuctionId()),
-                        outbox.getPayload().toString()
-                );
-                outbox.markSent();
+            kafkaTemplate.send(TOPIC, String.valueOf(outbox.getAuctionId()), outbox.getPayload())
+                    .whenComplete((result, ex) -> {
+                        if (ex == null) {
+                            outbox.markSent();
+                        } else {
+                            log.error("Failed to send event {}: {}", outbox.getId(), ex.getMessage());
+                            outbox.markFailed();
+                        }
 
-            } catch (Exception e) {
-                log.error("Failed to send event {}: {}", outbox.getId(), e.getMessage());
-                outbox.markFailed();
-            }
-
-            outboxRepository.save(outbox);
+                        outboxRepository.save(outbox);
+                    });
         }
 
         log.info("Processed {} outbox events", pendingEvents.size());

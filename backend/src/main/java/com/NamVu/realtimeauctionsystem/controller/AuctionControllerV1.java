@@ -1,7 +1,7 @@
 package com.NamVu.realtimeauctionsystem.controller;
 
 import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequest;
+import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequestV1;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
 import com.NamVu.realtimeauctionsystem.dto.response.*;
@@ -89,7 +89,7 @@ public class AuctionControllerV1 {
      *  Chậm, tắc cổ chai nếu nhiều bids cùng lúc, không Atomic
      */
     @PostMapping("/{auctionId}/bids")
-    public ApiResponse<PlaceBidResponse> placeBids(@RequestBody @Valid PlaceBidRequest request) {
+    public ApiResponse<PlaceBidResponse> placeBids(@RequestBody @Valid PlaceBidRequestV1 request) {
         return ApiResponse.<PlaceBidResponse>builder()
                 .result(auctionService.placeBids(request))
                 .build();

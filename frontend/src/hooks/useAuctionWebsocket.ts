@@ -58,9 +58,24 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
   const handleBidUpdate = useCallback(
     (message: Message) => {
       try {
-        const bidUpdate = JSON.parse(message.body) as BidUpdateMessage;
+        const rawBody = JSON.parse(message.body);
 
-        console.log("Bid update received:", bidUpdate);
+        // Normalize CamelCase fields (V1 uses currentPrice, V2 uses amount)
+        const bidUpdate: BidUpdateMessage = {
+          ...rawBody,
+          currentPrice:
+            rawBody.amount !== undefined
+              ? rawBody.amount
+              : rawBody.currentPrice,
+          highestBidderId:
+            rawBody.bidderId !== undefined
+              ? rawBody.bidderId
+              : rawBody.highestBidderId,
+          highestBidderName: rawBody.highestBidderName || rawBody.bidderName,
+          bidderName: rawBody.bidderName,
+        };
+
+        console.log("Bid update received (normalized):", bidUpdate);
         setLastBidTime(Date.now());
 
         // Call user-provided callback
@@ -87,11 +102,11 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
           });
         }
 
-        // Show global notification for new bid with Vietnamese message
+        // Show global notification for new bid
         notification.success({
           key: `bid-${auctionId}`,
           title: "New Bid Placed",
-          description: `${bidUpdate.highestBidderName} đã đặt giá ${formatCurrency(bidUpdate.currentPrice)}!`,
+          description: `${bidUpdate.highestBidderName || "Người đấu giá"} đã đặt giá ${formatCurrency(bidUpdate.currentPrice || 0)}!`,
           duration: 3,
         });
       } catch (error) {
