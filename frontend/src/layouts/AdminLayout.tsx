@@ -21,12 +21,12 @@ const AdminLayout = () => {
   const { logout } = useAuth();
 
   const menuItems = [
-    {
-      key: "dashboard",
-      icon: <DashboardOutlined />,
-      label: "Dashboard",
-      onClick: () => navigate("/admin"),
-    },
+    // {
+    //   key: "dashboard",
+    //   icon: <DashboardOutlined />,
+    //   label: "Dashboard",
+    //   onClick: () => navigate("/admin"),
+    // },
     {
       key: "users",
       icon: <UserOutlined />,

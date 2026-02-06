@@ -67,10 +67,14 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     Optional<Auction> findByIdWithLock(Long id);
 
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE Auction a SET a.currentPrice = :newPrice, a.highestBidder.id = :bidderId WHERE a.id = :auctionId")
+    @Query("UPDATE Auction a " +
+            "SET a.currentPrice = :newPrice, a.highestBidder.id = :bidderId, a.version = a.version + 1 " +
+            "WHERE a.id = :auctionId")
     int updateAuctionPrice(
             @Param("auctionId") Long auctionId,
             @Param("newPrice") BigDecimal newPrice,
             @Param("bidderId") Long bidderId
     );
+
+    List<Auction> findByStatus(AuctionStatus status);
 }

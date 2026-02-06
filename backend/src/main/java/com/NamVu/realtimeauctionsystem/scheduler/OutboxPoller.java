@@ -10,7 +10,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
@@ -32,8 +34,11 @@ public class OutboxPoller {
 
         if (pendingEvents.isEmpty()) return;
 
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
         for (Outbox outbox : pendingEvents) {
-            kafkaTemplate.send(TOPIC, String.valueOf(outbox.getAuctionId()), outbox.getPayload())
+            CompletableFuture<Void> future = kafkaTemplate
+                    .send(TOPIC, String.valueOf(outbox.getAuctionId()), outbox.getPayload())
                     .whenComplete((result, ex) -> {
                         if (ex == null) {
                             outbox.markSent();
@@ -41,10 +46,14 @@ public class OutboxPoller {
                             log.error("Failed to send event {}: {}", outbox.getId(), ex.getMessage());
                             outbox.markFailed();
                         }
-
                         outboxRepository.save(outbox);
-                    });
+                    })
+                    .thenApply(result -> null);
+
+            futures.add(future);
         }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
         log.info("Processed {} outbox events", pendingEvents.size());
     }

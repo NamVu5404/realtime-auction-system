@@ -298,8 +298,8 @@ export const AuctionDetailPage = () => {
           setAuction((prev) => {
             if (!prev) return null;
 
-            // Scenario A: Kafka/Websocket Failure (apiPrice > currentPrice)
-            if (apiPrice > prev.currentPrice) {
+            // Scenario A: Kafka/Websocket Failure or save DB Failure (apiPrice != currentPrice)
+            if (apiPrice !== prev.currentPrice) {
               setPollingInterval(2000); // Maintain high frequency
               return {
                 ...prev,
@@ -599,7 +599,7 @@ export const AuctionDetailPage = () => {
               {/* Status Badge */}
               <div className="flex items-center gap-2">
                 {isLive && (
-                  <Tag color="red" className="text-base px-3 py-1">
+                  <Tag color="green" className="text-base px-3 py-1">
                     LIVE
                   </Tag>
                 )}
