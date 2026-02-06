@@ -34,7 +34,8 @@ export const Header = () => {
             key: "admin",
             label: "Admin Dashboard",
             icon: <DashboardOutlined />,
-            onClick: () => navigate("/admin"),
+            // onClick: () => navigate("/admin"),
+            onClick: () => navigate("/admin/users"),
           },
         ]
       : []),

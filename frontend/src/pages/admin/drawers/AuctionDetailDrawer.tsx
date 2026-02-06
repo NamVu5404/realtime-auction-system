@@ -1,8 +1,4 @@
-import {
-  TrophyOutlined,
-  WifiOutlined,
-  DisconnectOutlined,
-} from "@ant-design/icons";
+import { WifiOutlined } from "@ant-design/icons";
 import {
   Image as AntImage,
   Card,
@@ -10,27 +6,29 @@ import {
   Drawer,
   Empty,
   Image,
+  message,
   Row,
   Spin,
   Table,
   Tabs,
   Tag,
-  message,
   Tooltip,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { useEffect, useState, useCallback } from "react";
-import { auctionApi } from "../../../api/auctionApi"; // Import auctionApi for other uses if any, or remove if unused. Keep for now.
+import { useCallback, useEffect, useRef, useState } from "react";
+import { auctionApi } from "../../../api/auctionApi";
 import {
   Auction,
-  AuctionStatus,
   AuctionHistoryResponse,
-  BidUpdateMessage,
+  AuctionStatus,
   BidStatus,
+  BidUpdateMessage,
+  UserRole,
 } from "../../../api/types";
-import { useAuctionWebsocket } from "../../../hooks/useAuctionWebsocket";
-import { useAuctionHistory } from "../../../hooks/useAuctions"; // Import hook
 import Countdown from "../../../features/auction/Countdown";
+import { useAuctionWebsocket } from "../../../hooks/useAuctionWebsocket";
+import { useAuctionHistory } from "../../../hooks/useAuctions";
+import { useUIStore } from "../../../store/useUIStore";
 import { formatAuctionTime, getTimeRemaining } from "../../../utils/dateUtils";
 import { formatCurrency } from "../../../utils/format";
 import { getStatusColor } from "../../../utils/statusUtils";
@@ -45,20 +43,33 @@ const DEFAULT_IMAGE =
   "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
 
 export const AuctionDetailDrawer = ({
-  auction,
+  auction: propAuction,
   visible,
   onClose,
 }: AuctionDetailDrawerProps) => {
   const [bidLogsPage, setBidLogsPage] = useState(1);
   const [activeTab, setActiveTab] = useState("overview");
+  const { isMaintenanceMode, setMaintenanceMode } = useUIStore();
+
+  // Local state for auction details to support real-time updates
+  const [localAuction, setLocalAuction] = useState<Auction | null>(null);
+
+  // Sync local state when prop changes
+  useEffect(() => {
+    if (propAuction) {
+      setLocalAuction(propAuction);
+    }
+  }, [propAuction]);
+
+  const auctionId = localAuction?.id || null;
 
   // Determine if we should fetch logs
   const shouldFetchLogs =
     visible &&
-    !!auction?.id &&
+    !!auctionId &&
     activeTab === "bid-logs" &&
-    (auction.status === AuctionStatus.LIVE ||
-      auction.status === AuctionStatus.ENDED);
+    (localAuction?.status === AuctionStatus.LIVE ||
+      localAuction?.status === AuctionStatus.ENDED);
 
   // Use TanStack Query hook
   const {
@@ -66,7 +77,7 @@ export const AuctionDetailDrawer = ({
     isLoading: isLoadingLogs,
     isFetching: isFetchingLogs,
   } = useAuctionHistory(
-    auction?.id || null,
+    auctionId,
     bidLogsPage,
     20, // fetching 20 items per page
     shouldFetchLogs,
@@ -85,6 +96,35 @@ export const AuctionDetailDrawer = ({
   // Handle real-time bid updates
   // Callback must be memoized to prevent WebSocket reconnection loops
   const onBidUpdate = useCallback((message: BidUpdateMessage) => {
+    // Update lastActive whenever a message is received
+    setLastActive(Date.now());
+    // Reset polling interval on recovery
+    setPollingInterval(2000);
+
+    // Update auction price and bidder
+    setLocalAuction((prev) =>
+      prev && prev.id === message.auctionId
+        ? {
+            ...prev,
+            currentPrice:
+              message.currentPrice || message.amount || prev.currentPrice,
+            highestBidder: {
+              id:
+                message.highestBidderId ||
+                message.bidderId ||
+                prev.highestBidder?.id ||
+                0,
+              name:
+                message.highestBidderName ||
+                prev.highestBidder?.name ||
+                "Người đấu giá",
+              email: prev.highestBidder?.email || "",
+              role: prev.highestBidder?.role || UserRole.USER,
+            },
+          }
+        : prev,
+    );
+
     // Only update if we are on the first page to avoid confusion
     setBidLogs((prev) => {
       // Check for duplicate updates to be safe
@@ -92,15 +132,15 @@ export const AuctionDetailDrawer = ({
         prev.some(
           (bid) =>
             bid.timestamp === new Date().toISOString() &&
-            bid.amount === message.currentPrice,
+            bid.amount === (message.currentPrice || message.amount),
         )
       )
         return prev;
 
       const newBid: AuctionHistoryResponse = {
-        bidderId: message.highestBidderId,
-        bidderEmail: message.highestBidderName, // Map name to email field for display
-        amount: message.currentPrice,
+        bidderId: message.highestBidderId || message.bidderId || 0,
+        bidderEmail: message.highestBidderName || "Người đấu giá", // Map name to email field for display
+        amount: message.currentPrice || message.amount || 0,
         timestamp: new Date().toISOString(),
         status: "ACCEPTED" as BidStatus,
       };
@@ -109,16 +149,99 @@ export const AuctionDetailDrawer = ({
   }, []);
 
   // Connect to WebSocket only when drawer is visible and auction is LIVE
-  const shouldConnectSocket = visible && auction?.status === AuctionStatus.LIVE;
+  const shouldConnectSocket =
+    visible && localAuction?.status === AuctionStatus.LIVE;
 
   const { isConnected } = useAuctionWebsocket({
-    auctionId: shouldConnectSocket && auction?.id ? auction.id : 0,
+    auctionId: shouldConnectSocket && auctionId ? auctionId : 0,
     onBidUpdate,
   });
 
-  if (!auction) {
+  // --- Smart Fallback Logic (Polling) ---
+  const [lastActive, setLastActive] = useState<number>(Date.now());
+  const [pollingInterval, setPollingInterval] = useState<number>(2000);
+  const isFetchingRef = useRef<boolean>(false);
+  const lastPollTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (
+      !localAuction ||
+      localAuction.status !== AuctionStatus.LIVE ||
+      !auctionId ||
+      !visible
+    )
+      return;
+
+    const silenceDetector = setInterval(async () => {
+      const now = Date.now();
+      const timeSinceLastActive = now - lastActive;
+      const timeSinceLastPoll = now - lastPollTimeRef.current;
+
+      const pollerInterval = isMaintenanceMode ? 5000 : pollingInterval;
+
+      if (
+        (timeSinceLastActive > 2000 || isMaintenanceMode) &&
+        timeSinceLastPoll >= pollerInterval &&
+        !isFetchingRef.current
+      ) {
+        console.log(
+          `Silence/Maintenance detected in Drawer. Polling API (Interval: ${pollerInterval}ms)...`,
+        );
+        isFetchingRef.current = true;
+        lastPollTimeRef.current = now;
+
+        try {
+          const apiPrice = await auctionApi.getCurrentPrice(auctionId);
+          isFetchingRef.current = false;
+
+          if (isMaintenanceMode) {
+            console.log("System recovered from Maintenance Mode!");
+            setMaintenanceMode(false);
+            setPollingInterval(2000);
+          }
+
+          setLocalAuction((prev) => {
+            if (!prev) return null;
+
+            if (apiPrice !== prev.currentPrice) {
+              setPollingInterval(2000);
+              return {
+                ...prev,
+                currentPrice: apiPrice,
+              };
+            }
+
+            if (!isMaintenanceMode) {
+              setPollingInterval((current) => Math.min(10000, current + 1000));
+            }
+            return prev;
+          });
+        } catch (error) {
+          console.error("Fallback polling failed in Drawer:", error);
+          isFetchingRef.current = false;
+          if (!isMaintenanceMode) {
+            setPollingInterval((current) => Math.min(10000, current + 1000));
+          }
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(silenceDetector);
+  }, [
+    localAuction?.status,
+    auctionId,
+    lastActive,
+    pollingInterval,
+    isMaintenanceMode,
+    visible,
+  ]);
+  // --- End Smart Fallback Logic ---
+
+  if (!localAuction) {
     return null;
   }
+
+  const auction = localAuction; // Re-use auction variable for convenience in rest of code
 
   // Determine if Bid Logs tab should be shown
   const showBidLogsTab =
@@ -212,12 +335,18 @@ export const AuctionDetailDrawer = ({
             {auction.status === AuctionStatus.LIVE && (
               <div className="ml-2 flex items-center">
                 {isConnected ? (
-                  <Tooltip title="Realtime updates active">
-                    <WifiOutlined className="text-green-500 animate-pulse" />
+                  <Tooltip title="Real-time updates connected">
+                    <span className="flex items-center gap-2 px-3 py-1 bg-green-900/30 border border-green-700/50 rounded-full text-green-400 text-sm">
+                      <WifiOutlined className="text-xs" />
+                      Connected
+                    </span>
                   </Tooltip>
                 ) : (
-                  <Tooltip title="Disconnected">
-                    <DisconnectOutlined className="text-red-500" />
+                  <Tooltip title="Reconnecting to real-time updates...">
+                    <span className="flex items-center gap-2 px-3 py-1 bg-yellow-900/30 border border-yellow-700/50 rounded-full text-yellow-400 text-sm">
+                      <span className="animate-spin">⟳</span>
+                      Reconnecting...
+                    </span>
                   </Tooltip>
                 )}
               </div>
@@ -481,6 +610,29 @@ export const AuctionDetailDrawer = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
+          {/* Maintenance Banner */}
+          {isMaintenanceMode && (
+            <div className="mb-6 animate-pulse">
+              <div className="bg-red-900/40 border-2 border-red-500 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">⚠️</span>
+                  <div>
+                    <h4 className="text-red-400 font-bold m-0 p-0 text-sm">
+                      System Interruption Detected
+                    </h4>
+                    <p className="text-red-300 text-xs m-0 p-0">
+                      Redis is currently down. Tracking live updates via
+                      fallback...
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Spin size="small" />
+                </div>
+              </div>
+            </div>
+          )}
+
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
