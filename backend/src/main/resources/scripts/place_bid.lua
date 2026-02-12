@@ -25,60 +25,52 @@ local bidderId = ARGV[2]
 local now = tonumber(ARGV[3])
 local maxExtension = tonumber(ARGV[4])
 
--- 1. Check auction exists + status
-local status = redis.call('HGET', key, 'status')
-if status == false then
-    return { 0, 'Auction not found' }
-end
-if status ~= 'LIVE' then
-    return { 0, 'Auction is not live' }
-end
+-- 1. Dùng HMGET lấy 1 lượt toàn bộ field cần thiết
+local data = redis.call('HMGET', key, 'status', 'sellerId', 'currentPrice', 'minStep', 'endTime', 'antiSnipeSeconds', 'extensionSeconds', 'extensionCount')
 
--- 2. Anti-fraud: seller cannot bid own auction
-local sellerId = redis.call('HGET', key, 'sellerId')
-if sellerId == bidderId then
-    return { 0, 'Cannot bid on your own auction' }
-end
+local status = data[1]
+if not status then return { 0, 'Auction not found' } end
+if status ~= 'LIVE' then return { 0, 'Auction is not live' } end
 
--- 3. Validate price
-local currentPrice = tonumber(redis.call('HGET', key, 'currentPrice'))
-local minStep = tonumber(redis.call('HGET', key, 'minStep'))
-local minValidPrice = currentPrice + minStep
+local sellerId = data[2]
+if sellerId == bidderId then return { 0, 'Cannot bid on your own auction' } end
 
-if newPrice < minValidPrice then
-    return { 0, string.format('Bid must be at least %.2f', minValidPrice) }
+local currentPrice = tonumber(data[3] or '0')
+local minStep = tonumber(data[4] or '0')
+if newPrice < (currentPrice + minStep) then
+    return { 0, string.format('Bid must be at least %.2f', currentPrice + minStep) }
 end
 
--- 4. Anti-snipe check
-local endTime = tonumber(redis.call('HGET', key, 'endTime'))
-local antiSnipeSeconds = tonumber(redis.call('HGET', key, 'antiSnipeSeconds'))
-local extensionSeconds = tonumber(redis.call('HGET', key, 'extensionSeconds'))
-local extensionCount = tonumber(redis.call('HGET', key, 'extensionCount') or '0')
+-- 2. Logic Anti-snipe
+local endTime = tonumber(data[5] or '0')
+local antiSnipeSeconds = tonumber(data[6] or '0')
+local extensionSeconds = tonumber(data[7] or '0')
+local extensionCount = tonumber(data[8] or '0')
 
 local extended = false
 local finalEndTime = endTime
 local secondsLeft = endTime - now
 
-if secondsLeft <= antiSnipeSeconds then
-    if extensionCount < maxExtension then
-        -- Gia hạn
-        finalEndTime = endTime + extensionSeconds
-        redis.call('HSET', key, 'endTime', tostring(finalEndTime))
-        redis.call('HSET', key, 'extensionCount', tostring(extensionCount + 1))
-        extended = true
-    end
-    -- Nếu đã max extension → vẫn cho bid, chỉ không extend
+if secondsLeft <= antiSnipeSeconds and extensionCount < maxExtension then
+    finalEndTime = endTime + extensionSeconds
+    extended = true
 end
 
--- 5. Update bid (ATOMIC)
-redis.call('HSET', key, 'currentPrice', tostring(newPrice))
-redis.call('HSET', key, 'highestBidderId', bidderId)
-redis.call('HSET', key, 'lastBidTime', tostring(now))
+-- 3. Ghi dữ liệu (Dùng HMSET để gom các lệnh SET)
+local updates = {
+    'currentPrice', tostring(newPrice),
+    'highestBidderId', bidderId,
+    'lastBidTime', tostring(now),
+    'endTime', tostring(finalEndTime)
+}
+
+if extended then
+    table.insert(updates, 'extensionCount')
+    table.insert(updates, tostring(extensionCount + 1))
+end
+
+redis.call('HMSET', key, unpack(updates))
 redis.call('HINCRBY', key, 'bidCount', 1)
 redis.call('HINCRBY', key, 'version', 1)
 
--- 6. Return result
-if extended then
-    return { 1, 'Success', 'extended', tostring(finalEndTime) }
-end
-return { 1, 'Success', 'normal', tostring(finalEndTime) }
+return { 1, 'Success', extended and 'extended' or 'normal', tostring(finalEndTime) }
