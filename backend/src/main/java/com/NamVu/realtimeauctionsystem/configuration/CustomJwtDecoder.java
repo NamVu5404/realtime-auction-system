@@ -2,10 +2,9 @@ package com.NamVu.realtimeauctionsystem.configuration;
 
 import com.NamVu.realtimeauctionsystem.dto.request.IntrospectRequest;
 import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -21,10 +20,11 @@ import java.text.ParseException;
 import java.util.Objects;
 
 @Component
+@Slf4j
 public class CustomJwtDecoder implements JwtDecoder {
 
-    @Value("${jwt.signer-key}")
-    private String SIGNER_KEY;
+    @Value("${jwt.access-key}")
+    private String ACCESS_KEY;
 
     @Autowired
     @Lazy
@@ -33,23 +33,25 @@ public class CustomJwtDecoder implements JwtDecoder {
     private NimbusJwtDecoder nimbusJwtDecoder = null;
 
     @Override
-    public Jwt decode(String token) throws JwtException {
+    public Jwt decode(String accessToken) throws JwtException {
         try {
             IntrospectResponse response = authenticationService.introspect(
-                    IntrospectRequest.builder().token(token).build());
+                    IntrospectRequest.builder().accessToken(accessToken).build());
 
-            if (!response.isValid()) throw new AppException(ErrorCode.TOKEN_INVALID);
+            if (!response.isValid()) {
+                log.warn("Unauthenticated");
+            }
         } catch (JOSEException | ParseException e) {
-            throw new JwtException(e.getMessage());
+            log.warn("Token Invalid");
         }
 
         if (Objects.isNull(nimbusJwtDecoder)) {
-            SecretKeySpec secretKeySpec = new SecretKeySpec(SIGNER_KEY.getBytes(), "HS512");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(ACCESS_KEY.getBytes(), "HS512");
             nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKeySpec)
                     .macAlgorithm(MacAlgorithm.HS512)
                     .build();
         }
 
-        return nimbusJwtDecoder.decode(token);
+        return nimbusJwtDecoder.decode(accessToken);
     }
 }

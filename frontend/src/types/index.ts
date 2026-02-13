@@ -1,6 +1,6 @@
 /**
  * Central Types File
- * 
+ *
  * This file re-exports types from api/types.ts for backward compatibility
  * New types are defined in api/types.ts based on backend analysis
  */
@@ -17,7 +17,12 @@ export {
   SingleAuctionResponse,
   CreateAuctionRequest,
   AuthenticationResponse,
-} from '../api/types';
+  IntrospectRequest,
+  IntrospectResponse,
+  RefreshRequest,
+  RefreshResponse,
+  LogoutRequest as AuthLogoutRequest,
+} from "../api/types";
 
 // Legacy types for authentication and WebSocket (keep for now)
 export interface ExchangeTokenRequest {
@@ -29,7 +34,7 @@ export interface UserInfo {
   email: string;
   name: string;
   avatarUrl?: string;
-  role: 'USER' | 'ADMIN';
+  role: "USER" | "ADMIN";
 }
 
 export interface ExchangeTokenResponse {
@@ -40,17 +45,19 @@ export interface ExchangeTokenResponse {
 }
 
 export interface RefreshTokenRequest {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface LogoutRequest {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
-  user: ExchangeTokenResponse['user'] | null;
+  user: ExchangeTokenResponse["user"] | null;
   isAuthenticated: boolean;
 }
 

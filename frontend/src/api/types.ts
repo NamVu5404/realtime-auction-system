@@ -136,6 +136,43 @@ export interface AuthenticationResponse {
 }
 
 /**
+ * Introspect Request - Derived from IntrospectRequest.java
+ */
+export interface IntrospectRequest {
+  accessToken: string;
+}
+
+/**
+ * Introspect Response - Derived from IntrospectResponse.java
+ */
+export interface IntrospectResponse {
+  valid: boolean;
+}
+
+/**
+ * Refresh Request - Derived from RefreshRequest.java
+ */
+export interface RefreshRequest {
+  accessToken: string;
+  refreshToken: string;
+}
+
+/**
+ * Refresh Response - Derived from RefreshResponse.java
+ */
+export interface RefreshResponse {
+  accessToken: string;
+}
+
+/**
+ * Logout Request - Derived from LogoutRequest.java
+ */
+export interface LogoutRequest {
+  accessToken: string;
+  refreshToken: string;
+}
+
+/**
  * Place Bid Response - from backend POST /api/v1/auctions/{auctionId}/bids
  */
 export interface PlaceBidResponse {

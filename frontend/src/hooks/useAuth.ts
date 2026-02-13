@@ -55,8 +55,11 @@ export const useAuth = () => {
 
   const logout = useCallback(async () => {
     try {
-      if (accessToken) {
-        await authApi.logout({ token: accessToken });
+      if (accessToken && useAuthStore.getState().refreshToken) {
+        await authApi.logout({
+          accessToken: accessToken,
+          refreshToken: useAuthStore.getState().refreshToken!,
+        });
       }
     } catch (error) {
       console.error("Logout failed:", error);
