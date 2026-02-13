@@ -3,9 +3,9 @@ import { persist } from "zustand/middleware";
 import { AuthState } from "../types";
 
 interface AuthStoreState extends AuthState {
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setTokens: (accessToken: string, refreshToken?: string) => void;
   setUser: (user: AuthState["user"]) => void;
-  logout: (accessToken: string) => void;
+  logout: () => void;
 }
 
 export const useAuthStore = create<AuthStoreState>()(
@@ -16,11 +16,11 @@ export const useAuthStore = create<AuthStoreState>()(
       user: null,
       isAuthenticated: false,
 
-      setTokens: (accessToken: string, refreshToken: string) =>
-        set({
+      setTokens: (accessToken: string, refreshToken?: string) =>
+        set((state) => ({
           accessToken,
-          refreshToken,
-        }),
+          refreshToken: refreshToken ?? state.refreshToken,
+        })),
 
       setUser: (user: AuthState["user"]) =>
         set({
@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthStoreState>()(
           isAuthenticated: !!user,
         }),
 
-      logout: (accessToken: AuthState["accessToken"]) =>
+      logout: () =>
         set({
           accessToken: null,
           refreshToken: null,

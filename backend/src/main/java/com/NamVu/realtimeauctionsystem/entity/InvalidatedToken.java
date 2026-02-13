@@ -5,7 +5,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
 
-import java.util.Date;
+import java.time.Instant;
 
 @Entity
 @Table(name = "invalidated_token")
@@ -18,5 +18,5 @@ public class InvalidatedToken {
     @Id
     private String id; // jwt id
 
-    private Date expiryTime;
+    private Instant expiryTime;
 }

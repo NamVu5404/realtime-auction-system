@@ -7,6 +7,7 @@ import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.RefreshResponse;
 import com.NamVu.realtimeauctionsystem.entity.InvalidatedToken;
 import com.NamVu.realtimeauctionsystem.entity.User;
+import com.NamVu.realtimeauctionsystem.enums.TokenType;
 import com.NamVu.realtimeauctionsystem.enums.UserStatus;
 import com.NamVu.realtimeauctionsystem.exception.AppException;
 import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
@@ -32,15 +33,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserRepository userRepository;
     private final TokenService tokenService;
-    //    private final PasswordEncoder passwordEncoder;
     private final InvalidatedTokenRepository invalidatedTokenRepository;
+//    private final PasswordEncoder passwordEncoder;
 
     @Value("${jwt.refreshable-duration}")
     private Long REFRESHABLE_DURATION;
 
 //    @Override
 //    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-//        User user = userRepository.findByUsernameAndIsActive(request.getUsername(), UserStatus.ACTIVE.name())
+//        User user = userRepository.findByEmailAndStatus(request.getEmail(), UserStatus.ACTIVE)
 //                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 //
 //        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
@@ -48,8 +49,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //        if (!authenticated)
 //            throw new AppException(ErrorCode.UNAUTHENTICATED);
 //
-//        String accessToken = tokenService.generateToken(user, "ACCESS");
-//        String refreshToken = tokenService.generateToken(user, "REFRESH");
+//        String accessToken = tokenService.generateToken(user, TokenType.ACCESS_TOKEN);
+//        String refreshToken = tokenService.generateToken(user, TokenType.REFRESH_TOKEN);
 //
 //        return AuthenticationResponse.builder()
 //                .accessToken(accessToken)
@@ -62,7 +63,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         boolean isValid = true;
 
         try {
-            tokenService.verifyToken(request.getToken(), false);
+            tokenService.verifyToken(request.getAccessToken(), false);
         } catch (AppException e) {
             isValid = false;
         }
@@ -73,20 +74,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout(LogoutRequest request) throws ParseException, JOSEException {
-        try { // lưu id(jti) của token xuống DB khi logout để check 1 token đã logout chưa
-            SignedJWT signedJWT = tokenService.verifyToken(request.getToken(), true); // cần check với refresh token. Vì nếu check access token, 1 token hết hạn sẽ nhảy vào catch(ko lưu xuống DB) nên vẫn có thể refresh
-
-            String jti = signedJWT.getJWTClaimsSet().getJWTID();
-            Date expiryTime = Date.from(signedJWT.getJWTClaimsSet().getIssueTime()
-                    .toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.HOURS));
-
-            InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                    .id(jti)
-                    .expiryTime(expiryTime)
-                    .build();
-
-            invalidatedTokenRepository.save(invalidatedToken);
+    public void logout(LogoutRequest request) throws ParseException {
+        try {
+            disableJwt(request.getAccessToken());
+            disableJwt(request.getRefreshToken());
         } catch (AppException e) {
             log.info("Token is invalid");
         }
@@ -94,28 +85,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public RefreshResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
-        String token = request.getToken();
-
-        SignedJWT signedJWT = tokenService.verifyToken(token, true);
+        SignedJWT signedJWT = tokenService.verifyToken(request.getRefreshToken(), true);
 
         // xóa token cũ bằng cách logout
-        String jti = signedJWT.getJWTClaimsSet().getJWTID();
-        Date expiryTime = Date.from(signedJWT.getJWTClaimsSet().getIssueTime()
-                .toInstant().plus(REFRESHABLE_DURATION, ChronoUnit.HOURS));
-
-        invalidatedTokenRepository.save(InvalidatedToken.builder()
-                .id(jti)
-                .expiryTime(expiryTime)
-                .build());
+        disableJwt(request.getAccessToken());
 
         // tạo token mới dựa vào subject
         String email = signedJWT.getJWTClaimsSet().getSubject();
 
-        User user = userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE.name())
+        User user = userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE)
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
         return RefreshResponse.builder()
-                .token(tokenService.generateToken(user, "ACCESS"))
+                .accessToken(tokenService.generateToken(user, TokenType.ACCESS_TOKEN))
                 .build();
+    }
+
+    private void disableJwt(String token) throws ParseException {
+        SignedJWT signedJWT = SignedJWT.parse(token);
+
+        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
+                .id(signedJWT.getJWTClaimsSet().getJWTID())
+                .expiryTime(signedJWT.getJWTClaimsSet().getExpirationTime().toInstant())
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
     }
 }

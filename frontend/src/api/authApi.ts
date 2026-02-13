@@ -4,8 +4,10 @@ import {
   AuthenticationResponse,
   ExchangeTokenRequest,
   ExchangeTokenResponse,
+  IntrospectResponse,
   LogoutRequest,
   RefreshTokenRequest,
+  RefreshResponse,
   UserInfo,
 } from "../types";
 import axiosClient from "./axiosClient";
@@ -94,34 +96,30 @@ export const authApi = {
     }
   },
 
-  // Refresh access token using refresh token
+  // Refresh access token using both tokens
   // This is used when access_token expires
   refreshToken: (
     request: RefreshTokenRequest,
   ): Promise<ExchangeTokenResponse> => {
     return axiosClient
-      .post<ApiResponse<AuthenticationResponse>>(`/auth/refresh`, {
-        token: request.token,
+      .post<ApiResponse<RefreshResponse>>(`/auth/refresh`, {
+        accessToken: request.accessToken,
+        refreshToken: request.refreshToken,
       })
       .then((response) => {
         if (response.data.code !== 1000) {
           throw new Error(response.data.message || "Token refresh failed");
         }
 
-        const { accessToken, refreshToken, user } = response.data.result;
-        const userInfo: UserInfo = {
-          id: String(user.id),
-          email: user.email,
-          name: user.name,
-          avatarUrl: user.avatarUrl,
-          role: user.role,
-        };
+        const { accessToken } = response.data.result;
 
+        // We get back only new accessToken. Existing refreshToken and user
+        // will be preserved in the store by the caller
         return {
           accessToken,
-          refreshToken,
+          refreshToken: request.refreshToken,
           expiresIn: 3600,
-          user: userInfo,
+          user: {} as any, // Placeholder, usually not used from refresh response
         };
       })
       .catch((error) => {
@@ -130,11 +128,26 @@ export const authApi = {
       });
   },
 
+  // Introspect token - check if accessToken is still valid
+  introspect: async (accessToken: string): Promise<boolean> => {
+    try {
+      const response = await axiosClient.post<ApiResponse<IntrospectResponse>>(
+        "/auth/introspect",
+        { accessToken },
+      );
+      return response.data.result.valid;
+    } catch (error) {
+      console.error("Introspect error:", error);
+      return false;
+    }
+  },
+
   // Logout - revoke tokens and clear session
   logout: async (request: LogoutRequest): Promise<void> => {
     try {
       await axiosClient.post("/auth/logout", {
-        token: request.token,
+        accessToken: request.accessToken,
+        refreshToken: request.refreshToken,
       });
     } catch (error) {
       console.error("Logout error:", error);

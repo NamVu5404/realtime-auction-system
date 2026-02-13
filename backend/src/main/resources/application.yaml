@@ -76,6 +76,7 @@ outbound:
     client-secret: ${GOOGLE_CLIENT_SECRET}
 
 jwt:
-  signer-key: ${JWT_SIGNER_KEY}
+  access-key: ${JWT_ACCESS_KEY}
+  refresh-key: ${JWT_REFRESH_KEY}
   valid-duration: 2 # in hours
   refreshable-duration: 48 # in hours

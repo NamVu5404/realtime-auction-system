@@ -80,22 +80,20 @@ axiosClient.interceptors.response.use(
         const authStore = useAuthStore.getState();
         const refreshToken = authStore.refreshToken;
 
-        if (!refreshToken) {
-          if (authStore.accessToken) {
-            authStore.logout(authStore.accessToken);
-          }
+        if (!refreshToken || !authStore.accessToken) {
+          authStore.logout();
           return Promise.reject(error);
         }
 
         // Call refresh token endpoint
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-          refreshToken,
+        const response = await axios.post<any>(`${API_BASE_URL}/auth/refresh`, {
+          accessToken: authStore.accessToken,
+          refreshToken: refreshToken,
         });
 
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-          response.data;
+        const { accessToken: newAccessToken } = response.data.result;
 
-        authStore.setTokens(newAccessToken, newRefreshToken);
+        authStore.setTokens(newAccessToken);
         axiosClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
         processQueue(null, newAccessToken);
 
@@ -103,7 +101,7 @@ axiosClient.interceptors.response.use(
       } catch (err) {
         const authStore = useAuthStore.getState();
         if (authStore.accessToken) {
-          authStore.logout(authStore.accessToken);
+          authStore.logout();
         }
         processQueue(error as AxiosError, null);
         return Promise.reject(err);
