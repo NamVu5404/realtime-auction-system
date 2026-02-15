@@ -1,12 +1,14 @@
 package com.NamVu.realtimeauctionsystem.service;
 
 
+import com.NamVu.realtimeauctionsystem.dto.InfoOsDto;
 import com.NamVu.realtimeauctionsystem.dto.request.IntrospectRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.LogoutRequest;
 import com.NamVu.realtimeauctionsystem.dto.request.RefreshRequest;
 import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
 import com.NamVu.realtimeauctionsystem.dto.response.RefreshResponse;
 import com.nimbusds.jose.JOSEException;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.text.ParseException;
 
@@ -18,4 +20,6 @@ public interface AuthenticationService {
     void logout(LogoutRequest request) throws ParseException, JOSEException;
 
     RefreshResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException;
+
+    InfoOsDto getRequestInfo(HttpServletRequest request);
 }
