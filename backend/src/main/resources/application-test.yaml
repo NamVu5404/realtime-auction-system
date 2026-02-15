@@ -1,4 +1,4 @@
-JWT_SIGNER_KEY: test-secret-key-for-testing-only-min-256-bits-long
+JWT_ACCESS_KEY: test-secret-key-for-testing-only-min-256-bits-long
 GOOGLE_CLIENT_ID: test-secret-key-for-testing-only-min-256-bits-long
 GOOGLE_CLIENT_SECRET: test-secret-key-for-testing-only-min-256-bits-long
 

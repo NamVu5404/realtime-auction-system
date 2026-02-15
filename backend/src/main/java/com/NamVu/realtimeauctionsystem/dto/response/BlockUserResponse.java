@@ -15,7 +15,7 @@ import java.time.Instant;
 public class BlockUserResponse {
     private Long userId;
     private UserStatus status;
-    private Long by;
+    private String by;
     private String reason;
     private Instant timestamp;
 }
