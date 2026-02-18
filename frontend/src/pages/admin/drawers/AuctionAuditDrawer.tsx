@@ -69,7 +69,7 @@ const getActionIcon = (actionType: AuctionActionType) => {
  * Render timeline item for audit log
  */
 const renderAuditItem = (log: AuctionAuditResponse): TimelineItemProps => {
-  const formattedTime = dayjs(log.createdAt).format("HH:mm DD/MM/YYYY");
+  const formattedTime = dayjs(log.createdAt).format("DD/MM/YYYY HH:mm:ss");
   const color = getActionColor(log.actionType);
   const icon = getActionIcon(log.actionType);
   const actor = log?.updatedBy || "System";
