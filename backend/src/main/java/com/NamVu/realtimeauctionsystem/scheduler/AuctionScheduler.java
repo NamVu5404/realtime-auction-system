@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class AuctionScheduler {
             try {
                 // Update status to LIVE
                 auction.setStatus(AuctionStatus.LIVE);
-                auctionRepository.save(auction);
+                auction = auctionRepository.save(auction);
 
                 // Init Redis
                 redisAuctionService.initAuction(
@@ -66,7 +67,7 @@ public class AuctionScheduler {
 
                 // Ghi audit
                 auctionAuditRepository.save(AuctionAudit.builder()
-                        .auction(auctionRepository.getReferenceById(auction.getId()))
+                        .auction(auction)
                         .actionType(AuctionActionType.START)
                         .details(Map.of("description", "Auction started"))
                         .build());
@@ -81,6 +82,7 @@ public class AuctionScheduler {
      * Chạy mỗi 1 giây, tìm auctions cần end
      */
     @Scheduled(fixedDelay = 1000)
+    @Transactional
     public void endLiveAuctions() {
         Instant now = Instant.now();
 
@@ -98,7 +100,7 @@ public class AuctionScheduler {
             try {
                 // Update status to ENDED
                 auction.setStatus(AuctionStatus.ENDED);
-                auctionRepository.save(auction);
+                auction = auctionRepository.save(auction);
 
                 // Update Redis status
                 redisAuctionService.updateStatus(auction.getId(), "ENDED");
@@ -107,25 +109,24 @@ public class AuctionScheduler {
 
                 // Ghi audit
                 auctionAuditRepository.save(AuctionAudit.builder()
-                        .auction(auctionRepository.getReferenceById(auction.getId()))
+                        .auction(auction)
                         .actionType(AuctionActionType.END)
                         .details(Map.of("description", "Auction ended"))
                         .build());
 
                 Map<String, Object> details = new HashMap<>();
                 details.put("title", auction.getTitle());
-                details.put("highest price", auction.getHighestBidder());
-                details.put("winner", auction.getHighestBidder());
+                details.put("highest price", auction.getCurrentPrice());
                 details.put("seller", auction.getSeller().getEmail());
 
                 if (auction.getHighestBidder() != null) {
-                    details.put("winner", auction.getHighestBidder());
+                    details.put("winner", auction.getHighestBidder().getEmail());
                 } else {
                     details.put("winner", "NO BIDDER");
                 }
 
                 auctionAuditRepository.save(AuctionAudit.builder()
-                        .auction(auctionRepository.getReferenceById(auction.getId()))
+                        .auction(auction)
                         .actionType(AuctionActionType.RESULT)
                         .details(details)
                         .build());
