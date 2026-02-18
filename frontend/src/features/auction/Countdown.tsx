@@ -75,7 +75,7 @@ export const Countdown = ({
     return (
       <div className="text-center">
         <Tag color="success" className="text-lg px-4 py-2 animate-pulse">
-          ✓ Now Live!
+          Ended!
         </Tag>
       </div>
     );
