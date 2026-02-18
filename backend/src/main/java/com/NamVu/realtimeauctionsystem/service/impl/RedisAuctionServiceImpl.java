@@ -1,8 +1,8 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.AuctionRedisData;
-import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
-import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
+import com.NamVu.realtimeauctionsystem.dto.auction.AuctionRedisData;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 import com.NamVu.realtimeauctionsystem.exception.AppException;
 import com.NamVu.realtimeauctionsystem.exception.ErrorCode;

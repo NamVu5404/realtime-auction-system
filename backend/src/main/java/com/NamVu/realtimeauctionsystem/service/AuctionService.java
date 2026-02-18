@@ -1,13 +1,9 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequestV1;
-import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.AuctionHistoryResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.AuctionResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PlaceBidResponse;
+import com.NamVu.realtimeauctionsystem.dto.auction.*;
+import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
+import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
+import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
 import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
 import org.springframework.data.domain.Pageable;
 
@@ -26,7 +22,7 @@ public interface AuctionService {
 
     AuctionResponse updateScheduledAuction(Long id, UpdateScheduledAuctionRequest request);
 
-    AuctionResponse cancelAuction(Long id);
+    CancelAuctionResponse cancelAuction(Long id, CancelAuctionRequest request);
 
     PlaceBidResponse placeBids(PlaceBidRequestV1 request);
 

@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.response.OutboundUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.OutboundUserResponse;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.enums.UserStatus;
 import com.NamVu.realtimeauctionsystem.exception.AppException;

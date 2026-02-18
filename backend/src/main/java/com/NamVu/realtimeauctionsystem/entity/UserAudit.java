@@ -16,7 +16,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserAudit {
+public class UserAudit extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,13 +30,6 @@ public class UserAudit {
     @Column(nullable = false)
     private UserActionType actionType;
 
-    private Instant createdAt;
-
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> details;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = Instant.now();
-    }
 }

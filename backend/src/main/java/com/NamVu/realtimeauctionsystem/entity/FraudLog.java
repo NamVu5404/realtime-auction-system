@@ -17,7 +17,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FraudLog {
+public class FraudLog extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,12 +41,4 @@ public class FraudLog {
 
     @Column(nullable = false)
     private String reason;
-
-    @Column(name = "created_at", updatable = false)
-    private Instant createdAt;
-
-    @PrePersist
-    void prePersist() {
-        createdAt = Instant.now();
-    }
 }

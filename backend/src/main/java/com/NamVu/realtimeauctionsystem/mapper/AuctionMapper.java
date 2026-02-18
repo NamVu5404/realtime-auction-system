@@ -1,9 +1,9 @@
 package com.NamVu.realtimeauctionsystem.mapper;
 
-import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.AuctionResponse;
+import com.NamVu.realtimeauctionsystem.dto.auction.CreateAuctionRequest;
+import com.NamVu.realtimeauctionsystem.dto.auction.UpdateDraftAuctionRequest;
+import com.NamVu.realtimeauctionsystem.dto.auction.UpdateScheduledAuctionRequest;
+import com.NamVu.realtimeauctionsystem.dto.auction.AuctionResponse;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 import org.mapstruct.*;
 

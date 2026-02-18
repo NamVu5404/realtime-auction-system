@@ -1,10 +1,10 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.request.ExchangeTokenRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.AuthenticationResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.ExchangeTokenResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.OutboundUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.UserResponse;
+import com.NamVu.realtimeauctionsystem.dto.auth.ExchangeTokenRequest;
+import com.NamVu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
+import com.NamVu.realtimeauctionsystem.dto.auth.ExchangeTokenResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.OutboundUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.UserResponse;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.enums.TokenType;
 import com.NamVu.realtimeauctionsystem.httpclient.GoogleAuthClient;

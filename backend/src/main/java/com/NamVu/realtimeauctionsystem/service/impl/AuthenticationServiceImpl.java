@@ -1,10 +1,12 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.request.IntrospectRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.LogoutRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.RefreshRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.RefreshResponse;
+import com.NamVu.realtimeauctionsystem.dto.auth.InfoOsDto;
+import com.NamVu.realtimeauctionsystem.dto.auth.RestAuthenticationDetailsDto;
+import com.NamVu.realtimeauctionsystem.dto.auth.IntrospectRequest;
+import com.NamVu.realtimeauctionsystem.dto.auth.LogoutRequest;
+import com.NamVu.realtimeauctionsystem.dto.auth.RefreshRequest;
+import com.NamVu.realtimeauctionsystem.dto.auth.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.dto.auth.RefreshResponse;
 import com.NamVu.realtimeauctionsystem.entity.InvalidatedToken;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.enums.TokenType;
@@ -15,16 +17,17 @@ import com.NamVu.realtimeauctionsystem.repository.InvalidatedTokenRepository;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
 import com.NamVu.realtimeauctionsystem.service.TokenService;
+import com.NamVu.realtimeauctionsystem.utils.RequestUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ua_parser.Client;
 
 import java.text.ParseException;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -98,6 +101,28 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         return RefreshResponse.builder()
                 .accessToken(tokenService.generateToken(user, TokenType.ACCESS_TOKEN))
+                .build();
+    }
+
+    @Override
+    public InfoOsDto getRequestInfo(HttpServletRequest request) {
+        Client userAgent = RestAuthenticationDetailsDto.getUserAgent(request);
+        String browser = "Unknown", os = "Unknown", device = "Unknown";
+
+        if (userAgent != null) {
+            if (userAgent.userAgent != null)
+                browser = RequestUtils.formatVersion(userAgent.userAgent.family, userAgent.userAgent.major, userAgent.userAgent.minor);
+            if (userAgent.os != null)
+                os = RequestUtils.formatVersion(userAgent.os.family, userAgent.os.major, userAgent.os.minor, userAgent.os.patch);
+            if (userAgent.device != null)
+                device = userAgent.device.family;
+        }
+
+        return InfoOsDto.builder()
+                .browser(browser)
+                .os(os)
+                .device(device)
+                .clientAddress(RequestUtils.getIpAddress(request))
                 .build();
     }
 

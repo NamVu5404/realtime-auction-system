@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;

@@ -1,7 +1,11 @@
 package com.NamVu.realtimeauctionsystem.controller;
 
-import com.NamVu.realtimeauctionsystem.dto.request.BlockUserRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.*;
+import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.BlockUserRequest;
+import com.NamVu.realtimeauctionsystem.dto.user.BlockUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.ManagerUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.UserAuditResponse;
 import com.NamVu.realtimeauctionsystem.enums.Role;
 import com.NamVu.realtimeauctionsystem.enums.UserStatus;
 import com.NamVu.realtimeauctionsystem.service.UserService;

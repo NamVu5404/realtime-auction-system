@@ -251,3 +251,44 @@ export interface AuctionHistoryResponse {
   timestamp: string; // ISO 8601 UTC string
   status: BidStatus;
 }
+
+/**
+ * Cancel Auction Request - Derived from CancelAuctionRequest.java
+ */
+export interface CancelAuctionRequest {
+  reason: string;
+}
+
+/**
+ * Cancel Auction Response - Derived from CancelAuctionResponse.java
+ */
+export interface CancelAuctionResponse {
+  auctionId: number;
+  reason: string;
+  timestamp: string; // Instant from Java
+  by: string;
+}
+
+/**
+ * Auction Action Type - Derived from AuctionActionType.java
+ */
+export enum AuctionActionType {
+  CREATED = "CREATED",
+  UPDATED = "UPDATED",
+  CANCELLED = "CANCELLED",
+  START = "START",
+  END = "END",
+  RESULT = "RESULT",
+  FRAUD = "FRAUD",
+}
+
+/**
+ * Auction Audit Response - Derived from AuctionAuditResponse.java
+ */
+export interface AuctionAuditResponse {
+  id: number;
+  actionType: AuctionActionType;
+  createdAt: string; // ISO 8601 UTC string
+  details: Record<string, any>;
+  updatedBy: string;
+}

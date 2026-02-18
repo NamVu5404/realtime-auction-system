@@ -1,9 +1,9 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
-import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
-import com.NamVu.realtimeauctionsystem.dto.response.MyBidHistoryResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
+import com.NamVu.realtimeauctionsystem.dto.bid.MyBidHistoryResponse;
+import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.data.domain.Pageable;
 

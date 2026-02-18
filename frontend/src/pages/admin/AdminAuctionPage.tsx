@@ -26,7 +26,12 @@ import {
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import adminApi from "../../api/adminApi";
-import { Auction, AuctionStatus, PageResponse } from "../../api/types";
+import {
+  Auction,
+  AuctionStatus,
+  CancelAuctionRequest,
+  PageResponse,
+} from "../../api/types";
 import CancelAuctionModal from "../../components/admin/CancelAuctionModal";
 import AuctionForm from "../../features/auction/AuctionForm";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -144,7 +149,13 @@ const AdminAuctionPage = () => {
   });
 
   const cancelMutation = useMutation({
-    mutationFn: adminApi.cancelAuction,
+    mutationFn: ({
+      id,
+      request,
+    }: {
+      id: number;
+      request: CancelAuctionRequest;
+    }) => adminApi.cancelAuction(id, request),
     onSuccess: () => {
       message.success("Auction cancelled successfully");
       queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });

@@ -1,11 +1,12 @@
 package com.NamVu.realtimeauctionsystem.controller;
 
-import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequestV1;
-import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.*;
+import com.NamVu.realtimeauctionsystem.dto.auction.*;
+import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
+import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
+import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
 import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
+import com.NamVu.realtimeauctionsystem.service.AuctionAuditService;
 import com.NamVu.realtimeauctionsystem.service.AuctionService;
 import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ public class AuctionControllerV1 {
 
     private final AuctionService auctionService;
     private final RedisAuctionService redisAuctionService;
+    private final AuctionAuditService auctionAuditService;
 
     // LIVE = LIVE + SCHEDULED (startTime - now <= 1h)
     // UPCOMING = SCHEDULED (startTime - now > 1h)
@@ -81,9 +83,9 @@ public class AuctionControllerV1 {
     }
 
     @PatchMapping("/{id}/cancel")
-    public ApiResponse<AuctionResponse> cancelAuction(@PathVariable Long id) {
-        return ApiResponse.<AuctionResponse>builder()
-                .result(auctionService.cancelAuction(id))
+    public ApiResponse<CancelAuctionResponse> cancelAuction(@PathVariable Long id, @RequestBody CancelAuctionRequest request) {
+        return ApiResponse.<CancelAuctionResponse>builder()
+                .result(auctionService.cancelAuction(id, request))
                 .build();
     }
 
@@ -134,4 +136,16 @@ public class AuctionControllerV1 {
                 .build();
     }
 
+    @GetMapping("/{auctionId}/audit")
+    public ApiResponse<PageResponse<AuctionAuditResponse>> getAuctionAudit(
+            @PathVariable Long auctionId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        return ApiResponse.<PageResponse<AuctionAuditResponse>>builder()
+                .result(auctionAuditService.getAuctionAudit(auctionId, pageable))
+                .build();
+    }
 }

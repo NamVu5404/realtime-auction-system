@@ -1,14 +1,12 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.request.BlockUserRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.BlockUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.ManagerUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.BlockUserRequest;
+import com.NamVu.realtimeauctionsystem.dto.user.BlockUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.ManagerUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.enums.Role;
 import com.NamVu.realtimeauctionsystem.enums.UserStatus;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.NamVu.realtimeauctionsystem.mapper.UserMapper;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.UserService;
@@ -18,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -54,16 +54,21 @@ public class UserServiceImpl implements UserService {
     @PreAuthorize("hasAuthority('ADMIN')")
     public BlockUserResponse blockUser(Long userId, BlockUserRequest request) {
         Instant now = Instant.now();
-        int rowsAffected = userRepository.updateStatus(userId, UserStatus.BLOCKED, now);
+        userRepository.updateStatus(userId, UserStatus.BLOCKED, now);
 
-        if (rowsAffected > 0) {
-            auditService.blockAudit(userId, request);
-        } else {
-            log.info("User {} already blocked", userId);
-            throw new AppException(ErrorCode.USER_BLOCKED);
-        }
+        Jwt jwt = (Jwt) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        String blockedBy = jwt.getSubject();
 
         return BlockUserResponse.builder()
+                .userId(userId)
+                .status(UserStatus.BLOCKED)
+                .by(blockedBy)
+                .reason(request.getReason())
+                .timestamp(now)
                 .build();
     }
 
@@ -71,16 +76,21 @@ public class UserServiceImpl implements UserService {
     @PreAuthorize("hasAuthority('ADMIN')")
     public BlockUserResponse unblockUser(Long userId, BlockUserRequest request) {
         Instant now = Instant.now();
-        int rowsAffected = userRepository.updateStatus(userId, UserStatus.ACTIVE, now);
+        userRepository.updateStatus(userId, UserStatus.ACTIVE, now);
 
-        if (rowsAffected > 0) {
-            auditService.blockAudit(userId, request);
-        } else {
-            log.info("User {} already active", userId);
-            throw new AppException(ErrorCode.USER_ACTIVE);
-        }
+        Jwt jwt = (Jwt) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        String unblockedBy = jwt.getSubject();
 
         return BlockUserResponse.builder()
+                .userId(userId)
+                .status(UserStatus.ACTIVE)
+                .by(unblockedBy)
+                .reason(request.getReason())
+                .timestamp(now)
                 .build();
     }
 }
