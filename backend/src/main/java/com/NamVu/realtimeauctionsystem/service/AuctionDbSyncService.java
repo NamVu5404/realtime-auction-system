@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
 
 import java.util.List;
 

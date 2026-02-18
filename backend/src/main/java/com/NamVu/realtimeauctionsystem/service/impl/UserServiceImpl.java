@@ -1,14 +1,12 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.request.BlockUserRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.BlockUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.ManagerUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.BlockUserRequest;
+import com.NamVu.realtimeauctionsystem.dto.user.BlockUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.ManagerUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.enums.Role;
 import com.NamVu.realtimeauctionsystem.enums.UserStatus;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.NamVu.realtimeauctionsystem.mapper.UserMapper;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.UserService;

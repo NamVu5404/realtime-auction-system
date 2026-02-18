@@ -1,8 +1,8 @@
 package com.NamVu.realtimeauctionsystem.controller;
 
-import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
-import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequestV2;
-import com.NamVu.realtimeauctionsystem.dto.response.ApiResponse;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
+import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidRequestV2;
+import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
 import com.NamVu.realtimeauctionsystem.service.BidService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;

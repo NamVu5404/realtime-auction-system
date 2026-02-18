@@ -1,12 +1,12 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.InfoOsDto;
-import com.NamVu.realtimeauctionsystem.dto.RestAuthenticationDetailsDto;
-import com.NamVu.realtimeauctionsystem.dto.request.IntrospectRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.LogoutRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.RefreshRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.IntrospectResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.RefreshResponse;
+import com.NamVu.realtimeauctionsystem.dto.auth.InfoOsDto;
+import com.NamVu.realtimeauctionsystem.dto.auth.RestAuthenticationDetailsDto;
+import com.NamVu.realtimeauctionsystem.dto.auth.IntrospectRequest;
+import com.NamVu.realtimeauctionsystem.dto.auth.LogoutRequest;
+import com.NamVu.realtimeauctionsystem.dto.auth.RefreshRequest;
+import com.NamVu.realtimeauctionsystem.dto.auth.IntrospectResponse;
+import com.NamVu.realtimeauctionsystem.dto.auth.RefreshResponse;
 import com.NamVu.realtimeauctionsystem.entity.InvalidatedToken;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.enums.TokenType;
@@ -28,8 +28,6 @@ import org.springframework.stereotype.Service;
 import ua_parser.Client;
 
 import java.text.ParseException;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor

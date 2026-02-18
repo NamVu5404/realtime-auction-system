@@ -3,6 +3,9 @@ import {
   ApiResponse,
   Auction,
   AuctionStatus,
+  AuctionAuditResponse,
+  CancelAuctionRequest,
+  CancelAuctionResponse,
   PageResponse,
   User,
   UserAuditResponse,
@@ -142,9 +145,15 @@ export const adminApi = {
     }
   },
 
-  cancelAuction: async (auctionId: number): Promise<void> => {
+  cancelAuction: async (
+    auctionId: number,
+    request: CancelAuctionRequest,
+  ): Promise<CancelAuctionResponse> => {
     try {
-      await axiosClient.patch(`/auctions/${auctionId}/cancel`);
+      const response = await axiosClient.patch<
+        ApiResponse<CancelAuctionResponse>
+      >(`/auctions/${auctionId}/cancel`, request);
+      return response.data.result;
     } catch (error) {
       console.error("Failed to cancel auction:", error);
       throw error;
@@ -203,6 +212,28 @@ export const adminApi = {
       return response.data.result;
     } catch (error) {
       console.error("Failed to fetch user audit:", error);
+      throw error;
+    }
+  },
+
+  // Auction Audit - Fetch audit logs for an auction
+  getAuctionAudit: async (
+    auctionId: number,
+    page: number = 1,
+    size: number = 20,
+  ): Promise<PageResponse<AuctionAuditResponse>> => {
+    try {
+      const response = await axiosClient.get<
+        ApiResponse<PageResponse<AuctionAuditResponse>>
+      >(`/auctions/${auctionId}/audit`, {
+        params: {
+          page,
+          size,
+        },
+      });
+      return response.data.result;
+    } catch (error) {
+      console.error("Failed to fetch auction audit:", error);
       throw error;
     }
   },

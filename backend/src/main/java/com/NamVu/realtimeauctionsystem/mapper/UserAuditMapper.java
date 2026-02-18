@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.mapper;
 
-import com.NamVu.realtimeauctionsystem.dto.response.UserAuditResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.UserAuditResponse;
 import com.NamVu.realtimeauctionsystem.entity.UserAudit;
 import org.mapstruct.Mapper;
 

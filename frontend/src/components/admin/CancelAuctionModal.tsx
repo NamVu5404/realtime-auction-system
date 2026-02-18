@@ -1,6 +1,6 @@
-import { Modal, Form, Input, Button, message } from 'antd';
-import { useState } from 'react';
-import adminApi from '../../api/adminApi';
+import { Modal, Form, Input, Button, message } from "antd";
+import { useState } from "react";
+import adminApi from "../../api/adminApi";
 
 interface CancelAuctionModalProps {
   visible: boolean;
@@ -12,7 +12,7 @@ interface CancelAuctionModalProps {
 
 /**
  * CancelAuctionModal Component
- * 
+ *
  * Features:
  * - Opens when user clicks "Cancel" on a DRAFT or SCHEDULED auction
  * - Requires a reason (minimum 10 characters)
@@ -39,21 +39,19 @@ export const CancelAuctionModal = ({
       setIsLoading(true);
 
       if (auctionId) {
-        const reason = form.getFieldValue('reason');
-        
+        const reason = form.getFieldValue("reason");
+
         // Call cancel API with reason
-        // Note: Current backend cancel endpoint doesn't accept reason parameter
-        // Once backend is updated, send: { auctionId, reason }
-        await adminApi.cancelAuction(auctionId);
-        
-        message.success('Auction cancelled successfully');
+        await adminApi.cancelAuction(auctionId, { reason });
+
+        message.success("Auction cancelled successfully");
         form.resetFields();
         setReasonLength(0);
         onSuccess();
       }
     } catch (error) {
-      console.error('Failed to cancel auction:', error);
-      message.error('Failed to cancel auction');
+      console.error("Failed to cancel auction:", error);
+      message.error("Failed to cancel auction");
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +93,7 @@ export const CancelAuctionModal = ({
           rules={[
             {
               required: true,
-              message: 'Please provide a reason for cancellation',
+              message: "Please provide a reason for cancellation",
             },
             {
               min: MIN_REASON_LENGTH,
@@ -108,13 +106,13 @@ export const CancelAuctionModal = ({
             rows={4}
             placeholder={`Enter reason for cancellation (minimum ${MIN_REASON_LENGTH} characters)...`}
             onChange={(e) => setReasonLength(e.target.value.length)}
-            status={reasonLength > 0 && !isReasonValid ? 'error' : ''}
+            status={reasonLength > 0 && !isReasonValid ? "error" : ""}
           />
         </Form.Item>
 
         <div className="mt-4 p-3 bg-yellow-900 bg-opacity-20 border border-yellow-600 rounded text-sm text-yellow-300">
-          <strong>Note:</strong> Once cancelled, users who placed bids will be notified.
-          This action cannot be undone.
+          <strong>Note:</strong> Once cancelled, users who placed bids will be
+          notified. This action cannot be undone.
         </div>
       </Form>
     </Modal>

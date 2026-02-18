@@ -1,15 +1,11 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.BidUpdateMessage;
-import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
-import com.NamVu.realtimeauctionsystem.dto.request.CreateAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.PlaceBidRequestV1;
-import com.NamVu.realtimeauctionsystem.dto.request.UpdateDraftAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.request.UpdateScheduledAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.response.AuctionHistoryResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.AuctionResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PlaceBidResponse;
+import com.NamVu.realtimeauctionsystem.dto.auction.*;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateMessage;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
+import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
+import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
+import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 import com.NamVu.realtimeauctionsystem.entity.Bid;
 import com.NamVu.realtimeauctionsystem.entity.User;
@@ -84,9 +80,7 @@ public class AuctionServiceImpl implements AuctionService {
         auction.setStatus(AuctionStatus.DRAFT);
 
         Long sellerId = getCurrentUserId();
-        User seller = userRepository.findById(sellerId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        auction.setSeller(seller);
+        auction.setSeller(userRepository.getReferenceById(sellerId));
 
         auction = auctionRepository.save(auction);
         return auctionMapper.mapToResponse(auction);
@@ -124,9 +118,7 @@ public class AuctionServiceImpl implements AuctionService {
 
         if (auction.getSeller() == null) {
             Long sellerId = getCurrentUserId();
-            User seller = userRepository.findById(sellerId)
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-            auction.setSeller(seller);
+            auction.setSeller(userRepository.getReferenceById(sellerId));
         }
 
         auction = auctionRepository.save(auction);
@@ -178,7 +170,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     @Transactional
-    public AuctionResponse cancelAuction(Long id) {
+    public CancelAuctionResponse cancelAuction(Long id, CancelAuctionRequest request) {
         Auction auction = auctionRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
 
@@ -193,7 +185,12 @@ public class AuctionServiceImpl implements AuctionService {
         auction.setStatus(AuctionStatus.CANCELLED);
         auction = auctionRepository.save(auction);
 
-        return auctionMapper.mapToResponse(auction);
+        return CancelAuctionResponse.builder()
+                .auctionId(auction.getId())
+                .by(((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getSubject())
+                .timestamp(Instant.now())
+                .reason(request.getReason())
+                .build();
     }
 
     @Override

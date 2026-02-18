@@ -10,7 +10,8 @@ import { Card, Drawer, Tag } from "antd";
 import type { TimelineItemProps } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
-import { AuditLog, getAuctionAuditLogs } from "../../../api/adminMockApi";
+import adminApi from "../../../api/adminApi";
+import { AuctionActionType, AuctionAuditResponse } from "../../../api/types";
 import AuditTimeline from "../../../components/common/AuditTimeline";
 
 interface AuctionAuditDrawerProps {
@@ -23,64 +24,55 @@ interface AuctionAuditDrawerProps {
 /**
  * Get color for action type
  */
-const getActionColor = (actionType: string): string => {
-  const lowerAction = actionType.toLowerCase();
-
-  if (lowerAction.includes("created") || lowerAction.includes("uploaded")) {
-    return "green";
+const getActionColor = (actionType: AuctionActionType): string => {
+  switch (actionType) {
+    case AuctionActionType.CREATED:
+      return "green";
+    case AuctionActionType.UPDATED:
+      return "blue";
+    case AuctionActionType.START:
+      return "cyan";
+    case AuctionActionType.END:
+      return "purple";
+    case AuctionActionType.CANCELLED:
+      return "red";
+    case AuctionActionType.FRAUD:
+      return "orange";
+    case AuctionActionType.RESULT:
+      return "gold";
+    default:
+      return "default";
   }
-  if (
-    lowerAction.includes("edited") ||
-    lowerAction.includes("updated") ||
-    lowerAction.includes("adjusted")
-  ) {
-    return "blue";
-  }
-  if (lowerAction.includes("status")) {
-    return "purple";
-  }
-  if (lowerAction.includes("auto") || lowerAction.includes("system")) {
-    return "cyan";
-  }
-  if (lowerAction.includes("cancelled") || lowerAction.includes("stopped")) {
-    return "red";
-  }
-
-  return "default";
 };
 
 /**
  * Get icon for action type
  */
-const getActionIcon = (actionType: string) => {
-  const lowerAction = actionType.toLowerCase();
-
-  if (lowerAction.includes("created")) {
-    return <PlusCircleOutlined />;
+const getActionIcon = (actionType: AuctionActionType) => {
+  switch (actionType) {
+    case AuctionActionType.CREATED:
+      return <PlusCircleOutlined />;
+    case AuctionActionType.UPDATED:
+      return <EditOutlined />;
+    case AuctionActionType.START:
+      return <CheckCircleOutlined />;
+    case AuctionActionType.END:
+      return <SettingOutlined />;
+    case AuctionActionType.CANCELLED:
+      return <AlertOutlined />;
+    default:
+      return <FileTextOutlined />;
   }
-  if (lowerAction.includes("edited") || lowerAction.includes("updated")) {
-    return <EditOutlined />;
-  }
-  if (lowerAction.includes("status")) {
-    return <SettingOutlined />;
-  }
-  if (lowerAction.includes("auto") || lowerAction.includes("system")) {
-    return <CheckCircleOutlined />;
-  }
-  if (lowerAction.includes("cancelled") || lowerAction.includes("stopped")) {
-    return <AlertOutlined />;
-  }
-
-  return <FileTextOutlined />;
 };
 
 /**
  * Render timeline item for audit log
  */
-const renderAuditItem = (log: AuditLog): TimelineItemProps => {
-  const formattedTime = dayjs(log.timestamp).format("HH:mm DD/MM/YYYY");
+const renderAuditItem = (log: AuctionAuditResponse): TimelineItemProps => {
+  const formattedTime = dayjs(log.createdAt).format("HH:mm DD/MM/YYYY");
   const color = getActionColor(log.actionType);
   const icon = getActionIcon(log.actionType);
+  const actor = log?.updatedBy || "System";
 
   return {
     color,
@@ -113,38 +105,55 @@ const renderAuditItem = (log: AuditLog): TimelineItemProps => {
               </span>
               <span
                 style={{
-                  color: log.actor === "System" ? "#22d3ee" : "#fbbf24",
+                  color: actor === "System" ? "#22d3ee" : "#fbbf24",
                   fontWeight: 600,
                 }}
               >
-                {log.actor}
+                {actor}
               </span>
             </div>
 
-            {/* Details */}
-            {log.details && (
+            {/* Details as JSON */}
+            {log.details && Object.keys(log.details).length > 0 ? (
               <div>
                 <span
                   style={{
                     color: "#9ca3af",
                     fontSize: "12px",
                     display: "block",
-                    marginBottom: "4px",
+                    marginBottom: "8px",
                   }}
                 >
                   Details:
                 </span>
-                <p
+                <pre
                   style={{
-                    color: "#e5e7eb",
-                    fontSize: "13px",
-                    margin: 0,
-                    lineHeight: "1.5",
+                    backgroundColor: "#09090b",
+                    borderRadius: "4px",
+                    padding: "12px",
+                    border: "1px solid #52525b",
+                    overflow: "auto",
+                    marginTop: "8px",
+                    marginBottom: 0,
+                    maxHeight: "300px",
                   }}
                 >
-                  {log.details}
-                </p>
+                  <code
+                    style={{
+                      color: "#e5e7eb",
+                      fontSize: "13px",
+                      fontFamily: "monospace",
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {JSON.stringify(log.details, null, 2)}
+                  </code>
+                </pre>
               </div>
+            ) : (
+              <span style={{ color: "#9ca3af", fontSize: "12px" }}>
+                No details available
+              </span>
             )}
           </div>
         </Card>
@@ -164,19 +173,21 @@ export const AuctionAuditDrawer = ({
   auctionTitle,
   onClose,
 }: AuctionAuditDrawerProps) => {
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuctionAuditResponse[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch audit logs when drawer opens
   useEffect(() => {
     if (visible && auctionId) {
       setIsLoading(true);
-      getAuctionAuditLogs(auctionId)
-        .then((logs) => {
-          setAuditLogs(logs);
+      adminApi
+        .getAuctionAudit(auctionId)
+        .then((response) => {
+          setAuditLogs(response.data);
           setIsLoading(false);
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error("Failed to fetch auction audit logs:", error);
           setIsLoading(false);
         });
     } else {

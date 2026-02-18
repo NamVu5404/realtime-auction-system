@@ -14,7 +14,7 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,22 +37,9 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserStatus status;
 
-    @Column(name = "created_at", updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at")
-    private Instant updatedAt;
-
     @PrePersist
     protected void onCreate() {
-        this.createdAt = Instant.now();
-        this.updatedAt = this.createdAt;
         this.status = UserStatus.ACTIVE;
         this.role = Role.USER;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = Instant.now();
     }
 }

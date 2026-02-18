@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.FraudCheckResult;
+import com.NamVu.realtimeauctionsystem.dto.auction.FraudCheckResult;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 import com.NamVu.realtimeauctionsystem.entity.Bid;
 import com.NamVu.realtimeauctionsystem.entity.User;

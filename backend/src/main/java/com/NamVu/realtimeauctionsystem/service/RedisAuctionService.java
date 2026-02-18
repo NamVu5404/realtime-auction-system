@@ -1,7 +1,7 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.AuctionRedisData;
-import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
+import com.NamVu.realtimeauctionsystem.dto.auction.AuctionRedisData;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 
 import java.math.BigDecimal;

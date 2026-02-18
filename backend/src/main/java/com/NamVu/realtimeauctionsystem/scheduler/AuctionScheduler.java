@@ -1,7 +1,10 @@
 package com.NamVu.realtimeauctionsystem.scheduler;
 
 import com.NamVu.realtimeauctionsystem.entity.Auction;
+import com.NamVu.realtimeauctionsystem.entity.AuctionAudit;
+import com.NamVu.realtimeauctionsystem.enums.AuctionActionType;
 import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
+import com.NamVu.realtimeauctionsystem.repository.AuctionAuditRepository;
 import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
 import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +14,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -21,6 +26,7 @@ public class AuctionScheduler {
 
     private final AuctionRepository auctionRepository;
     private final RedisAuctionService redisAuctionService;
+    private final AuctionAuditRepository auctionAuditRepository;
 
     /**
      * Chạy mỗi 1 giây, tìm auctions cần start
@@ -58,6 +64,13 @@ public class AuctionScheduler {
 
                 log.info("Auction {} started and initialized in Redis", auction.getId());
 
+                // Ghi audit
+                auctionAuditRepository.save(AuctionAudit.builder()
+                        .auction(auctionRepository.getReferenceById(auction.getId()))
+                        .actionType(AuctionActionType.START)
+                        .details(Map.of("description", "Auction started"))
+                        .build());
+
             } catch (Exception e) {
                 log.error("Failed to start auction {}", auction.getId(), e);
             }
@@ -91,6 +104,31 @@ public class AuctionScheduler {
                 redisAuctionService.updateStatus(auction.getId(), "ENDED");
 
                 log.info("Auction {} ended", auction.getId());
+
+                // Ghi audit
+                auctionAuditRepository.save(AuctionAudit.builder()
+                        .auction(auctionRepository.getReferenceById(auction.getId()))
+                        .actionType(AuctionActionType.END)
+                        .details(Map.of("description", "Auction ended"))
+                        .build());
+
+                Map<String, Object> details = new HashMap<>();
+                details.put("title", auction.getTitle());
+                details.put("highest price", auction.getHighestBidder());
+                details.put("winner", auction.getHighestBidder());
+                details.put("seller", auction.getSeller().getEmail());
+
+                if (auction.getHighestBidder() != null) {
+                    details.put("winner", auction.getHighestBidder());
+                } else {
+                    details.put("winner", "NO BIDDER");
+                }
+
+                auctionAuditRepository.save(AuctionAudit.builder()
+                        .auction(auctionRepository.getReferenceById(auction.getId()))
+                        .actionType(AuctionActionType.RESULT)
+                        .details(details)
+                        .build());
 
             } catch (Exception e) {
                 log.error("Failed to end auction {}", auction.getId(), e);

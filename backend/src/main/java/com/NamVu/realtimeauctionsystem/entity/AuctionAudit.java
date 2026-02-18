@@ -16,7 +16,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AuctionAudit {
+public class AuctionAudit extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,11 +32,4 @@ public class AuctionAudit {
 
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> details;
-
-    private Instant createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = Instant.now();
-    }
 }

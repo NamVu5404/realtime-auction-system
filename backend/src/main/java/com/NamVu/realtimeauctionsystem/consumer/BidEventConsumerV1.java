@@ -1,7 +1,7 @@
 package com.NamVu.realtimeauctionsystem.consumer;
 
-import com.NamVu.realtimeauctionsystem.dto.BidFailureMessage;
-import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidFailureMessage;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
 import com.NamVu.realtimeauctionsystem.service.AuctionDbSyncService;
 import com.NamVu.realtimeauctionsystem.service.BidService;
 import lombok.RequiredArgsConstructor;

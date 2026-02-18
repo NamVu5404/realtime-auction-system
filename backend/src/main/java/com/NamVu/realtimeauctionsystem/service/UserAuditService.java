@@ -1,7 +1,7 @@
 package com.NamVu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.UserAuditResponse;
+import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.UserAuditResponse;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 import com.NamVu.realtimeauctionsystem.entity.Bid;
 import com.NamVu.realtimeauctionsystem.enums.FraudType;

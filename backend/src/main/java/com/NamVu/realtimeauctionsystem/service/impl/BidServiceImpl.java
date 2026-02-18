@@ -1,9 +1,9 @@
 package com.NamVu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
-import com.NamVu.realtimeauctionsystem.dto.BidUpdateResult;
-import com.NamVu.realtimeauctionsystem.dto.response.MyBidHistoryResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.PageResponse;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
+import com.NamVu.realtimeauctionsystem.dto.bid.MyBidHistoryResponse;
+import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
 import com.NamVu.realtimeauctionsystem.entity.Bid;
 import com.NamVu.realtimeauctionsystem.entity.User;
@@ -84,7 +84,6 @@ public class BidServiceImpl implements BidService {
                 .bidder(userRepository.getReferenceById(bidderId))
                 .amount(newPrice)
                 .status(BidStatus.ACCEPTED)
-                .createdAt(now)
                 .build();
 
         bidRepository.save(bid);

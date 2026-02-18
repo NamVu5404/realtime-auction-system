@@ -1,9 +1,9 @@
 package com.NamVu.realtimeauctionsystem.aop;
 
-import com.NamVu.realtimeauctionsystem.dto.InfoOsDto;
-import com.NamVu.realtimeauctionsystem.dto.response.ApiResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.AuthenticationResponse;
-import com.NamVu.realtimeauctionsystem.dto.response.BlockUserResponse;
+import com.NamVu.realtimeauctionsystem.dto.auth.InfoOsDto;
+import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.NamVu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
+import com.NamVu.realtimeauctionsystem.dto.user.BlockUserResponse;
 import com.NamVu.realtimeauctionsystem.entity.User;
 import com.NamVu.realtimeauctionsystem.entity.UserAudit;
 import com.NamVu.realtimeauctionsystem.enums.UserActionType;

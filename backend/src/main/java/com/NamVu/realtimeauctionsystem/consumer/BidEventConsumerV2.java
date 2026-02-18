@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.consumer;
 
-import com.NamVu.realtimeauctionsystem.dto.BidEvent;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

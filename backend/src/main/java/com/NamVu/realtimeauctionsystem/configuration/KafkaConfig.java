@@ -1,6 +1,6 @@
 package com.NamVu.realtimeauctionsystem.configuration;
 
-import com.NamVu.realtimeauctionsystem.dto.BidPlacedEvent;
+import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

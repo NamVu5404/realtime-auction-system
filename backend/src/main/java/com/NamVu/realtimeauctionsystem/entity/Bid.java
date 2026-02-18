@@ -14,7 +14,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Bid {
+public class Bid extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,12 +34,4 @@ public class Bid {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BidStatus status;
-
-    @Column(name = "created_at", updatable = false)
-    private Instant createdAt;
-
-    @PrePersist
-    void prePersist() {
-        createdAt = Instant.now();
-    }
 }

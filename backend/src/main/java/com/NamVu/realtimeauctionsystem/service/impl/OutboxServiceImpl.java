@@ -40,7 +40,6 @@ public class OutboxServiceImpl implements OutboxService {
                 .payload(objectMapper.writeValueAsString(payload))
                 .status(OutboxStatus.PENDING)
                 .retryCount(0)
-                .createdAt(Instant.now())
                 .build();
 
         outboxRepository.save(outbox);
