@@ -93,37 +93,46 @@ export const AuctionDetailDrawer = ({
     }
   }, [bidLogsData]);
 
-  // Handle real-time bid updates
-  // Callback must be memoized to prevent WebSocket reconnection loops
+  // ✅ Single source of truth for ALL WebSocket state updates
   const onBidUpdate = useCallback((message: BidUpdateMessage) => {
     // Update lastActive whenever a message is received
     setLastActive(Date.now());
     // Reset polling interval on recovery
     setPollingInterval(2000);
 
-    // Update auction price and bidder
-    setLocalAuction((prev) =>
-      prev && prev.id === message.auctionId
-        ? {
-            ...prev,
-            currentPrice:
-              message.currentPrice || message.amount || prev.currentPrice,
-            highestBidder: {
-              id:
-                message.highestBidderId ||
-                message.bidderId ||
-                prev.highestBidder?.id ||
-                0,
-              name:
-                message.highestBidderName ||
-                prev.highestBidder?.name ||
-                "Người đấu giá",
-              email: prev.highestBidder?.email || "",
-              role: prev.highestBidder?.role || UserRole.USER,
-            },
-          }
-        : prev,
-    );
+    // Update auction price, bidder AND endTime
+    setLocalAuction((prev) => {
+      if (!prev || prev.id !== message.auctionId) return prev;
+
+      const newEndTime = message.finalEndTime || prev.endTime;
+
+      console.log("[AdminDrawer] onBidUpdate:", {
+        oldEndTime: prev.endTime,
+        newEndTime,
+        finalEndTime: message.finalEndTime,
+        extended: message.extended,
+      });
+
+      return {
+        ...prev,
+        currentPrice:
+          message.currentPrice || message.amount || prev.currentPrice,
+        highestBidder: {
+          id:
+            message.highestBidderId ||
+            message.bidderId ||
+            prev.highestBidder?.id ||
+            0,
+          name:
+            message.highestBidderName ||
+            prev.highestBidder?.name ||
+            "Ng\u01b0\u1eddi \u0111\u1ea5u gi\u00e1",
+          email: prev.highestBidder?.email || "",
+          role: prev.highestBidder?.role || UserRole.USER,
+        },
+        endTime: newEndTime,
+      };
+    });
 
     // Only update if we are on the first page to avoid confusion
     setBidLogs((prev) => {
@@ -139,13 +148,19 @@ export const AuctionDetailDrawer = ({
 
       const newBid: AuctionHistoryResponse = {
         bidderId: message.highestBidderId || message.bidderId || 0,
-        bidderEmail: message.highestBidderName || "Người đấu giá", // Map name to email field for display
+        bidderEmail:
+          message.highestBidderName || "Ng\u01b0\u1eddi \u0111\u1ea5u gi\u00e1",
         amount: message.currentPrice || message.amount || 0,
         timestamp: new Date().toISOString(),
         status: "ACCEPTED" as BidStatus,
       };
       return [newBid, ...prev];
     });
+  }, []);
+
+  // ✅ Visual notification only — state is already updated by onBidUpdate
+  const onTimeExtended = useCallback((_newEndTime: string) => {
+    // No state update needed here — onBidUpdate already handles endTime
   }, []);
 
   // Connect to WebSocket only when drawer is visible and auction is LIVE
@@ -155,6 +170,7 @@ export const AuctionDetailDrawer = ({
   const { isConnected } = useAuctionWebsocket({
     auctionId: shouldConnectSocket && auctionId ? auctionId : 0,
     onBidUpdate,
+    onTimeExtended,
   });
 
   // --- Smart Fallback Logic (Polling) ---

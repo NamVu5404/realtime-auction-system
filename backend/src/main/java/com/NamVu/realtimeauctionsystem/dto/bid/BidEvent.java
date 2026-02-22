@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 
 @Data
 @Builder
@@ -17,5 +18,6 @@ public class BidEvent {
     private String bidderName;
     private BigDecimal amount;
     private boolean extended;
+    private Instant finalEndTime;
     private Long timestamp;
 }

@@ -53,6 +53,7 @@ const BiddingSection = memo(
     minStep,
     isBidDisabled,
     bidLoading,
+    isEnded,
     onPlaceBid,
   }: {
     isLive: boolean;
@@ -65,18 +66,19 @@ const BiddingSection = memo(
     minStep: number;
     isBidDisabled: boolean;
     bidLoading: boolean;
+    isEnded: boolean;
     onPlaceBid: (amount: string) => void;
   }) => {
     // State nội bộ - KHÔNG nhận từ props để tránh re-render
     const [localBidAmount, setLocalBidAmount] = useState<string>("");
 
-    if (!((isLive || isCountdownStarted) && !isCountdownFinished)) {
+    if (!((isLive || isCountdownStarted) && !isCountdownFinished && !isEnded)) {
       return (
         <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
           <p className="text-gray-400">
-            {!isCountdownStarted
-              ? "Bidding opens when auction goes live"
-              : "This auction has ended"}
+            {isEnded || isCountdownFinished
+              ? "This auction has ended"
+              : "Bidding opens when auction goes live"}
           </p>
         </div>
       );
@@ -198,40 +200,50 @@ export const AuctionDetailPage = () => {
 
   const auctionId = id ? parseInt(id, 10) : null;
 
-  // ✅ FIX: Stabilize callbacks to prevent unnecessary WebSocket reconnections
+  // ✅ Single source of truth for ALL WebSocket state updates
   const onBidUpdate = useCallback((message: BidUpdateMessage) => {
     // Update lastActive whenever a message is received
     setLastActive(Date.now());
     // Reset polling interval on recovery
     setPollingInterval(2000);
 
-    setAuction((prev) =>
-      prev && prev.id === message.auctionId
-        ? {
-            ...prev,
-            currentPrice:
-              message.currentPrice || message.amount || prev.currentPrice,
-            highestBidder: {
-              id:
-                message.highestBidderId ||
-                message.bidderId ||
-                prev.highestBidder?.id ||
-                0,
-              name:
-                message.highestBidderName ||
-                prev.highestBidder?.name ||
-                "Người đấu giá",
-              email: prev.highestBidder?.email || "",
-              role: prev.highestBidder?.role || UserRole.USER,
-            },
-          }
-        : prev,
-    );
+    setAuction((prev) => {
+      if (!prev || prev.id !== message.auctionId) return prev;
+
+      const newEndTime = message.finalEndTime || prev.endTime;
+
+      console.log("[AuctionDetailPage] onBidUpdate:", {
+        oldEndTime: prev.endTime,
+        newEndTime,
+        finalEndTime: message.finalEndTime,
+        extended: message.extended,
+      });
+
+      return {
+        ...prev,
+        currentPrice:
+          message.currentPrice || message.amount || prev.currentPrice,
+        highestBidder: {
+          id:
+            message.highestBidderId ||
+            message.bidderId ||
+            prev.highestBidder?.id ||
+            0,
+          name:
+            message.highestBidderName ||
+            prev.highestBidder?.name ||
+            "Ng\u01b0\u1eddi \u0111\u1ea5u gi\u00e1",
+          email: prev.highestBidder?.email || "",
+          role: prev.highestBidder?.role || UserRole.USER,
+        },
+        endTime: newEndTime,
+      };
+    });
   }, []);
 
-  const onTimeExtended = useCallback((newEndTime: string) => {
+  // ✅ Visual effects ONLY — no state update here
+  const onTimeExtended = useCallback((_newEndTime: string) => {
     setHasTimeExtension(true);
-    setAuction((prev) => (prev ? { ...prev, endTime: newEndTime } : null));
     setTimeout(() => setHasTimeExtension(false), 3000);
   }, []);
 
@@ -452,9 +464,14 @@ export const AuctionDetailPage = () => {
                   email: prev.highestBidder?.email || "",
                   role: prev.highestBidder?.role || UserRole.USER,
                 },
+                endTime: response.finalEndTime || prev.endTime,
               }
             : prev,
         );
+
+        if (response.extended && response.finalEndTime) {
+          onTimeExtended(response.finalEndTime);
+        }
       } else {
         message.error(response.message || "Failed to place bid");
       }
@@ -662,6 +679,7 @@ export const AuctionDetailPage = () => {
                 minStep={auction.minStep}
                 isBidDisabled={isBidDisabled}
                 bidLoading={bidLoading}
+                isEnded={isEnded}
                 onPlaceBid={handlePlaceBid}
               />
 

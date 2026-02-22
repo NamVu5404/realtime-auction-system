@@ -4,9 +4,9 @@ import com.NamVu.realtimeauctionsystem.dto.auction.AuctionRedisData;
 import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
 import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
 import com.NamVu.realtimeauctionsystem.entity.Auction;
+import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
 import com.NamVu.realtimeauctionsystem.exception.AppException;
 import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,6 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final UserRepository userRepository;
 
     private static final String AUCTION_KEY_PREFIX = "auction:";
     private static final String LOCK_KEY_PREFIX = "lock:auction:";
@@ -43,7 +42,16 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
      * Khởi tạo dữ liệu auction trong Redis khi auction chuyển sang LIVE
      */
     @Override
-    public void initAuction(Long auctionId, BigDecimal startPrice, BigDecimal minStep, Long sellerId, Instant endTime, Integer antiSnipeSeconds, Integer extensionSeconds) {
+    public void initAuction(
+            Long auctionId,
+            BigDecimal startPrice,
+            BigDecimal minStep,
+            Long sellerId,
+            Instant endTime,
+            Integer antiSnipeSeconds,
+            Integer extensionSeconds,
+            Integer extensionCount
+    ) {
         String key = AUCTION_KEY_PREFIX + auctionId;
 
         Map<String, String> data = new HashMap<>();
@@ -54,10 +62,10 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         data.put("bidCount", "0");
         data.put("lastBidTime", "");
         data.put("endTime", String.valueOf(endTime.getEpochSecond()));
-        data.put("status", "LIVE");
+        data.put("status", AuctionStatus.LIVE.name());
         data.put("antiSnipeSeconds", antiSnipeSeconds.toString());
         data.put("extensionSeconds", extensionSeconds.toString());
-        data.put("extensionCount", "0");
+        data.put("extensionCount", extensionCount.toString());
         data.put("version", "0");
 
         stringRedisTemplate.opsForHash().putAll(key, data);
@@ -135,7 +143,9 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
                 stringRedisTemplate.opsForHash().put(key, "extensionCount", auctionData.get("extensionCount"));
             }
 
-            result = BidUpdateResult.success(newPrice, bidderId, now, extended);
+            Instant finalEndTime = (Instant) auctionData.get("endTime");
+
+            result = BidUpdateResult.success(newPrice, bidderId, now, extended, finalEndTime);
             log.info("Successfully updated bid for auction {}: price={}, bidder={}", auctionId, newPrice, bidderId);
 
         } catch (InterruptedException e) {
@@ -269,7 +279,8 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
                 auction.getSeller().getId(),
                 auction.getEndTime(),
                 auction.getAntiSnipeSeconds(),
-                auction.getExtensionSeconds()
+                auction.getExtensionSeconds(),
+                auction.getExtensionCount()
         );
     }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Tag, Statistic } from "antd";
 import { getTimeRemaining, formatCountdown } from "../../utils/dateUtils";
 
@@ -37,6 +37,7 @@ export const Countdown = ({
 
   const [timeLeft, setTimeLeft] = useState<string>(calculateTimeLeft());
   const [isFinished, setIsFinished] = useState(false);
+  const hasCalledFinishRef = useRef(false);
 
   useEffect(() => {
     // Initial check
@@ -44,10 +45,17 @@ export const Countdown = ({
     if (initialRemaining <= 0) {
       setIsFinished(true);
       setTimeLeft("00:00:00");
-      onFinish?.();
+      if (!hasCalledFinishRef.current) {
+        hasCalledFinishRef.current = true;
+        onFinish?.();
+      }
       return;
     }
 
+    // Reset finished state when targetTime changes to a future time
+    // (critical for anti-sniping: countdown may have ended, then time extends)
+    setIsFinished(false);
+    hasCalledFinishRef.current = false;
     setTimeLeft(formatCountdown(initialRemaining));
 
     // Update countdown every second
@@ -62,7 +70,10 @@ export const Countdown = ({
       if (remainingMs <= 0) {
         setTimeLeft("00:00:00");
         setIsFinished(true);
-        onFinish?.();
+        if (!hasCalledFinishRef.current) {
+          hasCalledFinishRef.current = true;
+          onFinish?.();
+        }
         clearInterval(interval);
       }
     }, 1000);

@@ -33,6 +33,7 @@ public class AuctionScheduler {
      * Chạy mỗi 1 giây, tìm auctions cần start
      */
     @Scheduled(fixedDelay = 1000) // 1 seconds
+    @Transactional
     public void startScheduledAuctions() {
         Instant now = Instant.now();
 
@@ -60,7 +61,8 @@ public class AuctionScheduler {
                         auction.getSeller().getId(),
                         auction.getEndTime(),
                         auction.getAntiSnipeSeconds(),
-                        auction.getExtensionSeconds()
+                        auction.getExtensionSeconds(),
+                        auction.getExtensionCount()
                 );
 
                 log.info("Auction {} started and initialized in Redis", auction.getId());

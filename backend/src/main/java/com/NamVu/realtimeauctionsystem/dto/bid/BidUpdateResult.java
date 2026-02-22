@@ -19,9 +19,10 @@ public class BidUpdateResult {
     private Long highestBidderId;
     private Instant timestamp;
     private boolean extended;
+    private Instant finalEndTime;
     private Long version; // Version của Auction entity sau khi update
 
-    public static BidUpdateResult success(BigDecimal price, Long bidderId, Instant timestamp, boolean extended) {
+    public static BidUpdateResult success(BigDecimal price, Long bidderId, Instant timestamp, boolean extended, Instant finalEndTime) {
         return BidUpdateResult.builder()
                 .success(true)
                 .message("Bid placed successfully")
@@ -29,6 +30,7 @@ public class BidUpdateResult {
                 .highestBidderId(bidderId)
                 .timestamp(timestamp)
                 .extended(extended)
+                .finalEndTime(finalEndTime)
                 .build();
     }
 
