@@ -214,7 +214,6 @@ export interface BidUpdateMessage {
   bidCount?: number;
   extended: boolean;
   timestamp: string | number;
-  newEndTime?: string;
   finalEndTime?: string;
 }
 

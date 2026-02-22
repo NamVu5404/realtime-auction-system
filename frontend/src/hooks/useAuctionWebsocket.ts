@@ -6,7 +6,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { notification } from "antd";
 import { BidUpdateMessage } from "../api/types";
 import formatCurrency from "../utils/format";
-import { normalizeDate } from "../utils/dateUtils";
 
 interface UseAuctionWebsocketOptions {
   auctionId: number;
@@ -61,7 +60,7 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
       try {
         const rawBody = JSON.parse(message.body);
 
-        // Normalize CamelCase fields (V1 uses currentPrice, V2 uses amount)
+        // Normalize fields (V1 uses currentPrice, V2 uses amount)
         const bidUpdate: BidUpdateMessage = {
           ...rawBody,
           currentPrice:
@@ -74,29 +73,33 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
               : rawBody.highestBidderId,
           highestBidderName: rawBody.highestBidderName || rawBody.bidderName,
           bidderName: rawBody.bidderName,
-          finalEndTime: normalizeDate(
-            rawBody.finalEndTime || rawBody.newEndTime,
-          ),
-          timestamp: normalizeDate(rawBody.timestamp) || Date.now(),
+          // finalEndTime is always present as ISO string from backend
+          finalEndTime: rawBody.finalEndTime,
         };
 
-        console.log("Bid update received (normalized):", bidUpdate);
+        console.log("[WS] Bid update received:", {
+          auctionId: bidUpdate.auctionId,
+          currentPrice: bidUpdate.currentPrice,
+          finalEndTime: bidUpdate.finalEndTime,
+          extended: bidUpdate.extended,
+        });
         setLastBidTime(Date.now());
 
-        // Call user-provided callback
+        // 1. Let consumer handle ALL state updates (price, bidder, endTime)
         onBidUpdate?.(bidUpdate);
 
-        // Handle time extension
-        const nextEndTime = bidUpdate.finalEndTime || bidUpdate.newEndTime;
-        if (bidUpdate.extended && nextEndTime) {
-          console.log(`Auction ${auctionId} time extended to:`, nextEndTime);
-          onTimeExtended?.(nextEndTime);
+        // 2. Visual notification only when time was extended
+        if (bidUpdate.extended && bidUpdate.finalEndTime) {
+          console.log(
+            `[WS] Auction ${auctionId} time extended to:`,
+            bidUpdate.finalEndTime,
+          );
+          onTimeExtended?.(bidUpdate.finalEndTime);
 
-          // Show visual alert for time extension
           notification.info({
             key: `extend-${auctionId}`,
-            message: "Time Extended!",
-            description: `Auction time extended due to new bid!`,
+            message: "⏱ Time Extended!",
+            description: "Auction time extended due to a last-moment bid!",
             duration: 3,
             style: {
               backgroundColor: "#FFC107",
@@ -105,15 +108,15 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
           });
         }
 
-        // Show global notification for new bid
+        // 3. Global bid notification
         notification.success({
           key: `bid-${auctionId}`,
-          title: "New Bid Placed",
+          message: "New Bid Placed",
           description: `${bidUpdate.highestBidderName || "Người đấu giá"} đã đặt giá ${formatCurrency(bidUpdate.currentPrice || 0)}!`,
           duration: 3,
         });
       } catch (error) {
-        console.error("Failed to parse bid update message:", error);
+        console.error("[WS] Failed to parse bid update message:", error);
       }
     },
     [auctionId, onBidUpdate, onTimeExtended],
