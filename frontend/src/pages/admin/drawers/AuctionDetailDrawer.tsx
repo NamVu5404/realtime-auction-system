@@ -121,6 +121,7 @@ export const AuctionDetailDrawer = ({
               email: prev.highestBidder?.email || "",
               role: prev.highestBidder?.role || UserRole.USER,
             },
+            endTime: message.finalEndTime || message.newEndTime || prev.endTime,
           }
         : prev,
     );
@@ -148,6 +149,10 @@ export const AuctionDetailDrawer = ({
     });
   }, []);
 
+  const onTimeExtended = useCallback((newEndTime: string) => {
+    setLocalAuction((prev) => (prev ? { ...prev, endTime: newEndTime } : null));
+  }, []);
+
   // Connect to WebSocket only when drawer is visible and auction is LIVE
   const shouldConnectSocket =
     visible && localAuction?.status === AuctionStatus.LIVE;
@@ -155,6 +160,7 @@ export const AuctionDetailDrawer = ({
   const { isConnected } = useAuctionWebsocket({
     auctionId: shouldConnectSocket && auctionId ? auctionId : 0,
     onBidUpdate,
+    onTimeExtended,
   });
 
   // --- Smart Fallback Logic (Polling) ---

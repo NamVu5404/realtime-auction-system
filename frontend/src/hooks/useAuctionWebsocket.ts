@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { notification } from "antd";
 import { BidUpdateMessage } from "../api/types";
 import formatCurrency from "../utils/format";
+import { normalizeDate } from "../utils/dateUtils";
 
 interface UseAuctionWebsocketOptions {
   auctionId: number;
@@ -73,6 +74,10 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
               : rawBody.highestBidderId,
           highestBidderName: rawBody.highestBidderName || rawBody.bidderName,
           bidderName: rawBody.bidderName,
+          finalEndTime: normalizeDate(
+            rawBody.finalEndTime || rawBody.newEndTime,
+          ),
+          timestamp: normalizeDate(rawBody.timestamp) || Date.now(),
         };
 
         console.log("Bid update received (normalized):", bidUpdate);
@@ -82,12 +87,10 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
         onBidUpdate?.(bidUpdate);
 
         // Handle time extension
-        if (bidUpdate.extended && bidUpdate.newEndTime) {
-          console.log(
-            `Auction ${auctionId} time extended to:`,
-            bidUpdate.newEndTime,
-          );
-          onTimeExtended?.(bidUpdate.newEndTime);
+        const nextEndTime = bidUpdate.finalEndTime || bidUpdate.newEndTime;
+        if (bidUpdate.extended && nextEndTime) {
+          console.log(`Auction ${auctionId} time extended to:`, nextEndTime);
+          onTimeExtended?.(nextEndTime);
 
           // Show visual alert for time extension
           notification.info({

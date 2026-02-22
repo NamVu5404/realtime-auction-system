@@ -77,6 +77,9 @@ public class BidServiceImpl implements BidService {
         // 3. Parse result từ Lua
         String extendedFlag = (String) result.get(2);  // "extended" | "normal"
         boolean extended = "extended".equals(extendedFlag);
+        long finalEndTimeEpoch = Long.parseLong((String) result.get(3));
+        Instant finalEndTime = Instant.ofEpochSecond(finalEndTimeEpoch);
+        Integer nextExtensionCount = ((Long) result.get(4)).intValue();
 
         // 4. Ghi MySQL + Outbox (trong 1 transaction)
         Bid bid = Bid.builder()
@@ -87,16 +90,16 @@ public class BidServiceImpl implements BidService {
                 .build();
 
         bidRepository.save(bid);
-        outboxService.save(auctionId, bid, extended);
+        outboxService.save(auctionId, bid, extended, finalEndTime);
 
         // Update auction
-        int updatedRows = auctionRepository.updateAuctionPrice(auctionId, newPrice, bidderId);
+        int updatedRows = auctionRepository.updateAuctionPriceAndEndTime(auctionId, newPrice, bidderId, finalEndTime, nextExtensionCount);
         if (updatedRows == 0) {
             throw new AppException(ErrorCode.AUCTION_NOT_FOUND);
         }
 
         // 5. Return success
-        return BidUpdateResult.success(newPrice, bidderId, now, extended);
+        return BidUpdateResult.success(newPrice, bidderId, now, extended, finalEndTime);
     }
 
     /**

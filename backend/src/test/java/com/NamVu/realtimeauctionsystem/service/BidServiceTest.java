@@ -7,6 +7,7 @@ import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
 import com.NamVu.realtimeauctionsystem.repository.BidRepository;
 import com.NamVu.realtimeauctionsystem.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,23 +72,25 @@ public class BidServiceTest {
     void testPlaceBidSuccess() throws JsonProcessingException {
         // Mock Lua return success
         when(redisLuaService.executePlaceBid(any(), any(), any(), anyLong(), anyInt()))
-                .thenAnswer(invocation -> List.of(1L, "Success", "normal", "1234567890"));
+                .thenAnswer(invocation -> List.of(1L, "Success", "normal", "1234567890", 0L));
 
-        when(auctionRepository.updateAuctionPrice(anyLong(), any(), anyLong()))
+        when(auctionRepository.updateAuctionPriceAndEndTime(anyLong(), any(BigDecimal.class), anyLong(), any(Instant.class), any(Integer.class)))
                 .thenReturn(1);
 
         BidUpdateResult result = bidService.placeBid(AUCTION_ID, BIDDER_ID, new BigDecimal("1200"));
 
         assertTrue(result.isSuccess());
 
-        verify(auctionRepository, times(1)).updateAuctionPrice(
+        verify(auctionRepository, times(1)).updateAuctionPriceAndEndTime(
                 eq(AUCTION_ID),
                 eq(new BigDecimal("1200")),
-                eq(BIDDER_ID)
+                eq(BIDDER_ID),
+                any(Instant.class),
+                any(Integer.class)
         );
 
         verify(bidRepository, times(1)).save(any());
-        verify(outboxService, times(1)).save(any(), any(), anyBoolean());
+        verify(outboxService, times(1)).save(any(), any(), anyBoolean(), any());
         verify(auctionRepository, times(1)).getReferenceById(AUCTION_ID);
     }
 
@@ -101,22 +105,46 @@ public class BidServiceTest {
         assertFalse(result.isSuccess());
         verify(auctionRepository, never()).save(any()); // KHÔNG update auction khi thất bại
         verify(bidRepository, never()).save(any());
-        verify(outboxService, never()).save(any(), any(), anyBoolean());
+        verify(outboxService, never()).save(any(), any(), anyBoolean(), any());
     }
 
     // ✅ Test extended bid
     @Test
     void testPlaceBidExtended() throws JsonProcessingException {
-        when(redisLuaService.executePlaceBid(any(), any(), any(), anyLong(), anyInt()))
-                .thenAnswer(invocation -> List.of(1L, "Success", "extended", "1234567890"));
+        // 1. Giả lập dữ liệu
+        BigDecimal newPrice = new BigDecimal("1200");
+        String newEndTimeStr = "1738572600";
+        Long nextExtCount = 1L;
 
-        when(auctionRepository.updateAuctionPrice(anyLong(), any(), anyLong()))
+        // 2. Mock Lua: Trả về 5 phần tử để khớp với logic parse trong Service
+        // Index: 0-Status, 1-Msg, 2-Flag, 3-EndTime, 4-Count
+        when(redisLuaService.executePlaceBid(anyLong(), any(BigDecimal.class), anyLong(), anyLong(), anyInt()))
+                .thenAnswer(invocation -> List.of(1L, "Success", "extended", newEndTimeStr, nextExtCount));
+
+        when(auctionRepository.updateAuctionPriceAndEndTime(anyLong(), any(), anyLong(), any(), anyInt()))
                 .thenReturn(1);
 
-        BidUpdateResult result = bidService.placeBid(AUCTION_ID, BIDDER_ID, new BigDecimal("1200"));
+        // 3. Thực thi
+        BidUpdateResult result = bidService.placeBid(AUCTION_ID, BIDDER_ID, newPrice);
 
-        assertTrue(result.isSuccess());
-        assertTrue(result.isExtended());
-        verify(outboxService, times(1)).save(any(), any(), eq(true));
+        // 4. Kiểm chứng kết quả trả về
+        assertTrue(result.isSuccess(), "Bid should be successful");
+        assertTrue(result.isExtended(), "Bid should trigger anti-snipe extension");
+        Assertions.assertEquals(newPrice, result.getNewPrice());
+
+        // 5. Kiểm chứng việc lưu xuống Database
+        verify(auctionRepository, times(1)).updateAuctionPriceAndEndTime(
+                eq(AUCTION_ID),
+                eq(newPrice),
+                eq(BIDDER_ID),
+                argThat(time -> time.getEpochSecond() == Long.parseLong(newEndTimeStr)),
+                eq(nextExtCount.intValue())
+        );
+
+        // 6. Kiểm chứng Outbox Pattern nhận đúng cờ extended = true
+        verify(outboxService, times(1)).save(any(), any(), eq(true), any());
+
+        // Đảm bảo không lưu bid nếu transaction fail
+        verify(bidRepository, times(1)).save(any());
     }
 }

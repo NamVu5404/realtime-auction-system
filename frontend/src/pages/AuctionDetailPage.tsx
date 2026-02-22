@@ -53,6 +53,7 @@ const BiddingSection = memo(
     minStep,
     isBidDisabled,
     bidLoading,
+    isEnded,
     onPlaceBid,
   }: {
     isLive: boolean;
@@ -65,18 +66,19 @@ const BiddingSection = memo(
     minStep: number;
     isBidDisabled: boolean;
     bidLoading: boolean;
+    isEnded: boolean;
     onPlaceBid: (amount: string) => void;
   }) => {
     // State nội bộ - KHÔNG nhận từ props để tránh re-render
     const [localBidAmount, setLocalBidAmount] = useState<string>("");
 
-    if (!((isLive || isCountdownStarted) && !isCountdownFinished)) {
+    if (!((isLive || isCountdownStarted) && !isCountdownFinished && !isEnded)) {
       return (
         <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
           <p className="text-gray-400">
-            {!isCountdownStarted
-              ? "Bidding opens when auction goes live"
-              : "This auction has ended"}
+            {isEnded || isCountdownFinished
+              ? "This auction has ended"
+              : "Bidding opens when auction goes live"}
           </p>
         </div>
       );
@@ -224,6 +226,7 @@ export const AuctionDetailPage = () => {
               email: prev.highestBidder?.email || "",
               role: prev.highestBidder?.role || UserRole.USER,
             },
+            endTime: message.finalEndTime || message.newEndTime || prev.endTime,
           }
         : prev,
     );
@@ -452,9 +455,14 @@ export const AuctionDetailPage = () => {
                   email: prev.highestBidder?.email || "",
                   role: prev.highestBidder?.role || UserRole.USER,
                 },
+                endTime: response.finalEndTime || prev.endTime,
               }
             : prev,
         );
+
+        if (response.extended && response.finalEndTime) {
+          onTimeExtended(response.finalEndTime);
+        }
       } else {
         message.error(response.message || "Failed to place bid");
       }
@@ -662,6 +670,7 @@ export const AuctionDetailPage = () => {
                 minStep={auction.minStep}
                 isBidDisabled={isBidDisabled}
                 bidLoading={bidLoading}
+                isEnded={isEnded}
                 onPlaceBid={handlePlaceBid}
               />
 

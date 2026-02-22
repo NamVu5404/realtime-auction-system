@@ -5,10 +5,7 @@ import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -36,8 +33,10 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {"seller"})
     List<Auction> findByStatusAndStartTimeLessThanEqual(AuctionStatus status, Instant startTime);
 
+    @EntityGraph(attributePaths = {"seller", "highestBidder"})
     List<Auction> findByStatusAndEndTimeLessThanEqual(AuctionStatus status, Instant endTime);
 
     @Query("SELECT a FROM Auction a " +
@@ -68,12 +67,18 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Auction a " +
-            "SET a.currentPrice = :newPrice, a.highestBidder.id = :bidderId, a.version = a.version + 1 " +
+            "SET a.currentPrice = :newPrice, " +
+            "a.highestBidder.id = :bidderId, " +
+            "a.endTime = :endTime, " +
+            "a.extensionCount = :extensionCount, " +
+            "a.version = a.version + 1 " +
             "WHERE a.id = :auctionId")
-    int updateAuctionPrice(
+    int updateAuctionPriceAndEndTime(
             @Param("auctionId") Long auctionId,
             @Param("newPrice") BigDecimal newPrice,
-            @Param("bidderId") Long bidderId
+            @Param("bidderId") Long bidderId,
+            @Param("endTime") Instant endTime,
+            @Param("extensionCount") Integer extensionCount
     );
 
     List<Auction> findByStatus(AuctionStatus status);

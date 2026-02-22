@@ -197,6 +197,7 @@ export interface PlaceBidResponseV2 {
   timestamp: string | number; // ISO 8601 UTC string or Epoch seconds
   extended: boolean;
   version: number;
+  finalEndTime?: string;
 }
 
 /**
@@ -214,6 +215,7 @@ export interface BidUpdateMessage {
   extended: boolean;
   timestamp: string | number;
   newEndTime?: string;
+  finalEndTime?: string;
 }
 
 /**

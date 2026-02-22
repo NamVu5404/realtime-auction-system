@@ -186,7 +186,8 @@ class BiddingIntegrationV1Test {
                 seller.getId(),
                 auction.getEndTime(),
                 auction.getAntiSnipeSeconds(),
-                auction.getExtensionSeconds()
+                auction.getExtensionSeconds(),
+                auction.getExtensionCount()
         );
     }
 

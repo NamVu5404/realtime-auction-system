@@ -64,13 +64,15 @@ local updates = {
     'endTime', tostring(finalEndTime)
 }
 
+local nextExtensionCount = extensionCount
 if extended then
+    nextExtensionCount = extensionCount + 1
     table.insert(updates, 'extensionCount')
-    table.insert(updates, tostring(extensionCount + 1))
+    table.insert(updates, tostring(nextExtensionCount))
 end
 
 redis.call('HMSET', key, unpack(updates))
 redis.call('HINCRBY', key, 'bidCount', 1)
 redis.call('HINCRBY', key, 'version', 1)
 
-return { 1, 'Success', extended and 'extended' or 'normal', tostring(finalEndTime) }
+return { 1, 'Success', extended and 'extended' or 'normal', tostring(finalEndTime), nextExtensionCount }

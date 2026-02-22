@@ -8,7 +8,16 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public interface RedisAuctionService {
-    void initAuction(Long auctionId, BigDecimal startPrice, BigDecimal minStep, Long sellerId, Instant endTime, Integer antiSnipeSeconds, Integer extensionSeconds);
+    void initAuction(
+            Long auctionId,
+            BigDecimal startPrice,
+            BigDecimal minStep,
+            Long sellerId,
+            Instant endTime,
+            Integer antiSnipeSeconds,
+            Integer extensionSeconds,
+            Integer extensionCount
+    );
 
     BidUpdateResult updateBidWithLock(Long auctionId, Long bidderId, BigDecimal newPrice);
 
