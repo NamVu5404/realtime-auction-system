@@ -83,7 +83,8 @@ public class AuctionControllerV1 {
     }
 
     @PatchMapping("/{id}/cancel")
-    public ApiResponse<CancelAuctionResponse> cancelAuction(@PathVariable Long id, @RequestBody CancelAuctionRequest request) {
+    public ApiResponse<CancelAuctionResponse> cancelAuction(@PathVariable Long id,
+                                                            @RequestBody @Valid CancelAuctionRequest request) {
         return ApiResponse.<CancelAuctionResponse>builder()
                 .result(auctionService.cancelAuction(id, request))
                 .build();

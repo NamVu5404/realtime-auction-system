@@ -1,5 +1,6 @@
 package com.NamVu.realtimeauctionsystem.dto.auth;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class RefreshRequest {
+
+    @NotBlank
     private String accessToken;
+
+    @NotBlank
     private String refreshToken;
 }

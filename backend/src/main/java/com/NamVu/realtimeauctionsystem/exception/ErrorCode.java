@@ -29,6 +29,11 @@ public enum ErrorCode {
     INVALID_INPUT(1018, "Input invalid", HttpStatus.BAD_REQUEST),
     START_END_TIME_INVALID(1019, "Start time or end time invalid", HttpStatus.BAD_REQUEST),
     REDIS_DOWN(1020, "Redis is down", HttpStatus.SERVICE_UNAVAILABLE),
+    EMAIL_NOT_BLANK(1021, "Email ís not blank", HttpStatus.BAD_REQUEST),
+    PASSWORD_NOT_BLANK(1022, "Password is not blank", HttpStatus.BAD_REQUEST),
+    REASON_NOT_BLANK(1023, "Reason is not blank", HttpStatus.BAD_REQUEST),
+    AMOUNT_NOT_BLANK(1024, "Amount is required", HttpStatus.BAD_REQUEST),
+    INVALID_AMOUNT(1025, "Amount must be greater than 0", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

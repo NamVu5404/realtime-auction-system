@@ -6,11 +6,13 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.Instant;
 import java.util.Map;
 
 @Entity
-@Table(name = "user_audit")
+@Table(name = "user_audit",
+        indexes = {
+                @Index(name = "idx_user_audit_user_created_desc", columnList = "user_id, created_at DESC")
+        })
 @Getter
 @Setter
 @Builder
