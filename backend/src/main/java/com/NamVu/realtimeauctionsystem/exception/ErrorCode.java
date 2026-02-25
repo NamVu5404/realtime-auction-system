@@ -34,6 +34,10 @@ public enum ErrorCode {
     REASON_NOT_BLANK(1023, "Reason is not blank", HttpStatus.BAD_REQUEST),
     AMOUNT_NOT_BLANK(1024, "Amount is required", HttpStatus.BAD_REQUEST),
     INVALID_AMOUNT(1025, "Amount must be greater than 0", HttpStatus.BAD_REQUEST),
+    FILE_EMPTY(1026, "File is empty", HttpStatus.BAD_REQUEST),
+    FILE_TOO_LARGE(1027, "File is too large", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_TYPE(1028, "Invalid file type", HttpStatus.BAD_REQUEST),
+    FILE_UPLOAD_ERROR(1028, "File upload error", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
 
     private final int code;

@@ -80,3 +80,13 @@ jwt:
   refresh-key: ${JWT_REFRESH_KEY}
   valid-duration: 2 # in hours
   refreshable-duration: 48 # in hours
+
+app:
+  file:
+    upload-dir: "uploads"
+    max-size: 5242880 # 5MB
+    allowed-types:
+      - "image/jpeg"
+      - "image/png"
+      - "image/webp"
+      - "image/gif"
