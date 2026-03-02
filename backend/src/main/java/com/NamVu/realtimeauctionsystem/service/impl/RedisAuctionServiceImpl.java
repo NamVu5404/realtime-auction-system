@@ -265,18 +265,32 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
      */
     @Override
     public void syncFromDatabase(Auction auction) {
-        AuctionInitRequest request = AuctionInitRequest.builder()
-                .auctionId(auction.getId())
-                .startPrice(auction.getStartPrice())
-                .minStep(auction.getMinStep())
-                .sellerId(auction.getSeller().getId())
-                .endTime(auction.getEndTime())
-                .antiSnipeSeconds(auction.getAntiSnipeSeconds())
-                .extensionSeconds(auction.getExtensionSeconds())
-                .extensionCount(auction.getExtensionCount())
-                .build();
+        String key = AUCTION_KEY_PREFIX + auction.getId();
 
-        initAuction(request);
+        Map<String, String> data = new HashMap<>();
+        data.put(AuctionCacheKey.CURRENT_PRICE.getValue(), auction.getCurrentPrice().toString());
+        data.put(AuctionCacheKey.MIN_STEP.getValue(), auction.getMinStep().toString());
+        data.put(AuctionCacheKey.SELLER_ID.getValue(), auction.getSeller().getId().toString());
+        data.put(AuctionCacheKey.END_TIME.getValue(), String.valueOf(auction.getEndTime().getEpochSecond()));
+        data.put(AuctionCacheKey.STATUS.getValue(), auction.getStatus().name());
+        data.put(AuctionCacheKey.ANTI_SNIPE_SECONDS.getValue(), auction.getAntiSnipeSeconds().toString());
+        data.put(AuctionCacheKey.EXTENSION_SECONDS.getValue(), auction.getExtensionSeconds().toString());
+        data.put(AuctionCacheKey.EXTENSION_COUNT.getValue(), auction.getExtensionCount().toString());
+
+        if (auction.getHighestBidder() != null) {
+            data.put(AuctionCacheKey.HIGHEST_BIDDER_ID.getValue(), auction.getHighestBidder().getId().toString());
+        } else {
+            data.put(AuctionCacheKey.HIGHEST_BIDDER_ID.getValue(), "");
+        }
+
+        stringRedisTemplate.opsForHash().putAll(key, data);
+
+        long secondsUntilEnd = Duration.between(Instant.now(), auction.getEndTime()).getSeconds();
+        long bufferSeconds = 24L * 60 * 60;
+        long finalTtl = Math.max(secondsUntilEnd + bufferSeconds, 3600);
+        stringRedisTemplate.expire(key, Duration.ofSeconds(finalTtl));
+
+        log.info("Synced auction {} from DB to Redis with currentPrice {}", auction.getId(), auction.getCurrentPrice());
     }
 
     private boolean antiSniping(Long auctionId, Instant now, Map<Object, Object> auctionData) {
