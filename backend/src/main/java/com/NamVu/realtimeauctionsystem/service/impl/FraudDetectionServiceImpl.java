@@ -1,13 +1,13 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.FraudCheckResult;
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.entity.Bid;
-import com.NamVu.realtimeauctionsystem.entity.FraudLog;
-import com.NamVu.realtimeauctionsystem.enums.FraudType;
-import com.NamVu.realtimeauctionsystem.repository.BidRepository;
-import com.NamVu.realtimeauctionsystem.repository.FraudLogRepository;
-import com.NamVu.realtimeauctionsystem.service.FraudDetectionService;
+import com.namvu.realtimeauctionsystem.dto.auction.FraudCheckResult;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.entity.FraudLog;
+import com.namvu.realtimeauctionsystem.enums.FraudType;
+import com.namvu.realtimeauctionsystem.repository.BidRepository;
+import com.namvu.realtimeauctionsystem.repository.FraudLogRepository;
+import com.namvu.realtimeauctionsystem.service.FraudDetectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,11 +1,11 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.entity.Bid;
-import com.NamVu.realtimeauctionsystem.entity.Outbox;
-import com.NamVu.realtimeauctionsystem.enums.OutboxEventType;
-import com.NamVu.realtimeauctionsystem.enums.OutboxStatus;
-import com.NamVu.realtimeauctionsystem.repository.OutboxRepository;
-import com.NamVu.realtimeauctionsystem.service.OutboxService;
+import com.namvu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.entity.Outbox;
+import com.namvu.realtimeauctionsystem.enums.OutboxEventType;
+import com.namvu.realtimeauctionsystem.enums.OutboxStatus;
+import com.namvu.realtimeauctionsystem.repository.OutboxRepository;
+import com.namvu.realtimeauctionsystem.service.OutboxService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

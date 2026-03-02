@@ -1,7 +1,7 @@
-package com.NamVu.realtimeauctionsystem.service;
+package com.namvu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.file.FileResponse;
-import com.NamVu.realtimeauctionsystem.enums.OwnerType;
+import com.namvu.realtimeauctionsystem.dto.file.FileResponse;
+import com.namvu.realtimeauctionsystem.enums.OwnerType;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface FileService {

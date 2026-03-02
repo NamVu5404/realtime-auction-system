@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.enums;
+package com.namvu.realtimeauctionsystem.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

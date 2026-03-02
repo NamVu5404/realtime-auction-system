@@ -1,6 +1,6 @@
-package com.NamVu.realtimeauctionsystem.repository;
+package com.namvu.realtimeauctionsystem.repository;
 
-import com.NamVu.realtimeauctionsystem.entity.FraudLog;
+import com.namvu.realtimeauctionsystem.entity.FraudLog;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

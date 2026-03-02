@@ -1,9 +1,9 @@
-package com.NamVu.realtimeauctionsystem.service;
+package com.namvu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.FraudCheckResult;
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.entity.Bid;
-import com.NamVu.realtimeauctionsystem.enums.FraudType;
+import com.namvu.realtimeauctionsystem.dto.auction.FraudCheckResult;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.enums.FraudType;
 
 import java.math.BigDecimal;
 

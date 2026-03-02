@@ -1,11 +1,9 @@
-package com.NamVu.realtimeauctionsystem.entity;
+package com.namvu.realtimeauctionsystem.entity;
 
-import com.NamVu.realtimeauctionsystem.enums.Role;
-import com.NamVu.realtimeauctionsystem.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.enums.Role;
+import com.namvu.realtimeauctionsystem.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.Instant;
 
 @Entity
 @Table(name = "users")

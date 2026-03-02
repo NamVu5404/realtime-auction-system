@@ -1,6 +1,6 @@
-package com.NamVu.realtimeauctionsystem.scheduler;
+package com.namvu.realtimeauctionsystem.scheduler;
 
-import com.NamVu.realtimeauctionsystem.repository.InvalidatedTokenRepository;
+import com.namvu.realtimeauctionsystem.repository.InvalidatedTokenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

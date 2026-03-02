@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.bid;
+package com.namvu.realtimeauctionsystem.dto.bid;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;

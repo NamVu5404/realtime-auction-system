@@ -1,6 +1,6 @@
-package com.NamVu.realtimeauctionsystem.dto.auth;
+package com.namvu.realtimeauctionsystem.dto.auth;
 
-import com.NamVu.realtimeauctionsystem.dto.user.UserResponse;
+import com.namvu.realtimeauctionsystem.dto.user.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

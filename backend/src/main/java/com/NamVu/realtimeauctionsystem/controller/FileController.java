@@ -1,8 +1,8 @@
-package com.NamVu.realtimeauctionsystem.controller;
+package com.namvu.realtimeauctionsystem.controller;
 
-import com.NamVu.realtimeauctionsystem.dto.file.FileResponse;
-import com.NamVu.realtimeauctionsystem.enums.OwnerType;
-import com.NamVu.realtimeauctionsystem.service.FileService;
+import com.namvu.realtimeauctionsystem.dto.file.FileResponse;
+import com.namvu.realtimeauctionsystem.enums.OwnerType;
+import com.namvu.realtimeauctionsystem.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

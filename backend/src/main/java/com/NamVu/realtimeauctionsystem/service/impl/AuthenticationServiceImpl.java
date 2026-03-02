@@ -1,29 +1,22 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.auth.InfoOsDto;
-import com.NamVu.realtimeauctionsystem.dto.auth.RestAuthenticationDetailsDto;
-import com.NamVu.realtimeauctionsystem.dto.auth.IntrospectRequest;
-import com.NamVu.realtimeauctionsystem.dto.auth.LogoutRequest;
-import com.NamVu.realtimeauctionsystem.dto.auth.RefreshRequest;
-import com.NamVu.realtimeauctionsystem.dto.auth.IntrospectResponse;
-import com.NamVu.realtimeauctionsystem.dto.auth.RefreshResponse;
-import com.NamVu.realtimeauctionsystem.entity.InvalidatedToken;
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.TokenType;
-import com.NamVu.realtimeauctionsystem.enums.UserStatus;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.repository.InvalidatedTokenRepository;
-import com.NamVu.realtimeauctionsystem.repository.UserRepository;
-import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
-import com.NamVu.realtimeauctionsystem.service.TokenService;
-import com.NamVu.realtimeauctionsystem.utils.RequestUtils;
+import com.namvu.realtimeauctionsystem.dto.auth.*;
+import com.namvu.realtimeauctionsystem.entity.InvalidatedToken;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.TokenType;
+import com.namvu.realtimeauctionsystem.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.exception.AppException;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
+import com.namvu.realtimeauctionsystem.repository.InvalidatedTokenRepository;
+import com.namvu.realtimeauctionsystem.repository.UserRepository;
+import com.namvu.realtimeauctionsystem.service.AuthenticationService;
+import com.namvu.realtimeauctionsystem.service.TokenService;
+import com.namvu.realtimeauctionsystem.utils.RequestUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ua_parser.Client;
 
@@ -37,10 +30,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserRepository userRepository;
     private final TokenService tokenService;
     private final InvalidatedTokenRepository invalidatedTokenRepository;
-//    private final PasswordEncoder passwordEncoder;
 
-    @Value("${jwt.refreshable-duration}")
-    private Long REFRESHABLE_DURATION;
+    private static final String UNKNOWN_VALUE = "Unknown";
 
 //    @Override
 //    public AuthenticationResponse authenticate(AuthenticationRequest request) {
@@ -107,7 +98,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public InfoOsDto getRequestInfo(HttpServletRequest request) {
         Client userAgent = RestAuthenticationDetailsDto.getUserAgent(request);
-        String browser = "Unknown", os = "Unknown", device = "Unknown";
+        String browser = UNKNOWN_VALUE;
+        String os = UNKNOWN_VALUE;
+        String device = UNKNOWN_VALUE;
 
         if (userAgent != null) {
             if (userAgent.userAgent != null)

@@ -1,11 +1,11 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.AuctionAuditResponse;
-import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
-import com.NamVu.realtimeauctionsystem.entity.AuctionAudit;
-import com.NamVu.realtimeauctionsystem.mapper.AuctionAuditMapper;
-import com.NamVu.realtimeauctionsystem.repository.AuctionAuditRepository;
-import com.NamVu.realtimeauctionsystem.service.AuctionAuditService;
+import com.namvu.realtimeauctionsystem.dto.auction.AuctionAuditResponse;
+import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.entity.AuctionAudit;
+import com.namvu.realtimeauctionsystem.mapper.AuctionAuditMapper;
+import com.namvu.realtimeauctionsystem.repository.AuctionAuditRepository;
+import com.namvu.realtimeauctionsystem.service.AuctionAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

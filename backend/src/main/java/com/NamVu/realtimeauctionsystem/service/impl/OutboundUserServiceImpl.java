@@ -1,12 +1,12 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.user.OutboundUserResponse;
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.UserStatus;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.repository.UserRepository;
-import com.NamVu.realtimeauctionsystem.service.OutboundUserService;
+import com.namvu.realtimeauctionsystem.dto.user.OutboundUserResponse;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.exception.AppException;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
+import com.namvu.realtimeauctionsystem.repository.UserRepository;
+import com.namvu.realtimeauctionsystem.service.OutboundUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.user;
+package com.namvu.realtimeauctionsystem.dto.user;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

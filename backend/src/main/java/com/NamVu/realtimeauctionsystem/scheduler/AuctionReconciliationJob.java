@@ -1,8 +1,8 @@
-package com.NamVu.realtimeauctionsystem.scheduler;
+package com.namvu.realtimeauctionsystem.scheduler;
 
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
-import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.service.RedisAuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static com.NamVu.realtimeauctionsystem.enums.AuctionStatus.LIVE;
+import static com.namvu.realtimeauctionsystem.enums.AuctionStatus.LIVE;
 
 @Component
 @RequiredArgsConstructor

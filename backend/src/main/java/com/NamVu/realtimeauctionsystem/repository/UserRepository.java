@@ -1,8 +1,8 @@
-package com.NamVu.realtimeauctionsystem.repository;
+package com.namvu.realtimeauctionsystem.repository;
 
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.Role;
-import com.NamVu.realtimeauctionsystem.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.Role;
+import com.namvu.realtimeauctionsystem.enums.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,7 +21,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmailAndStatus(String email, UserStatus status);
 
-    Optional<User> findByIdAndStatus(Long id, String status);
+    Optional<User> findByIdAndStatus(Long id, UserStatus status);
 
     boolean existsByEmailAndStatus(String email, UserStatus status);
 
@@ -50,5 +50,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
             SET u.status = :status, u.updatedAt = :updatedAt
             WHERE u.id = :id AND u.status != :status AND u.role != 'ADMIN'
             """)
-    int updateStatus(@Param("id") Long id, @Param("status") UserStatus status, @Param("updatedAt") Instant updatedAt);
+    void updateStatus(@Param("id") Long id, @Param("status") UserStatus status, @Param("updatedAt") Instant updatedAt);
 }

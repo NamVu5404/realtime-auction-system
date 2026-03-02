@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.auction;
+package com.namvu.realtimeauctionsystem.dto.auction;
 
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;

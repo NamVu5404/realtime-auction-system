@@ -21,24 +21,25 @@ spring:
         jdbc:
           time_zone: UTC
     show-sql: false
-  redis:
-    host: localhost
-    port: 6379
-    password:
-    timeout: 3000
-    lettuce:
-      pool:
-        max-active: 50
-        max-idle: 20
-        min-idle: 10
-        max-wait: 10000
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 50
+          max-idle: 20
+          min-idle: 10
+          max-wait: 10000
   kafka:
     bootstrap-servers: localhost:9092
     producer:
       acks: 1
       retries: 1
       batch-size: 16384
-      linger-ms: 10
       compression-type: snappy
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -46,6 +47,7 @@ spring:
         request.timeout.ms: 1000
         delivery.timeout.ms: 2500
         retry.backoff.ms: 200
+        linger.ms: 10
     consumer:
       group-id: auction-db-sync-group
       auto-offset-reset: earliest
@@ -83,10 +85,6 @@ jwt:
 
 app:
   file:
-    upload-dir: "uploads"
+    upload-dir: F:/bidding-platform/upload
     max-size: 5242880 # 5MB
-    allowed-types:
-      - "image/jpeg"
-      - "image/png"
-      - "image/webp"
-      - "image/gif"
+    allowed-types: image/jpeg,image/png,image/webp,image/gif

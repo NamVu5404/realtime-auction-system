@@ -1,12 +1,12 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.file.FileResponse;
-import com.NamVu.realtimeauctionsystem.entity.File;
-import com.NamVu.realtimeauctionsystem.enums.OwnerType;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.repository.FileRepository;
-import com.NamVu.realtimeauctionsystem.service.FileService;
+import com.namvu.realtimeauctionsystem.dto.file.FileResponse;
+import com.namvu.realtimeauctionsystem.entity.File;
+import com.namvu.realtimeauctionsystem.enums.OwnerType;
+import com.namvu.realtimeauctionsystem.exception.AppException;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
+import com.namvu.realtimeauctionsystem.repository.FileRepository;
+import com.namvu.realtimeauctionsystem.service.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

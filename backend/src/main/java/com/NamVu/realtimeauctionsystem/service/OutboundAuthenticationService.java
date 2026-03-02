@@ -1,7 +1,6 @@
-package com.NamVu.realtimeauctionsystem.service;
+package com.namvu.realtimeauctionsystem.service;
 
-
-import com.NamVu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
+import com.namvu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
 
 public interface OutboundAuthenticationService {
     AuthenticationResponse outboundAuthentication(String code);

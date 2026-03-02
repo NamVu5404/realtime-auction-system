@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.entity;
+package com.namvu.realtimeauctionsystem.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

@@ -1,12 +1,13 @@
-package com.NamVu.realtimeauctionsystem.scheduler;
+package com.namvu.realtimeauctionsystem.scheduler;
 
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.entity.AuctionAudit;
-import com.NamVu.realtimeauctionsystem.enums.AuctionActionType;
-import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
-import com.NamVu.realtimeauctionsystem.repository.AuctionAuditRepository;
-import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
-import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
+import com.namvu.realtimeauctionsystem.dto.auction.AuctionInitRequest;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.entity.AuctionAudit;
+import com.namvu.realtimeauctionsystem.enums.AuctionActionType;
+import com.namvu.realtimeauctionsystem.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.repository.AuctionAuditRepository;
+import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.service.RedisAuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -54,16 +55,18 @@ public class AuctionScheduler {
                 auction = auctionRepository.save(auction);
 
                 // Init Redis
-                redisAuctionService.initAuction(
-                        auction.getId(),
-                        auction.getStartPrice(),
-                        auction.getMinStep(),
-                        auction.getSeller().getId(),
-                        auction.getEndTime(),
-                        auction.getAntiSnipeSeconds(),
-                        auction.getExtensionSeconds(),
-                        auction.getExtensionCount()
-                );
+                AuctionInitRequest request = AuctionInitRequest.builder()
+                        .auctionId(auction.getId())
+                        .startPrice(auction.getStartPrice())
+                        .minStep(auction.getMinStep())
+                        .sellerId(auction.getSeller().getId())
+                        .endTime(auction.getEndTime())
+                        .antiSnipeSeconds(auction.getAntiSnipeSeconds())
+                        .extensionSeconds(auction.getExtensionSeconds())
+                        .extensionCount(auction.getExtensionCount())
+                        .build();
+
+                redisAuctionService.initAuction(request);
 
                 log.info("Auction {} started and initialized in Redis", auction.getId());
 

@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.service;
+package com.namvu.realtimeauctionsystem.service;
 
 import java.math.BigDecimal;
 import java.util.List;

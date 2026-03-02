@@ -1,19 +1,20 @@
-package com.NamVu.realtimeauctionsystem.service;
+package com.namvu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.RealtimeAuctionSystemApplication;
-import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.entity.Bid;
-import com.NamVu.realtimeauctionsystem.entity.FraudLog;
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
-import com.NamVu.realtimeauctionsystem.enums.BidStatus;
-import com.NamVu.realtimeauctionsystem.enums.FraudType;
-import com.NamVu.realtimeauctionsystem.enums.Role;
-import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
-import com.NamVu.realtimeauctionsystem.repository.BidRepository;
-import com.NamVu.realtimeauctionsystem.repository.FraudLogRepository;
-import com.NamVu.realtimeauctionsystem.repository.UserRepository;
+import com.namvu.realtimeauctionsystem.RealtimeAuctionSystemApplication;
+import com.namvu.realtimeauctionsystem.dto.auction.AuctionInitRequest;
+import com.namvu.realtimeauctionsystem.dto.bid.BidUpdateResult;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.entity.FraudLog;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.enums.BidStatus;
+import com.namvu.realtimeauctionsystem.enums.FraudType;
+import com.namvu.realtimeauctionsystem.enums.Role;
+import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.repository.BidRepository;
+import com.namvu.realtimeauctionsystem.repository.FraudLogRepository;
+import com.namvu.realtimeauctionsystem.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -179,16 +180,18 @@ class BiddingIntegrationV1Test {
                 .build());
 
         // Init Redis
-        redisAuctionService.initAuction(
-                auction.getId(),
-                auction.getStartPrice(),
-                auction.getMinStep(),
-                seller.getId(),
-                auction.getEndTime(),
-                auction.getAntiSnipeSeconds(),
-                auction.getExtensionSeconds(),
-                auction.getExtensionCount()
-        );
+        AuctionInitRequest request = AuctionInitRequest.builder()
+                .auctionId(auction.getId())
+                .startPrice(auction.getStartPrice())
+                .minStep(auction.getMinStep())
+                .sellerId(auction.getSeller().getId())
+                .endTime(auction.getEndTime())
+                .antiSnipeSeconds(auction.getAntiSnipeSeconds())
+                .extensionSeconds(auction.getExtensionSeconds())
+                .extensionCount(auction.getExtensionCount())
+                .build();
+
+        redisAuctionService.initAuction(request);
     }
 
     @AfterEach

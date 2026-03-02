@@ -1,23 +1,22 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.AuctionRedisData;
-import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
-import com.NamVu.realtimeauctionsystem.dto.auction.FraudCheckResult;
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.entity.Bid;
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
-import com.NamVu.realtimeauctionsystem.enums.BidStatus;
-import com.NamVu.realtimeauctionsystem.enums.UserStatus;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
-import com.NamVu.realtimeauctionsystem.repository.BidRepository;
-import com.NamVu.realtimeauctionsystem.repository.UserRepository;
-import com.NamVu.realtimeauctionsystem.service.AuctionDbSyncService;
-import com.NamVu.realtimeauctionsystem.service.FraudDetectionService;
-import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
-import com.NamVu.realtimeauctionsystem.service.UserAuditService;
+import com.namvu.realtimeauctionsystem.dto.auction.FraudCheckResult;
+import com.namvu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.enums.BidStatus;
+import com.namvu.realtimeauctionsystem.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.exception.AppException;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
+import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.repository.BidRepository;
+import com.namvu.realtimeauctionsystem.repository.UserRepository;
+import com.namvu.realtimeauctionsystem.service.AuctionDbSyncService;
+import com.namvu.realtimeauctionsystem.service.FraudDetectionService;
+import com.namvu.realtimeauctionsystem.service.RedisAuctionService;
+import com.namvu.realtimeauctionsystem.service.UserAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -26,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -49,90 +49,13 @@ public class AuctionDbSyncServiceImpl implements AuctionDbSyncService {
     @Transactional
     public void syncBidToDatabase(BidPlacedEvent event) {
         int attempt = 0;
-
         while (attempt < MAX_AUTO_RETRY) {
             try {
-                Auction auction = auctionRepository.findById(event.getAuctionId())
-                        .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
-
-                if (auction.getStatus() != AuctionStatus.LIVE) {
-                    log.warn("Auction {} is not live, skip DB sync", event.getAuctionId());
-                    throw new AppException(ErrorCode.AUCTION_NOT_FOUND);
-                }
-
-                User bidder = userRepository.findById(event.getBidderId())
-                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-                if (bidder.getStatus() == UserStatus.BLOCKED) {
-                    throw new AppException(ErrorCode.USER_BLOCKED);
-                }
-
-                BigDecimal currentPrice = auction.getCurrentPrice();
-
-                // Update auction (optimistic lock sẽ check version)
-                auction.setCurrentPrice(event.getAmount());
-                auction.setHighestBidder(bidder);
-
-                if (event.isExtended()) {
-                    AuctionRedisData redisData = redisAuctionService.getAuctionData(event.getAuctionId());
-                    if (redisData != null) {
-                        auction.setEndTime(redisData.getEndTime());
-                    }
-                }
-
-                auction = auctionRepository.save(auction);
-
-                // Create bid record
-                Bid bid = Bid.builder()
-                        .auction(auction)
-                        .bidder(bidder)
-                        .amount(event.getAmount())
-                        .status(BidStatus.ACCEPTED)
-                        .build();
-
-                // FRAUD DETECTION - Chỉ gán cờ FLAGGED nếu vi phạm
-                FraudCheckResult fraudCheck = fraudDetectionService.checkBid(bid, auction, currentPrice);
-
-                if (fraudCheck.isHighRisk() || fraudCheck.isMediumRisk()) {
-                    bid.setStatus(BidStatus.FLAGGED);
-
-                    // Log fraud
-                    fraudDetectionService.logFraud(
-                            bid,
-                            auction,
-                            fraudCheck.getPrimaryViolation(),
-                            fraudCheck.getReason()
-                    );
-
-                    log.warn("Bid FLAGGED for fraud: auction={}, bidder={}, reason={}",
-                            event.getAuctionId(), event.getBidderId(), fraudCheck.getReason());
-                }
-
-                bidRepository.save(bid);
-
-                auditService.fraudAudit(bid, auction, fraudCheck.getPrimaryViolation(), fraudCheck.getReason());
-
-                log.info("DB synced: auction={}, price={}, bidder={}, version={}",
-                        event.getAuctionId(), event.getAmount(), event.getBidderId(), auction.getVersion());
-
-                return; // Success
-
+                doSync(event);
+                return;
             } catch (OptimisticLockingFailureException e) {
                 attempt++;
-                log.warn("Optimistic lock conflict (attempt {}/{})", attempt, MAX_AUTO_RETRY);
-
-                if (attempt >= MAX_AUTO_RETRY) {
-                    log.error("Failed to sync bid after {} retries", MAX_AUTO_RETRY);
-                    throw new AppException(ErrorCode.MAX_RETRIES_EXCEEDED);
-                }
-
-                // Exponential backoff
-                try {
-                    Thread.sleep(100L * attempt);
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    throw new AppException(ErrorCode.INTERRUPTED_DURING_RETRY);
-                }
+                handleRetry(attempt, e);
             }
         }
     }
@@ -143,6 +66,87 @@ public class AuctionDbSyncServiceImpl implements AuctionDbSyncService {
     @Override
     @Transactional
     public void batchSyncFromRedis(List<Long> auctionIds) {
+        throw new UnsupportedOperationException("Batch sync from Redis is not implemented yet.");
+    }
 
+    private void doSync(BidPlacedEvent event) {
+        Auction auction = getValidAuction(event.getAuctionId());
+        User bidder = getValidBidder(event.getBidderId());
+        BigDecimal oldPrice = auction.getCurrentPrice();
+
+        updateAuctionState(auction, bidder, event);
+        auction = auctionRepository.save(auction);
+
+        processBidAndFraud(event, auction, bidder, oldPrice);
+    }
+
+    private User getValidBidder(Long bidderId) {
+        User bidder = userRepository.findById(bidderId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (bidder.getStatus() == UserStatus.BLOCKED) {
+            log.warn("User {} is blocked, cannot sync bid", bidderId);
+            throw new AppException(ErrorCode.USER_BLOCKED);
+        }
+
+        return bidder;
+    }
+
+    private Auction getValidAuction(Long auctionId) {
+        Auction auction = auctionRepository.findById(auctionId)
+                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+        if (auction.getStatus() != AuctionStatus.LIVE) {
+            log.warn("Auction {} is not live, skip DB sync", auctionId);
+            throw new AppException(ErrorCode.AUCTION_NOT_FOUND);
+        }
+        return auction;
+    }
+
+    private void updateAuctionState(Auction auction, User bidder, BidPlacedEvent event) {
+        auction.setCurrentPrice(event.getAmount());
+        auction.setHighestBidder(bidder);
+
+        if (event.isExtended()) {
+            Optional.ofNullable(redisAuctionService.getAuctionData(event.getAuctionId()))
+                    .ifPresent(data -> auction.setEndTime(data.getEndTime()));
+        }
+    }
+
+    private void processBidAndFraud(BidPlacedEvent event, Auction auction, User bidder, BigDecimal oldPrice) {
+        Bid bid = Bid.builder()
+                .auction(auction)
+                .bidder(bidder)
+                .amount(event.getAmount())
+                .status(BidStatus.ACCEPTED)
+                .build();
+
+        FraudCheckResult fraud = fraudDetectionService.checkBid(bid, auction, oldPrice);
+
+        if (fraud.isHighRisk() || fraud.isMediumRisk()) {
+            handleFraudulentBid(bid, auction, fraud);
+        }
+
+        bidRepository.save(bid);
+        auditService.fraudAudit(bid, auction, fraud.getPrimaryViolation(), fraud.getReason());
+    }
+
+    private void handleFraudulentBid(Bid bid, Auction auction, FraudCheckResult fraud) {
+        bid.setStatus(BidStatus.FLAGGED);
+        fraudDetectionService.logFraud(bid, auction, fraud.getPrimaryViolation(), fraud.getReason());
+        log.warn("Bid FLAGGED for fraud: auction={}, reason={}", auction.getId(), fraud.getReason());
+    }
+
+    private void handleRetry(int attempt, OptimisticLockingFailureException e) {
+        log.warn("Optimistic lock conflict (attempt {}/{}) - Reason: {}", attempt, MAX_AUTO_RETRY, e.getMessage());
+
+        if (attempt >= MAX_AUTO_RETRY) {
+            throw new AppException(ErrorCode.MAX_RETRIES_EXCEEDED);
+        }
+        try {
+            Thread.sleep(100L * attempt);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new AppException(ErrorCode.INTERRUPTED_DURING_RETRY);
+        }
     }
 }

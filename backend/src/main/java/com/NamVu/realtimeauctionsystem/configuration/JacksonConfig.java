@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.configuration;
+package com.namvu.realtimeauctionsystem.configuration;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -14,7 +14,7 @@ public class JacksonConfig {
 
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer() {
-        return builder -> {
+        return builder ->
             builder.deserializerByType(String.class, new StdScalarDeserializer<>(String.class) {
                 @Override
                 public String deserialize(JsonParser parser, DeserializationContext context) throws IOException {
@@ -22,6 +22,5 @@ public class JacksonConfig {
                     return (value != null) ? value.trim() : null;
                 }
             });
-        };
     }
 }

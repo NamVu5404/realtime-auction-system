@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.file;
+package com.namvu.realtimeauctionsystem.dto.file;
 
 public record FileResponse(
         Long id,

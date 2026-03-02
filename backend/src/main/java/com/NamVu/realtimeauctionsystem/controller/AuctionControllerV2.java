@@ -1,10 +1,10 @@
-package com.NamVu.realtimeauctionsystem.controller;
+package com.namvu.realtimeauctionsystem.controller;
 
-import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
-import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidRequestV2;
-import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
-import com.NamVu.realtimeauctionsystem.service.BidService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.namvu.realtimeauctionsystem.dto.bid.BidUpdateResult;
+import com.namvu.realtimeauctionsystem.dto.bid.PlaceBidRequestV2;
+import com.namvu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.namvu.realtimeauctionsystem.service.BidService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;

@@ -12,13 +12,13 @@ import java.time.Instant;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuctionRedisData {
+public class AuctionInitRequest {
     private Long auctionId;
-    private BigDecimal currentPrice;
-    private Long highestBidderId;
+    private BigDecimal startPrice;
+    private BigDecimal minStep;
     private Long sellerId;
-    private Integer bidCount;
-    private Instant lastBidTime;
     private Instant endTime;
-    private String status;
+    private Integer antiSnipeSeconds;
+    private Integer extensionSeconds;
+    private Integer extensionCount;
 }

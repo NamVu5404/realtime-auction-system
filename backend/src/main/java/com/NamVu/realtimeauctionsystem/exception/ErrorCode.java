@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.exception;
+package com.namvu.realtimeauctionsystem.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,6 +38,7 @@ public enum ErrorCode {
     FILE_TOO_LARGE(1027, "File is too large", HttpStatus.BAD_REQUEST),
     INVALID_FILE_TYPE(1028, "Invalid file type", HttpStatus.BAD_REQUEST),
     FILE_UPLOAD_ERROR(1028, "File upload error", HttpStatus.INTERNAL_SERVER_ERROR),
+    TOKEN_GENERATION_FAILED(1029, "Token generate failed", HttpStatus.INTERNAL_SERVER_ERROR),
     ;
 
     private final int code;

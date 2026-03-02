@@ -1,15 +1,15 @@
-package com.NamVu.realtimeauctionsystem.aop;
+package com.namvu.realtimeauctionsystem.aop;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.AuctionResponse;
-import com.NamVu.realtimeauctionsystem.dto.auction.CancelAuctionResponse;
-import com.NamVu.realtimeauctionsystem.dto.auction.CreateAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
-import com.NamVu.realtimeauctionsystem.entity.AuctionAudit;
-import com.NamVu.realtimeauctionsystem.enums.AuctionActionType;
-import com.NamVu.realtimeauctionsystem.repository.AuctionAuditRepository;
-import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namvu.realtimeauctionsystem.dto.auction.AuctionResponse;
+import com.namvu.realtimeauctionsystem.dto.auction.CancelAuctionResponse;
+import com.namvu.realtimeauctionsystem.dto.auction.CreateAuctionRequest;
+import com.namvu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.namvu.realtimeauctionsystem.entity.AuctionAudit;
+import com.namvu.realtimeauctionsystem.enums.AuctionActionType;
+import com.namvu.realtimeauctionsystem.repository.AuctionAuditRepository;
+import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -29,7 +29,7 @@ public class AuctionAspect {
     private final ObjectMapper objectMapper;
 
     @AfterReturning(
-            value = "execution(* com.NamVu.realtimeauctionsystem.controller.AuctionControllerV1.saveDraft(..))",
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.AuctionControllerV1.saveDraft(..))",
             returning = "response"
     )
     public void afterSaveDraftReturning(ApiResponse<AuctionResponse> response) {
@@ -41,9 +41,9 @@ public class AuctionAspect {
     }
 
     @AfterReturning(
-            value = "execution(* com.NamVu.realtimeauctionsystem.controller.AuctionControllerV1.scheduleAuction(..)) && args(request)",
-            returning = "response"
-    )
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.AuctionControllerV1.scheduleAuction(..)) && args(request)",
+            returning = "response",
+            argNames = "request,response")
     public void afterScheduleAuctionReturning(CreateAuctionRequest request, ApiResponse<AuctionResponse> response) {
         if (response.getCode() != 1000) {
             return;
@@ -55,7 +55,7 @@ public class AuctionAspect {
     }
 
     @AfterReturning(
-            value = "execution(* com.NamVu.realtimeauctionsystem.controller.AuctionControllerV1.updateDraftAuction(..))",
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.AuctionControllerV1.updateDraftAuction(..))",
             returning = "response"
     )
     public void afterUpdateDraftAuctionReturning(ApiResponse<AuctionResponse> response) {
@@ -67,7 +67,7 @@ public class AuctionAspect {
     }
 
     @AfterReturning(
-            value = "execution(* com.NamVu.realtimeauctionsystem.controller.AuctionControllerV1.updateScheduledAuction(..))",
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.AuctionControllerV1.updateScheduledAuction(..))",
             returning = "response"
     )
     public void afterUpdateScheduledAuctionReturning(ApiResponse<AuctionResponse> response) {
@@ -79,7 +79,7 @@ public class AuctionAspect {
     }
 
     @AfterReturning(
-            value = "execution(* com.NamVu.realtimeauctionsystem.controller.AuctionControllerV1.cancelAuction(..))",
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.AuctionControllerV1.cancelAuction(..))",
             returning = "response"
     )
     public void afterCancelAuctionReturning(ApiResponse<CancelAuctionResponse> response) {

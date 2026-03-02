@@ -1,6 +1,6 @@
-package com.NamVu.realtimeauctionsystem.entity;
+package com.namvu.realtimeauctionsystem.entity;
 
-import com.NamVu.realtimeauctionsystem.enums.OwnerType;
+import com.namvu.realtimeauctionsystem.enums.OwnerType;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -1,17 +1,17 @@
-package com.NamVu.realtimeauctionsystem.aop;
+package com.namvu.realtimeauctionsystem.aop;
 
-import com.NamVu.realtimeauctionsystem.dto.auth.InfoOsDto;
-import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
-import com.NamVu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
-import com.NamVu.realtimeauctionsystem.dto.user.BlockUserResponse;
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.entity.UserAudit;
-import com.NamVu.realtimeauctionsystem.enums.UserActionType;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.repository.UserAuditRepository;
-import com.NamVu.realtimeauctionsystem.repository.UserRepository;
-import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
+import com.namvu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
+import com.namvu.realtimeauctionsystem.dto.auth.InfoOsDto;
+import com.namvu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.namvu.realtimeauctionsystem.dto.user.BlockUserResponse;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.entity.UserAudit;
+import com.namvu.realtimeauctionsystem.enums.UserActionType;
+import com.namvu.realtimeauctionsystem.exception.AppException;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
+import com.namvu.realtimeauctionsystem.repository.UserAuditRepository;
+import com.namvu.realtimeauctionsystem.repository.UserRepository;
+import com.namvu.realtimeauctionsystem.service.AuthenticationService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class UserAspect {
     private final AuthenticationService authenticationService;
 
     @AfterReturning(
-            value = "execution(* com.NamVu.realtimeauctionsystem.controller.OutboundAuthenticationController.outboundAuthentication(..))",
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.OutboundAuthenticationController.outboundAuthentication(..))",
             returning = "response"
     )
     public void afterLoginReturning(ApiResponse<AuthenticationResponse> response) {
@@ -67,7 +67,7 @@ public class UserAspect {
     }
 
     @AfterReturning(
-            value = "execution(* com.NamVu.realtimeauctionsystem.controller.AuthenticationController.logout(..))",
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.AuthenticationController.logout(..))",
             returning = "response"
     )
     public void afterLogoutReturning(ApiResponse<?> response) {
@@ -98,7 +98,7 @@ public class UserAspect {
     }
 
     @AfterReturning(
-            value = "execution(* com.NamVu.realtimeauctionsystem.controller.UserController.blockUser(..))",
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.UserController.blockUser(..))",
             returning = "response"
     )
     public void afterBlockReturning(ApiResponse<BlockUserResponse> response) {
@@ -126,7 +126,7 @@ public class UserAspect {
     }
 
     @AfterReturning(
-            value = "execution(* com.NamVu.realtimeauctionsystem.controller.UserController.unblockUser(..))",
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.UserController.unblockUser(..))",
             returning = "response"
     )
     public void afterUnblockReturning(ApiResponse<BlockUserResponse> response) {

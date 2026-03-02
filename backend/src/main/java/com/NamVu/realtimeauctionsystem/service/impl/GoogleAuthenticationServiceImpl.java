@@ -1,17 +1,17 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.auth.ExchangeTokenRequest;
-import com.NamVu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
-import com.NamVu.realtimeauctionsystem.dto.auth.ExchangeTokenResponse;
-import com.NamVu.realtimeauctionsystem.dto.user.OutboundUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.user.UserResponse;
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.TokenType;
-import com.NamVu.realtimeauctionsystem.httpclient.GoogleAuthClient;
-import com.NamVu.realtimeauctionsystem.httpclient.GoogleUserClient;
-import com.NamVu.realtimeauctionsystem.service.OutboundAuthenticationService;
-import com.NamVu.realtimeauctionsystem.service.OutboundUserService;
-import com.NamVu.realtimeauctionsystem.service.TokenService;
+import com.namvu.realtimeauctionsystem.dto.auth.ExchangeTokenRequest;
+import com.namvu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
+import com.namvu.realtimeauctionsystem.dto.auth.ExchangeTokenResponse;
+import com.namvu.realtimeauctionsystem.dto.user.OutboundUserResponse;
+import com.namvu.realtimeauctionsystem.dto.user.UserResponse;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.TokenType;
+import com.namvu.realtimeauctionsystem.httpclient.GoogleAuthClient;
+import com.namvu.realtimeauctionsystem.httpclient.GoogleUserClient;
+import com.namvu.realtimeauctionsystem.service.OutboundAuthenticationService;
+import com.namvu.realtimeauctionsystem.service.OutboundUserService;
+import com.namvu.realtimeauctionsystem.service.TokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,15 +28,15 @@ public class GoogleAuthenticationServiceImpl implements OutboundAuthenticationSe
     private final OutboundUserService outboundUserService;
 
     @Value("${outbound.google.client-id}")
-    private String GOOGLE_CLIENT_ID;
+    private String googleClientId;
 
     @Value("${outbound.google.client-secret}")
-    private String GOOGLE_CLIENT_SECRET;
+    private String googleClientSecret;
 
     @Value("${outbound.redirect-uri}")
-    private String REDIRECT_URI;
+    private String redirectUri;
 
-    private String GRANT_TYPE = "authorization_code";
+    private static final String GRANT_TYPE = "authorization_code";
 
     @Override
     public AuthenticationResponse outboundAuthentication(String code) {
@@ -45,7 +45,6 @@ public class GoogleAuthenticationServiceImpl implements OutboundAuthenticationSe
 
         // Get user info
         OutboundUserResponse userInfo = getUserInfo(response);
-//        log.info("user: {}", userInfo);
 
         // Onboard user
         User user = outboundUserService.onboardUser(userInfo);
@@ -69,11 +68,11 @@ public class GoogleAuthenticationServiceImpl implements OutboundAuthenticationSe
 
     private ExchangeTokenResponse exchangeToken(String code) {
         return googleAuthClient.exchangeToken(ExchangeTokenRequest.builder()
-                .clientId(GOOGLE_CLIENT_ID)
-                .clientSecret(GOOGLE_CLIENT_SECRET)
+                .clientId(googleClientId)
+                .clientSecret(googleClientSecret)
                 .code(code)
                 .grantType(GRANT_TYPE)
-                .redirectUri(REDIRECT_URI)
+                .redirectUri(redirectUri)
                 .build());
     }
 
