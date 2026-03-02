@@ -1,7 +1,7 @@
-package com.NamVu.realtimeauctionsystem.mapper;
+package com.namvu.realtimeauctionsystem.mapper;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.AuctionAuditResponse;
-import com.NamVu.realtimeauctionsystem.entity.AuctionAudit;
+import com.namvu.realtimeauctionsystem.dto.auction.AuctionAuditResponse;
+import com.namvu.realtimeauctionsystem.entity.AuctionAudit;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

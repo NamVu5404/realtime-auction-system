@@ -1,6 +1,6 @@
-package com.NamVu.realtimeauctionsystem.repository;
+package com.namvu.realtimeauctionsystem.repository;
 
-import com.NamVu.realtimeauctionsystem.entity.AuctionAudit;
+import com.namvu.realtimeauctionsystem.entity.AuctionAudit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

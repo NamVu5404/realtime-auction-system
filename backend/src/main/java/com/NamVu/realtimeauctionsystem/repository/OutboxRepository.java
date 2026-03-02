@@ -1,7 +1,7 @@
-package com.NamVu.realtimeauctionsystem.repository;
+package com.namvu.realtimeauctionsystem.repository;
 
-import com.NamVu.realtimeauctionsystem.entity.Outbox;
-import com.NamVu.realtimeauctionsystem.enums.OutboxStatus;
+import com.namvu.realtimeauctionsystem.entity.Outbox;
+import com.namvu.realtimeauctionsystem.enums.OutboxStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

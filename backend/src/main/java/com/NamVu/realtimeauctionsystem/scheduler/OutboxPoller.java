@@ -1,8 +1,8 @@
-package com.NamVu.realtimeauctionsystem.scheduler;
+package com.namvu.realtimeauctionsystem.scheduler;
 
-import com.NamVu.realtimeauctionsystem.entity.Outbox;
-import com.NamVu.realtimeauctionsystem.enums.OutboxStatus;
-import com.NamVu.realtimeauctionsystem.repository.OutboxRepository;
+import com.namvu.realtimeauctionsystem.entity.Outbox;
+import com.namvu.realtimeauctionsystem.enums.OutboxStatus;
+import com.namvu.realtimeauctionsystem.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;

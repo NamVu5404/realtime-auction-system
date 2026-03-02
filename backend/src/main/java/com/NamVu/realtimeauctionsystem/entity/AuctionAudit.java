@@ -1,16 +1,18 @@
-package com.NamVu.realtimeauctionsystem.entity;
+package com.namvu.realtimeauctionsystem.entity;
 
-import com.NamVu.realtimeauctionsystem.enums.AuctionActionType;
+import com.namvu.realtimeauctionsystem.enums.AuctionActionType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.Instant;
 import java.util.Map;
 
 @Entity
-@Table(name = "auction_audit")
+@Table(name = "auction_audit",
+        indexes = {
+                @Index(name = "idx_auction_audit_auction_created_desc", columnList = "auction_id, created_at DESC")
+        })
 @Getter
 @Setter
 @NoArgsConstructor

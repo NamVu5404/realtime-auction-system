@@ -1,23 +1,23 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.*;
-import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateMessage;
-import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
-import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
-import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
-import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.entity.Bid;
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.mapper.AuctionMapper;
-import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
-import com.NamVu.realtimeauctionsystem.repository.BidRepository;
-import com.NamVu.realtimeauctionsystem.repository.UserRepository;
-import com.NamVu.realtimeauctionsystem.service.AuctionService;
-import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
+import com.namvu.realtimeauctionsystem.dto.auction.*;
+import com.namvu.realtimeauctionsystem.dto.bid.BidUpdateMessage;
+import com.namvu.realtimeauctionsystem.dto.bid.BidUpdateResult;
+import com.namvu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
+import com.namvu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
+import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.exception.AppException;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
+import com.namvu.realtimeauctionsystem.mapper.AuctionMapper;
+import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.repository.BidRepository;
+import com.namvu.realtimeauctionsystem.repository.UserRepository;
+import com.namvu.realtimeauctionsystem.service.AuctionService;
+import com.namvu.realtimeauctionsystem.service.RedisAuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -195,9 +195,6 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     public PlaceBidResponse placeBids(PlaceBidRequestV1 request) {
-//        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//        String name = jwt.getClaim("name");
-
         BidUpdateResult result = redisAuctionService
                 .updateBidWithLock(request.getAuctionId(), request.getBidderId(), request.getAmount());
 

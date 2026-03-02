@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.auction;
+package com.namvu.realtimeauctionsystem.dto.auction;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CancelAuctionRequest {
 
-    @NotBlank
+    @NotBlank(message = "REASON_NOT_BLANK")
     private String reason;
 }

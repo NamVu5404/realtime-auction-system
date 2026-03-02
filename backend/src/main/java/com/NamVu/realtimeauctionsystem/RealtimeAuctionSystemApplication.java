@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem;
+package com.namvu.realtimeauctionsystem;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;

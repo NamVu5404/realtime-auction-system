@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.configuration;
+package com.namvu.realtimeauctionsystem.configuration;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

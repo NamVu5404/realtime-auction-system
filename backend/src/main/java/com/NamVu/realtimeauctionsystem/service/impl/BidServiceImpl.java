@@ -1,22 +1,21 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
-import com.NamVu.realtimeauctionsystem.dto.bid.BidUpdateResult;
-import com.NamVu.realtimeauctionsystem.dto.bid.MyBidHistoryResponse;
-import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.entity.Bid;
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.BidStatus;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.repository.AuctionRepository;
-import com.NamVu.realtimeauctionsystem.repository.BidRepository;
-import com.NamVu.realtimeauctionsystem.repository.UserRepository;
-import com.NamVu.realtimeauctionsystem.service.BidService;
-import com.NamVu.realtimeauctionsystem.service.OutboxService;
-import com.NamVu.realtimeauctionsystem.service.RedisLuaService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.namvu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
+import com.namvu.realtimeauctionsystem.dto.bid.BidUpdateResult;
+import com.namvu.realtimeauctionsystem.dto.bid.MyBidHistoryResponse;
+import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.enums.BidStatus;
+import com.namvu.realtimeauctionsystem.exception.AppException;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
+import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.repository.BidRepository;
+import com.namvu.realtimeauctionsystem.repository.UserRepository;
+import com.namvu.realtimeauctionsystem.service.BidService;
+import com.namvu.realtimeauctionsystem.service.OutboxService;
+import com.namvu.realtimeauctionsystem.service.RedisLuaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,7 +51,7 @@ public class BidServiceImpl implements BidService {
     public BidUpdateResult placeBid(Long auctionId, Long bidderId, BigDecimal newPrice) throws JsonProcessingException {
         Instant now = Instant.now();
 
-        // 1. Execute Lua Script (atomic)
+        // Execute Lua Script (atomic)
         List<?> result;
 
         try {
@@ -69,19 +68,19 @@ public class BidServiceImpl implements BidService {
         Long status = (Long) result.get(0);
         String message = (String) result.get(1);
 
-        // 2. Lua reject
+        // Lua reject
         if (status == 0L) {
             return BidUpdateResult.failure(message, now);
         }
 
-        // 3. Parse result từ Lua
+        // Parse result từ Lua
         String extendedFlag = (String) result.get(2);  // "extended" | "normal"
         boolean extended = "extended".equals(extendedFlag);
         long finalEndTimeEpoch = Long.parseLong((String) result.get(3));
         Instant finalEndTime = Instant.ofEpochSecond(finalEndTimeEpoch);
         Integer nextExtensionCount = ((Long) result.get(4)).intValue();
 
-        // 4. Ghi MySQL + Outbox (trong 1 transaction)
+        // Ghi MySQL + Outbox (trong 1 transaction)
         Bid bid = Bid.builder()
                 .auction(auctionRepository.getReferenceById(auctionId))
                 .bidder(userRepository.getReferenceById(bidderId))
@@ -98,7 +97,7 @@ public class BidServiceImpl implements BidService {
             throw new AppException(ErrorCode.AUCTION_NOT_FOUND);
         }
 
-        // 5. Return success
+        // Return success
         return BidUpdateResult.success(newPrice, bidderId, now, extended, finalEndTime);
     }
 
@@ -108,19 +107,14 @@ public class BidServiceImpl implements BidService {
     @Override
     public void createRejectedBidRecord(BidPlacedEvent event) {
         try {
-            Auction auction = auctionRepository.findById(event.getAuctionId())
-                    .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
-            User bidder = userRepository.findById(event.getBidderId())
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-
-            if (auction == null || bidder == null) {
+            if (event.getAuctionId() == null || event.getBidderId() == null) {
                 log.warn("Cannot create rejected bid: auction or bidder not found");
                 return;
             }
 
             Bid bid = Bid.builder()
-                    .auction(auction)
-                    .bidder(bidder)
+                    .auction(auctionRepository.getReferenceById(event.getAuctionId()))
+                    .bidder(userRepository.getReferenceById(event.getBidderId()))
                     .amount(event.getAmount())
                     .status(BidStatus.REJECTED)
                     .build();

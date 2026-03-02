@@ -1,8 +1,12 @@
-package com.NamVu.realtimeauctionsystem.utils;
+package com.namvu.realtimeauctionsystem.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 public class RequestUtils {
+    private RequestUtils() {
+        /* This utility class should not be instantiated */
+    }
+
     public static String getIpAddress(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {

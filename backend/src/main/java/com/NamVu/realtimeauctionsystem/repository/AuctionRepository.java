@@ -1,7 +1,7 @@
-package com.NamVu.realtimeauctionsystem.repository;
+package com.namvu.realtimeauctionsystem.repository;
 
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.enums.AuctionStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,5 +81,6 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             @Param("extensionCount") Integer extensionCount
     );
 
+    @EntityGraph(attributePaths = {"seller"})
     List<Auction> findByStatus(AuctionStatus status);
 }

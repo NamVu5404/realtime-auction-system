@@ -1,6 +1,6 @@
-package com.NamVu.realtimeauctionsystem.service;
+package com.namvu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.entity.Bid;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.time.Instant;

@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.enums;
+package com.namvu.realtimeauctionsystem.enums;
 
 public enum FraudType {
     SELF_BIDDING,

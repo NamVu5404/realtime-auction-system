@@ -1,7 +1,7 @@
-package com.NamVu.realtimeauctionsystem.service;
+package com.namvu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.TokenType;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.TokenType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 

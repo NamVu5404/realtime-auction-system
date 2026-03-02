@@ -1,17 +1,18 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.entity.User;
-import com.NamVu.realtimeauctionsystem.enums.TokenType;
-import com.NamVu.realtimeauctionsystem.exception.AppException;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
-import com.NamVu.realtimeauctionsystem.repository.InvalidatedTokenRepository;
-import com.NamVu.realtimeauctionsystem.service.TokenService;
+import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.TokenType;
+import com.namvu.realtimeauctionsystem.exception.AppException;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
+import com.namvu.realtimeauctionsystem.repository.InvalidatedTokenRepository;
+import com.namvu.realtimeauctionsystem.service.TokenService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,36 +24,37 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TokenServiceImpl implements TokenService {
 
     private final InvalidatedTokenRepository invalidatedTokenRepository;
 
     @Value("${jwt.access-key}")
-    private String ACCESS_KEY;
+    private String accessKey;
 
     @Value("${jwt.refresh-key}")
-    private String REFRESH_KEY;
+    private String refreshKey;
 
     @Value("${jwt.valid-duration}")
-    private Long VALID_DURATION;
+    private Long validDuration;
 
     @Value("${jwt.refreshable-duration}")
-    private Long REFRESHABLE_DURATION;
+    private Long refreshableDuration;
 
     @Override
     public String generateToken(User user, TokenType type) {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .issuer("NamVu.com")
+                .issuer("namvu.com")
                 .subject(user.getEmail())
                 .claim("uid", user.getId())
                 .claim("scope", user.getRole())
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString())
                 .expirationTime(type == TokenType.ACCESS_TOKEN
-                        ? Date.from(Instant.now().plus(VALID_DURATION, ChronoUnit.HOURS))
-                        : Date.from(Instant.now().plus(REFRESHABLE_DURATION, ChronoUnit.HOURS))
+                        ? Date.from(Instant.now().plus(validDuration, ChronoUnit.HOURS))
+                        : Date.from(Instant.now().plus(refreshableDuration, ChronoUnit.HOURS))
                 )
                 .build();
 
@@ -62,13 +64,14 @@ public class TokenServiceImpl implements TokenService {
 
         try {
             if (type == TokenType.ACCESS_TOKEN) {
-                jwsObject.sign(new MACSigner(ACCESS_KEY.getBytes()));
+                jwsObject.sign(new MACSigner(accessKey.getBytes()));
             } else {
-                jwsObject.sign(new MACSigner(REFRESH_KEY.getBytes()));
+                jwsObject.sign(new MACSigner(refreshKey.getBytes()));
             }
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            throw new RuntimeException(e);
+            log.error("Failed to sign {} due to cryptographic error", type, e);
+            throw new AppException(ErrorCode.TOKEN_GENERATION_FAILED);
         }
     }
 
@@ -77,9 +80,9 @@ public class TokenServiceImpl implements TokenService {
         JWSVerifier verifier;
 
         if (!isRefresh) {
-            verifier = new MACVerifier(ACCESS_KEY.getBytes());
+            verifier = new MACVerifier(accessKey.getBytes());
         } else {
-            verifier = new MACVerifier(REFRESH_KEY.getBytes());
+            verifier = new MACVerifier(refreshKey.getBytes());
         }
 
         SignedJWT signedJWT = SignedJWT.parse(token);

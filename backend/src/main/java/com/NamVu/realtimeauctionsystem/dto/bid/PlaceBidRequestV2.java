@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.bid;
+package com.namvu.realtimeauctionsystem.dto.bid;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlaceBidRequestV2 {
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
+    @NotNull(message = "AMOUNT_NOT_BLANK")
+    @DecimalMin(value = "0.01", message = "INVALID_AMOUNT")
     private BigDecimal amount;
 }

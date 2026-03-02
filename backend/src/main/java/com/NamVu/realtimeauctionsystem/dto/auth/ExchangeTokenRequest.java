@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.auth;
+package com.namvu.realtimeauctionsystem.dto.auth;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

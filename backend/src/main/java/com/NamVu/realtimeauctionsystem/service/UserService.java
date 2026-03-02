@@ -1,11 +1,11 @@
-package com.NamVu.realtimeauctionsystem.service;
+package com.namvu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.user.BlockUserRequest;
-import com.NamVu.realtimeauctionsystem.dto.user.BlockUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.user.ManagerUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
-import com.NamVu.realtimeauctionsystem.enums.Role;
-import com.NamVu.realtimeauctionsystem.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.dto.user.BlockUserRequest;
+import com.namvu.realtimeauctionsystem.dto.user.BlockUserResponse;
+import com.namvu.realtimeauctionsystem.dto.user.ManagerUserResponse;
+import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.enums.Role;
+import com.namvu.realtimeauctionsystem.enums.UserStatus;
 import org.springframework.data.domain.Pageable;
 
 public interface UserService {

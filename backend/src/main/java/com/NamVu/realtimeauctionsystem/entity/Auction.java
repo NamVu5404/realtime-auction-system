@@ -1,11 +1,12 @@
-package com.NamVu.realtimeauctionsystem.entity;
+package com.namvu.realtimeauctionsystem.entity;
 
-import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.enums.AuctionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @Table(name = "auctions",
@@ -31,8 +32,8 @@ public class Auction extends Auditable {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(columnDefinition = "TEXT")
-    private String image;
+    @Transient
+    private List<File> images;
 
     @Column(precision = 15, scale = 2)
     private BigDecimal startPrice;

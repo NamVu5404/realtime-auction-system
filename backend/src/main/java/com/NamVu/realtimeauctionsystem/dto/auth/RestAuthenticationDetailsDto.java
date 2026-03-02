@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.auth;
+package com.namvu.realtimeauctionsystem.dto.auth;
 
 import jakarta.servlet.http.HttpServletRequest;
 import ua_parser.Client;

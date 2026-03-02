@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.exception;
+package com.namvu.realtimeauctionsystem.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,5 +8,5 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class AppException extends RuntimeException {
-    private ErrorCode errorCode;
+    private final ErrorCode errorCode;
 }

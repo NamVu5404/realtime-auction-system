@@ -1,14 +1,14 @@
-package com.NamVu.realtimeauctionsystem.controller;
+package com.namvu.realtimeauctionsystem.controller;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.*;
-import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
-import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
-import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
-import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
-import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
-import com.NamVu.realtimeauctionsystem.service.AuctionAuditService;
-import com.NamVu.realtimeauctionsystem.service.AuctionService;
-import com.NamVu.realtimeauctionsystem.service.RedisAuctionService;
+import com.namvu.realtimeauctionsystem.dto.auction.*;
+import com.namvu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
+import com.namvu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
+import com.namvu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.service.AuctionAuditService;
+import com.namvu.realtimeauctionsystem.service.AuctionService;
+import com.namvu.realtimeauctionsystem.service.RedisAuctionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -83,7 +83,8 @@ public class AuctionControllerV1 {
     }
 
     @PatchMapping("/{id}/cancel")
-    public ApiResponse<CancelAuctionResponse> cancelAuction(@PathVariable Long id, @RequestBody CancelAuctionRequest request) {
+    public ApiResponse<CancelAuctionResponse> cancelAuction(@PathVariable Long id,
+                                                            @RequestBody @Valid CancelAuctionRequest request) {
         return ApiResponse.<CancelAuctionResponse>builder()
                 .result(auctionService.cancelAuction(id, request))
                 .build();
@@ -94,7 +95,8 @@ public class AuctionControllerV1 {
      *  Chậm, tắc cổ chai nếu nhiều bids cùng lúc, không Atomic
      */
     @PostMapping("/{auctionId}/bids")
-    public ApiResponse<PlaceBidResponse> placeBids(@RequestBody @Valid PlaceBidRequestV1 request) {
+    public ApiResponse<PlaceBidResponse> placeBids(@PathVariable Long auctionId,
+                                                   @RequestBody @Valid PlaceBidRequestV1 request) {
         return ApiResponse.<PlaceBidResponse>builder()
                 .result(auctionService.placeBids(request))
                 .build();

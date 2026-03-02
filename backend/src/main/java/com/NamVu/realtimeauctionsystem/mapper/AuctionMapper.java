@@ -1,10 +1,10 @@
-package com.NamVu.realtimeauctionsystem.mapper;
+package com.namvu.realtimeauctionsystem.mapper;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.CreateAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.auction.UpdateDraftAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.auction.UpdateScheduledAuctionRequest;
-import com.NamVu.realtimeauctionsystem.dto.auction.AuctionResponse;
-import com.NamVu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.dto.auction.CreateAuctionRequest;
+import com.namvu.realtimeauctionsystem.dto.auction.UpdateDraftAuctionRequest;
+import com.namvu.realtimeauctionsystem.dto.auction.UpdateScheduledAuctionRequest;
+import com.namvu.realtimeauctionsystem.dto.auction.AuctionResponse;
+import com.namvu.realtimeauctionsystem.entity.Auction;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")

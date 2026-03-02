@@ -1,4 +1,4 @@
-package com.NamVu.realtimeauctionsystem.dto.common;
+package com.namvu.realtimeauctionsystem.dto.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

@@ -1,15 +1,16 @@
-package com.NamVu.realtimeauctionsystem.controller;
+package com.namvu.realtimeauctionsystem.controller;
 
-import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
-import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
-import com.NamVu.realtimeauctionsystem.dto.user.BlockUserRequest;
-import com.NamVu.realtimeauctionsystem.dto.user.BlockUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.user.ManagerUserResponse;
-import com.NamVu.realtimeauctionsystem.dto.user.UserAuditResponse;
-import com.NamVu.realtimeauctionsystem.enums.Role;
-import com.NamVu.realtimeauctionsystem.enums.UserStatus;
-import com.NamVu.realtimeauctionsystem.service.UserService;
-import com.NamVu.realtimeauctionsystem.service.UserAuditService;
+import com.namvu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.dto.user.BlockUserRequest;
+import com.namvu.realtimeauctionsystem.dto.user.BlockUserResponse;
+import com.namvu.realtimeauctionsystem.dto.user.ManagerUserResponse;
+import com.namvu.realtimeauctionsystem.dto.user.UserAuditResponse;
+import com.namvu.realtimeauctionsystem.enums.Role;
+import com.namvu.realtimeauctionsystem.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.service.UserAuditService;
+import com.namvu.realtimeauctionsystem.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,14 +40,14 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}/block")
-    public ApiResponse<BlockUserResponse> blockUser(@PathVariable Long userId, @RequestBody BlockUserRequest request) {
+    public ApiResponse<BlockUserResponse> blockUser(@PathVariable Long userId, @RequestBody @Valid BlockUserRequest request) {
         return ApiResponse.<BlockUserResponse>builder()
                 .result(userService.blockUser(userId, request))
                 .build();
     }
 
     @PatchMapping("/{userId}/unblock")
-    public ApiResponse<BlockUserResponse> unblockUser(@PathVariable Long userId, @RequestBody BlockUserRequest request) {
+    public ApiResponse<BlockUserResponse> unblockUser(@PathVariable Long userId, @RequestBody @Valid BlockUserRequest request) {
         return ApiResponse.<BlockUserResponse>builder()
                 .result(userService.unblockUser(userId, request))
                 .build();

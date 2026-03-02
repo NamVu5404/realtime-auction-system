@@ -1,9 +1,9 @@
-package com.NamVu.realtimeauctionsystem.consumer;
+package com.namvu.realtimeauctionsystem.consumer;
 
-import com.NamVu.realtimeauctionsystem.dto.bid.BidFailureMessage;
-import com.NamVu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
-import com.NamVu.realtimeauctionsystem.service.AuctionDbSyncService;
-import com.NamVu.realtimeauctionsystem.service.BidService;
+import com.namvu.realtimeauctionsystem.dto.bid.BidFailureMessage;
+import com.namvu.realtimeauctionsystem.dto.bid.BidPlacedEvent;
+import com.namvu.realtimeauctionsystem.service.AuctionDbSyncService;
+import com.namvu.realtimeauctionsystem.service.BidService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;

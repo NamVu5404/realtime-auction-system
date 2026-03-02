@@ -1,9 +1,7 @@
-package com.NamVu.realtimeauctionsystem.configuration;
+package com.namvu.realtimeauctionsystem.configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,16 +20,19 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final String[] PUBLIC_ENDPOINTS = {
+    private static final String[] PUBLIC_ENDPOINTS = {
         "/v1/auth/**", "/v1/auctions", "/v1/auctions/*", "/v1/auctions/*/current-price"
     };
-
-    @Autowired
-    private CustomJwtDecoder customJwtDecoder;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
+    }
+
+    private final CustomJwtDecoder customJwtDecoder;
+
+    public SecurityConfig(CustomJwtDecoder customJwtDecoder) {
+        this.customJwtDecoder = customJwtDecoder;
     }
 
     @Bean

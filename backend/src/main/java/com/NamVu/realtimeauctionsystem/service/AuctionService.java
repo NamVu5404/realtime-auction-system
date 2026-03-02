@@ -1,10 +1,10 @@
-package com.NamVu.realtimeauctionsystem.service;
+package com.namvu.realtimeauctionsystem.service;
 
-import com.NamVu.realtimeauctionsystem.dto.auction.*;
-import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
-import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
-import com.NamVu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
-import com.NamVu.realtimeauctionsystem.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.dto.auction.*;
+import com.namvu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
+import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
+import com.namvu.realtimeauctionsystem.enums.AuctionStatus;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;

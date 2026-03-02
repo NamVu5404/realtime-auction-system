@@ -1,8 +1,8 @@
-package com.NamVu.realtimeauctionsystem.configuration;
+package com.namvu.realtimeauctionsystem.configuration;
 
-import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
-import com.NamVu.realtimeauctionsystem.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namvu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;

@@ -1,9 +1,9 @@
-package com.NamVu.realtimeauctionsystem.controller;
+package com.namvu.realtimeauctionsystem.controller;
 
-import com.NamVu.realtimeauctionsystem.dto.common.ApiResponse;
-import com.NamVu.realtimeauctionsystem.dto.bid.MyBidHistoryResponse;
-import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
-import com.NamVu.realtimeauctionsystem.service.BidService;
+import com.namvu.realtimeauctionsystem.dto.bid.MyBidHistoryResponse;
+import com.namvu.realtimeauctionsystem.dto.common.ApiResponse;
+import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.service.BidService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

@@ -1,10 +1,8 @@
-package com.NamVu.realtimeauctionsystem.entity;
+package com.namvu.realtimeauctionsystem.entity;
 
-import com.NamVu.realtimeauctionsystem.enums.FraudType;
+import com.namvu.realtimeauctionsystem.enums.FraudType;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.time.Instant;
 
 @Entity
 @Table(name = "fraud_logs",

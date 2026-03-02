@@ -1,15 +1,15 @@
-package com.NamVu.realtimeauctionsystem.service.impl;
+package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.NamVu.realtimeauctionsystem.dto.common.PageResponse;
-import com.NamVu.realtimeauctionsystem.dto.user.UserAuditResponse;
-import com.NamVu.realtimeauctionsystem.entity.Auction;
-import com.NamVu.realtimeauctionsystem.entity.Bid;
-import com.NamVu.realtimeauctionsystem.entity.UserAudit;
-import com.NamVu.realtimeauctionsystem.enums.FraudType;
-import com.NamVu.realtimeauctionsystem.enums.UserActionType;
-import com.NamVu.realtimeauctionsystem.mapper.UserAuditMapper;
-import com.NamVu.realtimeauctionsystem.repository.UserAuditRepository;
-import com.NamVu.realtimeauctionsystem.service.UserAuditService;
+import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.dto.user.UserAuditResponse;
+import com.namvu.realtimeauctionsystem.entity.Auction;
+import com.namvu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.entity.UserAudit;
+import com.namvu.realtimeauctionsystem.enums.FraudType;
+import com.namvu.realtimeauctionsystem.enums.UserActionType;
+import com.namvu.realtimeauctionsystem.mapper.UserAuditMapper;
+import com.namvu.realtimeauctionsystem.repository.UserAuditRepository;
+import com.namvu.realtimeauctionsystem.service.UserAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

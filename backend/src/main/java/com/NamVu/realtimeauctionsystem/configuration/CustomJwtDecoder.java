@@ -1,11 +1,10 @@
-package com.NamVu.realtimeauctionsystem.configuration;
+package com.namvu.realtimeauctionsystem.configuration;
 
-import com.NamVu.realtimeauctionsystem.dto.auth.IntrospectRequest;
-import com.NamVu.realtimeauctionsystem.dto.auth.IntrospectResponse;
-import com.NamVu.realtimeauctionsystem.service.AuthenticationService;
+import com.namvu.realtimeauctionsystem.dto.auth.IntrospectRequest;
+import com.namvu.realtimeauctionsystem.dto.auth.IntrospectResponse;
+import com.namvu.realtimeauctionsystem.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -24,13 +23,15 @@ import java.util.Objects;
 public class CustomJwtDecoder implements JwtDecoder {
 
     @Value("${jwt.access-key}")
-    private String ACCESS_KEY;
+    private String accessKey;
 
-    @Autowired
-    @Lazy
-    private AuthenticationService authenticationService;
+    private final AuthenticationService authenticationService;
 
     private NimbusJwtDecoder nimbusJwtDecoder = null;
+
+    public CustomJwtDecoder(@Lazy AuthenticationService authenticationService) {
+        this.authenticationService = authenticationService;
+    }
 
     @Override
     public Jwt decode(String accessToken) throws JwtException {
@@ -46,7 +47,7 @@ public class CustomJwtDecoder implements JwtDecoder {
         }
 
         if (Objects.isNull(nimbusJwtDecoder)) {
-            SecretKeySpec secretKeySpec = new SecretKeySpec(ACCESS_KEY.getBytes(), "HS512");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(accessKey.getBytes(), "HS512");
             nimbusJwtDecoder = NimbusJwtDecoder.withSecretKey(secretKeySpec)
                     .macAlgorithm(MacAlgorithm.HS512)
                     .build();

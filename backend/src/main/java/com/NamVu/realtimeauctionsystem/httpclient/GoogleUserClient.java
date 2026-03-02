@@ -1,6 +1,6 @@
-package com.NamVu.realtimeauctionsystem.httpclient;
+package com.namvu.realtimeauctionsystem.httpclient;
 
-import com.NamVu.realtimeauctionsystem.dto.user.OutboundUserResponse;
+import com.namvu.realtimeauctionsystem.dto.user.OutboundUserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;

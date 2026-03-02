@@ -1,7 +1,7 @@
-package com.NamVu.realtimeauctionsystem.dto.bid;
+package com.namvu.realtimeauctionsystem.dto.bid;
 
-import com.NamVu.realtimeauctionsystem.dto.user.UserResponse;
-import com.NamVu.realtimeauctionsystem.enums.BidStatus;
+import com.namvu.realtimeauctionsystem.dto.user.UserResponse;
+import com.namvu.realtimeauctionsystem.enums.BidStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
