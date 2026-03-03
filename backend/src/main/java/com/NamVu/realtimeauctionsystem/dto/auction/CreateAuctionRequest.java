@@ -23,8 +23,6 @@ public class CreateAuctionRequest {
 
     private String description;
 
-    private String image;
-
     @NotNull(groups = Scheduler.class, message = "INVALID_INPUT")
     @DecimalMin(value = "0.01", groups = Scheduler.class, message = "INVALID_INPUT")
     private BigDecimal startPrice;

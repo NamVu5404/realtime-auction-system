@@ -77,7 +77,7 @@ public class BidServiceTest {
         when(auctionRepository.updateAuctionPriceAndEndTime(anyLong(), any(BigDecimal.class), anyLong(), any(Instant.class), any(Integer.class)))
                 .thenReturn(1);
 
-        BidUpdateResult result = bidService.placeBid(AUCTION_ID, BIDDER_ID, new BigDecimal("1200"));
+        BidUpdateResult result = bidService.placeBidV2(AUCTION_ID, BIDDER_ID, new BigDecimal("1200"));
 
         assertTrue(result.isSuccess());
 
@@ -100,7 +100,7 @@ public class BidServiceTest {
         when(redisLuaService.executePlaceBid(any(), any(), any(), anyLong(), anyInt()))
                 .thenAnswer(invocation -> List.of(0L, "Bid must be at least 1100"));
 
-        BidUpdateResult result = bidService.placeBid(AUCTION_ID, BIDDER_ID, new BigDecimal("1050"));
+        BidUpdateResult result = bidService.placeBidV2(AUCTION_ID, BIDDER_ID, new BigDecimal("1050"));
 
         assertFalse(result.isSuccess());
         verify(auctionRepository, never()).save(any()); // KHÔNG update auction khi thất bại
@@ -125,7 +125,7 @@ public class BidServiceTest {
                 .thenReturn(1);
 
         // 3. Thực thi
-        BidUpdateResult result = bidService.placeBid(AUCTION_ID, BIDDER_ID, newPrice);
+        BidUpdateResult result = bidService.placeBidV2(AUCTION_ID, BIDDER_ID, newPrice);
 
         // 4. Kiểm chứng kết quả trả về
         assertTrue(result.isSuccess(), "Bid should be successful");

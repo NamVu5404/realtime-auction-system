@@ -1,6 +1,5 @@
 import { WifiOutlined } from "@ant-design/icons";
 import {
-  Image as AntImage,
   Card,
   Col,
   Drawer,
@@ -14,6 +13,7 @@ import {
   Tag,
   Tooltip,
 } from "antd";
+
 import type { ColumnsType } from "antd/es/table";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { auctionApi } from "../../../api/auctionApi";
@@ -30,6 +30,7 @@ import { useAuctionWebsocket } from "../../../hooks/useAuctionWebsocket";
 import { useAuctionHistory } from "../../../hooks/useAuctions";
 import { useUIStore } from "../../../store/useUIStore";
 import { formatAuctionTime, getTimeRemaining } from "../../../utils/dateUtils";
+import { AuctionImageCarousel } from "../../../components/common/AuctionImageCarousel";
 import { formatCurrency } from "../../../utils/format";
 import { getStatusColor } from "../../../utils/statusUtils";
 
@@ -38,9 +39,6 @@ interface AuctionDetailDrawerProps {
   visible: boolean;
   onClose: () => void;
 }
-
-const DEFAULT_IMAGE =
-  "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
 
 export const AuctionDetailDrawer = ({
   auction: propAuction,
@@ -370,25 +368,10 @@ export const AuctionDetailDrawer = ({
           </div>
 
           <div className="grid grid-cols-1 gap-6">
-            {/* Left Column: Image & Description */}
-            <div className="space-y-6">
-              {/* Product Image */}
-              <Card
-                className="bg-zinc-900 border-zinc-800 overflow-hidden"
-                styles={{ body: { padding: 0 } }}
-              >
-                <div className="relative aspect-video w-full bg-zinc-950 flex items-center justify-center">
-                  <AntImage
-                    src={auction.image || DEFAULT_IMAGE}
-                    alt={auction.title}
-                    className="object-contain w-full h-full"
-                    style={{ maxHeight: "300px" }}
-                    classNames={{
-                      root: "w-full h-full flex items-center justify-center",
-                    }}
-                  />
-                </div>
-              </Card>
+            {/* Left Column: Image Carousel & Description */}
+            <div className="space-y-4">
+              {/* Image Carousel */}
+              <AuctionImageCarousel images={auction.images} compact />
 
               {/* Description */}
               <p className="text-gray-400 m-0 leading-relaxed whitespace-pre-wrap">

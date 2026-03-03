@@ -19,8 +19,6 @@ public class UpdateScheduledAuctionRequest {
 
     private String description;
 
-    private String image;
-
     @NotNull(message = "INVALID_INPUT")
     @Future(message = "INVALID_INPUT")
     private Instant startTime;

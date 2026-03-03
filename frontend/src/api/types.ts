@@ -58,6 +58,37 @@ export interface User {
 }
 
 /**
+ * Owner Type Enum for files - Matches Backend OwnerType.java constant names
+ */
+export enum OwnerType {
+  AUCTION_IMAGE = "AUCTION_IMAGE",
+  NEWS = "NEWS",
+  HOME_THUMBNAIL = "HOME_THUMBNAIL",
+  USER_AVATAR = "USER_AVATAR",
+}
+
+/**
+ * File Response Interface
+ */
+export interface FileResponse {
+  id: number;
+  filePath: string;
+  storageName: string;
+  ownerId: number;
+  sortOrder: number;
+  isPrimary: boolean;
+}
+
+/**
+ * File Metadata Request Interface
+ */
+export interface FileMetadataRequest {
+  id: number;
+  isPrimary: boolean;
+  sortOrder: number;
+}
+
+/**
  * Auction Response - Derived from AuctionResponse.java
  * All timestamps are ISO 8601 strings in UTC format from backend
  */
@@ -65,7 +96,8 @@ export interface Auction {
   id: number;
   title: string;
   description: string;
-  image?: string;
+  image?: string; // Legacy field
+  images?: FileResponse[]; // New field
   startPrice: number; // BigDecimal from Java
   currentPrice: number; // BigDecimal from Java
   minStep: number; // BigDecimal from Java

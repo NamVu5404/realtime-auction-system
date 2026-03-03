@@ -95,10 +95,10 @@ public class AuctionControllerV1 {
      *  Chậm, tắc cổ chai nếu nhiều bids cùng lúc, không Atomic
      */
     @PostMapping("/{auctionId}/bids")
-    public ApiResponse<PlaceBidResponse> placeBids(@PathVariable Long auctionId,
+    public ApiResponse<PlaceBidResponse> placeBidV1(@PathVariable Long auctionId,
                                                    @RequestBody @Valid PlaceBidRequestV1 request) {
         return ApiResponse.<PlaceBidResponse>builder()
-                .result(auctionService.placeBids(request))
+                .result(auctionService.placeBidV1(request))
                 .build();
     }
 

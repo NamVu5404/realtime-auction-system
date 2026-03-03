@@ -36,9 +36,7 @@ import { useAuctionWebsocket } from "../hooks/useAuctionWebsocket";
 import { formatAuctionTime, getTimeRemaining } from "../utils/dateUtils";
 import { formatCurrency } from "../utils/format";
 import { useUIStore } from "../store/useUIStore";
-
-const DEFAULT_IMAGE =
-  "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
+import { AuctionImageCarousel } from "../components/common/AuctionImageCarousel";
 
 // Tách phần bidding form ra component riêng với state nội bộ
 const BiddingSection = memo(
@@ -400,7 +398,6 @@ export const AuctionDetailPage = () => {
     isLive || (isScheduled && timeTilStart > 0 && timeTilStart < oneHourMs);
 
   const minimumBid = auction.currentPrice + auction.minStep;
-  const isValidImage = auction.image && !auction.image.includes("placeholder");
 
   // Determine if bid button should be disabled
   const isBidDisabled =
@@ -644,23 +641,15 @@ export const AuctionDetailPage = () => {
               </div>
 
               {/* Title */}
-              <h1 className="text-4xl font-bold text-white mb-2">
+              <h1 className="text-2xl font-bold text-white mb-2">
                 {auction.title}
               </h1>
 
-              {/* Image Card */}
-              <Card className="bg-zinc-900 border-zinc-800">
-                <Image
-                  src={isValidImage ? auction?.image : undefined}
-                  alt={auction.title}
-                  preview={true}
-                  className="w-full rounded-lg"
-                  fallback="https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg"
-                />
-              </Card>
+              {/* Image Carousel */}
+              <AuctionImageCarousel images={auction.images} />
 
               {/* Description */}
-              <p className="text-gray-400 text-lg">{auction.description}</p>
+              <p className="text-gray-400 text-base">{auction.description}</p>
             </div>
           </Col>
 

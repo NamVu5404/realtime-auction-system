@@ -6,15 +6,18 @@ import com.namvu.realtimeauctionsystem.dto.bid.BidUpdateResult;
 import com.namvu.realtimeauctionsystem.dto.bid.PlaceBidRequestV1;
 import com.namvu.realtimeauctionsystem.dto.bid.PlaceBidResponse;
 import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
+import com.namvu.realtimeauctionsystem.dto.file.FileResponse;
 import com.namvu.realtimeauctionsystem.entity.Auction;
 import com.namvu.realtimeauctionsystem.entity.Bid;
 import com.namvu.realtimeauctionsystem.entity.User;
 import com.namvu.realtimeauctionsystem.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.enums.OwnerType;
 import com.namvu.realtimeauctionsystem.exception.AppException;
 import com.namvu.realtimeauctionsystem.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.mapper.AuctionMapper;
 import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
 import com.namvu.realtimeauctionsystem.repository.BidRepository;
+import com.namvu.realtimeauctionsystem.repository.FileRepository;
 import com.namvu.realtimeauctionsystem.repository.UserRepository;
 import com.namvu.realtimeauctionsystem.service.AuctionService;
 import com.namvu.realtimeauctionsystem.service.RedisAuctionService;
@@ -32,6 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +49,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final RedisAuctionService redisAuctionService;
     private final SimpMessagingTemplate messagingTemplate;
     private final BidRepository bidRepository;
+    private final FileRepository fileRepository;
 
     @Override
     public PageResponse<AuctionResponse> getAuctionsByStatus(AuctionStatus status, Pageable pageable) {
@@ -54,6 +60,8 @@ public class AuctionServiceImpl implements AuctionService {
         List<AuctionResponse> responses = auctionPage.getContent().stream()
                 .map(auctionMapper::mapToResponse)
                 .toList();
+
+        populateImages(responses);
 
         return PageResponse.<AuctionResponse>builder()
                 .currentPage(pageable.getPageNumber() + 1)
@@ -69,7 +77,11 @@ public class AuctionServiceImpl implements AuctionService {
         Auction auction = auctionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
 
-        return auctionMapper.mapToResponse(auction);
+        AuctionResponse response = auctionMapper.mapToResponse(auction);
+        response.setImages(fileRepository.findAllByOwnerTypeAndIds(OwnerType.AUCTION_IMAGE, List.of(id)));
+        populateImages(response);
+
+        return response;
     }
 
     @Override
@@ -83,7 +95,9 @@ public class AuctionServiceImpl implements AuctionService {
         auction.setSeller(userRepository.getReferenceById(sellerId));
 
         auction = auctionRepository.save(auction);
-        return auctionMapper.mapToResponse(auction);
+        AuctionResponse response = auctionMapper.mapToResponse(auction);
+        populateImages(response);
+        return response;
     }
 
     @Override
@@ -122,7 +136,9 @@ public class AuctionServiceImpl implements AuctionService {
         }
 
         auction = auctionRepository.save(auction);
-        return auctionMapper.mapToResponse(auction);
+        AuctionResponse response = auctionMapper.mapToResponse(auction);
+        populateImages(response);
+        return response;
     }
 
     @Override
@@ -139,7 +155,9 @@ public class AuctionServiceImpl implements AuctionService {
         auctionMapper.updateEntity(request, auction);
         auction = auctionRepository.save(auction);
 
-        return auctionMapper.mapToResponse(auction);
+        AuctionResponse response = auctionMapper.mapToResponse(auction);
+        populateImages(response);
+        return response;
     }
 
     @Override
@@ -164,7 +182,9 @@ public class AuctionServiceImpl implements AuctionService {
         auctionMapper.updateEntity(request, auction);
         auction = auctionRepository.save(auction);
 
-        return auctionMapper.mapToResponse(auction);
+        AuctionResponse response = auctionMapper.mapToResponse(auction);
+        populateImages(response);
+        return response;
     }
 
     @Override
@@ -194,7 +214,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    public PlaceBidResponse placeBids(PlaceBidRequestV1 request) {
+    public PlaceBidResponse placeBidV1(PlaceBidRequestV1 request) {
         BidUpdateResult result = redisAuctionService
                 .updateBidWithLock(request.getAuctionId(), request.getBidderId(), request.getAmount());
 
@@ -237,6 +257,8 @@ public class AuctionServiceImpl implements AuctionService {
                 .map(auctionMapper::mapToResponse)
                 .toList();
 
+        populateImages(responses);
+
         return PageResponse.<AuctionResponse>builder()
                 .currentPage(pageable.getPageNumber() + 1)
                 .pageSize(pageable.getPageSize())
@@ -271,6 +293,40 @@ public class AuctionServiceImpl implements AuctionService {
                 .totalElements(bidPage.getTotalElements())
                 .data(data)
                 .build();
+    }
+
+    private void populateImages(List<AuctionResponse> responses) {
+        if (responses.isEmpty()) return;
+
+        List<Long> auctionIds = responses.stream().map(AuctionResponse::getId).toList();
+        List<FileResponse> allImages = fileRepository.findAllByOwnerTypeAndIds(OwnerType.AUCTION_IMAGE, auctionIds);
+
+        Map<Long, List<FileResponse>> imageMap = allImages.stream()
+                .collect(Collectors.groupingBy(FileResponse::ownerId));
+
+        responses.forEach(response -> {
+            List<FileResponse> images = imageMap.getOrDefault(response.getId(), List.of());
+            response.setImages(images);
+            setPrimaryImage(response, images);
+        });
+    }
+
+    private void populateImages(AuctionResponse response) {
+        if (response.getImages() == null || response.getImages().isEmpty()) {
+            List<FileResponse> images = fileRepository.findAllByOwnerTypeAndIds(OwnerType.AUCTION_IMAGE, List.of(response.getId()));
+            response.setImages(images);
+        }
+        setPrimaryImage(response, response.getImages());
+    }
+
+    private void setPrimaryImage(AuctionResponse response, List<FileResponse> images) {
+        if (images == null || images.isEmpty()) return;
+
+        images.stream()
+                .filter(img -> img.isPrimary() != null && img.isPrimary())
+                .findFirst()
+                .or(() -> images.stream().findFirst()) // fallback to first image if no primary
+                .ifPresent(img -> response.setImage(img.filePath() + "/" + img.storageName()));
     }
 
     private Long getCurrentUserId() {

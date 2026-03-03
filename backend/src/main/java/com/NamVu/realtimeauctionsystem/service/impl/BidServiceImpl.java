@@ -48,7 +48,7 @@ public class BidServiceImpl implements BidService {
      */
     @Override
     @Transactional
-    public BidUpdateResult placeBid(Long auctionId, Long bidderId, BigDecimal newPrice) throws JsonProcessingException {
+    public BidUpdateResult placeBidV2(Long auctionId, Long bidderId, BigDecimal newPrice) throws JsonProcessingException {
         Instant now = Instant.now();
 
         // Execute Lua Script (atomic)
