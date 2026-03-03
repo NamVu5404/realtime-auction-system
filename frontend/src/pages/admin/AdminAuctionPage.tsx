@@ -38,11 +38,11 @@ import { useDebounce } from "../../hooks/useDebounce";
 import { convertUTCToLocal } from "../../utils/dateUtils";
 import { formatDateTime } from "../../utils/format";
 import { getStatusColor } from "../../utils/statusUtils";
+import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
 import AuctionAuditDrawer from "./drawers/AuctionAuditDrawer";
 import AuctionDetailDrawer from "./drawers/AuctionDetailDrawer";
 
-const DEFAULT_IMAGE =
-  "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
+const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 
 const { RangePicker } = DatePicker;
 
@@ -216,7 +216,12 @@ const AdminAuctionPage = () => {
       dataIndex: "image",
       key: "image",
       render: (image: string) => (
-        <Image src={image || DEFAULT_IMAGE} width={50} height={50} />
+        <Image
+          src={getImageUrl(image)}
+          width={50}
+          height={50}
+          fallback={DEFAULT_IMAGE}
+        />
       ),
     },
     {
@@ -437,7 +442,7 @@ const AdminAuctionPage = () => {
         open={createModal}
         onCancel={() => setCreateModal(false)}
         footer={null}
-        width={600}
+        width={700}
         centered
       >
         <AuctionForm
@@ -451,11 +456,11 @@ const AdminAuctionPage = () => {
       {/* Edit Auction Modal */}
       {editModal.auction && (
         <Modal
-          title={`Edit Auction: "${editModal.auction.title}"`}
+          title={`Edit Auction #${editModal.auction.id}`}
           open={editModal.visible}
           onCancel={() => setEditModal({ visible: false })}
           footer={null}
-          width={600}
+          width={700}
           centered
         >
           <AuctionForm

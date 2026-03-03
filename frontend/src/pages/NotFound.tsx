@@ -1,5 +1,5 @@
-import { Button, Result } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { Button, Result } from "antd";
+import { useNavigate } from "react-router-dom";
 
 export const NotFound = () => {
   const navigate = useNavigate();
@@ -10,7 +10,7 @@ export const NotFound = () => {
       title="404"
       subTitle="Sorry, the page you are looking for does not exist."
       extra={
-        <Button type="primary" onClick={() => navigate('/')}>
+        <Button type="primary" onClick={() => navigate("/")}>
           Back to Home
         </Button>
       }

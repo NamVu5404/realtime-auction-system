@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 
 public interface BidService {
-    BidUpdateResult placeBid(Long auctionId, Long bidderId, BigDecimal newPrice) throws JsonProcessingException;
+    BidUpdateResult placeBidV2(Long auctionId, Long bidderId, BigDecimal newPrice) throws JsonProcessingException;
 
     void createRejectedBidRecord(BidPlacedEvent event);
 

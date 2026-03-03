@@ -39,6 +39,8 @@ public enum ErrorCode {
     INVALID_FILE_TYPE(1028, "Invalid file type", HttpStatus.BAD_REQUEST),
     FILE_UPLOAD_ERROR(1028, "File upload error", HttpStatus.INTERNAL_SERVER_ERROR),
     TOKEN_GENERATION_FAILED(1029, "Token generate failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_DELETE_ERROR(1030, "Delete file failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_NOT_FOUND(1031, "File not found", HttpStatus.NOT_FOUND),
     ;
 
     private final int code;

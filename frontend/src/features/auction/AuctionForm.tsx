@@ -11,11 +11,13 @@ import {
   message,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useState, useEffect } from "react";
 import { Auction, AuctionStatus } from "../../api/types";
 import adminApi from "../../api/adminApi";
 import { convertUTCToLocal } from "../../utils/dateUtils";
+import { AuctionImageManager } from "../../components/admin/AuctionImageManager";
 
 interface AuctionFormProps {
   form: FormInstance;
@@ -49,6 +51,8 @@ export const AuctionForm = ({
   const [isLoading, setIsLoading] = useState(false);
   const [submitMode, setSubmitMode] = useState<"draft" | "schedule">("draft");
   const [isFormChanged, setIsFormChanged] = useState(false);
+  const [localAuction, setLocalAuction] = useState<Auction | null>(null);
+  const queryClient = useQueryClient();
 
   // Helper function to check if data has changed
   const hasDataChanged = (values: any): boolean => {
@@ -58,14 +62,17 @@ export const AuctionForm = ({
     if (values.title !== auction.title) return true;
     if ((values.description || "") !== (auction.description || "")) return true;
 
-    // Compare image
-    // Check if new image uploaded
-    if (values.image?.[0]?.originFileObj) return true;
-    // Check if image was removed (auction has image but form doesn't)
-    if (auction.image && (!values.image || values.image.length === 0))
-      return true;
-    // Check if image was removed (form has no URL matching auction's image)
-    if (auction.image && values.image?.[0]?.url !== auction.image) return true;
+    // In EDIT mode, image is managed separately via AuctionImageManager
+    if (mode === "create") {
+      // Check if new image uploaded
+      if (values.image?.[0]?.originFileObj) return true;
+      // Check if image was removed (auction has image but form doesn't)
+      if (auction.image && (!values.image || values.image.length === 0))
+        return true;
+      // Check if image was removed (form has no URL matching auction's image)
+      if (auction.image && values.image?.[0]?.url !== auction.image)
+        return true;
+    }
 
     // Compare price fields
     if (values.startPrice !== auction.startPrice) return true;
@@ -88,6 +95,13 @@ export const AuctionForm = ({
 
     return false;
   };
+
+  // Sync localAuction with prop
+  useEffect(() => {
+    if (auction) {
+      setLocalAuction(auction);
+    }
+  }, [auction]);
 
   // Initialize form with auction data if in edit mode
   useEffect(() => {
@@ -166,34 +180,63 @@ export const AuctionForm = ({
 
       if (mode === "create") {
         // CREATE mode
-        if (submitMode === "draft") {
-          // Save Draft - only title required
-          const draftData = new FormData();
-          draftData.append("title", values.title);
-          if (values.description)
-            draftData.append("description", values.description);
-          if (values.image?.[0]?.originFileObj) {
-            draftData.append("image", values.image[0].originFileObj);
-          }
+        if (!localAuction) {
+          // Initial creation (Draft or Schedule)
+          const requestData = {
+            title: values.title,
+            description: values.description || "",
+            startPrice: values.startPrice,
+            minStep: values.minStep,
+            startTime: values.startTime?.toISOString(),
+            endTime: values.endTime?.toISOString(),
+          };
 
-          // Call draft endpoint with Draft validation group
-          await adminApi.saveDraft(draftData);
-          message.success("Auction saved as draft");
+          const result =
+            submitMode === "draft"
+              ? await adminApi.saveDraft(requestData)
+              : await adminApi.scheduleAuction(requestData);
+
+          setLocalAuction(result);
+          setIsFormChanged(false);
+          message.success(
+            submitMode === "draft"
+              ? "Auction saved as draft and initialized"
+              : "Auction scheduled successfully",
+          );
+
+          // If it was a draft save, we STAY in the modal to allow image/further edits
+          if (submitMode === "draft") {
+            setIsLoading(false);
+            return; // Don't call onSuccess yet
+          }
         } else {
-          // Schedule - full validation required
-          const scheduleData = new FormData();
-          scheduleData.append("title", values.title);
-          scheduleData.append("description", values.description || "");
-          if (values.image?.[0]?.originFileObj) {
-            scheduleData.append("image", values.image[0].originFileObj);
-          }
-          scheduleData.append("startPrice", values.startPrice);
-          scheduleData.append("minStep", values.minStep);
-          scheduleData.append("startTime", values.startTime.toISOString());
-          scheduleData.append("endTime", values.endTime.toISOString());
+          // We have a localAuction, so treat it as an update
+          const updateData = {
+            title: values.title,
+            description: values.description || "",
+            startPrice: values.startPrice,
+            minStep: values.minStep,
+            startTime: values.startTime?.toISOString(),
+            endTime: values.endTime?.toISOString(),
+          };
 
-          await adminApi.scheduleAuction(scheduleData);
-          message.success("Auction scheduled successfully");
+          if (submitMode === "schedule") {
+            await adminApi.scheduleAuction({
+              ...updateData,
+              id: localAuction.id,
+            });
+            message.success("Auction scheduled successfully");
+          } else {
+            if (localAuction.status === AuctionStatus.DRAFT) {
+              await adminApi.updateDraftAuction(localAuction.id, updateData);
+            } else {
+              await adminApi.updateScheduledAuction(
+                localAuction.id,
+                updateData,
+              );
+            }
+            message.success("Draft updated successfully");
+          }
         }
       } else if (mode === "edit" && auction) {
         // UPDATE mode
@@ -202,7 +245,7 @@ export const AuctionForm = ({
           const updateData = {
             title: values.title,
             description: values.description || "",
-            image: values.image?.[0]?.originFileObj,
+            // image is managed separately via AuctionImageManager
             startPrice: values.startPrice,
             minStep: values.minStep,
             startTime: values.startTime?.toISOString(),
@@ -211,24 +254,20 @@ export const AuctionForm = ({
 
           if (submitMode === "schedule") {
             // Schedule: Convert DRAFT to SCHEDULED
-            // Backend expects full validation for schedule
             const scheduleData = new FormData();
-            scheduleData.append("id", auction.id.toString()); // Hidden id to update existing draft
+            scheduleData.append("id", auction.id.toString());
             scheduleData.append("title", updateData.title);
             scheduleData.append("description", updateData.description);
-            if (updateData.image) {
-              scheduleData.append("image", updateData.image);
-            }
-            scheduleData.append("startPrice", updateData.startPrice);
-            scheduleData.append("minStep", updateData.minStep);
+            // scheduleData.append("image", ...) is NOT needed as images are auto-uploaded
+            scheduleData.append("startPrice", updateData.startPrice.toString());
+            scheduleData.append("minStep", updateData.minStep.toString());
             scheduleData.append("startTime", updateData.startTime!);
             scheduleData.append("endTime", updateData.endTime!);
 
-            // Call POST scheduleAuction with id to convert draft to scheduled
             await adminApi.scheduleAuction(scheduleData);
             message.success("Auction scheduled successfully");
           } else {
-            // Update Draft - only call API if data has changed
+            // Update Draft
             if (hasDataChanged(values)) {
               await adminApi.updateDraftAuction(auction.id, updateData as any);
               message.success("Draft updated successfully");
@@ -237,16 +276,14 @@ export const AuctionForm = ({
             }
           }
         } else if (auction.status === AuctionStatus.SCHEDULED) {
-          // SCHEDULED: Lock startPrice & minStep, allow editing title, description, image, times
+          // SCHEDULED: Locked fields, text fields and times editable
           const updateData = {
             title: values.title,
             description: values.description || "",
-            image: values.image?.[0]?.originFileObj,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
 
-          // Only call API if data has changed
           if (hasDataChanged(values)) {
             await adminApi.updateScheduledAuction(
               auction.id,
@@ -290,17 +327,8 @@ export const AuctionForm = ({
         />
       </Form.Item>
 
-      {/* Description - Required for Schedule, Optional for Draft */}
-      <Form.Item
-        name="description"
-        label="Description"
-        // rules={[
-        //   {
-        //     required: submitMode === 'schedule',
-        //     message: 'Description is required for scheduled auctions',
-        //   },
-        // ]}
-      >
+      {/* Description */}
+      <Form.Item name="description" label="Description">
         <Input.TextArea
           rows={4}
           placeholder="Enter auction description"
@@ -308,32 +336,39 @@ export const AuctionForm = ({
         />
       </Form.Item>
 
-      {/* Image - Required for Schedule, Optional for Draft */}
-      <Form.Item
-        name="image"
-        label="Image"
-        // rules={[
-        //   {
-        //     required: submitMode === "schedule",
-        //     message: "Image is required for scheduled auctions",
-        //   },
-        // ]}
-      >
-        <Upload
-          listType="picture-card"
-          maxCount={1}
-          accept="image/*"
-          beforeUpload={() => false}
-        >
-          <div>
-            <UploadOutlined />
-            <div className="mt-2">Upload</div>
+      {/* Image Section */}
+      <Form.Item label="Images">
+        {(mode === "edit" && localAuction) ||
+        (mode === "create" && localAuction) ? (
+          <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
+            <AuctionImageManager
+              key={localAuction!.id}
+              auctionId={localAuction!.id}
+              status={localAuction!.status}
+              initialImages={localAuction!.images || []}
+              onImagesChange={(newImages) => {
+                // Update local state to prevent flickering
+                setLocalAuction((prev) =>
+                  prev ? { ...prev, images: newImages } : null,
+                );
+
+                // Invalidate all auction lists to reflect new image immediately
+                queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
+                queryClient.invalidateQueries({ queryKey: ["auctions"] });
+              }}
+            />
           </div>
-        </Upload>
+        ) : (
+          <div className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-800 border-dashed text-center">
+            <p className="text-gray-400 m-0">
+              Save as draft first to enable image management.
+            </p>
+          </div>
+        )}
       </Form.Item>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Start Price - Required for Schedule, Optional for Draft, Read-only for SCHEDULED */}
+        {/* Start Price */}
         <Form.Item
           name="startPrice"
           label="Start Price"
@@ -358,7 +393,7 @@ export const AuctionForm = ({
           />
         </Form.Item>
 
-        {/* Minimum Step - Required for Schedule, Optional for Draft, Read-only for SCHEDULED */}
+        {/* Minimum Step */}
         <Form.Item
           name="minStep"
           label="Minimum Step (Bid Increment)"
@@ -385,7 +420,7 @@ export const AuctionForm = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Start Time - Required for Schedule, Optional for Draft */}
+        {/* Start Time */}
         <Form.Item
           name="startTime"
           label="Start Time"
@@ -400,11 +435,9 @@ export const AuctionForm = ({
               : []),
             {
               validator: (_, value) => {
-                // For draft: only validate if value is provided
                 if (submitMode === "draft" && !value) {
                   return Promise.resolve();
                 }
-                // For schedule or when value exists: perform validation
                 return validateStartTime(_, value);
               },
             },
@@ -419,7 +452,7 @@ export const AuctionForm = ({
           />
         </Form.Item>
 
-        {/* End Time - Required for Schedule, Optional for Draft */}
+        {/* End Time */}
         <Form.Item
           name="endTime"
           label="End Time"
@@ -434,11 +467,9 @@ export const AuctionForm = ({
               : []),
             {
               validator: (_, value) => {
-                // For draft: only validate if value is provided
                 if (submitMode === "draft" && !value) {
                   return Promise.resolve();
                 }
-                // For schedule or when value exists: perform validation
                 return validateEndTime(_, value);
               },
             },
@@ -455,11 +486,10 @@ export const AuctionForm = ({
       </div>
 
       {/* Action Buttons */}
-      <Form.Item>
+      <Form.Item className="mb-0 mt-6">
         <Space>
-          {mode === "create" ? (
+          {mode === "create" && !localAuction ? (
             <>
-              {/* CREATE mode: Save Draft vs Schedule */}
               <Button
                 onClick={() => {
                   setSubmitMode("draft");
@@ -480,9 +510,8 @@ export const AuctionForm = ({
                 Schedule
               </Button>
             </>
-          ) : isDraftStatus ? (
+          ) : isDraftStatus || localAuction?.status === AuctionStatus.DRAFT ? (
             <>
-              {/* EDIT DRAFT mode: Update Draft vs Publish */}
               <Button
                 onClick={() => {
                   setSubmitMode("draft");
@@ -505,17 +534,14 @@ export const AuctionForm = ({
               </Button>
             </>
           ) : (
-            <>
-              {/* EDIT SCHEDULED mode: Update only */}
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={isLoading}
-                disabled={!isFormChanged}
-              >
-                Update
-              </Button>
-            </>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={isLoading}
+              disabled={!isFormChanged}
+            >
+              Update
+            </Button>
           )}
           <Button onClick={onCancel}>Cancel</Button>
         </Space>

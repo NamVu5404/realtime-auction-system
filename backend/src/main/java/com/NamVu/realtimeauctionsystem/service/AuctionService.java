@@ -24,7 +24,7 @@ public interface AuctionService {
 
     CancelAuctionResponse cancelAuction(Long id, CancelAuctionRequest request);
 
-    PlaceBidResponse placeBids(PlaceBidRequestV1 request);
+    PlaceBidResponse placeBidV1(PlaceBidRequestV1 request);
 
     PageResponse<AuctionResponse> filterAuction(String keyword, Instant startTime, Instant endTime,
                                                 AuctionStatus status, Pageable pageable);

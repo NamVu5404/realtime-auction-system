@@ -11,9 +11,9 @@ import {
 } from "../../utils/dateUtils";
 import Countdown from "./Countdown";
 import { formatCurrency } from "../../utils/format";
+import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
 
-const DEFAULT_IMAGE =
-  "https://png.pngtree.com/background/20231030/original/pngtree-courtroom-judgement-dark-wooden-stand-with-gavel-and-auction-hammer-3d-picture-image_5798933.jpg";
+const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 
 interface AuctionCardProps {
   auction: Auction;
@@ -64,8 +64,7 @@ export const AuctionCard = memo(
       navigate(`/auction/${auction.id}`);
     };
 
-    const isValidImage =
-      auction.image && !auction.image.includes("placeholder");
+    const auctionImageUrl = getImageUrl(auction.image);
 
     // Handle countdown completion
     const handleCountdownFinish = () => {
@@ -87,7 +86,7 @@ export const AuctionCard = memo(
         className="h-full flex flex-col cursor-pointer transition-all duration-300 bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:shadow-lg hover:scale-105"
         cover={
           <Image
-            src={isValidImage ? auction.image : DEFAULT_IMAGE}
+            src={auctionImageUrl}
             alt={auction.title}
             preview={false}
             className="h-48 object-cover"

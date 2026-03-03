@@ -19,13 +19,13 @@ public class AuctionControllerV2 {
     private final BidService bidService;
 
     @PostMapping("/{auctionId}/bids")
-    public ApiResponse<BidUpdateResult> placeBids(@PathVariable Long auctionId,
-                                                  @RequestBody @Valid PlaceBidRequestV2 request) throws JsonProcessingException {
+    public ApiResponse<BidUpdateResult> placeBidV2(@PathVariable Long auctionId,
+                                                   @RequestBody @Valid PlaceBidRequestV2 request) throws JsonProcessingException {
         Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long bidderId = jwt.getClaim("uid");
 
         return ApiResponse.<BidUpdateResult>builder()
-                .result(bidService.placeBid(auctionId, bidderId, request.getAmount()))
+                .result(bidService.placeBidV2(auctionId, bidderId, request.getAmount()))
                 .build();
     }
 }

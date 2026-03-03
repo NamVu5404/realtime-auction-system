@@ -1,5 +1,6 @@
 package com.namvu.realtimeauctionsystem.service.impl;
 
+import com.namvu.realtimeauctionsystem.dto.file.FileMetadataRequest;
 import com.namvu.realtimeauctionsystem.dto.file.FileResponse;
 import com.namvu.realtimeauctionsystem.entity.File;
 import com.namvu.realtimeauctionsystem.enums.OwnerType;
@@ -7,9 +8,11 @@ import com.namvu.realtimeauctionsystem.exception.AppException;
 import com.namvu.realtimeauctionsystem.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.repository.FileRepository;
 import com.namvu.realtimeauctionsystem.service.FileService;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -29,6 +32,7 @@ import java.util.UUID;
 public class FileServiceImpl implements FileService {
 
     private final FileRepository fileRepository;
+    private final EntityManager entityManager;
 
     @Value("${app.file.upload-dir}")
     private String uploadDir;
@@ -41,6 +45,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
     public FileResponse uploadFile(MultipartFile file, OwnerType ownerType, Long ownerId, Boolean isPrimary, Integer sortOrder) {
         validateFile(file);
 
@@ -76,6 +81,56 @@ public class FileServiceImpl implements FileService {
         } catch (IOException e) {
             log.error("Failed to store file", e);
             throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
+        }
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void updateMetadataBatch(List<FileMetadataRequest> requests) {
+        if (requests == null || requests.isEmpty()) return;
+
+        boolean hasNewPrimary = requests.stream()
+                .anyMatch(r -> Boolean.TRUE.equals(r.getIsPrimary()));
+
+        if (hasNewPrimary) {
+            File firstFile = fileRepository.findById(requests.getFirst().getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+            fileRepository.resetPrimaryStatus(firstFile.getOwnerType(), firstFile.getOwnerId());
+            entityManager.flush();
+        }
+
+        for (FileMetadataRequest request : requests) {
+            File file = fileRepository.findById(request.getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+            if (request.getIsPrimary() != null) {
+                file.setPrimary(request.getIsPrimary());
+            }
+            if (request.getSortOrder() != null) {
+                file.setSortOrder(request.getSortOrder());
+            }
+            fileRepository.save(file);
+        }
+        log.info("Updated metadata for {} files", requests.size());
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void deleteFile(Long id) {
+        File file = fileRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
+
+        try {
+            Path filePath = Paths.get(uploadDir).resolve(file.getFilePath()).resolve(file.getStorageName());
+            Files.deleteIfExists(filePath);
+            fileRepository.delete(file);
+            log.info("Deleted file id: {}, storageName: {}", id, file.getStorageName());
+        } catch (IOException e) {
+            log.error("Failed to delete physical file: {}", file.getStorageName(), e);
+            throw new AppException(ErrorCode.FILE_DELETE_ERROR);
         }
     }
 

@@ -20,8 +20,6 @@ public class UpdateDraftAuctionRequest {
 
     private String description;
 
-    private String image;
-
     @DecimalMin(value = "0.01", message = "INVALID_INPUT")
     private BigDecimal startPrice;
 
