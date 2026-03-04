@@ -374,9 +374,12 @@ export const AuctionDetailDrawer = ({
               <AuctionImageCarousel images={auction.images} compact />
 
               {/* Description */}
-              <p className="text-gray-400 m-0 leading-relaxed whitespace-pre-wrap">
-                {auction.description || "No description provided."}
-              </p>
+              <div
+                className="prose prose-invert prose-sm prose-zinc max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: auction.description || "No description provided.",
+                }}
+              />
             </div>
 
             {/* Right Column: Key Stats & Timeline */}
