@@ -1,14 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Card, Image, Tag, Empty } from "antd";
+import { Image } from "antd";
 import { useState, memo } from "react";
 import { Auction, AuctionStatus } from "../../api/types";
-import {
-  convertUTCToLocal,
-  formatAuctionTime,
-  getTimeRemaining,
-  hasAuctionStarted,
-} from "../../utils/dateUtils";
+import { formatAuctionTime, getTimeRemaining } from "../../utils/dateUtils";
 import Countdown from "./Countdown";
 import { formatCurrency, stripHtml } from "../../utils/format";
 import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
@@ -20,22 +15,6 @@ interface AuctionCardProps {
   onCountdownComplete?: () => void;
 }
 
-/**
- * Auction Card Component
- *
- * Displays:
- * - Auction image with placeholder fallback
- * - Status badge (LIVE, STARTING SOON, UPCOMING, ENDED)
- * - Title and description
- * - Price display (conditional based on status)
- * - Countdown timer (for LIVE and STARTING SOON)
- * - Timing information in local timezone
- * - Seller information
- *
- * Events:
- * - onCountdownComplete: Triggered when countdown reaches 00:00:00
- *   This should refetch auctions to sync status changes
- */
 export const AuctionCard = memo(
   ({ auction, onCountdownComplete }: AuctionCardProps) => {
     const navigate = useNavigate();
@@ -46,17 +25,9 @@ export const AuctionCard = memo(
     const isScheduled = auction.status === AuctionStatus.SCHEDULED;
     const isEnded = auction.status === AuctionStatus.ENDED;
 
-    // Convert UTC times to local timezone
-    const startTimeLocal = convertUTCToLocal(auction.startTime);
-    const endTimeLocal = convertUTCToLocal(auction.endTime);
-
-    // Calculate time until start
     const timeTilStart = getTimeRemaining(auction.startTime);
     const oneHourMs = 3600000;
 
-    // Show countdown if:
-    // 1. Auction is LIVE and hasn't ended, OR
-    // 2. Auction is SCHEDULED and starts within 1 hour
     const shouldShowCountdown =
       isLive || (isScheduled && timeTilStart > 0 && timeTilStart < oneHourMs);
 
@@ -66,86 +37,202 @@ export const AuctionCard = memo(
 
     const auctionImageUrl = getImageUrl(auction.image);
 
-    // Handle countdown completion
     const handleCountdownFinish = () => {
-      console.log(`Countdown finished for auction ${auction.id}`);
-      // If countdown was for start time, mark auction as started
       if (isScheduled) {
         setCountdownStarted(true);
-        // Invalidate queries to fetch updated LIVE status from backend
         queryClient.invalidateQueries({ queryKey: ["auctions"] });
       }
-      // Trigger refetch to sync UI with backend scheduler status changes
       onCountdownComplete?.();
     };
 
+    const StatusBadge = () => {
+      if (isLive || countdownStarted) {
+        return (
+          <span className="badge-live">
+            <span className="live-pulse-dot" />
+            LIVE
+          </span>
+        );
+      }
+      if (isScheduled && !countdownStarted && timeTilStart < oneHourMs) {
+        return <span className="badge-soon">SOON</span>;
+      }
+      if (isScheduled && !countdownStarted && timeTilStart >= oneHourMs) {
+        return <span className="badge-upcoming">UPCOMING</span>;
+      }
+      if (isEnded) {
+        return <span className="badge-ended">ENDED</span>;
+      }
+      return null;
+    };
+
     return (
-      <Card
-        hoverable
+      <div
         onClick={handleCardClick}
-        className="h-full flex flex-col cursor-pointer transition-all duration-300 bg-zinc-900 border-zinc-800 hover:border-zinc-700 hover:shadow-lg hover:scale-105"
-        cover={
+        style={{
+          background: "#21242E",
+          border: "1px solid rgba(255,255,255,0.03)",
+          borderRadius: "20px",
+          overflow: "hidden",
+          cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+        }}
+        className="group hover:-translate-y-1 hover:border-[rgba(254,212,105,0.15)] hover:shadow-[0_12px_40px_rgba(0,0,0,0.5),0_0_0_1px_rgba(254,212,105,0.08)]"
+      >
+        {/* Image */}
+        <div
+          style={{
+            position: "relative",
+            height: "200px",
+            flexShrink: 0,
+            overflow: "hidden",
+          }}
+        >
           <Image
             src={auctionImageUrl}
             alt={auction.title}
             preview={false}
-            className="h-48 object-cover"
+            style={{
+              width: "100%",
+              height: "200px",
+              objectFit: "cover",
+              display: "block",
+              transition: "transform 0.4s cubic-bezier(0.4,0,0.2,1)",
+            }}
+            className="group-hover:scale-[1.04]"
             fallback={DEFAULT_IMAGE}
           />
-        }
-      >
-        <div className="flex flex-col flex-grow">
-          {/* Status Badge */}
-          <div className="mb-3">
-            {(isLive || countdownStarted) && <Tag color="green">LIVE</Tag>}
-            {isScheduled && !countdownStarted && timeTilStart < oneHourMs && (
-              <Tag color="orange">STARTING SOON</Tag>
-            )}
-            {isScheduled && !countdownStarted && timeTilStart >= oneHourMs && (
-              <Tag color="blue">UPCOMING</Tag>
-            )}
-            {isEnded && <Tag color="default">ENDED</Tag>}
+          {/* Gradient overlay */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: "90px",
+              background: "linear-gradient(to top, #21242E, transparent)",
+              pointerEvents: "none",
+            }}
+          />
+          {/* Status badge */}
+          <div style={{ position: "absolute", top: "12px", left: "12px" }}>
+            <StatusBadge />
           </div>
+        </div>
 
+        {/* Body */}
+        <div
+          style={{
+            padding: "16px 18px",
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            gap: "12px",
+          }}
+        >
           {/* Title */}
-          <h3 className="text-lg font-semibold mb-2 line-clamp-2 text-white">
+          <h3
+            style={{
+              fontSize: "15px",
+              fontWeight: 700,
+              color: "#fff",
+              lineHeight: 1.35,
+              letterSpacing: "-0.01em",
+              margin: 0,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
             {auction.title}
           </h3>
 
           {/* Description */}
-          <p className="text-sm text-gray-400 mb-3 line-clamp-2">
+          <p
+            style={{
+              fontSize: "13px",
+              color: "rgba(255,255,255,0.52)",
+              margin: 0,
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              lineHeight: 1.55,
+            }}
+          >
             {stripHtml(auction.description)}
           </p>
 
-          {/* Price Display - Conditional based on status */}
-          <div className="bg-zinc-800 p-3 rounded-lg mb-4">
+          {/* Price */}
+          <div
+            style={{
+              background:
+                isLive || countdownStarted
+                  ? "rgba(254,212,105,0.06)"
+                  : "rgba(255,255,255,0.03)",
+              border: `0.5px solid ${
+                isLive || countdownStarted
+                  ? "rgba(254,212,105,0.3)"
+                  : "rgba(255,255,255,0.08)"
+              }`,
+              borderRadius: "12px",
+              padding: "10px 14px",
+            }}
+          >
             {isLive || countdownStarted ? (
               <div>
-                <div className="text-xs text-gray-400 mb-1">Current Price</div>
-                <div className="text-2xl font-bold text-green-400">
+                <div className="price-label">Current Price</div>
+                <div
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: 800,
+                    color: "#FED469",
+                    letterSpacing: "-0.02em",
+                    textShadow: "0 0 20px rgba(254,212,105,0.3)",
+                  }}
+                >
                   {formatCurrency(auction.currentPrice)}
                 </div>
               </div>
             ) : isEnded ? (
               <div>
-                <div className="text-xs text-gray-400 mb-1">Final Price</div>
-                <div className="text-2xl font-bold text-gray-300">
+                <div className="price-label">Final Price</div>
+                <div
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: 800,
+                    color: "rgba(255,255,255,0.75)",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   {formatCurrency(auction.currentPrice)}
                 </div>
               </div>
             ) : (
               <div>
-                <div className="text-xs text-gray-400 mb-1">Starting Price</div>
-                <div className="text-2xl font-bold text-yellow-500">
+                <div className="price-label">Starting Price</div>
+                <div
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: 800,
+                    color: "rgba(255, 255, 255, 0.85)",
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   {formatCurrency(auction.startPrice)}
                 </div>
               </div>
             )}
           </div>
 
-          {/* Countdown Timer - Shows for LIVE or STARTING SOON */}
+          {/* Countdown */}
           {shouldShowCountdown && (
-            <div className="mb-4">
+            <div>
               {isLive || countdownStarted ? (
                 <Countdown
                   targetTime={auction.endTime}
@@ -161,28 +248,43 @@ export const AuctionCard = memo(
             </div>
           )}
 
-          {/* Timing Information - Shows times in user's local timezone */}
-          <div className="bg-zinc-800 p-3 rounded-lg mb-4">
-            <div className="text-xs text-gray-400 mb-1">Timing</div>
-            <div className="text-xs text-gray-300 space-y-1">
+          {/* Timing */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "0.5px solid rgba(255,255,255,0.07)",
+              borderRadius: "10px",
+              padding: "8px 12px",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "10px",
+                fontWeight: 600,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "rgba(255,255,255,0.35)",
+                marginBottom: "4px",
+              }}
+            >
+              Timing
+            </div>
+            <div
+              style={{
+                fontSize: "11px",
+                color: "rgba(255,255,255,0.5)",
+                lineHeight: 1.7,
+              }}
+            >
               <div>Start: {formatAuctionTime(auction.startTime)}</div>
               <div>End: {formatAuctionTime(auction.endTime)}</div>
             </div>
           </div>
-
-          {/* Seller Information */}
-          <p className="text-xs text-gray-500 mt-auto">
-            Seller:{" "}
-            <span className="font-medium text-gray-300">
-              {auction.seller?.name || "Unknown"}
-            </span>
-          </p>
         </div>
-      </Card>
+      </div>
     );
   },
 );
 
 AuctionCard.displayName = "AuctionCard";
-
 export default AuctionCard;

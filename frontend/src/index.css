@@ -1,29 +1,68 @@
+/* ===================================================
+   PREMIUM DARK UI — GLOBAL & ANT DESIGN OVERRIDES
+   RoPhim Exact Palette Edition (#191B24)
+   =================================================== */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* -------------------------------------------------------
+   2. Root — Exact RoPhim Palette
+   ------------------------------------------------------- */
 :root {
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    "Roboto",
-    "Oxygen",
-    "Ubuntu",
-    "Cantarell",
-    "Fira Sans",
-    "Droid Sans",
-    "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Backgrounds */
+  --color-bg: #191b24;
+  --color-surface: #21242e;
+  --color-card: #21242e;
+  --color-card-high: #282c38;
+  --color-card-hover: #2e3240;
+
+  /* Borders */
+  --color-border: rgba(255, 255, 255, 0.03);
+  --color-border-md: rgba(255, 255, 255, 0.08);
+
+  /* Typography */
+  --color-text-primary: #ffffff;
+  --color-text-secondary: rgba(255, 255, 255, 0.6);
+  --color-text-muted: rgba(255, 255, 255, 0.38);
+
+  /* RoPhim Golden Gradient */
+  --color-gold-start: #fed469;
+  --color-gold-end: #feecbb;
+  --color-gold-glow: rgba(254, 212, 105, 0.2);
+  --color-gold-subtle: rgba(254, 212, 105, 0.08);
+  --color-gold-border: rgba(254, 212, 105, 0.3);
+  --color-text-on-gold: #191b24; /* Dark text on gold for contrast */
+
+  /* Status accents */
+  --color-accent-blue: #60a5fa;
+  --color-accent-red: #f87171;
+  --color-accent-green: #4ade80;
+
+  --font-sans:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans",
+    "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-* {
+/* -------------------------------------------------------
+   3. Base
+   ------------------------------------------------------- */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--color-bg);
 }
 
 html,
@@ -33,45 +72,21 @@ body,
   width: 100%;
 }
 
-/* Ant Design overrides */
-.ant-layout {
-  background: transparent;
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.ant-layout-content {
-  background: transparent;
-}
-
-/* Card styles */
-.ant-card {
-  border-color: transparent;
-}
-
-.dark .ant-card {
-  background-color: #1a1a1a;
-}
-
-/* Auction tabs */
-.auction-tabs .ant-tabs-tab {
-  font-weight: 500;
-  font-size: 16px;
-}
-
-.auction-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: #1890ff;
-  font-weight: 600;
-}
-
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Animations */
+/* -------------------------------------------------------
+   4. Animations
+   ------------------------------------------------------- */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -79,62 +94,501 @@ html {
   }
 }
 
-.ant-card {
-  animation: fadeIn 0.3s ease-in-out;
+@keyframes pulseGold {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(254, 212, 105, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(254, 212, 105, 0.5);
+  }
 }
+
+@keyframes pulseDot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.85);
+  }
+}
+
+/* -------------------------------------------------------
+   5. Utilities
+   ------------------------------------------------------- */
+.glass-card {
+  background: rgba(33, 36, 46, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.gradient-text-gold {
+  background: linear-gradient(135deg, #fed469, #feecbb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-gold {
+  box-shadow: 0 0 20px rgba(254, 212, 105, 0.2);
+}
+
+/* -------------------------------------------------------
+   6. Layout
+   ------------------------------------------------------- */
+.ant-layout {
+  background: transparent !important;
+}
+.ant-layout-content {
+  background: transparent !important;
+}
+
+/* -------------------------------------------------------
+   7. Card
+   ------------------------------------------------------- */
+:where(.ant-card) {
+  background: var(--color-card) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  animation: fadeIn 0.35s ease-out;
+}
+
+:where(.ant-card-body) {
+  padding: 20px !important;
+}
+
+:where(.ant-card-hoverable):hover {
+  border-color: rgba(254, 212, 105, 0.15) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(254, 212, 105, 0.08) !important;
+  transform: translateY(-3px);
+  transition: var(--transition);
+}
+
+/* -------------------------------------------------------
+   8. Tabs
+   ------------------------------------------------------- */
+/* Pill tabs */
+.auction-tabs .ant-tabs-tab {
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  padding: 8px 20px !important;
+  border-radius: 100px !important;
+  margin-right: 4px !important;
+  color: var(--color-text-secondary) !important;
+  transition: var(--transition);
+  border: 1px solid transparent !important;
+}
+
+.auction-tabs .ant-tabs-tab:hover {
+  color: var(--color-text-primary) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.auction-tabs .ant-tabs-tab-active {
+  background: var(--color-gold-subtle) !important;
+  border-color: var(--color-gold-border) !important;
+}
+
+.auction-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #fed469 !important;
+  font-weight: 700 !important;
+}
+
+.auction-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}
+.auction-tabs .ant-tabs-nav::before {
+  border-bottom: none !important;
+}
+
+/* Standard tabs */
+:where(.ant-tabs-tab) {
+  color: var(--color-text-secondary) !important;
+  transition: var(--transition);
+}
+:where(.ant-tabs-tab):hover {
+  color: var(--color-text-primary) !important;
+}
+:where(.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn) {
+  color: #fed469 !important;
+  font-weight: 700 !important;
+}
+:where(.ant-tabs-ink-bar) {
+  background: linear-gradient(90deg, #fed469, #feecbb) !important;
+}
+:where(.ant-tabs-nav)::before {
+  border-bottom-color: var(--color-border) !important;
+}
+
+/* -------------------------------------------------------
+   9. Input
+   ------------------------------------------------------- */
+:where(.ant-input),
+:where(.ant-input-affix-wrapper) {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--color-border-md) !important;
+  color: var(--color-text-primary) !important;
+  border-radius: var(--radius-sm) !important;
+  transition: var(--transition);
+}
+
+:where(.ant-input):focus,
+:where(.ant-input-affix-wrapper):focus,
+:where(.ant-input-affix-wrapper-focused) {
+  border-color: #fed469 !important;
+  box-shadow: 0 0 0 2px rgba(254, 212, 105, 0.15) !important;
+}
+
+:where(.ant-input)::placeholder {
+  color: var(--color-text-muted) !important;
+}
+:where(.ant-input-affix-wrapper) .ant-input-prefix {
+  color: var(--color-text-muted) !important;
+}
+
+:where(.ant-input-textarea) textarea {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--color-border-md) !important;
+  color: var(--color-text-primary) !important;
+}
+
+:where(.ant-input-textarea) textarea:focus {
+  border-color: #fed469 !important;
+  box-shadow: 0 0 0 2px rgba(254, 212, 105, 0.15) !important;
+}
+
+/* -------------------------------------------------------
+   10. Button
+   ------------------------------------------------------- */
+:where(.ant-btn-primary) {
+  background: linear-gradient(135deg, #fed469 0%, #feecbb 100%) !important;
+  border: none !important;
+  color: #191b24 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em;
+  box-shadow:
+    0 0 16px rgba(254, 212, 105, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  transition: var(--transition);
+  border-radius: var(--radius-sm) !important;
+}
+
+:where(.ant-btn-primary):hover {
+  opacity: 0.92;
+  box-shadow:
+    0 0 28px rgba(254, 212, 105, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+:where(.ant-btn-default) {
+  background: transparent !important;
+  border-color: var(--color-border-md) !important;
+  color: var(--color-text-secondary) !important;
+  border-radius: var(--radius-sm) !important;
+  transition: var(--transition);
+}
+
+:where(.ant-btn-default):hover {
+  border-color: rgba(254, 212, 105, 0.4) !important;
+  color: #fed469 !important;
+  background: var(--color-gold-subtle) !important;
+}
+
+:where(.ant-btn-text) {
+  color: var(--color-text-secondary) !important;
+  transition: var(--transition);
+}
+:where(.ant-btn-text):hover {
+  color: var(--color-text-primary) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* -------------------------------------------------------
+   11. Tag / Badge — Ghost 0.5px border
+   ------------------------------------------------------- */
+:where(.ant-tag) {
+  background: transparent !important;
+  border-width: 0.5px !important;
+  border-radius: 100px !important;
+  font-weight: 600 !important;
+  font-size: 11px !important;
+  letter-spacing: 0.06em !important;
+  padding: 2px 10px !important;
+}
+
+:where(.ant-tag-green) {
+  color: #4ade80 !important;
+  border-color: rgba(74, 222, 128, 0.45) !important;
+}
+:where(.ant-tag-blue) {
+  color: #60a5fa !important;
+  border-color: rgba(96, 165, 250, 0.45) !important;
+}
+:where(.ant-tag-orange) {
+  color: #fb923c !important;
+  border-color: rgba(251, 146, 60, 0.45) !important;
+}
+:where(.ant-tag-gold) {
+  color: #fed469 !important;
+  border-color: rgba(254, 212, 105, 0.45) !important;
+}
+:where(.ant-tag-red) {
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.45) !important;
+}
+:where(.ant-tag-default) {
+  color: var(--color-text-secondary) !important;
+  border-color: var(--color-border-md) !important;
+}
+:where(.ant-tag-success) {
+  color: #4ade80 !important;
+  border-color: rgba(74, 222, 128, 0.45) !important;
+}
+
+/* -------------------------------------------------------
+   12. Table
+   ------------------------------------------------------- */
+:where(.ant-table) {
+  background: transparent !important;
+}
+:where(.ant-table-thead > tr > th) {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  color: var(--color-text-muted) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+}
+:where(.ant-table-tbody > tr > td) {
+  background: transparent !important;
+  border-bottom: 1px solid var(--color-border) !important;
+  color: var(--color-text-primary) !important;
+  transition: background 0.2s ease;
+}
+:where(.ant-table-tbody > tr:hover > td) {
+  background: rgba(254, 212, 105, 0.03) !important;
+}
+:where(.ant-table-container) {
+  border: none !important;
+  overflow: hidden;
+}
+
+/* -------------------------------------------------------
+   13. Select / DatePicker
+   ------------------------------------------------------- */
+:where(.ant-select-selector) {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--color-border-md) !important;
+  color: var(--color-text-primary) !important;
+  border-radius: var(--radius-sm) !important;
+}
+:where(.ant-select-focused .ant-select-selector) {
+  border-color: #fed469 !important;
+  box-shadow: 0 0 0 2px rgba(254, 212, 105, 0.15) !important;
+}
+:where(.ant-select-dropdown) {
+  background: var(--color-card-high, #282c38) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-sm) !important;
+}
+:where(.ant-select-item) {
+  color: var(--color-text-secondary) !important;
+}
+:where(.ant-select-item-option-selected) {
+  background: var(--color-gold-subtle) !important;
+  color: #fed469 !important;
+}
+:where(.ant-select-item-option-active) {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+:where(.ant-select-arrow),
+:where(.ant-select-clear) {
+  color: var(--color-text-muted) !important;
+}
+
+:where(.ant-picker) {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--color-border-md) !important;
+  color: var(--color-text-primary) !important;
+  border-radius: var(--radius-sm) !important;
+}
+:where(.ant-picker-focused) {
+  border-color: #fed469 !important;
+  box-shadow: 0 0 0 2px rgba(254, 212, 105, 0.15) !important;
+}
+:where(.ant-picker-input > input) {
+  color: var(--color-text-primary) !important;
+}
+:where(.ant-picker-suffix),
+:where(.ant-picker-clear) {
+  color: var(--color-text-muted) !important;
+}
+
+/* -------------------------------------------------------
+   14. Modal / Drawer
+   ------------------------------------------------------- */
+:where(.ant-modal-content) {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+}
+:where(.ant-modal-header) {
+  background: transparent !important;
+  border-bottom: 1px solid var(--color-border) !important;
+}
+:where(.ant-modal-title) {
+  color: var(--color-text-primary) !important;
+  font-weight: 700 !important;
+}
+:where(.ant-modal-footer) {
+  border-top: 1px solid var(--color-border) !important;
+}
+:where(.ant-drawer-content) {
+  background: var(--color-surface) !important;
+}
+:where(.ant-drawer-header) {
+  background: transparent !important;
+  border-bottom: 1px solid var(--color-border) !important;
+}
+:where(.ant-drawer-title) {
+  color: var(--color-text-primary) !important;
+  font-weight: 700 !important;
+}
+
+/* -------------------------------------------------------
+   15. Pagination
+   ------------------------------------------------------- */
+:where(.ant-pagination-item) {
+  background: transparent !important;
+  border-color: var(--color-border-md) !important;
+  border-radius: 100px !important;
+}
+:where(.ant-pagination-item a) {
+  color: var(--color-text-secondary) !important;
+}
+:where(.ant-pagination-item-active) {
+  background: var(--color-gold-subtle) !important;
+  border-color: var(--color-gold-border) !important;
+}
+:where(.ant-pagination-item-active a) {
+  color: #fed469 !important;
+  font-weight: 700 !important;
+}
+:where(.ant-pagination-prev .ant-pagination-item-link),
+:where(.ant-pagination-next .ant-pagination-item-link) {
+  background: transparent !important;
+  border-color: var(--color-border-md) !important;
+  color: var(--color-text-secondary) !important;
+  border-radius: 100px !important;
+}
+
+/* -------------------------------------------------------
+   16. Sider
+   ------------------------------------------------------- */
+:where(.ant-layout-sider) {
+  background: rgba(25, 27, 36, 0.97) !important;
+  border-right: 1px solid var(--color-border) !important;
+}
+:where(.ant-menu-dark) {
+  background: transparent !important;
+}
+:where(.ant-menu-dark .ant-menu-item) {
+  border-radius: var(--radius-sm) !important;
+  margin: 2px 8px !important;
+  width: calc(100% - 16px) !important;
+  transition: var(--transition);
+}
+:where(.ant-menu-dark .ant-menu-item-selected) {
+  background: var(--color-gold-subtle) !important;
+  color: #fed469 !important;
+}
+:where(.ant-menu-dark .ant-menu-item:hover) {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* -------------------------------------------------------
+   17. Misc
+   ------------------------------------------------------- */
+:where(.ant-divider) {
+  border-color: var(--color-border) !important;
+}
+:where(.ant-empty-description) {
+  color: var(--color-text-muted) !important;
+}
+:where(.ant-spin-text) {
+  color: var(--color-text-secondary) !important;
+}
+:where(.ant-spin .ant-spin-dot-item) {
+  background: #fed469 !important;
+}
+:where(.ant-form-item-label > label) {
+  color: var(--color-text-secondary) !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+}
+:where(.ant-breadcrumb) {
+  color: var(--color-text-muted) !important;
+}
+:where(.ant-breadcrumb a) {
+  color: var(--color-text-secondary) !important;
+}
+:where(.ant-breadcrumb a):hover {
+  color: #fed469 !important;
+}
+
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: none;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+:where(.ant-input-number) {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: var(--color-border-md) !important;
+  border-radius: var(--radius-sm) !important;
+}
+:where(.ant-input-number-input) {
+  color: var(--color-text-primary) !important;
+}
+:where(.ant-input-number-focused) {
+  border-color: #fed469 !important;
+  box-shadow: 0 0 0 2px rgba(254, 212, 105, 0.15) !important;
 }
 
-/* Rich Text / Tiptap styling consistency */
+/* -------------------------------------------------------
+   18. Rich Text
+   ------------------------------------------------------- */
 .prose,
 .ProseMirror {
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
-
 .ProseMirror p,
 .prose p {
   margin-top: 0.5em !important;
   margin-bottom: 0.5em !important;
-  line-height: 1.6;
+  line-height: 1.7;
 }
-
 .ProseMirror ul,
 .prose ul {
   list-style-type: disc !important;
   padding-left: 1.5rem !important;
-  margin-top: 0.25em !important;
-  margin-bottom: 0.25em !important;
 }
-
 .ProseMirror ol,
 .prose ol {
   list-style-type: decimal !important;
   padding-left: 1.5rem !important;
-  margin-top: 0.25em !important;
-  margin-bottom: 0.25em !important;
 }
-
-.ProseMirror li,
-.prose li {
-  margin-top: 0.1em !important;
-  margin-bottom: 0.1em !important;
-}
-
 .ProseMirror h1,
 .prose h1,
 .ProseMirror h2,
@@ -145,16 +599,23 @@ button:focus-visible {
   margin-bottom: 0.5em !important;
   font-weight: 700 !important;
 }
-
-/* Tiptap specific */
 .ProseMirror {
   outline: none;
 }
-
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
-  color: #52525b;
+  color: var(--color-text-muted);
   pointer-events: none;
   height: 0;
+}
+
+.ant-layout-sider,
+.ant-layout-sider-children {
+  background: #0f111a !important;
+}
+
+/* Fix for Tooltip arrow color if needed */
+.ant-tooltip-arrow::before {
+  background: #191b24 !important;
 }

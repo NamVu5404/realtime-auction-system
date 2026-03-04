@@ -156,9 +156,10 @@ export const AuctionDetailDrawer = ({
     });
   }, []);
 
-  // ✅ Visual notification only — state is already updated by onBidUpdate
+  // ✅ Visual effects ONLY — state is already updated by onBidUpdate
   const onTimeExtended = useCallback((_newEndTime: string) => {
-    // No state update needed here — onBidUpdate already handles endTime
+    setHasTimeExtension(true);
+    setTimeout(() => setHasTimeExtension(false), 3000);
   }, []);
 
   // Connect to WebSocket only when drawer is visible and auction is LIVE
@@ -170,6 +171,8 @@ export const AuctionDetailDrawer = ({
     onBidUpdate,
     onTimeExtended,
   });
+
+  const [hasTimeExtension, setHasTimeExtension] = useState(false);
 
   // --- Smart Fallback Logic (Polling) ---
   const [lastActive, setLastActive] = useState<number>(Date.now());
@@ -257,10 +260,11 @@ export const AuctionDetailDrawer = ({
 
   const auction = localAuction; // Re-use auction variable for convenience in rest of code
 
+  const isLive = auction.status === AuctionStatus.LIVE;
+  const isScheduled = auction.status === AuctionStatus.SCHEDULED;
+
   // Determine if Bid Logs tab should be shown
-  const showBidLogsTab =
-    auction.status === AuctionStatus.LIVE ||
-    auction.status === AuctionStatus.ENDED;
+  const showBidLogsTab = isLive || auction.status === AuctionStatus.ENDED;
 
   // Find the highest bid (winner) for ENDED auctions
 
@@ -295,7 +299,7 @@ export const AuctionDetailDrawer = ({
       dataIndex: "amount",
       key: "amount",
       render: (amount: number) => (
-        <span className="text-green-400 font-semibold">
+        <span className="font-semibold" style={{ color: "#FED469" }}>
           {formatCurrency(amount)}
         </span>
       ),
@@ -372,22 +376,26 @@ export const AuctionDetailDrawer = ({
             <div className="space-y-4">
               {/* Image Carousel */}
               <AuctionImageCarousel images={auction.images} compact />
-
-              {/* Description */}
-              <div
-                className="prose prose-invert prose-sm prose-zinc max-w-none"
-                dangerouslySetInnerHTML={{
-                  __html: auction.description || "No description provided.",
-                }}
-              />
             </div>
 
-            {/* Right Column: Key Stats & Timeline */}
-            <div className="space-y-6">
+            {/* Right Column Content - Now Single Column Stack */}
+            <div className="space-y-4">
               {/* Countdown Timer */}
               {shouldShowCountdown && (
-                <Card className="bg-zinc-900 border-zinc-800">
-                  {auction.status === AuctionStatus.LIVE ? (
+                <div
+                  style={{
+                    background: hasTimeExtension
+                      ? "rgba(251,191,36,0.05)"
+                      : "transparent",
+                    border: hasTimeExtension
+                      ? "1px solid rgba(251,191,36,0.25)"
+                      : "none",
+                    borderRadius: "16px",
+                    padding: hasTimeExtension ? "4px" : "0",
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  {isLive ? (
                     <Countdown
                       targetTime={auction.endTime}
                       isLive
@@ -399,130 +407,279 @@ export const AuctionDetailDrawer = ({
                       onFinish={handleCountdownComplete}
                     />
                   )}
-                </Card>
+                </div>
               )}
 
               {/* Price Card */}
-              <Card className="bg-zinc-900 border-zinc-800">
-                <div className="space-y-6">
-                  {/* Current Price - Main Focus */}
-                  <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-700/50 rounded-lg p-6 text-center">
-                    <div className="text-gray-300 text-sm mb-2">
-                      Current Price
-                    </div>
-                    <div className="text-4xl font-bold text-green-400 drop-shadow-lg">
-                      {formatCurrency(auction.currentPrice)}
-                    </div>
+              <div
+                style={{
+                  background: "rgba(33,36,46,0.8)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.03)",
+                  borderRadius: "20px",
+                  padding: "20px",
+                }}
+              >
+                {/* Main price */}
+                <div
+                  style={{
+                    background:
+                      auction.status === AuctionStatus.LIVE
+                        ? "rgba(254,212,105,0.07)"
+                        : "rgba(255,255,255,0.03)",
+                    border: `0.5px solid ${auction.status === AuctionStatus.LIVE ? "rgba(254,212,105,0.3)" : "rgba(255,255,255,0.06)"}`,
+                    borderRadius: "16px",
+                    padding: "20px 24px",
+                    textAlign: "center",
+                    marginBottom: "20px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.2em",
+                      color: "rgba(255,255,255,0.5)",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    {auction.status === AuctionStatus.LIVE
+                      ? "Current Price"
+                      : auction.status === AuctionStatus.ENDED
+                        ? "Final Price"
+                        : "Current Price"}
                   </div>
+                  <div
+                    key={auction.currentPrice} // Force re-render on price change to trigger animation
+                    style={{
+                      fontSize: "clamp(2rem, 5vw, 3rem)",
+                      fontWeight: 800,
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1.1,
+                      background:
+                        auction.status === AuctionStatus.LIVE
+                          ? "linear-gradient(135deg, #FED469, #FEECBB)"
+                          : "rgba(255,255,255,0.9)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      filter:
+                        auction.status === AuctionStatus.LIVE
+                          ? "drop-shadow(0 0 15px rgba(254,212,105,0.3))"
+                          : "none",
+                      animation:
+                        auction.status === AuctionStatus.LIVE
+                          ? "pricePulse 0.5s ease-out"
+                          : "none",
+                      display: "inline-block", // Required for transform animation
+                    }}
+                  >
+                    {formatCurrency(auction.currentPrice)}
+                  </div>
+                </div>
 
-                  {/* Supporting Prices */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-zinc-800/50 rounded p-3 text-center">
-                      <div className="text-gray-400 text-xs mb-1">
-                        Starting Price
-                      </div>
-                      <div className="text-lg font-bold text-yellow-500">
+                {/* Supporting prices */}
+                <Row gutter={[12, 12]}>
+                  <Col xs={12}>
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                        borderRadius: "12px",
+                        padding: "12px 14px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div className="price-label">Starting</div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          color: "#fafafa",
+                        }}
+                      >
                         {formatCurrency(auction.startPrice)}
                       </div>
                     </div>
-                    <div className="bg-zinc-800/50 rounded p-3 text-center">
-                      <div className="text-gray-400 text-xs mb-1">
-                        Min Bid Step
-                      </div>
-                      <div className="text-lg font-bold text-blue-400">
-                        {formatCurrency(auction.minStep)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Timeline Card */}
-              <Card className="bg-zinc-900 border-zinc-800">
-                <Row gutter={[16, 16]}>
-                  <Col xs={24} sm={12}>
-                    <div>
-                      <div className="text-gray-400 text-sm mb-2">
-                        Start Time
-                      </div>
-                      <div className="text-white font-medium">
-                        {formatAuctionTime(auction.startTime)}
-                      </div>
-                    </div>
                   </Col>
-                  <Col xs={24} sm={12}>
-                    <div>
-                      <div className="text-gray-400 text-sm mb-2">End Time</div>
-                      <div className="text-white font-medium">
-                        {formatAuctionTime(auction.endTime)}
+                  <Col xs={12}>
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                        borderRadius: "12px",
+                        padding: "12px 14px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div className="price-label">Min Step</div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          color: "#fafafa",
+                        }}
+                      >
+                        {formatCurrency(auction.minStep)}
                       </div>
                     </div>
                   </Col>
                 </Row>
-              </Card>
+              </div>
 
-              {/* Users Info Card */}
-              <Card className="bg-zinc-900 border-zinc-800">
-                <Row gutter={[32, 16]}>
+              {/* Seller & Highest Bidder */}
+              <div
+                style={{
+                  background: "rgba(33,36,46,0.85)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.03)",
+                  borderRadius: "20px",
+                  padding: "20px",
+                }}
+              >
+                <Row gutter={[24, 20]}>
                   <Col xs={24} sm={12}>
                     <div>
-                      <div className="text-gray-400 text-sm mb-3">Seller</div>
-                      <div className="flex items-center space-x-3">
+                      <div className="price-label">Seller</div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
                         {auction.seller?.avatarUrl && (
                           <Image
                             src={auction.seller.avatarUrl}
                             alt={auction.seller.name}
-                            className="w-10 h-10 rounded-full"
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                            }}
                             preview={false}
                           />
                         )}
                         <div>
-                          <div className="font-medium text-white">
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              color: "#fff",
+                              fontSize: "14px",
+                            }}
+                          >
                             {auction.seller?.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "rgba(255,255,255,0.4)",
+                            }}
+                          >
                             {auction.seller?.email}
                           </div>
                         </div>
                       </div>
                     </div>
                   </Col>
+
                   {auction.highestBidder && (
                     <Col xs={24} sm={12}>
                       <div>
-                        <div className="text-gray-400 text-sm mb-3">
-                          Highest Bidder
+                        <div className="price-label">
+                          {auction.status === AuctionStatus.ENDED
+                            ? "Winner 🏆"
+                            : "Highest Bidder"}
                         </div>
-                        {auction.status === AuctionStatus.LIVE ? (
-                          <div className="font-semibold text-white">
-                            {auction.highestBidder.name}
-                          </div>
-                        ) : (
-                          <div className="flex items-center space-x-3">
-                            {auction.highestBidder?.avatarUrl && (
-                              <Image
-                                src={auction.highestBidder.avatarUrl}
-                                alt={auction.highestBidder.name}
-                                className="w-10 h-10 rounded-full"
-                                preview={false}
-                              />
-                            )}
-                            <div>
-                              <div className="font-medium text-white">
-                                {auction.highestBidder?.name}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                {auction.highestBidder?.email}
-                              </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                          }}
+                        >
+                          {auction.highestBidder?.avatarUrl && (
+                            <Image
+                              src={auction.highestBidder.avatarUrl}
+                              alt={auction.highestBidder.name}
+                              style={{
+                                width: "36px",
+                                height: "36px",
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                              }}
+                              preview={false}
+                            />
+                          )}
+                          <div>
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                color:
+                                  auction.status === AuctionStatus.LIVE
+                                    ? "#FED469"
+                                    : "#fff",
+                                fontSize: "14px",
+                              }}
+                            >
+                              {auction.highestBidder?.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "rgba(255,255,255,0.4)",
+                              }}
+                            >
+                              {auction.highestBidder?.email}
                             </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </Col>
                   )}
                 </Row>
-              </Card>
+              </div>
+
+              {/* Timing Info */}
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                }}
+              >
+                <Row gutter={[16, 12]}>
+                  <Col xs={24} sm={12}>
+                    <div className="info-pair">
+                      <span className="info-label">Start Time</span>
+                      <span className="info-value">
+                        {formatAuctionTime(auction.startTime)}
+                      </span>
+                    </div>
+                  </Col>
+                  <Col xs={24} sm={12}>
+                    <div className="info-pair">
+                      <span className="info-label">End Time</span>
+                      <span className="info-value">
+                        {formatAuctionTime(auction.endTime)}
+                      </span>
+                    </div>
+                  </Col>
+                </Row>
+              </div>
             </div>
+
+            {/* Description */}
+            <div
+              className="prose prose-invert prose-sm prose-zinc max-w-none"
+              dangerouslySetInnerHTML={{
+                __html: auction.description || "No description provided.",
+              }}
+            />
           </div>
         </div>
       ),
@@ -537,7 +694,15 @@ export const AuctionDetailDrawer = ({
       children: (
         <div className="space-y-4">
           {auction.status === AuctionStatus.LIVE && (
-            <div className="bg-blue-900 bg-opacity-20 border border-blue-500 rounded p-3">
+            <div
+              style={{
+                background: "rgba(42, 45, 58, 0.9)", // #2A2D3A High-Contrast Surface instead of blue
+                border: "1px solid rgba(96, 165, 250, 0.3)",
+                borderRadius: "12px",
+                padding: "12px",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+              }}
+            >
               <p className="text-sm text-blue-300 m-0">
                 🔴 Live bidding in progress. Bid logs are displayed below.
               </p>
@@ -590,7 +755,7 @@ export const AuctionDetailDrawer = ({
       size={1000}
       styles={{
         body: {
-          backgroundColor: "#09090b", // zinc-950
+          backgroundColor: "#191B24", // zinc-950
           padding: "0",
         },
       }}

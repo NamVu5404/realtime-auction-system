@@ -1,4 +1,13 @@
-import { Layout } from 'antd';
+import { Layout, Row, Col, Space } from "antd";
+import {
+  FacebookFilled,
+  TwitterOutlined,
+  InstagramOutlined,
+  YoutubeFilled,
+  MailOutlined,
+  PhoneOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 
 const { Footer: AntFooter } = Layout;
 
@@ -6,9 +15,217 @@ export const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <AntFooter className="text-center bg-gray-900 border-t border-gray-700 text-gray-400">
-      <p>© {currentYear} Real-time Auction Platform. All rights reserved.</p>
-      <p className="text-xs mt-2">Built with React + Spring Boot</p>
+    <AntFooter
+      style={{
+        background: "#0F111A",
+        borderTop: "1px solid rgba(255,255,255,0.05)",
+        padding: "60px 0 24px",
+        color: "rgba(255,255,255,0.6)",
+      }}
+    >
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
+        <Row gutter={[48, 40]}>
+          {/* Brand & About */}
+          <Col xs={24} sm={24} md={9}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+                gap: "10px",
+                marginBottom: "20px",
+              }}
+            >
+              <span style={{ fontSize: "30px" }}>⚡</span>
+              <span
+                style={{
+                  fontSize: "30px",
+                  fontWeight: 800,
+                  letterSpacing: "-0.02em",
+                  background:
+                    "linear-gradient(135deg, #FED469 0%, #FEECBB 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                AuctionPro
+              </span>
+            </div>
+            <p className="text-[14px] leading-[1.8] text-white/55 mb-6 pr-4">
+              The premier platform for high-end, real-time bidding on exclusive,
+              luxury assets. Experience the thrill of live auctions from
+              anywhere in the world with absolute security and transparency.
+            </p>
+            <Space size="middle">
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
+              >
+                <FacebookFilled />
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
+              >
+                <TwitterOutlined />
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
+              >
+                <InstagramOutlined />
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
+              >
+                <YoutubeFilled />
+              </a>
+            </Space>
+          </Col>
+
+          {/* Categories */}
+          <Col xs={12} sm={8} md={5}>
+            <h4 className="text-white text-[15px] font-bold mb-6 tracking-wider uppercase">
+              Categories
+            </h4>
+            <div className="flex flex-col space-y-3">
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                Fine Art & Paintings
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                Luxury Watches
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                Classic Cars
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                Real Estate
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                Rare Antiques
+              </a>
+            </div>
+          </Col>
+
+          {/* Support */}
+          <Col xs={12} sm={8} md={5}>
+            <h4 className="text-white text-[15px] font-bold mb-6 tracking-wider uppercase">
+              Support
+            </h4>
+            <div className="flex flex-col space-y-3">
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                How to Bid
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                Buyer's Premium
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                Authentication Process
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                Shipping & Delivery
+              </a>
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                Help Center & FAQ
+              </a>
+            </div>
+          </Col>
+
+          {/* Contact */}
+          <Col xs={24} sm={8} md={5}>
+            <h4 className="text-white text-[15px] font-bold mb-6 tracking-wider uppercase">
+              Contact Us
+            </h4>
+            <div className="flex items-start mb-4">
+              <EnvironmentOutlined className="text-[#FED469] text-[16px] mr-3 mt-1" />
+              <span className="text-white/55 text-[13px] leading-relaxed">
+                123 Luxury Avenue, Suite 400
+                <br />
+                Ho Chi Minh City, Vietnam
+              </span>
+            </div>
+            <div className="flex items-center mb-4">
+              <PhoneOutlined className="text-[#FED469] text-[16px] mr-3" />
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                +84 9889 88888
+              </a>
+            </div>
+            <div className="flex items-center">
+              <MailOutlined className="text-[#FED469] text-[16px] mr-3" />
+              <a
+                href="#"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                contact@auctionpro.com
+              </a>
+            </div>
+          </Col>
+        </Row>
+
+        {/* Bottom Banner */}
+        <div className="border-t border-white/5 mt-[60px] pt-6 flex flex-wrap justify-between items-center gap-4">
+          <p className="text-white/40 text-[12px] m-0">
+            © {currentYear} Auction Pro. All rights reserved.
+          </p>
+          <div className="flex items-center space-x-4">
+            <a
+              href="#"
+              className="text-white/40 hover:text-[#FED469] transition-colors duration-300 text-[12px]"
+            >
+              Privacy Policy
+            </a>
+            <span className="text-white/10 text-[12px]">|</span>
+            <a
+              href="#"
+              className="text-white/40 hover:text-[#FED469] transition-colors duration-300 text-[12px]"
+            >
+              Terms of Service
+            </a>
+            <span className="text-white/10 text-[12px]">|</span>
+            <a
+              href="#"
+              className="text-white/40 hover:text-[#FED469] transition-colors duration-300 text-[12px]"
+            >
+              Cookie Policy
+            </a>
+          </div>
+        </div>
+      </div>
     </AntFooter>
   );
 };

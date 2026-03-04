@@ -38,10 +38,26 @@ const MyBidsPage = () => {
 
   if (!isLoading && data && data.data.length === 0) {
     return (
-      <div className="bg-black min-h-screen py-8">
-        <div className="container max-w-7xl mx-auto px-4">
-          <Empty description="No bids found">
-            <Button type="primary" onClick={() => navigate("/")}>
+      <div
+        style={{
+          background: "var(--color-bg)",
+          minHeight: "100vh",
+          padding: "48px 0",
+        }}
+      >
+        <div className="container max-w-7xl mx-auto px-6">
+          <Empty
+            description={
+              <span style={{ color: "rgba(255,255,255,0.4)" }}>
+                No bids found
+              </span>
+            }
+          >
+            <Button
+              type="primary"
+              onClick={() => navigate("/")}
+              style={{ marginTop: "12px" }}
+            >
               Browse Auctions
             </Button>
           </Empty>
@@ -58,7 +74,7 @@ const MyBidsPage = () => {
       render: (text: string, record: MyBidHistoryResponse) => (
         <a
           onClick={() => navigate(`/auction/${record.auctionId}`)}
-          className="text-white"
+          className="text-white font-semibold cursor-pointer hover:text-[#FED469] transition-colors"
         >
           {text}
         </a>
@@ -69,7 +85,9 @@ const MyBidsPage = () => {
       dataIndex: "amount",
       key: "amount",
       render: (amt: number) => (
-        <span className="text-white">{formatCurrency(amt)}</span>
+        <span style={{ color: "#fff", fontWeight: 600 }}>
+          {formatCurrency(amt)}
+        </span>
       ),
     },
     {
@@ -80,7 +98,7 @@ const MyBidsPage = () => {
         const isEnded = record.auctionStatus === AuctionStatus.ENDED;
         return (
           <div className="flex items-center gap-2">
-            <span className="text-white">
+            <span style={{ color: "#fff" }}>
               {formatCurrency(record.currentPrice)}
             </span>
           </div>
@@ -105,7 +123,9 @@ const MyBidsPage = () => {
       dataIndex: "createdAt",
       key: "createdAt",
       render: (dt: string) => (
-        <span className="text-gray-300">{formatDateTime(dt)}</span>
+        <span style={{ color: "rgba(255,255,255,0.55)", fontSize: "13px" }}>
+          {formatDateTime(dt)}
+        </span>
       ),
     },
     {
@@ -115,36 +135,66 @@ const MyBidsPage = () => {
       render: (status: AuctionStatus) => {
         const colorMap: Partial<Record<AuctionStatus, string>> = {
           [AuctionStatus.LIVE]: "green",
-          [AuctionStatus.ENDED]: "white",
+          [AuctionStatus.ENDED]: "default",
         };
-        return (
-          <span style={{ color: colorMap[status] ?? "#fff" }}>{status}</span>
-        );
+        return <Tag color={colorMap[status] ?? "default"}>{status}</Tag>;
       },
     },
   ];
 
   return (
-    <div className="bg-black min-h-screen py-8">
-      <div className="container max-w-7xl mx-auto px-4">
-        <h1 className="text-2xl font-bold text-white mb-6">My Bids</h1>
-
-        <Table
-          columns={columns}
-          dataSource={data?.data || []}
-          rowKey={(record: MyBidHistoryResponse) =>
-            `${record.auctionId}-${record.createdAt}`
-          }
-          pagination={{
-            current: data ? data.currentPage : page,
-            pageSize: data ? data.pageSize : PAGE_SIZE,
-            total: data ? data.totalElements : 0,
-            onChange: (p) => setPage(p),
-            showSizeChanger: false,
+    <div
+      style={{
+        background: "var(--color-bg)",
+        minHeight: "100vh",
+        padding: "48px 0",
+      }}
+    >
+      <div className="container max-w-7xl mx-auto px-6">
+        <h1
+          style={{
+            fontSize: "2.5rem",
+            fontWeight: 800,
+            letterSpacing: "-0.03em",
+            marginBottom: "32px",
+            background:
+              "linear-gradient(135deg, #ffffff 30%, rgba(255,255,255,0.55))",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
           }}
-          loading={isLoading}
-          className="bg-zinc-900 border-zinc-800"
-        />
+        >
+          My Bids
+        </h1>
+
+        {/* Table */}
+        <div
+          style={{
+            background: "rgba(20,20,20,0.7)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "16px",
+            overflow: "hidden",
+          }}
+        >
+          <Table
+            columns={columns}
+            dataSource={data?.data || []}
+            rowKey={(record: MyBidHistoryResponse) =>
+              `${record.auctionId}-${record.createdAt}`
+            }
+            pagination={{
+              current: data ? data.currentPage : page,
+              pageSize: data ? data.pageSize : PAGE_SIZE,
+              total: data ? data.totalElements : 0,
+              onChange: (p) => setPage(p),
+              showSizeChanger: false,
+            }}
+            loading={isLoading}
+            style={{ background: "transparent" }}
+          />
+        </div>
       </div>
     </div>
   );

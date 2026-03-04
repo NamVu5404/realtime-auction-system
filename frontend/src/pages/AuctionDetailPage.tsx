@@ -1,6 +1,8 @@
 import {
   ArrowLeftOutlined,
+  EditOutlined,
   RiseOutlined,
+  SettingOutlined,
   WifiOutlined,
   DisconnectOutlined,
 } from "@ant-design/icons";
@@ -72,11 +74,24 @@ const BiddingSection = memo(
 
     if (!((isLive || isCountdownStarted) && !isCountdownFinished && !isEnded)) {
       return (
-        <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
-          <p className="text-gray-400">
+        <div
+          style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "16px",
+            padding: "24px",
+          }}
+        >
+          <p
+            style={{
+              color: "rgba(255,255,255,0.45)",
+              margin: 0,
+              fontSize: "14px",
+            }}
+          >
             {isEnded || isCountdownFinished
-              ? "This auction has ended"
-              : "Bidding opens when auction goes live"}
+              ? "This auction has ended — no further bids accepted."
+              : "Bidding opens when the auction goes live."}
           </p>
         </div>
       );
@@ -84,23 +99,60 @@ const BiddingSection = memo(
 
     const handleSubmit = () => {
       onPlaceBid(localBidAmount);
-      setLocalBidAmount(""); // Clear sau khi submit
+      setLocalBidAmount(""); // Clear after submit
     };
 
     return (
-      <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
-        <h3 className="text-white font-semibold mb-4 text-lg">
+      <div
+        style={{
+          background: "rgba(33,36,46,0.85)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.03)",
+          borderRadius: "20px",
+          padding: "20px",
+        }}
+      >
+        <h3
+          style={{
+            color: "#fff",
+            fontWeight: 700,
+            fontSize: "17px",
+            margin: "0 0 16px 0",
+            letterSpacing: "-0.01em",
+          }}
+        >
           Place Your Bid
         </h3>
 
         {!isConnected && !isReconnecting && (
-          <div className="mb-4 p-3 bg-red-900/30 border border-red-700/50 rounded text-red-400 text-sm">
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "12px 16px",
+              background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.3)",
+              borderRadius: "10px",
+              color: "#f87171",
+              fontSize: "13px",
+            }}
+          >
             Real-time connection lost. Bidding is temporarily unavailable.
           </div>
         )}
 
         {isReconnecting && (
-          <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-700/50 rounded text-yellow-400 text-sm">
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "12px 16px",
+              background: "rgba(251,191,36,0.08)",
+              border: "1px solid rgba(251,191,36,0.3)",
+              borderRadius: "10px",
+              color: "#fbbf24",
+              fontSize: "13px",
+            }}
+          >
             Connecting to real-time updates... Please wait.
           </div>
         )}
@@ -120,7 +172,14 @@ const BiddingSection = memo(
             }}
             onPressEnter={handleSubmit}
             disabled={isBidDisabled}
-            className="bg-zinc-800 border-zinc-700 text-white"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "#fff",
+              height: "44px",
+              fontSize: "15px",
+              borderRadius: "12px 0 0 12px",
+            }}
           />
           <Tooltip
             title={
@@ -141,15 +200,22 @@ const BiddingSection = memo(
               onClick={handleSubmit}
               loading={bidLoading}
               disabled={isBidDisabled}
+              className="bid-cta-btn"
               style={{
+                height: "44px",
+                borderRadius: "0 12px 12px 0",
+                fontWeight: 800,
+                fontSize: "14px",
+                letterSpacing: "0.04em",
                 background: isBidDisabled
-                  ? "linear-gradient(135deg, #6B7280 0%, #4B5563 50%)"
-                  : "linear-gradient(135deg, #FFD700 0%, #FF8C00 50%)",
+                  ? "rgba(255,255,255,0.06)"
+                  : "linear-gradient(135deg, #FED469 0%, #FEECBB 100%)",
                 border: "none",
-                fontWeight: "bold",
-                color: isBidDisabled ? "#9CA3AF" : "#000",
+                color: isBidDisabled ? "rgba(255,255,255,0.2)" : "#191B24",
+                boxShadow: isBidDisabled
+                  ? "none"
+                  : "0 0 20px rgba(254,212,105,0.2), inset 0 1px 1px rgba(255,255,255,0.4)",
               }}
-              className="flex items-center justify-center hover:opacity-90 hover:scale-105 transition-all duration-300"
             >
               Place Bid
             </Button>
@@ -157,11 +223,27 @@ const BiddingSection = memo(
         </Space.Compact>
 
         {!isAuthenticated && (
-          <p className="text-xs text-gray-400 mt-2">Sign in to place bids</p>
+          <p
+            style={{
+              color: "rgba(255,255,255,0.38)",
+              fontSize: "12px",
+              marginTop: "8px",
+              margin: "8px 0 0",
+            }}
+          >
+            Sign in to place bids
+          </p>
         )}
         {isCountdownFinished && (
-          <p className="text-xs text-red-400 mt-2">
-            Auction has ended - bidding is closed
+          <p
+            style={{
+              color: "#f87171",
+              fontSize: "12px",
+              marginTop: "8px",
+              margin: "8px 0 0",
+            }}
+          >
+            Auction has ended — bidding is closed
           </p>
         )}
       </div>
@@ -538,28 +620,75 @@ export const AuctionDetailPage = () => {
     }
   };
 
+  // Derive owner status for Modular Action Panel
+  const deriveIsOwner = (id?: number) => {
+    return id == user?.id;
+  };
+
   return (
-    <div className="bg-black min-h-screen py-8">
-      <div className="container max-w-7xl mx-auto px-4">
+    <div
+      style={{
+        background: "var(--color-bg)",
+        minHeight: "100vh",
+        paddingTop: "32px",
+        paddingBottom: "64px",
+      }}
+    >
+      <div className="container max-w-7xl mx-auto px-6">
         {/* Maintenance Banner */}
         {isMaintenanceMode && (
-          <div className="mb-6 animate-pulse">
-            <div className="bg-red-900/40 border-2 border-red-500 rounded-lg p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">⚠️</span>
+          <div style={{ marginBottom: "24px" }}>
+            <div
+              style={{
+                background: "rgba(239,68,68,0.08)",
+                border: "2px solid rgba(239,68,68,0.5)",
+                borderRadius: "16px",
+                padding: "16px 20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+              className="animate-pulse"
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <span style={{ fontSize: "24px" }}>⚠️</span>
                 <div>
-                  <h3 className="text-red-400 font-bold m-0 p-0">
+                  <h3
+                    style={{
+                      color: "#f87171",
+                      fontWeight: 700,
+                      margin: 0,
+                      fontSize: "15px",
+                    }}
+                  >
                     System Interruption Detected
                   </h3>
-                  <p className="text-red-300 text-sm m-0 p-0">
-                    Redis is currently down. Bidding is temporarily disabled. We
-                    are attempting to recover...
+                  <p
+                    style={{
+                      color: "rgba(248,113,113,0.8)",
+                      fontSize: "13px",
+                      margin: "2px 0 0",
+                    }}
+                  >
+                    Redis is currently down. Bidding is temporarily disabled.
+                    Attempting to recover...
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <Spin size="small" />
-                <span className="text-red-400 text-xs font-mono">
+                <span
+                  style={{
+                    color: "rgba(248,113,113,0.7)",
+                    fontSize: "11px",
+                    fontFamily: "monospace",
+                    fontWeight: 600,
+                  }}
+                >
                   PROBING...
                 </span>
               </div>
@@ -567,37 +696,60 @@ export const AuctionDetailPage = () => {
           </div>
         )}
 
-        {/* Back Button */}
-        <div className="flex justify-between items-center mb-6">
+        {/* Back Button + Connection Status */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "28px",
+          }}
+        >
           <Button
             type="text"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate(-1)}
-            className="text-gray-300 hover:text-white"
+            style={{
+              color: "rgba(255,255,255,0.6)",
+              fontWeight: 600,
+              fontSize: "14px",
+              padding: "0 12px 0 4px",
+              height: "36px",
+              borderRadius: "100px",
+              border: "1px solid rgba(255,255,255,0.08)",
+              background: "rgba(255,255,255,0.04)",
+            }}
           >
             Back to Auctions
           </Button>
 
           {/* Connection Status Indicator */}
-          <div className="flex items-center gap-2">
+          <div>
             {isReconnecting ? (
               <Tooltip title="Reconnecting to real-time updates...">
-                <span className="flex items-center gap-2 px-3 py-1 bg-yellow-900/30 border border-yellow-700/50 rounded-full text-yellow-400 text-sm">
-                  <span className="animate-spin">⟳</span>
+                <span className="status-pill status-pill-reconnecting">
+                  <span
+                    style={{
+                      display: "inline-block",
+                      animation: "spin 1s linear infinite",
+                    }}
+                  >
+                    ⟳
+                  </span>
                   Reconnecting...
                 </span>
               </Tooltip>
             ) : isConnected ? (
               <Tooltip title="Real-time updates connected">
-                <span className="flex items-center gap-2 px-3 py-1 bg-green-900/30 border border-green-700/50 rounded-full text-green-400 text-sm">
-                  <WifiOutlined className="text-xs" />
+                <span className="status-pill status-pill-connected">
+                  <WifiOutlined style={{ fontSize: "11px" }} />
                   Connected
                 </span>
               </Tooltip>
             ) : (
               <Tooltip title="Disconnected - attempting to reconnect">
-                <span className="flex items-center gap-2 px-3 py-1 bg-red-900/30 border border-red-700/50 rounded-full text-red-400 text-sm">
-                  <DisconnectOutlined className="text-xs" />
+                <span className="status-pill status-pill-disconnected">
+                  <DisconnectOutlined style={{ fontSize: "11px" }} />
                   Disconnected
                 </span>
               </Tooltip>
@@ -606,42 +758,66 @@ export const AuctionDetailPage = () => {
         </div>
 
         {/* Main Content */}
-        <Row gutter={[32, 32]}>
-          {/* Left Column - Image */}
-          <Col xs={24} lg={12}>
-            <div className="space-y-6">
-              {/* Status Badge */}
-              <div className="flex items-center gap-2">
+        <Row gutter={[40, 32]}>
+          {/* Left Column - Image & Description */}
+          <Col xs={24} lg={13}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+            >
+              {/* Status Badges */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  flexWrap: "wrap",
+                }}
+              >
                 {isLive && (
-                  <Tag color="green" className="text-base px-3 py-1">
+                  <span className="badge-live">
+                    <span className="live-pulse-dot" />
                     LIVE
-                  </Tag>
+                  </span>
                 )}
                 {isScheduled && timeTilStart < oneHourMs && (
-                  <Tag color="orange" className="text-base px-3 py-1">
-                    STARTING SOON
-                  </Tag>
+                  <span className="badge-soon">STARTING SOON</span>
                 )}
                 {isScheduled && timeTilStart >= oneHourMs && (
-                  <Tag color="blue" className="text-base px-3 py-1">
-                    UPCOMING
-                  </Tag>
+                  <span className="badge-upcoming">UPCOMING</span>
                 )}
-                {isEnded && <Tag className="text-base px-3 py-1">ENDED</Tag>}
-
-                {/* Time Extension Badge */}
+                {isEnded && <span className="badge-ended">ENDED</span>}
                 {hasTimeExtension && (
-                  <Tag
-                    color="gold"
-                    className="text-base px-3 py-1 animate-pulse"
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      padding: "3px 12px",
+                      borderRadius: "100px",
+                      fontSize: "11px",
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      border: "1px solid rgba(251,191,36,0.4)",
+                      color: "#fbbf24",
+                      background: "rgba(251,191,36,0.08)",
+                    }}
+                    className="animate-pulse"
                   >
                     ⏱ Time Extended!
-                  </Tag>
+                  </span>
                 )}
               </div>
 
               {/* Title */}
-              <h1 className="text-2xl font-bold text-white mb-2">
+              <h1
+                style={{
+                  fontSize: "clamp(1.4rem, 3vw, 2rem)",
+                  fontWeight: 800,
+                  color: "#fff",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.2,
+                  margin: 0,
+                }}
+              >
                 {auction.title}
               </h1>
 
@@ -651,6 +827,7 @@ export const AuctionDetailPage = () => {
               {/* Description */}
               <div
                 className="prose prose-invert prose-sm prose-zinc max-w-none"
+                style={{ lineHeight: 1.75 }}
                 dangerouslySetInnerHTML={{
                   __html: auction.description || "No description provided.",
                 }}
@@ -659,30 +836,200 @@ export const AuctionDetailPage = () => {
           </Col>
 
           {/* Right Column - Auction Info & Bidding */}
-          <Col xs={24} lg={12}>
-            <div className="space-y-6">
-              {/* Bidding Form - Sử dụng BiddingSection component */}
-              <BiddingSection
-                isLive={isLive}
-                isCountdownStarted={isCountdownStarted}
-                isCountdownFinished={isCountdownFinished}
-                isConnected={isConnected}
-                isReconnecting={isReconnecting}
-                isAuthenticated={isAuthenticated}
-                minimumBid={minimumBid}
-                minStep={auction.minStep}
-                isBidDisabled={isBidDisabled}
-                bidLoading={bidLoading}
-                isEnded={isEnded}
-                onPlaceBid={handlePlaceBid}
-              />
+          <Col xs={24} lg={11}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "16px",
+                position: "sticky",
+                top: "80px",
+              }}
+            >
+              {/* ============================================
+                  MODULAR ACTION PANEL
+                  - Seller: Gold ghost management controls
+                  - User: Standard bid form
+                  ============================================ */}
+              {deriveIsOwner(auction?.seller.id) ? (
+                /* SELLER ACTION PANEL */
+                <div
+                  style={{
+                    background: "rgba(42, 45, 58, 0.9)", // #2A2D3A
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                    border: "0.5px solid rgba(254,212,105,0.3)",
+                    borderRadius: "20px",
+                    padding: "20px",
+                    overflow: "hidden",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "18px",
+                    }}
+                  >
+                    <SettingOutlined
+                      style={{
+                        color: "rgba(254,212,105,0.6)",
+                        fontSize: "16px",
+                      }}
+                    />
+                    <h3
+                      style={{
+                        color: "rgba(254,212,105,0.7)",
+                        fontWeight: 600,
+                        margin: 0,
+                        fontSize: "12px",
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      Seller Controls
+                    </h3>
+                  </div>
+
+                  {/* Auction status */}
+                  <div
+                    style={{
+                      background: "rgba(254,212,105,0.05)",
+                      border: "0.5px solid rgba(254,212,105,0.2)",
+                      borderRadius: "12px",
+                      padding: "12px 16px",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 600,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.2em",
+                        color: "rgba(255,255,255,0.5)",
+                        marginBottom: "6px",
+                      }}
+                    >
+                      Auction Status
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {isLive && (
+                        <span className="badge-live">
+                          <span className="live-pulse-dot" />
+                          LIVE
+                        </span>
+                      )}
+                      {isScheduled && (
+                        <span className="badge-upcoming">SCHEDULED</span>
+                      )}
+                      {isEnded && <span className="badge-ended">ENDED</span>}
+                      <span
+                        style={{
+                          color: "rgba(255,255,255,0.35)",
+                          fontSize: "11px",
+                        }}
+                      >
+                        ID: #{auction.id}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Ghost gold action button */}
+                  <button
+                    onClick={() => navigate(`/admin/auctions`)}
+                    style={{
+                      width: "100%",
+                      height: "42px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      background: "transparent",
+                      border: "0.5px solid rgba(254,212,105,0.4)",
+                      color: "#FED469",
+                      fontWeight: 700,
+                      fontSize: "14px",
+                      borderRadius: "12px",
+                      cursor: "pointer",
+                      transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
+                      fontFamily: "inherit",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background =
+                        "rgba(254,212,105,0.08)";
+                      e.currentTarget.style.boxShadow =
+                        "0 0 16px rgba(254,212,105,0.2)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "transparent";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    <EditOutlined />
+                    Manage in Dashboard
+                  </button>
+
+                  <div
+                    style={{
+                      height: "1px",
+                      background: "rgba(255,255,255,0.05)",
+                      margin: "16px 0 12px",
+                    }}
+                  />
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "rgba(255,255,255,0.35)",
+                      margin: 0,
+                      textAlign: "center",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Viewing as Seller - Can't bid yourself
+                  </p>
+                </div>
+              ) : (
+                /* USER BIDDING SECTION */
+                <BiddingSection
+                  isLive={isLive}
+                  isCountdownStarted={isCountdownStarted}
+                  isCountdownFinished={isCountdownFinished}
+                  isConnected={isConnected}
+                  isReconnecting={isReconnecting}
+                  isAuthenticated={isAuthenticated}
+                  minimumBid={minimumBid}
+                  minStep={auction.minStep}
+                  isBidDisabled={isBidDisabled}
+                  bidLoading={bidLoading}
+                  isEnded={isEnded}
+                  onPlaceBid={handlePlaceBid}
+                />
+              )}
 
               {/* Countdown Timer */}
               {shouldShowCountdown && (
-                <Card
-                  className={`bg-zinc-900 border-zinc-800 ${
-                    hasTimeExtension ? "border-gold-500 animate-pulse" : ""
-                  }`}
+                <div
+                  style={{
+                    background: hasTimeExtension
+                      ? "rgba(251,191,36,0.05)"
+                      : "transparent",
+                    border: hasTimeExtension
+                      ? "1px solid rgba(251,191,36,0.25)"
+                      : "none",
+                    borderRadius: "16px",
+                    padding: hasTimeExtension ? "4px" : "0",
+                    transition: "all 0.3s ease",
+                  }}
                 >
                   {isLive ? (
                     <Countdown
@@ -696,109 +1043,274 @@ export const AuctionDetailPage = () => {
                       onFinish={handleCountdownComplete}
                     />
                   ) : null}
-                </Card>
+                </div>
               )}
 
-              {/* Current Price - Highlighted */}
-              <Card className="bg-zinc-900 border-zinc-800">
-                <div className="space-y-6">
-                  {/* Current Price - Main Focus */}
-                  <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-700/50 rounded-lg p-6 text-center">
-                    <div className="text-gray-300 text-sm mb-2">
-                      {isLive
-                        ? "Current Price"
-                        : isEnded
-                          ? "Final Price"
-                          : "Current Price"}
-                    </div>
-                    <div
-                      className={`text-5xl font-bold ${
-                        isLive
-                          ? "text-green-400 drop-shadow-lg"
-                          : "text-gray-300"
-                      }`}
-                    >
-                      {formatCurrency(auction.currentPrice)}
-                    </div>
+              {/* Price Card */}
+              <div
+                style={{
+                  background: "rgba(33,36,46,0.8)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.03)",
+                  borderRadius: "20px",
+                  padding: "20px",
+                }}
+              >
+                {/* Main price */}
+                <div
+                  style={{
+                    background: isLive
+                      ? "rgba(254,212,105,0.07)"
+                      : "rgba(255,255,255,0.03)",
+                    border: `0.5px solid ${isLive ? "rgba(254,212,105,0.3)" : "rgba(255,255,255,0.06)"}`,
+                    borderRadius: "16px",
+                    padding: "20px 24px",
+                    textAlign: "center",
+                    marginBottom: "20px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.2em",
+                      color: "rgba(255,255,255,0.5)",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    {isLive
+                      ? "Current Price"
+                      : isEnded
+                        ? "Final Price"
+                        : "Current Price"}
                   </div>
-
-                  {/* Supporting Prices */}
-                  <Row gutter={[16, 16]}>
-                    <Col xs={12} sm={12}>
-                      <div className="bg-zinc-800/50 rounded p-3 text-center">
-                        <div className="text-gray-400 text-xs mb-1">
-                          Starting Price
-                        </div>
-                        <div className="text-lg font-bold text-yellow-500">
-                          {formatCurrency(auction.startPrice)}
-                        </div>
-                      </div>
-                    </Col>
-                    <Col xs={12} sm={12}>
-                      <div className="bg-zinc-800/50 rounded p-3 text-center">
-                        <div className="text-gray-400 text-xs mb-1">
-                          Min Bid Step
-                        </div>
-                        <div className="text-lg font-bold text-blue-400">
-                          {formatCurrency(auction.minStep)}
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
+                  <div
+                    key={auction.currentPrice} // Force re-render on price change to trigger animation
+                    style={{
+                      fontSize: "clamp(2.4rem, 6vw, 3.4rem)",
+                      fontWeight: 800,
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1.1,
+                      background: isLive
+                        ? "linear-gradient(135deg, #FED469, #FEECBB)"
+                        : "rgba(255,255,255,0.9)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      filter: isLive
+                        ? "drop-shadow(0 0 15px rgba(254,212,105,0.3))"
+                        : "none",
+                      animation: isLive ? "pricePulse 0.5s ease-out" : "none",
+                      display: "inline-block", // Required for transform animation
+                    }}
+                  >
+                    {formatCurrency(auction.currentPrice)}
+                  </div>
                 </div>
-              </Card>
 
-              {/* Seller & Highest Bidder Info */}
-              <Card className="bg-zinc-900 border-zinc-800">
-                <Row gutter={[32, 16]}>
+                {/* Supporting prices */}
+                <Row gutter={[12, 12]}>
+                  <Col xs={12}>
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                        borderRadius: "12px",
+                        padding: "12px 14px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.2em",
+                          color: "rgba(255,255,255,0.4)",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Starting
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          color: "#fafafa",
+                        }}
+                      >
+                        {formatCurrency(auction.startPrice)}
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={12}>
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                        borderRadius: "12px",
+                        padding: "12px 14px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.2em",
+                          color: "rgba(255,255,255,0.4)",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Min Step
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          color: "#fafafa",
+                        }}
+                      >
+                        {formatCurrency(auction.minStep)}
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+              </div>
+
+              {/* Seller & Highest Bidder */}
+              <div
+                style={{
+                  background: "rgba(33,36,46,0.85)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.03)",
+                  borderRadius: "20px",
+                  padding: "20px",
+                }}
+              >
+                <Row gutter={[24, 20]}>
                   <Col xs={24} sm={12}>
                     <div>
-                      <div className="text-gray-400 text-sm mb-3">Seller</div>
-                      <div className="flex items-center space-x-3">
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.2em",
+                          color: "rgba(255,255,255,0.5)",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        Seller
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                        }}
+                      >
                         {auction.seller?.avatarUrl && (
                           <Image
                             src={auction.seller.avatarUrl}
                             alt={auction.seller.name}
-                            className="w-10 h-10 rounded-full"
+                            style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                            }}
                             preview={false}
                           />
                         )}
                         <div>
-                          <div className="font-medium text-white">
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              color: "#fff",
+                              fontSize: "14px",
+                            }}
+                          >
                             {auction.seller?.name}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "rgba(255,255,255,0.4)",
+                            }}
+                          >
                             {auction.seller?.email}
                           </div>
                         </div>
                       </div>
                     </div>
                   </Col>
+
                   {auction.highestBidder && (
                     <Col xs={24} sm={12}>
                       <div>
-                        <div className="text-gray-400 text-sm mb-3">
-                          Highest Bidder
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.2em",
+                            color: "rgba(255,255,255,0.5)",
+                            marginBottom: "10px",
+                          }}
+                        >
+                          {isEnded ? "Winner 🏆" : "Highest Bidder"}
                         </div>
                         {!isEnded ? (
-                          <div className="font-semibold text-white">
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              color: "#FED469",
+                              fontSize: "14px",
+                            }}
+                          >
                             {auction.highestBidder.name}
                           </div>
                         ) : (
-                          <div className="flex items-center space-x-3">
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                            }}
+                          >
                             {auction.highestBidder?.avatarUrl && (
                               <Image
                                 src={auction.highestBidder.avatarUrl}
                                 alt={auction.highestBidder.name}
-                                className="w-10 h-10 rounded-full"
+                                style={{
+                                  width: "36px",
+                                  height: "36px",
+                                  borderRadius: "50%",
+                                  objectFit: "cover",
+                                }}
                                 preview={false}
                               />
                             )}
                             <div>
-                              <div className="font-medium text-white">
+                              <div
+                                style={{
+                                  fontWeight: 600,
+                                  color: "#fff",
+                                  fontSize: "14px",
+                                }}
+                              >
                                 {auction.highestBidder?.name}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "rgba(255,255,255,0.4)",
+                                }}
+                              >
                                 {auction.highestBidder?.email}
                               </div>
                             </div>
@@ -808,31 +1320,36 @@ export const AuctionDetailPage = () => {
                     </Col>
                   )}
                 </Row>
-              </Card>
+              </div>
 
-              {/* Auction Details - Timeline */}
-              <Card className="bg-zinc-900 border-zinc-800">
-                <Row gutter={[16, 16]}>
+              {/* Timing Info */}
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                }}
+              >
+                <Row gutter={[16, 12]}>
                   <Col xs={24} sm={12}>
-                    <div>
-                      <div className="text-gray-400 text-sm mb-2">
-                        Start Time
-                      </div>
-                      <div className="text-white font-medium">
+                    <div className="info-pair">
+                      <span className="info-label">Start Time</span>
+                      <span className="info-value">
                         {formatAuctionTime(auction.startTime)}
-                      </div>
+                      </span>
                     </div>
                   </Col>
                   <Col xs={24} sm={12}>
-                    <div>
-                      <div className="text-gray-400 text-sm mb-2">End Time</div>
-                      <div className="text-white font-medium">
+                    <div className="info-pair">
+                      <span className="info-label">End Time</span>
+                      <span className="info-value">
                         {formatAuctionTime(auction.endTime)}
-                      </div>
+                      </span>
                     </div>
                   </Col>
                 </Row>
-              </Card>
+              </div>
             </div>
           </Col>
         </Row>
