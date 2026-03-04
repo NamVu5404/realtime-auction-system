@@ -10,6 +10,7 @@ import {
   Upload,
   message,
 } from "antd";
+import { TiptapEditor } from "../../components/common/TiptapEditor";
 import { UploadOutlined } from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -321,19 +322,12 @@ export const AuctionForm = ({
         label="Title"
         rules={[{ required: true, message: "Title is required" }]}
       >
-        <Input
-          placeholder="Enter auction title"
-          disabled={isScheduledStatus && mode === "edit"}
-        />
+        <Input placeholder="Enter auction title" />
       </Form.Item>
 
       {/* Description */}
       <Form.Item name="description" label="Description">
-        <Input.TextArea
-          rows={4}
-          placeholder="Enter auction description"
-          disabled={isScheduledStatus && mode === "edit"}
-        />
+        <TiptapEditor placeholder="Enter auction description" />
       </Form.Item>
 
       {/* Image Section */}

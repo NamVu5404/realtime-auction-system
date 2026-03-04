@@ -1,37 +1,37 @@
-import { useState, useCallback } from 'react';
-import { Tabs, Button, Space, Empty, Spin } from 'antd';
-import { ReloadOutlined } from '@ant-design/icons';
-import { useQueryClient } from '@tanstack/react-query';
-import { AuctionStatus } from '../api/types';
-import { useAuctions } from '../hooks/useAuctions';
-import { useWebSocket } from '../hooks/useWebSocket';
-import AuctionList from '../features/auction/AuctionList';
+import { useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Tabs, Button, Space, Empty, Spin } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
+import { useQueryClient } from "@tanstack/react-query";
+import { AuctionStatus } from "../api/types";
+import { useAuctions } from "../hooks/useAuctions";
+import { useWebSocket } from "../hooks/useWebSocket";
+import AuctionList from "../features/auction/AuctionList";
 
 /**
  * Home Page Component
- * 
+ *
  * Features:
  * - Tab-based filtering: LIVE, UPCOMING (SCHEDULED), ENDED
  * - Pagination support with React Query
  * - Real-time updates via WebSocket
  * - Automatic refetch when countdown reaches 00:00:00
- * 
+ *
  * Tab Logic (Backend Driven):
  * - Tab "LIVE" → calls API with status=LIVE
- * - Tab "UPCOMING" → calls API with status=SCHEDULED  
+ * - Tab "UPCOMING" → calls API with status=SCHEDULED
  * - Tab "ENDED" → calls API with status=ENDED
- * 
+ *
  * Page indices: Frontend uses 1-based, Backend converts via Pageable
  */
 export const HomePage = () => {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<string>('live');
-  // Manage page per tab to preserve position when switching
-  const [pages, setPages] = useState<Record<string, number>>({
-    live: 1,
-    scheduled: 1,
-    ended: 1,
-  });
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Get active tab and page from URL
+  const activeTab = searchParams.get("status") || "live";
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+
   const pageSize = 20;
 
   // Map tab keys to backend status parameters
@@ -42,19 +42,18 @@ export const HomePage = () => {
   };
 
   const currentStatus = statusMap[activeTab] || AuctionStatus.LIVE;
-  const currentPage = pages[activeTab] || 1;
 
   // Fetch auctions with React Query
   const { data, isLoading, error, refetch } = useAuctions(
     currentStatus,
     currentPage,
-    pageSize
+    pageSize,
   );
 
   // ✅ FIX: Stabilize callback WITHOUT depending on refetch (which changes on every render)
   const onPriceUpdate = useCallback(() => {
     // Use queryClient to invalidate instead of refetch
-    queryClient.invalidateQueries({ queryKey: ['auctions'] });
+    queryClient.invalidateQueries({ queryKey: ["auctions"] });
   }, [queryClient]);
 
   // WebSocket connection for real-time price updates
@@ -72,25 +71,31 @@ export const HomePage = () => {
   const handleCountdownComplete = useCallback(() => {
     // Invalidate the auctions query to trigger a refetch
     // This ensures UI stays in sync with backend scheduler state transitions
-    queryClient.invalidateQueries({ queryKey: ['auctions'] });
+    queryClient.invalidateQueries({ queryKey: ["auctions"] });
   }, [queryClient]);
 
   // Tab and page handlers with stable references
-  const handleTabChange = useCallback((key: string) => {
-    setActiveTab(key);
-    setPages((prev) => ({ ...prev, [key]: 1 }));
-  }, []);
+  const handleTabChange = useCallback(
+    (key: string) => {
+      setSearchParams({ status: key, page: "1" });
+    },
+    [setSearchParams],
+  );
 
-  const handlePageChange = useCallback((p: number) => {
-    setPages((prev) => ({ ...prev, [activeTab]: p }));
-  }, [activeTab]);
+  const handlePageChange = useCallback(
+    (p: number) => {
+      setSearchParams({ status: activeTab, page: p.toString() });
+    },
+    [activeTab, setSearchParams],
+  );
 
   // Tab definitions with dynamic labels
   // Only show count badge for the active tab
   const tabs = [
     {
-      key: 'live',
-      label: activeTab === 'live' ? `LIVE (${data?.totalElements || 0})` : 'LIVE',
+      key: "live",
+      label:
+        activeTab === "live" ? `LIVE (${data?.totalElements || 0})` : "LIVE",
       children: (
         <Spin spinning={isLoading}>
           {!isLoading && data?.data && data.data.length > 0 ? (
@@ -112,8 +117,11 @@ export const HomePage = () => {
       ),
     },
     {
-      key: 'scheduled',
-      label: activeTab === 'scheduled' ? `UPCOMING (${data?.totalElements || 0})` : 'UPCOMING',
+      key: "scheduled",
+      label:
+        activeTab === "scheduled"
+          ? `UPCOMING (${data?.totalElements || 0})`
+          : "UPCOMING",
       children: (
         <Spin spinning={isLoading}>
           {!isLoading && data?.data && data.data.length > 0 ? (
@@ -135,8 +143,9 @@ export const HomePage = () => {
       ),
     },
     {
-      key: 'ended',
-      label: activeTab === 'ended' ? `ENDED (${data?.totalElements || 0})` : 'ENDED',
+      key: "ended",
+      label:
+        activeTab === "ended" ? `ENDED (${data?.totalElements || 0})` : "ENDED",
       children: (
         <Spin spinning={isLoading}>
           {!isLoading && data?.data && data.data.length > 0 ? (
@@ -165,12 +174,18 @@ export const HomePage = () => {
         {/* Header */}
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold mb-2 text-white">⚡ Auction Dashboard</h1>
+            <h1 className="text-4xl font-bold mb-2 text-white">
+              ⚡ Auction Dashboard
+            </h1>
             <p className="text-gray-400">
               {isConnected ? (
-                <span className="text-green-400">✓ Real-time updates active</span>
+                <span className="text-green-400">
+                  ✓ Real-time updates active
+                </span>
               ) : (
-                <span className="text-orange-400">⚠ Connecting to real-time updates...</span>
+                <span className="text-orange-400">
+                  ⚠ Connecting to real-time updates...
+                </span>
               )}
             </p>
           </div>
@@ -195,7 +210,11 @@ export const HomePage = () => {
 
         {/* Tabs - Disable animation to prevent lag when switching tabs */}
         <Tabs
-          activeKey={Object.keys(statusMap).find(k => statusMap[k] === currentStatus) || 'live'}
+          activeKey={
+            Object.keys(statusMap).find(
+              (k) => statusMap[k] === currentStatus,
+            ) || "live"
+          }
           onChange={handleTabChange}
           items={tabs}
           size="large"

@@ -357,7 +357,7 @@ export const AuctionDetailPage = () => {
         setAuction(data);
       } catch (error) {
         message.error("Failed to fetch auction details");
-        navigate("/");
+        navigate(-1);
       } finally {
         setLoading(false);
       }
@@ -378,7 +378,7 @@ export const AuctionDetailPage = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <Empty description="Auction not found" />
-        <Button onClick={() => navigate("/")} className="mt-4">
+        <Button onClick={() => navigate(-1)} className="mt-4">
           Back to Auctions
         </Button>
       </div>
@@ -572,7 +572,7 @@ export const AuctionDetailPage = () => {
           <Button
             type="text"
             icon={<ArrowLeftOutlined />}
-            onClick={() => navigate("/")}
+            onClick={() => navigate(-1)}
             className="text-gray-300 hover:text-white"
           >
             Back to Auctions
@@ -649,7 +649,12 @@ export const AuctionDetailPage = () => {
               <AuctionImageCarousel images={auction.images} />
 
               {/* Description */}
-              <p className="text-gray-400 text-base">{auction.description}</p>
+              <div
+                className="prose prose-invert prose-sm prose-zinc max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: auction.description || "No description provided.",
+                }}
+              />
             </div>
           </Col>
 

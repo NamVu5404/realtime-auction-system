@@ -10,7 +10,7 @@ import {
   hasAuctionStarted,
 } from "../../utils/dateUtils";
 import Countdown from "./Countdown";
-import { formatCurrency } from "../../utils/format";
+import { formatCurrency, stripHtml } from "../../utils/format";
 import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
 
 const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
@@ -114,7 +114,7 @@ export const AuctionCard = memo(
 
           {/* Description */}
           <p className="text-sm text-gray-400 mb-3 line-clamp-2">
-            {auction.description}
+            {stripHtml(auction.description)}
           </p>
 
           {/* Price Display - Conditional based on status */}
