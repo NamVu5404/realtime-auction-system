@@ -73,7 +73,7 @@ const createTimelineItem = (tracking: UserAuditResponse) => {
         <Card
           size="small"
           style={{
-            backgroundColor: "#18181b",
+            backgroundColor: "#191B24",
             borderColor: "#3f3f46",
             marginBottom: "16px",
           }}
@@ -99,7 +99,7 @@ const createTimelineItem = (tracking: UserAuditResponse) => {
                 </span>
                 <pre
                   style={{
-                    backgroundColor: "#09090b",
+                    backgroundColor: "#191B24",
                     borderRadius: "4px",
                     padding: "12px",
                     border: "1px solid #52525b",
@@ -177,10 +177,10 @@ export const AccountTrackingDrawer = ({
       styles={{
         body: {
           paddingBottom: "60px",
-          backgroundColor: "#0a0a0a",
+          backgroundColor: "#191B24",
         },
         header: {
-          backgroundColor: "#181818",
+          backgroundColor: "#191B24",
           borderBottom: "1px solid #404040",
           color: "#ffffff",
         },

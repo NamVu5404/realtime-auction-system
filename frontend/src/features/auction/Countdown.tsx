@@ -1,27 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Tag, Statistic } from "antd";
 import { getTimeRemaining, formatCountdown } from "../../utils/dateUtils";
 
 interface CountdownProps {
-  targetTime: string; // ISO 8601 UTC string from backend
+  targetTime: string;
   onFinish?: () => void;
   isLive?: boolean;
 }
 
-/**
- * Countdown Timer Component
- *
- * Features:
- * - Converts UTC time to local timezone automatically
- * - Updates every second
- * - Triggers callback when countdown reaches 00:00:00
- * - Shows visual warning when < 1 minute remains
- * - Color coding: Green for "Starts In" (upcoming), Blue for "Ends In" (live)
- *
- * @param targetTime - ISO 8601 UTC time string (e.g., auction.endTime or auction.startTime)
- * @param onFinish - Called when countdown completes
- * @param isLive - If true, countdown is for end time (Blue/Cyan); if false, for start time (Green)
- */
 export const Countdown = ({
   targetTime,
   onFinish,
@@ -29,9 +14,7 @@ export const Countdown = ({
 }: CountdownProps) => {
   const calculateTimeLeft = () => {
     const remainingMs = getTimeRemaining(targetTime);
-    if (remainingMs <= 0) {
-      return "00:00:00";
-    }
+    if (remainingMs <= 0) return "00d : 00h : 00m : 00s";
     return formatCountdown(remainingMs);
   };
 
@@ -40,11 +23,10 @@ export const Countdown = ({
   const hasCalledFinishRef = useRef(false);
 
   useEffect(() => {
-    // Initial check
     const initialRemaining = getTimeRemaining(targetTime);
     if (initialRemaining <= 0) {
       setIsFinished(true);
-      setTimeLeft("00:00:00");
+      setTimeLeft("00d : 00h : 00m : 00s");
       if (!hasCalledFinishRef.current) {
         hasCalledFinishRef.current = true;
         onFinish?.();
@@ -52,23 +34,16 @@ export const Countdown = ({
       return;
     }
 
-    // Reset finished state when targetTime changes to a future time
-    // (critical for anti-sniping: countdown may have ended, then time extends)
     setIsFinished(false);
     hasCalledFinishRef.current = false;
     setTimeLeft(formatCountdown(initialRemaining));
 
-    // Update countdown every second
     const interval = setInterval(() => {
       const remainingMs = getTimeRemaining(targetTime);
+      setTimeLeft(formatCountdown(remainingMs));
 
-      // Format and display remaining time
-      const formatted = formatCountdown(remainingMs);
-      setTimeLeft(formatted);
-
-      // Check if countdown finished
       if (remainingMs <= 0) {
-        setTimeLeft("00:00:00");
+        setTimeLeft("00d : 00h : 00m : 00s");
         setIsFinished(true);
         if (!hasCalledFinishRef.current) {
           hasCalledFinishRef.current = true;
@@ -81,57 +56,191 @@ export const Countdown = ({
     return () => clearInterval(interval);
   }, [targetTime, onFinish]);
 
-  // Show "Ended" tag when countdown completes
   if (isFinished) {
     return (
-      <div className="text-center">
-        <Tag color="success" className="text-lg px-4 py-2 animate-pulse">
-          Ended!
-        </Tag>
+      <div style={{ textAlign: "center" }}>
+        <span
+          style={{
+            display: "inline-block",
+            padding: "4px 16px",
+            borderRadius: "100px",
+            fontSize: "11px",
+            fontWeight: 700,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            border: "0.5px solid rgba(239,68,68,0.5)",
+            color: "#f87171",
+            background: "rgba(239,68,68,0.07)",
+          }}
+        >
+          Ended
+        </span>
       </div>
     );
   }
 
-  // Check if less than 1 minute remaining (warning state)
-  const [hours, minutes, seconds] = timeLeft.split(":").map(Number);
+  const match = timeLeft.match(/(\d+)d : (\d+)h : (\d+)m : (\d+)s/);
+  const days = match ? parseInt(match[1], 10) : 0;
+  const hours = match ? parseInt(match[2], 10) : 0;
+  const minutes = match ? parseInt(match[3], 10) : 0;
+  const seconds = match ? parseInt(match[4], 10) : 0;
   const showWarning =
-    hours === 0 && minutes === 0 && seconds < 60 && seconds > 0;
+    days === 0 && hours === 0 && minutes === 0 && seconds < 60 && seconds > 0;
 
-  // Color logic:
-  // - Upcoming (Starts In): Green
-  // - Live (Ends In): Blue/Cyan
-  // - Warning: Orange-red (last minute)
-  const getCountdownColor = () => {
-    if (showWarning) {
-      return "#e84749"; // Orange-red for warning
-    }
-    if (isLive) {
-      return "#00C853"; // Cyan/Sky blue for live countdown
-    }
-    return "#3c89e8"; // Green for upcoming countdown
+  // Color logic: Pure white for digits, blue/red for backgrounds and borders
+  const getColor = () => {
+    if (showWarning) return "#ef4444";
+    return "#fafafa"; // Pure white digits
+  };
+
+  const getLabelColor = () => {
+    if (isLive) return "#FED469";
+    if (showWarning) return "#ef4444";
+    return "#60a5fa";
+  };
+
+  const getBorderColor = () => {
+    if (showWarning) return "rgba(239,68,68,0.3)";
+    if (isLive) return "rgba(254,212,105,0.3)";
+    return "rgba(96,165,250,0.3)";
+  };
+
+  const getBgColor = () => {
+    if (showWarning) return "rgba(239,68,68,0.06)";
+    if (isLive) return "rgba(254,212,105,0.06)";
+    return "rgba(96,165,250,0.06)";
+  };
+
+  const getGlowShadow = () => {
+    if (showWarning) return "0 0 20px rgba(239,68,68,0.3)";
+    if (isLive) return "0 0 20px rgba(254,212,105,0.2)";
+    return "none";
   };
 
   return (
-    <div className="text-center">
-      <p
-        className={`text-sm mb-2 ${
-          isLive ? "text-green-400" : "text-green-400"
-        }`}
+    <div
+      style={{
+        background: getBgColor(),
+        border: `0.5px solid ${getBorderColor()}`,
+        borderRadius: "12px",
+        padding: "12px 16px",
+        textAlign: "center",
+      }}
+    >
+      {/* Label */}
+      <div
+        style={{
+          display: "inline-block",
+          marginBottom: "6px",
+          padding: "2px 12px",
+          borderRadius: "100px",
+          fontSize: "10px",
+          fontWeight: 700,
+          letterSpacing: "0.2em",
+          textTransform: "uppercase",
+          color: getLabelColor(),
+          border: `0.5px solid ${getBorderColor()}`,
+        }}
       >
         {isLive ? "Ends in" : "Starts in"}
-      </p>
-      <Statistic
-        value={timeLeft}
-        styles={{
-          content: {
-            color: getCountdownColor(),
-            fontSize: "24px",
-            fontWeight: "bold",
-            fontFamily: "monospace",
-            letterSpacing: "2px",
-          },
+      </div>
+
+      <div
+        style={{
+          fontFamily: "'Be Vietnam Pro', 'Inter', sans-serif",
+          fontSize: "20px",
+          fontWeight: 800,
+          color: getColor(),
+          lineHeight: 1,
+          letterSpacing: "-0.02em",
+          fontVariantNumeric: "tabular-nums",
+          textShadow: getGlowShadow(),
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "baseline",
         }}
-      />
+      >
+        {match ? (
+          <>
+            <span>{match[1]}</span>
+            <span
+              style={{
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "#ddd",
+                margin: "0 4px 0 2px",
+              }}
+            >
+              d
+            </span>
+            <span
+              style={{
+                color: "#ddd",
+                margin: "0 4px",
+                fontSize: "20px",
+                fontWeight: 400,
+              }}
+            >
+              :
+            </span>
+            <span>{match[2]}</span>
+            <span
+              style={{
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "#ddd",
+                margin: "0 4px 0 2px",
+              }}
+            >
+              h
+            </span>
+            <span
+              style={{
+                color: "#ddd",
+                margin: "0 4px",
+                fontSize: "20px",
+                fontWeight: 400,
+              }}
+            >
+              :
+            </span>
+            <span>{match[3]}</span>
+            <span
+              style={{
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "#ddd",
+                margin: "0 4px 0 2px",
+              }}
+            >
+              m
+            </span>
+            <span
+              style={{
+                color: "#ddd",
+                margin: "0 4px",
+                fontSize: "20px",
+                fontWeight: 400,
+              }}
+            >
+              :
+            </span>
+            <span>{match[4]}</span>
+            <span
+              style={{
+                fontSize: "16px",
+                fontWeight: 600,
+                color: "#ddd",
+                margin: "0 0 0 2px",
+              }}
+            >
+              s
+            </span>
+          </>
+        ) : (
+          timeLeft
+        )}
+      </div>
     </div>
   );
 };

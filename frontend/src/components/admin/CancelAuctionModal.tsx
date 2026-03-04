@@ -39,7 +39,14 @@ export const CancelAuctionModal = ({
       setIsLoading(true);
 
       if (auctionId) {
-        const reason = form.getFieldValue("reason");
+        const reason = form.getFieldValue("reason")?.trim();
+
+        if (!reason || reason.length < MIN_REASON_LENGTH) {
+          message.error(
+            `Reason must be at least ${MIN_REASON_LENGTH} characters`,
+          );
+          return;
+        }
 
         // Call cancel API with reason
         await adminApi.cancelAuction(auctionId, { reason });
@@ -105,14 +112,13 @@ export const CancelAuctionModal = ({
           <Input.TextArea
             rows={4}
             placeholder={`Enter reason for cancellation (minimum ${MIN_REASON_LENGTH} characters)...`}
-            onChange={(e) => setReasonLength(e.target.value.length)}
+            onChange={(e) => setReasonLength(e.target.value.trim().length)}
             status={reasonLength > 0 && !isReasonValid ? "error" : ""}
           />
         </Form.Item>
 
         <div className="mt-4 p-3 bg-yellow-900 bg-opacity-20 border border-yellow-600 rounded text-sm text-yellow-300">
-          <strong>Note:</strong> Once cancelled, users who placed bids will be
-          notified. This action cannot be undone.
+          <strong>Note:</strong> This action cannot be undone!
         </div>
       </Form>
     </Modal>

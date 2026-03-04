@@ -34,14 +34,11 @@ export const Header = () => {
             key: "admin",
             label: "Admin Dashboard",
             icon: <DashboardOutlined />,
-            // onClick: () => navigate("/admin"),
             onClick: () => navigate("/admin/users"),
           },
         ]
       : []),
-
     ...(user?.role === "ADMIN" ? [{ type: "divider" as const }] : []),
-
     {
       key: "bid-history",
       label: "My Bids",
@@ -58,27 +55,100 @@ export const Header = () => {
   ];
 
   return (
-    <AntHeader className="bg-gray-900 border-b border-gray-700 px-6 flex justify-between items-center sticky top-0 z-40">
+    <AntHeader
+      style={{
+        background: "#0F111A",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "0 32px",
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        height: "64px",
+      }}
+    >
+      {/* Logo */}
       <div
-        className="flex items-center cursor-pointer"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          cursor: "pointer",
+          gap: "10px",
+        }}
         onClick={() => navigate("/")}
       >
-        <h1 className="text-white text-2xl font-bold">⚡ Auction Pro</h1>
+        <span style={{ fontSize: "24px" }}>⚡</span>
+        <span
+          style={{
+            fontSize: "24px",
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            background: "linear-gradient(135deg, #FED469 0%, #FEECBB 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          AuctionPro
+        </span>
       </div>
 
-      <Space>
+      {/* Right */}
+      <Space size={12}>
         {isAuthenticated && user ? (
           <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
-            <div className="flex items-center gap-3 cursor-pointer hover:opacity-80">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                cursor: "pointer",
+                padding: "5px 14px 5px 6px",
+                borderRadius: "100px",
+                border: "0.5px solid rgba(255,255,255,0.08)",
+                background: "rgba(255,255,255,0.03)",
+                transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
+              }}
+              className="hover:border-[rgba(254,212,105,0.3)] hover:bg-[rgba(254,212,105,0.05)]"
+            >
               <Avatar
-                size="large"
+                size={34}
                 icon={<UserOutlined />}
                 src={user.avatarUrl}
                 alt={user.name}
+                style={{
+                  background: "rgba(254,212,105,0.12)",
+                  border: "0.5px solid rgba(254,212,105,0.4)",
+                  color: "#FED469",
+                  flexShrink: 0,
+                }}
               />
               <div className="hidden sm:block">
-                <p className="text-white text-sm font-medium">{user.name}</p>
-                <p className="text-gray-400 text-xs">{user.email}</p>
+                <p
+                  style={{
+                    color: "#fff",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    lineHeight: 1.2,
+                    margin: 0,
+                  }}
+                >
+                  {user.name}
+                </p>
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.4)",
+                    fontSize: "11px",
+                    lineHeight: 1.2,
+                    margin: 0,
+                  }}
+                >
+                  {user.email}
+                </p>
               </div>
             </div>
           </Dropdown>

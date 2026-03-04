@@ -325,30 +325,93 @@ const AdminAuctionPage = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Auction Management</h1>
+      {/* Page Header */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "28px",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "24px",
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}
+        >
+          Auction Management
+        </h1>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => setCreateModal(true)}
+          style={{
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            border: "none",
+            fontWeight: 700,
+            height: "38px",
+            borderRadius: "100px",
+            padding: "0 20px",
+            boxShadow:
+              "0 0 16px rgba(16,185,129,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+          }}
         >
           Create Auction
         </Button>
       </div>
 
-      {/* Search Form with Manual Trigger */}
-      <Form layout="vertical" className="mb-6 bg-zinc-900 p-4 rounded">
+      {/* Search Form */}
+      <div
+        style={{
+          background: "#0F111A",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: "16px",
+          padding: "20px 24px",
+          marginBottom: "20px",
+        }}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Form.Item label="Search">
+          <div>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "rgba(255,255,255,0.45)",
+                marginBottom: "6px",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              Search
+            </div>
             <Input
               placeholder="Search by Title, Description, Seller"
-              prefix={<SearchOutlined />}
+              prefix={
+                <SearchOutlined style={{ color: "rgba(255,255,255,0.3)" }} />
+              }
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               onPressEnter={handleSearch}
             />
-          </Form.Item>
-          <Form.Item label="Date Range">
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "rgba(255,255,255,0.45)",
+                marginBottom: "6px",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              Date Range
+            </div>
             <RangePicker
               value={dateRange}
               onChange={setDateRange}
@@ -356,27 +419,25 @@ const AdminAuctionPage = () => {
               format="YYYY-MM-DD HH:mm"
               className="w-full"
             />
-          </Form.Item>
+          </div>
         </div>
-        <Form.Item>
-          <Space>
-            <Button
-              type="primary"
-              icon={<SearchOutlined />}
-              onClick={handleSearch}
-              loading={isLoading}
-            >
-              Search
-            </Button>
-            <Button icon={<DeleteOutlined />} onClick={handleClear}>
-              Clear
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+        <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+          <Button
+            type="primary"
+            icon={<SearchOutlined />}
+            onClick={handleSearch}
+            loading={isLoading}
+          >
+            Search
+          </Button>
+          <Button icon={<DeleteOutlined />} onClick={handleClear}>
+            Clear
+          </Button>
+        </div>
+      </div>
 
       {/* Tabs for Status Filter */}
-      <div>
+      <div style={{ marginBottom: "4px" }}>
         <Tabs
           activeKey={status}
           onChange={(key) => {
@@ -394,20 +455,32 @@ const AdminAuctionPage = () => {
         />
       </div>
 
-      <Table
-        columns={columns}
-        dataSource={data?.data}
-        rowKey="id"
-        loading={isLoading}
-        pagination={{
-          current: data?.currentPage,
-          pageSize: data?.pageSize,
-          total: data?.totalElements,
-          onChange: (p) => setPage(p),
-          showSizeChanger: false,
+      {/* Table */}
+      <div
+        style={{
+          background: "#0F111A",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: "16px",
+          overflow: "hidden",
         }}
-        className="bg-zinc-900"
-      />
+      >
+        <Table
+          columns={columns}
+          dataSource={data?.data}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{
+            current: data?.currentPage,
+            pageSize: data?.pageSize,
+            total: data?.totalElements,
+            onChange: (p) => setPage(p),
+            showSizeChanger: false,
+          }}
+          style={{ background: "transparent #0F111A" }}
+        />
+      </div>
 
       {detailDrawer.visible && detailDrawer.auction && (
         <AuctionDetailDrawer

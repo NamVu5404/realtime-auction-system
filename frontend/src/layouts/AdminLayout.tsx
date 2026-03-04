@@ -1,6 +1,5 @@
 import {
   AuditOutlined,
-  DashboardOutlined,
   HomeOutlined,
   LogoutOutlined,
   UserOutlined,
@@ -21,12 +20,6 @@ const AdminLayout = () => {
   const { logout } = useAuth();
 
   const menuItems = [
-    // {
-    //   key: "dashboard",
-    //   icon: <DashboardOutlined />,
-    //   label: "Dashboard",
-    //   onClick: () => navigate("/admin"),
-    // },
     {
       key: "users",
       icon: <UserOutlined />,
@@ -62,7 +55,6 @@ const AdminLayout = () => {
     },
   ];
 
-  // Generate breadcrumbs based on current path
   const pathSnippets = location.pathname.split("/").filter((i) => i);
   const breadcrumbItems = pathSnippets.map((snippet, index) => {
     const url = `/${pathSnippets.slice(0, index + 1).join("/")}`;
@@ -73,44 +65,136 @@ const AdminLayout = () => {
   });
 
   return (
-    <Layout className="min-h-screen bg-black">
+    <Layout style={{ minHeight: "100vh", background: "var(--color-bg)" }}>
+      {/* Glass Sidebar */}
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
         theme="dark"
-        className="bg-zinc-900 border-r border-zinc-700"
+        style={{
+          borderRight: "1px solid rgba(255,255,255,0.04)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
       >
-        <div className="p-4 text-white font-bold text-2xl ml-2">
-          {collapsed ? "⚡" : "Admin Panel"}
+        {/* Logo */}
+        <div
+          style={{
+            padding: collapsed ? "20px 0" : "18px 20px",
+            textAlign: collapsed ? "center" : "left",
+            borderBottom: "1px solid rgba(255,255,255,0.04)",
+            marginBottom: "8px",
+          }}
+        >
+          {collapsed ? (
+            <span style={{ fontSize: "22px" }}>⚡</span>
+          ) : (
+            <span
+              style={{
+                fontSize: "18px",
+                fontWeight: 800,
+                letterSpacing: "-0.02em",
+                background: "linear-gradient(135deg, #FED469, #FEECBB)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              ⚡ Admin Panel
+            </span>
+          )}
         </div>
+
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname.split("/")[2] || "dashboard"]}
           items={menuItems}
-          className="bg-zinc-900 border-none"
+          style={{ background: "transparent", border: "none" }}
         />
       </Sider>
-      <Layout>
-        <Header className="bg-zinc-900 border-b border-zinc-700 px-6 flex justify-between items-center">
-          <Breadcrumb items={breadcrumbItems} className="text-white" />
+
+      <Layout style={{ background: "var(--color-bg)" }}>
+        {/* Sticky blurred header */}
+        <Header
+          style={{
+            background: "#0F111A",
+            borderBottom: "1px solid rgba(255,255,255,0.04)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "0 24px",
+            position: "sticky",
+            top: 0,
+            zIndex: 40,
+          }}
+        >
+          <Breadcrumb items={breadcrumbItems} />
+
           <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
-            <div className="flex items-center gap-3 cursor-pointer hover:opacity-80">
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                cursor: "pointer",
+                padding: "6px 14px 6px 6px",
+                borderRadius: "100px",
+                border: "0.5px solid rgba(255,255,255,0.07)",
+                background: "rgba(255,255,255,0.03)",
+                transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
+              }}
+              className="hover:border-[rgba(254,212,105,0.3)] hover:bg-[rgba(254,212,105,0.05)]"
+            >
               <Avatar
-                size="large"
+                size="default"
                 icon={<UserOutlined />}
                 src={user?.avatarUrl}
                 alt={user?.name}
+                style={{
+                  background: "rgba(254,212,105,0.12)",
+                  border: "0.5px solid rgba(254,212,105,0.4)",
+                  color: "#FED469",
+                }}
               />
               <div className="hidden sm:block">
-                <p className="text-white text-sm font-medium">{user?.name}</p>
-                <p className="text-gray-400 text-xs">{user?.email}</p>
+                <p
+                  style={{
+                    color: "#fff",
+                    fontSize: "13px",
+                    fontWeight: 600,
+                    lineHeight: 1.2,
+                    margin: 0,
+                  }}
+                >
+                  {user?.name}
+                </p>
+                <p
+                  style={{
+                    color: "rgba(255,255,255,0.4)",
+                    fontSize: "11px",
+                    lineHeight: 1.2,
+                    margin: 0,
+                  }}
+                >
+                  {user?.email}
+                </p>
               </div>
             </div>
           </Dropdown>
         </Header>
-        <Content className="bg-black p-6 min-h-0 overflow-auto">
+
+        <Content
+          style={{
+            background: "var(--color-bg)",
+            padding: "28px",
+            minHeight: 0,
+            overflowY: "auto",
+          }}
+        >
           <Outlet />
         </Content>
       </Layout>

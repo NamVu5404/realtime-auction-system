@@ -110,8 +110,8 @@ const AdminUserPage = () => {
   };
 
   const handleBlockConfirm = () => {
-    if (!blockReason.trim()) {
-      message.error("Please enter a reason for blocking");
+    if (blockReason.trim().length < 3) {
+      message.error("Please enter a reason with at least 3 characters");
       return;
     }
     if (selectedUserId) {
@@ -309,76 +309,142 @@ const AdminUserPage = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">User Management</h1>
+      <h1
+        style={{
+          fontSize: "24px",
+          fontWeight: 800,
+          letterSpacing: "-0.02em",
+          marginBottom: "28px",
+        }}
+      >
+        User Management
+      </h1>
 
-      <Form layout="vertical" className="mb-6 bg-zinc-900 p-4 rounded">
+      {/* Filter Form */}
+      <div
+        style={{
+          background: "#0F111A",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: "16px",
+          padding: "20px 24px",
+          marginBottom: "20px",
+        }}
+      >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Form.Item label="Search">
+          <div>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "rgba(255,255,255,0.45)",
+                marginBottom: "6px",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              Search
+            </div>
             <Input
               placeholder="Search by Name, Email"
-              prefix={<SearchOutlined />}
+              prefix={
+                <SearchOutlined style={{ color: "rgba(255,255,255,0.3)" }} />
+              }
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
             />
-          </Form.Item>
-          <Form.Item label="Role">
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "rgba(255,255,255,0.45)",
+                marginBottom: "6px",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              Role
+            </div>
             <Select
               placeholder="Select Role"
               value={role}
               onChange={(value) => setRole(value)}
               allowClear
+              style={{ width: "100%" }}
               options={[
                 { label: "USER", value: "USER" },
                 { label: "ADMIN", value: "ADMIN" },
               ]}
             />
-          </Form.Item>
-          <Form.Item label="Status">
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: 600,
+                color: "rgba(255,255,255,0.45)",
+                marginBottom: "6px",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              Status
+            </div>
             <Select
               placeholder="Select Status"
               value={status}
               onChange={(value) => setStatus(value)}
               allowClear
+              style={{ width: "100%" }}
               options={[
                 { label: "ACTIVE", value: "ACTIVE" },
                 { label: "BLOCKED", value: "BLOCKED" },
               ]}
             />
-          </Form.Item>
+          </div>
         </div>
-        <Form.Item>
-          <Space>
-            <Button
-              type="primary"
-              icon={<SearchOutlined />}
-              loading={isLoading}
-            >
-              Search
-            </Button>
-            <Button icon={<DeleteOutlined />} onClick={handleClearFilters}>
-              Clear
-            </Button>
-          </Space>
-        </Form.Item>
-      </Form>
+        <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+          <Button type="primary" icon={<SearchOutlined />} loading={isLoading}>
+            Search
+          </Button>
+          <Button icon={<DeleteOutlined />} onClick={handleClearFilters}>
+            Clear
+          </Button>
+        </div>
+      </div>
 
-      <Table
-        columns={columns}
-        dataSource={data?.data}
-        rowKey="id"
-        loading={isLoading}
-        pagination={{
-          current: data?.currentPage,
-          pageSize: data?.pageSize,
-          total: data?.totalElements,
-          onChange: (p) => setPage(p),
-          showSizeChanger: false,
+      {/* Table */}
+      <div
+        style={{
+          background: "#0F111A",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          borderRadius: "16px",
+          overflow: "hidden",
         }}
-        rowClassName={(record) =>
-          record.status === "BLOCKED" ? "opacity-60" : ""
-        }
-        className="bg-zinc-900"
-      />
+      >
+        <Table
+          columns={columns}
+          dataSource={data?.data}
+          rowKey="id"
+          loading={isLoading}
+          pagination={{
+            current: data?.currentPage,
+            pageSize: data?.pageSize,
+            total: data?.totalElements,
+            onChange: (p) => setPage(p),
+            showSizeChanger: false,
+          }}
+          rowClassName={(record) =>
+            record.status === "BLOCKED" ? "opacity-50" : ""
+          }
+          style={{ background: "transparent" }}
+        />
+      </div>
 
       <Drawer
         title={
@@ -392,6 +458,12 @@ const AdminUserPage = () => {
         onClose={() => {
           setHistoryDrawer({ visible: false, type: "bid" });
           setBidHistoryPage(1);
+        }}
+        styles={{
+          body: {
+            backgroundColor: "#191B24",
+            padding: "0",
+          },
         }}
         size={1000}
       >
@@ -448,21 +520,11 @@ const AdminUserPage = () => {
         okText="Block"
         cancelText="Cancel"
         okButtonProps={{
-          style: {
-            backgroundColor: "#d32f2f",
-            borderColor: "#d32f2f",
-            color: "#fff",
-          },
+          disabled: blockReason.trim().length < 3,
+          danger: true,
         }}
         cancelButtonProps={{
-          style: {
-            backgroundColor: "transparent",
-            borderColor: "#404040",
-            color: "#e0e0e0",
-          },
-        }}
-        styles={{
-          title: { color: "#ffffff" },
+          type: "text",
         }}
       >
         <div style={{ marginTop: 16 }}>
@@ -480,12 +542,16 @@ const AdminUserPage = () => {
             rows={3}
             value={blockReason}
             onChange={(e) => setBlockReason(e.target.value)}
-            style={{
-              backgroundColor: "#2a2a2a",
-              borderColor: "#404040",
-              color: "#e0e0e0",
-            }}
           />
+          <div
+            style={{
+              color: blockReason.trim().length < 3 ? "#ff4d4f" : "#8c8c8c",
+              fontSize: "12px",
+              marginTop: "4px",
+            }}
+          >
+            {blockReason.trim().length} / 3 characters (minimum required)
+          </div>
         </div>
       </Modal>
 
@@ -497,22 +563,9 @@ const AdminUserPage = () => {
         onCancel={() => setUnblockModalVisible(false)}
         okText="Unblock"
         cancelText="Cancel"
-        okButtonProps={{
-          style: {
-            backgroundColor: "#1976d2",
-            borderColor: "#1976d2",
-            color: "#fff",
-          },
-        }}
+        okButtonProps={{}}
         cancelButtonProps={{
-          style: {
-            backgroundColor: "transparent",
-            borderColor: "#404040",
-            color: "#e0e0e0",
-          },
-        }}
-        styles={{
-          title: { color: "#ffffff" },
+          type: "text",
         }}
       >
         <div style={{ marginTop: 16 }}>
@@ -531,11 +584,6 @@ const AdminUserPage = () => {
             rows={3}
             value={unblockReason}
             onChange={(e) => setUnblockReason(e.target.value)}
-            style={{
-              backgroundColor: "#2a2a2a",
-              borderColor: "#404040",
-              color: "#e0e0e0",
-            }}
           />
         </div>
       </Modal>

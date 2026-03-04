@@ -25,10 +25,53 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ConfigProvider
         theme={{
-          algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
+          algorithm: theme.darkAlgorithm,
           token: {
-            colorPrimary: '#1890ff',
-            borderRadius: 8,
+            colorBgLayout: '#191B24',
+            colorBgContainer: '#21242E',
+            colorBgElevated: '#2A2D3A',
+            colorText: '#FFFFFF',
+            colorTextHeading: '#FFFFFF',
+            colorTextDescription: 'rgba(255, 255, 255, 0.65)',
+            borderRadius: 12,
+            lineWidth: 0,
+            colorPrimary: '#FED469',
+            colorBorder: 'rgba(255,255,255,0.1)',
+            colorTextSecondary: 'rgba(255,255,255,0.6)',
+            colorSuccess: '#10B981',
+            colorWarning: '#FED469',
+            colorError: '#F43F5E',
+            fontFamily: "'Be Vietnam Pro', Inter, -apple-system, sans-serif",
+          },
+          components: {
+            Message: {
+              colorBgElevated: '#2A2D3A',
+              boxShadowSecondary: '0 15px 50px rgba(0,0,0,0.8)',
+            },
+            Notification: {
+              colorBgElevated: '#2A2D3A',
+              boxShadowSecondary: '0 15px 50px rgba(0,0,0,0.8)',
+            },
+            Button: {
+              colorPrimary: 'linear-gradient(to right, #FED469, #FEECBB)',
+              colorPrimaryHover: 'linear-gradient(to right, #FEECBB, #FED469)',
+              colorPrimaryActive: '#FED469',
+              colorTextLightSolid: '#191B24',
+            },
+            Input: {
+              colorBgContainer: '#121212',
+              colorPrimaryHover: '#FED469',
+              colorPrimary: '#FED469',
+              activeBorderColor: '#FED469',
+            },
+            Modal: {
+              headerBg: '#2A2D3A',
+              contentBg: '#2A2D3A',
+              footerBg: '#2A2D3A',
+            },
+            Tooltip: {
+              colorBgDefault: '#2A2D3A',
+            },
           },
         }}
       >

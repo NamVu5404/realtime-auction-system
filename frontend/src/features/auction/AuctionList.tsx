@@ -1,7 +1,7 @@
-import { Row, Col, Empty, Pagination } from 'antd';
-import { Auction } from '../../api/types';
-import AuctionCard from './AuctionCard';
-import { memo } from 'react';
+import { Row, Col, Empty, Pagination } from "antd";
+import { Auction } from "../../api/types";
+import AuctionCard from "./AuctionCard";
+import { memo } from "react";
 
 interface AuctionListProps {
   auctions: Auction[];
@@ -16,7 +16,7 @@ interface AuctionListProps {
 
 /**
  * Renders a grid of auction cards
- * 
+ *
  * @param auctions - Array of auction items to display
  * @param onCountdownComplete - Callback when countdown reaches 00:00:00
  * @param emptyMessage - Message to show when no auctions
@@ -25,7 +25,7 @@ export const AuctionList = memo(
   ({
     auctions,
     onCountdownComplete,
-    emptyMessage = 'No auctions found',
+    emptyMessage = "No auctions found",
     currentPage = 1,
     pageSize = 20,
     totalElements = 0,
@@ -37,7 +37,7 @@ export const AuctionList = memo(
 
     return (
       <div>
-        <Row gutter={[16, 16]} className="w-full">
+        <Row gutter={[24, 24]} className="w-full">
           {auctions.map((auction) => (
             <Col key={auction.id} xs={24} sm={12} md={8} lg={6}>
               <AuctionCard
@@ -50,7 +50,7 @@ export const AuctionList = memo(
 
         {/* Pagination - server-side */}
         {totalElements > pageSize && (
-          <div className="mt-6 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <Pagination
               current={currentPage}
               pageSize={pageSize}
@@ -74,9 +74,9 @@ export const AuctionList = memo(
       prevProps.totalElements === nextProps.totalElements &&
       prevProps.onPageChange === nextProps.onPageChange
     );
-  }
+  },
 );
 
-AuctionList.displayName = 'AuctionList';
+AuctionList.displayName = "AuctionList";
 
 export default AuctionList;
