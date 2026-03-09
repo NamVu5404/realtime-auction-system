@@ -12,13 +12,12 @@ import com.namvu.realtimeauctionsystem.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.repository.UserAuditRepository;
 import com.namvu.realtimeauctionsystem.repository.UserRepository;
 import com.namvu.realtimeauctionsystem.service.AuthenticationService;
+import com.namvu.realtimeauctionsystem.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -75,8 +74,7 @@ public class UserAspect {
             return;
         }
 
-        Jwt jwt = (Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long userId = jwt.getClaim("uid");
+        Long userId = SecurityUtils.getCurrentUserId();
 
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         InfoOsDto info = authenticationService.getRequestInfo(request);

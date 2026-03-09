@@ -1,19 +1,29 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ConfigProvider, theme, App as AppAntd } from 'antd';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useUIStore } from './store/useUIStore';
-import MainLayout from './layouts/MainLayout';
+import { App as AppAntd, ConfigProvider, theme } from 'antd';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import './App.css';
+import ProtectedRoute from './auth/ProtectedRoute';
 import AdminLayout from './layouts/AdminLayout';
-import HomePage from './pages/HomePage';
-import AuctionDetailPage from './pages/AuctionDetailPage';
-import MyBidsPage from './pages/MyBidsPage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
+import MainLayout from './layouts/MainLayout';
+import AccountLayout from './pages/account/AccountLayout';
+import BidsPage from './pages/account/BidsPage';
+import BidStatisticsPage from './pages/account/BidStatisticsPage';
+import NotificationsPage from './pages/account/NotificationsPage';
+import ProfilePage from './pages/account/ProfilePage';
+import SecurityPage from './pages/account/SecurityPage';
+import SellerRegPage from './pages/account/SellerRegPage';
+import AdminAuctionPage from './pages/admin/AdminAuctionPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUserPage from './pages/admin/AdminUserPage';
-import AdminAuctionPage from './pages/admin/AdminAuctionPage';
+import SellerManagementPage from './pages/admin/SellerManagementPage';
+import SellerLayout from './layouts/SellerLayout';
+import SellerAuctionPage from './pages/seller/SellerAuctionPage';
+import SellerDashboard from './pages/seller/SellerDashboard';
+import AuctionDetailPage from './pages/AuctionDetailPage';
+import AuthCallbackPage from './pages/AuthCallbackPage';
+import HomePage from './pages/HomePage';
 import NotFound from './pages/NotFound';
-import ProtectedRoute from './auth/ProtectedRoute';
-import './App.css';
+import { useUIStore } from './store/useUIStore';
 
 // Create a client for React Query
 const queryClient = new QueryClient();
@@ -84,11 +94,7 @@ function App() {
                 <Route path="/auction/:id" element={<AuctionDetailPage />} />
                 <Route
                   path="/my-bids"
-                  element={
-                    <ProtectedRoute>
-                      <MyBidsPage />
-                    </ProtectedRoute>
-                  }
+                  element={<Navigate to="/account/bids" replace />}
                 />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
               </Route>
@@ -105,6 +111,39 @@ function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUserPage />} />
                 <Route path="auctions" element={<AdminAuctionPage />} />
+                <Route path="sellers" element={<SellerManagementPage />} />
+              </Route>
+
+              {/* Seller Routes with SellerLayout (Sidebar + Seller Header) */}
+              <Route
+                path="/seller"
+                element={
+                  <ProtectedRoute requiredRole="SELLER">
+                    <SellerLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<SellerDashboard />} />
+                <Route path="auctions" element={<SellerAuctionPage />} />
+              </Route>
+
+              {/* User Account Routes */}
+              <Route
+                path="/account"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route element={<AccountLayout />}>
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
+                  <Route path="2fa" element={<SecurityPage />} />
+                  <Route path="bid-stats" element={<BidStatisticsPage />} />
+                  <Route path="bids" element={<BidsPage />} />
+                  <Route path="seller-reg" element={<SellerRegPage />} />
+                </Route>
               </Route>
 
               {/* Catch-all for not found pages */}

@@ -17,7 +17,6 @@ import {
   Image,
   Input,
   Modal,
-  Space,
   Table,
   Tabs,
   Tag,
@@ -25,6 +24,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import adminApi from "../../api/adminApi";
 import {
   Auction,
@@ -34,11 +34,12 @@ import {
 } from "../../api/types";
 import CancelAuctionModal from "../../components/admin/CancelAuctionModal";
 import AuctionForm from "../../features/auction/AuctionForm";
+import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";
 import { convertUTCToLocal } from "../../utils/dateUtils";
 import { formatDateTime } from "../../utils/format";
+import { DEFAULT_AUCTION_IMAGE, getImageUrl } from "../../utils/imageUtils";
 import { getStatusColor } from "../../utils/statusUtils";
-import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
 import AuctionAuditDrawer from "./drawers/AuctionAuditDrawer";
 import AuctionDetailDrawer from "./drawers/AuctionDetailDrawer";
 
@@ -47,9 +48,30 @@ const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 const { RangePicker } = DatePicker;
 
 const AdminAuctionPage = () => {
-  const [page, setPage] = useState(1);
-  const [keyword, setKeyword] = useState("");
-  const [status, setStatus] = useState<AuctionStatus>(AuctionStatus.LIVE);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const { user } = useAuth();
+  const setPage = (p: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", p.toString());
+    setSearchParams(newParams);
+  };
+  const keyword = searchParams.get("keyword") || "";
+  const setKeyword = (k: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (k) newParams.set("keyword", k);
+    else newParams.delete("keyword");
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
+  const status =
+    (searchParams.get("status") as AuctionStatus) || AuctionStatus.LIVE;
+  const setStatus = (s: AuctionStatus) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("status", s);
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
   const [dateRange, setDateRange] = useState<any>(null);
   const [detailDrawer, setDetailDrawer] = useState<{
     visible: boolean;
@@ -82,7 +104,7 @@ const AdminAuctionPage = () => {
   const { data, isLoading, refetch } = useQuery<PageResponse<Auction>>({
     queryKey: ["admin-auctions", page, debouncedKeyword, status, dateRange],
     queryFn: () =>
-      adminApi.filterAuctions(
+      adminApi.filterAdminAuctions(
         page,
         20,
         debouncedKeyword,
@@ -171,10 +193,11 @@ const AdminAuctionPage = () => {
   };
 
   const handleClear = () => {
-    setKeyword("");
-    setStatus(AuctionStatus.LIVE);
     setDateRange(null);
-    setPage(1);
+    const newParams = new URLSearchParams();
+    newParams.set("page", "1");
+    newParams.set("status", AuctionStatus.LIVE);
+    setSearchParams(newParams);
     queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
   };
 
@@ -264,7 +287,8 @@ const AdminAuctionPage = () => {
         const canEdit =
           (record.status === AuctionStatus.DRAFT ||
             record.status === AuctionStatus.SCHEDULED) &&
-          !isLiveNow;
+          !isLiveNow &&
+          record?.seller?.id === Number(user?.id);
         const canCancel =
           (record.status === AuctionStatus.DRAFT ||
             record.status === AuctionStatus.SCHEDULED) &&
@@ -365,15 +389,8 @@ const AdminAuctionPage = () => {
 
       {/* Search Form */}
       <div
-        style={{
-          background: "#0F111A",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: "16px",
-          padding: "20px 24px",
-          marginBottom: "20px",
-        }}
+        className="filter-container"
+        style={{ animation: "fadeIn 0.35s ease-out" }}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -442,7 +459,6 @@ const AdminAuctionPage = () => {
           activeKey={status}
           onChange={(key) => {
             setStatus(key as AuctionStatus);
-            setPage(1);
           }}
           items={[
             { label: "ALL", key: AuctionStatus.ALL },
@@ -456,31 +472,19 @@ const AdminAuctionPage = () => {
       </div>
 
       {/* Table */}
-      <div
-        style={{
-          background: "#0F111A",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: "16px",
-          overflow: "hidden",
+      <Table
+        columns={columns}
+        dataSource={data?.data}
+        rowKey="id"
+        loading={isLoading}
+        pagination={{
+          current: data?.currentPage,
+          pageSize: data?.pageSize,
+          total: data?.totalElements,
+          onChange: (p) => setPage(p),
+          showSizeChanger: false,
         }}
-      >
-        <Table
-          columns={columns}
-          dataSource={data?.data}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            current: data?.currentPage,
-            pageSize: data?.pageSize,
-            total: data?.totalElements,
-            onChange: (p) => setPage(p),
-            showSizeChanger: false,
-          }}
-          style={{ background: "transparent #0F111A" }}
-        />
-      </div>
+      />
 
       {detailDrawer.visible && detailDrawer.auction && (
         <AuctionDetailDrawer

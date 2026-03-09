@@ -17,7 +17,6 @@ export const fileApi = {
    */
   uploadFile: async (
     file: File,
-    ownerType: OwnerType,
     ownerId: number,
     isPrimary: boolean = false,
     sortOrder: number = 0,
@@ -25,14 +24,13 @@ export const fileApi = {
   ): Promise<FileResponse> => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("ownerType", ownerType);
     formData.append("ownerId", ownerId.toString());
     formData.append("isPrimary", isPrimary.toString());
     formData.append("sortOrder", sortOrder.toString());
 
     try {
       const response = await axiosClient.post<ApiResponse<FileResponse>>(
-        "/files/upload",
+        "/files/seller/upload",
         formData,
         {
           headers: {
@@ -54,9 +52,13 @@ export const fileApi = {
    */
   updateMetadataBatch: async (
     requests: FileMetadataRequest[],
+    ownerId: number,
   ): Promise<void> => {
     try {
-      await axiosClient.patch("/files/metadata/batch", requests);
+      await axiosClient.patch(
+        `/files/seller/metadata/batch?ownerId=${ownerId}`,
+        requests,
+      );
     } catch (error) {
       console.error("Failed to update metadata batch:", error);
       throw error;
@@ -67,9 +69,9 @@ export const fileApi = {
    * Delete a file
    * @param id - File ID
    */
-  deleteFile: async (id: number): Promise<void> => {
+  deleteFile: async (id: number, ownerId: number): Promise<void> => {
     try {
-      await axiosClient.delete(`/files/${id}`);
+      await axiosClient.delete(`/files/seller/${id}?ownerId=${ownerId}`);
     } catch (error) {
       console.error("Failed to delete file:", error);
       throw error;

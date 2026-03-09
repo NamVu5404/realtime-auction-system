@@ -6,6 +6,7 @@ import {
   MoreOutlined,
   SearchOutlined,
   StopOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -21,7 +22,8 @@ import {
   Table,
   Tag,
 } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import adminApi, { mockViolations } from "../../api/adminApi";
 import bidApi from "../../api/bidApi";
 import {
@@ -37,10 +39,38 @@ import formatCurrency, { formatDateTime } from "../../utils/format";
 import AccountTrackingDrawer from "../../components/admin/AccountTrackingDrawer";
 
 const AdminUserPage = () => {
-  const [page, setPage] = useState(1);
-  const [keyword, setKeyword] = useState("");
-  const [role, setRole] = useState<UserRole | undefined>();
-  const [status, setStatus] = useState<"ACTIVE" | "BLOCKED" | undefined>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const setPage = (p: number) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("page", p.toString());
+    setSearchParams(newParams);
+  };
+  const keyword = searchParams.get("keyword") || "";
+  const setKeyword = (k: string) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (k) newParams.set("keyword", k);
+    else newParams.delete("keyword");
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
+  const role = (searchParams.get("role") as UserRole) || undefined;
+  const setRole = (r: UserRole | undefined) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (r) newParams.set("role", r);
+    else newParams.delete("role");
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
+  const status =
+    (searchParams.get("status") as "ACTIVE" | "BLOCKED") || undefined;
+  const setStatus = (s: "ACTIVE" | "BLOCKED" | undefined) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (s) newParams.set("status", s);
+    else newParams.delete("status");
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
   const [historyDrawer, setHistoryDrawer] = useState<{
     visible: boolean;
     type: "bid" | "violation" | "tracking";
@@ -55,6 +85,23 @@ const AdminUserPage = () => {
   const [blockReason, setBlockReason] = useState("");
   const [unblockReason, setUnblockReason] = useState("");
   const queryClient = useQueryClient();
+
+  const roleStyles = {
+    [UserRole.USER]: { color: "default" },
+    [UserRole.SELLER]: { color: "blue" },
+    [UserRole.ADMIN]: {
+      style: {
+        borderColor: "#FED469",
+        color: "#FED469",
+      },
+    },
+  };
+
+  const roleOrder: Record<UserRole, number> = {
+    [UserRole.USER]: 1,
+    [UserRole.SELLER]: 2,
+    [UserRole.ADMIN]: 3,
+  };
 
   // Debounce the keyword input (300ms delay)
   const debouncedKeyword = useDebounce(keyword, 300);
@@ -132,10 +179,9 @@ const AdminUserPage = () => {
   };
 
   const handleClearFilters = () => {
-    setKeyword("");
-    setRole(undefined);
-    setStatus(undefined);
-    setPage(1);
+    const newParams = new URLSearchParams();
+    newParams.set("page", "1");
+    setSearchParams(newParams);
     queryClient.invalidateQueries({ queryKey: ["admin-users"] });
   };
 
@@ -151,10 +197,21 @@ const AdminUserPage = () => {
       key: "email",
     },
     {
-      title: "Role",
-      dataIndex: "role",
-      key: "role",
-      render: (role: UserRole) => <Tag color="blue">{role}</Tag>,
+      title: "Roles",
+      dataIndex: "roles",
+      key: "roles",
+      render: (roles: UserRole[]) => (
+        <Space size={[0, 4]} wrap>
+          {roles
+            ?.slice() // tránh mutate dữ liệu gốc
+            .sort((a, b) => roleOrder[a] - roleOrder[b])
+            .map((r) => (
+              <Tag key={r} {...roleStyles[r]}>
+                {r}
+              </Tag>
+            ))}
+        </Space>
+      ),
     },
     {
       title: "Status",
@@ -202,7 +259,7 @@ const AdminUserPage = () => {
                   });
                 },
               },
-              record.role === UserRole.ADMIN
+              record.roles?.includes(UserRole.ADMIN)
                 ? null
                 : record.status === "ACTIVE"
                   ? {
@@ -241,23 +298,8 @@ const AdminUserPage = () => {
       dataIndex: "amount",
       key: "amount",
       render: (amt: number) => (
-        <span className="text-white">{formatCurrency(amt)}</span>
+        <span style={{ color: "#FED469" }}>{formatCurrency(amt)}</span>
       ),
-    },
-    {
-      title: "Current Price",
-      key: "auctionPrice",
-      render: (record: MyBidHistoryResponse) => {
-        const isLive = record.auctionStatus === AuctionStatus.LIVE;
-        const isEnded = record.auctionStatus === AuctionStatus.ENDED;
-        return (
-          <div className="flex items-center gap-2">
-            <span className="text-white">
-              {formatCurrency(record.currentPrice)}
-            </span>
-          </div>
-        );
-      },
     },
     {
       title: "Bid Status",
@@ -322,15 +364,8 @@ const AdminUserPage = () => {
 
       {/* Filter Form */}
       <div
-        style={{
-          background: "#0F111A",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: "16px",
-          padding: "20px 24px",
-          marginBottom: "20px",
-        }}
+        className="filter-container"
+        style={{ animation: "fadeIn 0.35s ease-out" }}
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
@@ -376,6 +411,7 @@ const AdminUserPage = () => {
               style={{ width: "100%" }}
               options={[
                 { label: "USER", value: "USER" },
+                { label: "SELLER", value: "SELLER" },
                 { label: "ADMIN", value: "ADMIN" },
               ]}
             />
@@ -417,34 +453,22 @@ const AdminUserPage = () => {
       </div>
 
       {/* Table */}
-      <div
-        style={{
-          background: "#0F111A",
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          borderRadius: "16px",
-          overflow: "hidden",
+      <Table
+        columns={columns}
+        dataSource={data?.data}
+        rowKey="id"
+        loading={isLoading}
+        pagination={{
+          current: data?.currentPage,
+          pageSize: data?.pageSize,
+          total: data?.totalElements,
+          onChange: (p) => setPage(p),
+          showSizeChanger: false,
         }}
-      >
-        <Table
-          columns={columns}
-          dataSource={data?.data}
-          rowKey="id"
-          loading={isLoading}
-          pagination={{
-            current: data?.currentPage,
-            pageSize: data?.pageSize,
-            total: data?.totalElements,
-            onChange: (p) => setPage(p),
-            showSizeChanger: false,
-          }}
-          rowClassName={(record) =>
-            record.status === "BLOCKED" ? "opacity-50" : ""
-          }
-          style={{ background: "transparent" }}
-        />
-      </div>
+        rowClassName={(record) =>
+          record.status === "BLOCKED" ? "opacity-50" : ""
+        }
+      />
 
       <Drawer
         title={
@@ -462,27 +486,30 @@ const AdminUserPage = () => {
         styles={{
           body: {
             backgroundColor: "#191B24",
-            padding: "0",
+            padding: "24px",
           },
         }}
         size={1000}
       >
         {historyDrawer.type === "bid" ? (
-          <Table
-            columns={historyColumns}
-            dataSource={bidHistoryData?.data}
-            rowKey={(record: MyBidHistoryResponse) =>
-              `${record.auctionId}-${record.createdAt}`
-            }
-            loading={bidHistoryLoading}
-            pagination={{
-              current: bidHistoryData?.currentPage || 1,
-              pageSize: bidHistoryData?.pageSize || 20,
-              total: bidHistoryData?.totalElements || 0,
-              onChange: (p) => setBidHistoryPage(p),
-              showSizeChanger: false,
-            }}
-          />
+          <div className="account-table-wrapper">
+            <Table
+              columns={historyColumns}
+              dataSource={bidHistoryData?.data}
+              rowKey={(record: MyBidHistoryResponse) =>
+                `${record.auctionId}-${record.createdAt}`
+              }
+              size="small"
+              loading={bidHistoryLoading}
+              pagination={{
+                current: bidHistoryData?.currentPage || 1,
+                pageSize: bidHistoryData?.pageSize || 20,
+                total: bidHistoryData?.totalElements || 0,
+                onChange: (p) => setBidHistoryPage(p),
+                showSizeChanger: false,
+              }}
+            />
+          </div>
         ) : (
           <Table
             columns={violationColumns}
@@ -517,15 +544,20 @@ const AdminUserPage = () => {
         open={blockModalVisible}
         onOk={handleBlockConfirm}
         onCancel={() => setBlockModalVisible(false)}
-        okText="Block"
-        cancelText="Cancel"
-        okButtonProps={{
-          disabled: blockReason.trim().length < 3,
-          danger: true,
-        }}
-        cancelButtonProps={{
-          type: "text",
-        }}
+        footer={[
+          <Button key="cancel" onClick={() => setBlockModalVisible(false)}>
+            Close
+          </Button>,
+          <Button
+            key="block"
+            type="primary"
+            danger
+            disabled={blockReason.trim().length < 3}
+            onClick={handleBlockConfirm}
+          >
+            Block
+          </Button>,
+        ]}
       >
         <div style={{ marginTop: 16 }}>
           <label
@@ -561,12 +593,20 @@ const AdminUserPage = () => {
         open={unblockModalVisible}
         onOk={handleUnblockConfirm}
         onCancel={() => setUnblockModalVisible(false)}
-        okText="Unblock"
-        cancelText="Cancel"
-        okButtonProps={{}}
-        cancelButtonProps={{
-          type: "text",
-        }}
+        footer={[
+          <Button key="cancel" onClick={() => setUnblockModalVisible(false)}>
+            Close
+          </Button>,
+          <Button
+            key="block"
+            type="primary"
+            danger
+            disabled={unblockReason.trim().length < 3}
+            onClick={handleUnblockConfirm}
+          >
+            Unblock
+          </Button>,
+        ]}
       >
         <div style={{ marginTop: 16 }}>
           <label
@@ -585,6 +625,15 @@ const AdminUserPage = () => {
             value={unblockReason}
             onChange={(e) => setUnblockReason(e.target.value)}
           />
+          <div
+            style={{
+              color: unblockReason.trim().length < 3 ? "#ff4d4f" : "#8c8c8c",
+              fontSize: "12px",
+              marginTop: "4px",
+            }}
+          >
+            {unblockReason.trim().length} / 3 characters (minimum required)
+          </div>
         </div>
       </Modal>
     </div>

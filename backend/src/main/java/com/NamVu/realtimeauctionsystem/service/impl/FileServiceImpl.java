@@ -2,17 +2,18 @@ package com.namvu.realtimeauctionsystem.service.impl;
 
 import com.namvu.realtimeauctionsystem.dto.file.FileMetadataRequest;
 import com.namvu.realtimeauctionsystem.dto.file.FileResponse;
+import com.namvu.realtimeauctionsystem.entity.Auction;
 import com.namvu.realtimeauctionsystem.entity.File;
 import com.namvu.realtimeauctionsystem.enums.OwnerType;
 import com.namvu.realtimeauctionsystem.exception.AppException;
 import com.namvu.realtimeauctionsystem.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.repository.FileRepository;
 import com.namvu.realtimeauctionsystem.service.FileService;
+import com.namvu.realtimeauctionsystem.utils.SecurityUtils;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -45,7 +46,6 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('ADMIN')")
     public FileResponse uploadFile(MultipartFile file, OwnerType ownerType, Long ownerId, Boolean isPrimary, Integer sortOrder) {
         validateFile(file);
 
@@ -86,7 +86,6 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('ADMIN')")
     public void updateMetadataBatch(List<FileMetadataRequest> requests) {
         if (requests == null || requests.isEmpty()) return;
 
@@ -118,7 +117,6 @@ public class FileServiceImpl implements FileService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteFile(Long id) {
         File file = fileRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));

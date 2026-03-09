@@ -31,14 +31,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RedisAuctionServiceImpl implements RedisAuctionService {
 
-    private final StringRedisTemplate stringRedisTemplate;
-    private final RedissonClient redissonClient;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
-
     private static final String AUCTION_KEY_PREFIX = "auction:";
     private static final String LOCK_KEY_PREFIX = "lock:auction:";
     private static final int MAX_EXTENSION = 3;
     private static final String KAFKA_TOPIC = "auction.bid.events";
+    private final StringRedisTemplate stringRedisTemplate;
+    private final RedissonClient redissonClient;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     /**
      * Khởi tạo dữ liệu auction trong Redis khi auction chuyển sang LIVE

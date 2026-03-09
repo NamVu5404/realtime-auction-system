@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Spin, message, Result, notification } from 'antd';
-import { useAuth } from '../hooks/useAuth';
+import { useEffect, useState, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { message, Result, notification } from "antd";
+import { useAuth } from "../hooks/useAuth";
+import LoadingPage from "../components/common/LoadingPage";
 
 export const AuthCallbackPage = () => {
   const navigate = useNavigate();
@@ -18,58 +19,58 @@ export const AuthCallbackPage = () => {
 
     const handleCallback = async () => {
       try {
-        const code = searchParams.get('code');
-        const state = searchParams.get('state');
-        const errorParam = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
+        const code = searchParams.get("code");
+        const state = searchParams.get("state");
+        const errorParam = searchParams.get("error");
+        const errorDescription = searchParams.get("error_description");
 
         // Step 1: Validate state token to prevent CSRF attacks
-        const storedState = sessionStorage.getItem('oauth_state');
+        const storedState = sessionStorage.getItem("oauth_state");
         if (!state || state !== storedState) {
-          const errorMsg = 'Invalid state parameter - possible CSRF attack';
+          const errorMsg = "Invalid state parameter - possible CSRF attack";
           setError(errorMsg);
-          sessionStorage.removeItem('oauth_state');
-          console.error('State mismatch - potential CSRF attack');
+          sessionStorage.removeItem("oauth_state");
+          console.error("State mismatch - potential CSRF attack");
           setIsLoading(false);
           notification.error({
-            message: 'Security Error',
+            message: "Security Error",
             description: errorMsg,
             duration: 3,
           });
-          sessionStorage.removeItem('returnUrl');
-          setTimeout(() => navigate('/'), 3000);
+          sessionStorage.removeItem("returnUrl");
+          setTimeout(() => navigate("/"), 3000);
           return;
         }
-        sessionStorage.removeItem('oauth_state');
+        sessionStorage.removeItem("oauth_state");
 
         // Step 2: Handle Google OAuth errors (user denied, etc.)
         if (errorParam) {
           const errorMsg = errorDescription || errorParam;
           setError(errorMsg);
-          console.error('OAuth error:', errorMsg);
+          console.error("OAuth error:", errorMsg);
           setIsLoading(false);
           notification.error({
-            message: 'Google Login Failed',
-            description: errorMsg || 'An error occurred during authentication',
+            message: "Google Login Failed",
+            description: errorMsg || "An error occurred during authentication",
             duration: 3,
           });
-          sessionStorage.removeItem('returnUrl');
-          setTimeout(() => navigate('/'), 3000);
+          sessionStorage.removeItem("returnUrl");
+          setTimeout(() => navigate("/"), 3000);
           return;
         }
 
         // Step 3: Verify authorization code was received
         if (!code) {
-          const errorMsg = 'No authorization code received from Google';
+          const errorMsg = "No authorization code received from Google";
           setError(errorMsg);
           setIsLoading(false);
           notification.error({
-            message: 'Authentication Error',
+            message: "Authentication Error",
             description: errorMsg,
             duration: 3,
           });
-          sessionStorage.removeItem('returnUrl');
-          setTimeout(() => navigate('/'), 3000);
+          sessionStorage.removeItem("returnUrl");
+          setTimeout(() => navigate("/"), 3000);
           return;
         }
 
@@ -77,38 +78,40 @@ export const AuthCallbackPage = () => {
         // Keep loading state true while waiting for response
         setIsLoading(true);
         setError(null); // Reset error before attempt
-        
+
         await login(code);
-        
+
         // Only show success and redirect if login completed successfully
-        message.success('Login successful!');
+        message.success("Login successful!");
         setIsLoading(false);
-        
+
         // Get return URL from sessionStorage, default to home
-        const returnUrl = sessionStorage.getItem('returnUrl') || '/';
-        sessionStorage.removeItem('returnUrl');
-        
+        const returnUrl = sessionStorage.getItem("returnUrl") || "/";
+        sessionStorage.removeItem("returnUrl");
+
         // Redirect to previous page or home after short delay
         setTimeout(() => navigate(returnUrl), 1000);
       } catch (err) {
         // Only handle error here - after response received or timeout
-        const errorMessage = err instanceof Error ? err.message : 'Login failed';
-        console.error('Auth callback error:', err);
+        const errorMessage =
+          err instanceof Error ? err.message : "Login failed";
+        console.error("Auth callback error:", err);
         setError(errorMessage);
         setIsLoading(false);
-        
+
         // Display backend error message using notification
         notification.error({
-          message: 'Authentication Failed',
-          description: errorMessage || 'An error occurred during login. Please try again.',
+          message: "Authentication Failed",
+          description:
+            errorMessage || "An error occurred during login. Please try again.",
           duration: 3,
         });
-        
+
         // Clean up return URL on error
-        sessionStorage.removeItem('returnUrl');
-        
+        sessionStorage.removeItem("returnUrl");
+
         // Auto redirect on error after 3 seconds
-        setTimeout(() => navigate('/'), 3000);
+        setTimeout(() => navigate("/"), 3000);
       }
     };
 
@@ -131,10 +134,10 @@ export const AuthCallbackPage = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black">
-      <Spin size="large" tip="Logging you in..." />
-      <p className="text-gray-400 mt-4">Please wait while we authenticate you...</p>
-    </div>
+    <LoadingPage
+      tip="Authenticating..."
+      message="Securing your connection to AuctionPro"
+    />
   );
 };
 

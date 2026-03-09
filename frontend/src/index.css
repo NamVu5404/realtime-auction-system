@@ -116,6 +116,26 @@ body {
   }
 }
 
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes preloader-fadeout {
+  from {
+    opacity: 1;
+    visibility: visible;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 /* -------------------------------------------------------
    5. Utilities
    ------------------------------------------------------- */
@@ -136,6 +156,22 @@ body {
 
 .glow-gold {
   box-shadow: 0 0 20px rgba(254, 212, 105, 0.2);
+}
+
+.filter-container {
+  background: #191b24 !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+.stats-card.ant-card {
+  background: #191b24 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 /* -------------------------------------------------------
@@ -165,9 +201,7 @@ body {
 
 :where(.ant-card-hoverable):hover {
   border-color: rgba(254, 212, 105, 0.15) !important;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(254, 212, 105, 0.08) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
   transform: translateY(-3px);
   transition: var(--transition);
 }
@@ -358,11 +392,33 @@ body {
 /* -------------------------------------------------------
    12. Table
    ------------------------------------------------------- */
+@keyframes pageSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+:where(.ant-table-wrapper) {
+  background: #191b24 !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  overflow: hidden;
+  margin-bottom: 24px;
+  animation: fadeIn 0.35s ease-out;
+}
+
 :where(.ant-table) {
   background: transparent !important;
 }
+
 :where(.ant-table-thead > tr > th) {
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: #191b24 !important;
   border-bottom: 1px solid var(--color-border) !important;
   color: var(--color-text-muted) !important;
   font-size: 11px !important;
@@ -370,18 +426,44 @@ body {
   letter-spacing: 0.08em !important;
   text-transform: uppercase !important;
 }
+
 :where(.ant-table-tbody > tr > td) {
   background: transparent !important;
   border-bottom: 1px solid var(--color-border) !important;
   color: var(--color-text-primary) !important;
   transition: background 0.2s ease;
 }
+
 :where(.ant-table-tbody > tr:hover > td) {
   background: rgba(254, 212, 105, 0.03) !important;
 }
+
 :where(.ant-table-container) {
+  border-radius: var(--radius-md) var(--radius-md) 0 0 !important;
+}
+
+:where(.ant-table-pagination) {
+  margin: 16px 24px !important;
+}
+
+/* Ghi đè lại các thuộc tính của .ant-table-wrapper nhưng CHỈ bên trong account-table-wrapper */
+.account-table-wrapper :where(.ant-table-wrapper) {
+  background: transparent !important;
   border: none !important;
-  overflow: hidden;
+  box-shadow: none !important;
+  margin-bottom: 0 !important;
+}
+
+/* Xóa viền header và footer của table bên trong account */
+.account-table-wrapper :where(.ant-table-container),
+.account-table-wrapper :where(.ant-table-container table) {
+  border: none !important;
+}
+
+/* Đảm bảo các ô không có viền đứng */
+.account-table-wrapper :where(.ant-table-thead > tr > th),
+.account-table-wrapper :where(.ant-table-tbody > tr > td) {
+  border-inline-end: none !important;
 }
 
 /* -------------------------------------------------------
@@ -442,7 +524,7 @@ body {
   background: var(--color-surface) !important;
   border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-lg) !important;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
 }
 :where(.ant-modal-header) {
   background: transparent !important;
@@ -618,4 +700,70 @@ button:focus-visible {
 /* Fix for Tooltip arrow color if needed */
 .ant-tooltip-arrow::before {
   background: #191b24 !important;
+}
+
+/* -------------------------------------------------------
+   19. Dropdown Menu Overrides
+   ------------------------------------------------------- */
+.ant-dropdown-menu-item:not(.ant-dropdown-menu-item-danger):hover,
+.ant-dropdown-menu-item:not(.ant-dropdown-menu-item-danger):hover
+  .ant-dropdown-menu-item-icon,
+.ant-dropdown-menu-item:not(.ant-dropdown-menu-item-danger):hover
+  .ant-dropdown-menu-title-content {
+  color: #fed469 !important;
+}
+
+.ant-dropdown-menu-item:not(.ant-dropdown-menu-item-danger):hover {
+  background: rgba(254, 212, 105, 0.05) !important;
+}
+
+/* -------------------------------------------------------
+   20. Pre-loader Styles (for index.html)
+   ------------------------------------------------------- */
+#initial-preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #191b24;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  transition: opacity 0.5s ease;
+}
+
+#initial-preloader.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loader-ring {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(254, 212, 105, 0.1);
+  border-top-color: #fed469;
+  border-radius: 50%;
+  animation: spin-slow 1s linear infinite;
+  box-shadow: 0 0 15px rgba(254, 212, 105, 0.1);
+}
+
+.loader-text {
+  margin-top: 24px;
+  color: #ffffff;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pulseDot 2s infinite ease-in-out;
 }

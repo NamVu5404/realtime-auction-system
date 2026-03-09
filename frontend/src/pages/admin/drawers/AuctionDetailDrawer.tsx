@@ -124,9 +124,9 @@ export const AuctionDetailDrawer = ({
           name:
             message.highestBidderName ||
             prev.highestBidder?.name ||
-            "Ng\u01b0\u1eddi \u0111\u1ea5u gi\u00e1",
+            "Người đặt giá cao nhất",
           email: prev.highestBidder?.email || "",
-          role: prev.highestBidder?.role || UserRole.USER,
+          roles: message.roles || prev.highestBidder?.roles || [UserRole.USER],
         },
         endTime: newEndTime,
       };
@@ -675,7 +675,7 @@ export const AuctionDetailDrawer = ({
 
             {/* Description */}
             <div
-              className="prose prose-invert prose-sm prose-zinc max-w-none"
+              className="prose prose-invert prose-zinc max-w-none"
               dangerouslySetInnerHTML={{
                 __html: auction.description || "No description provided.",
               }}
@@ -692,31 +692,7 @@ export const AuctionDetailDrawer = ({
       key: "bid-logs",
       label: "Bid Logs",
       children: (
-        <div className="space-y-4">
-          {auction.status === AuctionStatus.LIVE && (
-            <div
-              style={{
-                background: "rgba(42, 45, 58, 0.9)", // #2A2D3A High-Contrast Surface instead of blue
-                border: "1px solid rgba(96, 165, 250, 0.3)",
-                borderRadius: "12px",
-                padding: "12px",
-                boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
-              }}
-            >
-              <p className="text-sm text-blue-300 m-0">
-                🔴 Live bidding in progress. Bid logs are displayed below.
-              </p>
-            </div>
-          )}
-
-          {auction.status === AuctionStatus.ENDED && (
-            <div className="bg-gray-900 bg-opacity-20 border border-gray-500 rounded p-3">
-              <p className="text-sm text-gray-300 m-0">
-                📊 Final bid history for this auction.
-              </p>
-            </div>
-          )}
-
+        <div className="space-y-4 account-table-wrapper">
           <Spin spinning={isLoadingLogs || isFetchingLogs}>
             {bidLogs.length > 0 ? (
               <Table
@@ -730,7 +706,6 @@ export const AuctionDetailDrawer = ({
                   onChange: (page) => setBidLogsPage(page),
                   showSizeChanger: false,
                 }}
-                className="bg-zinc-900 rounded"
                 size="small"
                 scroll={{ x: true }}
               />

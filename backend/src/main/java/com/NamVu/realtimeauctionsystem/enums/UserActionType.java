@@ -7,4 +7,6 @@ public enum UserActionType {
     BLOCKED,
     UNBLOCKED,
     FRAUD,
+    SELLER_ROLE_REVOKED,
+    SELLER_APPROVED,
 }

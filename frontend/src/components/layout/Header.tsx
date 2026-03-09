@@ -1,7 +1,8 @@
 import {
   DashboardOutlined,
-  HistoryOutlined,
   LogoutOutlined,
+  SettingOutlined,
+  ShopOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { Avatar, Dropdown, Layout, MenuProps, Space, Spin } from "antd";
@@ -28,22 +29,34 @@ export const Header = () => {
   };
 
   const userMenuItems: MenuProps["items"] = [
-    ...(user?.role === "ADMIN"
+    ...(user?.roles?.includes("ADMIN")
       ? [
           {
             key: "admin",
             label: "Admin Dashboard",
             icon: <DashboardOutlined />,
-            onClick: () => navigate("/admin/users"),
+            onClick: () => navigate("/admin"),
           },
         ]
       : []),
-    ...(user?.role === "ADMIN" ? [{ type: "divider" as const }] : []),
+    ...(user?.roles?.includes("SELLER")
+      ? [
+          {
+            key: "seller",
+            label: "Seller Dashboard",
+            icon: <ShopOutlined />,
+            onClick: () => navigate("/seller"),
+          },
+        ]
+      : []),
+    ...(user?.roles?.includes("ADMIN") || user?.roles?.includes("SELLER")
+      ? [{ type: "divider" as const }]
+      : []),
     {
-      key: "bid-history",
-      label: "My Bids",
-      icon: <HistoryOutlined />,
-      onClick: () => navigate("/my-bids"),
+      key: "account",
+      label: "Account Settings",
+      icon: <SettingOutlined />,
+      onClick: () => navigate("/account/profile"),
     },
     {
       key: "logout",

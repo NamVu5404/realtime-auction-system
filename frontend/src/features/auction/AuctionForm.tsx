@@ -348,6 +348,9 @@ export const AuctionForm = ({
 
                 // Invalidate all auction lists to reflect new image immediately
                 queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
+                queryClient.invalidateQueries({
+                  queryKey: ["seller-auctions"],
+                });
                 queryClient.invalidateQueries({ queryKey: ["auctions"] });
               }}
             />

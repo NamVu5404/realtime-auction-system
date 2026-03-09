@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,11 +46,15 @@ public class TokenServiceImpl implements TokenService {
     public String generateToken(User user, TokenType type) {
         JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.HS512);
 
+        String scope = user.getRoles().stream()
+                .map(Enum::name)
+                .collect(Collectors.joining(" "));
+
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .issuer("namvu.com")
                 .subject(user.getEmail())
                 .claim("uid", user.getId())
-                .claim("scope", user.getRole())
+                .claim("scope", scope)
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString())
                 .expirationTime(type == TokenType.ACCESS_TOKEN

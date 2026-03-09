@@ -6,7 +6,7 @@
  */
 
 // Re-export types generated from backend analysis
-export {
+export type {
   AuctionStatus,
   UserRole,
   User,
@@ -21,8 +21,16 @@ export {
   IntrospectResponse,
   RefreshRequest,
   RefreshResponse,
-  LogoutRequest as AuthLogoutRequest,
+  SellerRegResponse,
+  RequestStatus,
+  PlaceBidResponse,
+  AuctionHistoryResponse,
+  BidUpdateMessage,
+  FileMetadataRequest,
+  OwnerType,
 } from "../api/types";
+export { UserActionType } from "../api/types";
+export type { LogoutRequest as AuthLogoutRequest } from "../api/types";
 
 // Legacy types for authentication and WebSocket (keep for now)
 export interface ExchangeTokenRequest {
@@ -34,7 +42,7 @@ export interface UserInfo {
   email: string;
   name: string;
   avatarUrl?: string;
-  role: "USER" | "ADMIN";
+  roles: string[];
 }
 
 export interface ExchangeTokenResponse {
@@ -64,14 +72,6 @@ export interface AuthState {
 /**
  * WebSocket Event Types
  */
-export interface BidUpdateMessage {
-  auctionId: string;
-  currentPrice: number;
-  highestBidderId: string;
-  highestBidderName: string;
-  timestamp: string;
-}
-
 export interface BidRequest {
   auctionId: string;
   bidAmount: number;

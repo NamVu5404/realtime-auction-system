@@ -21,14 +21,13 @@ import com.namvu.realtimeauctionsystem.repository.FileRepository;
 import com.namvu.realtimeauctionsystem.repository.UserRepository;
 import com.namvu.realtimeauctionsystem.service.AuctionService;
 import com.namvu.realtimeauctionsystem.service.RedisAuctionService;
+import com.namvu.realtimeauctionsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,19 +56,7 @@ public class AuctionServiceImpl implements AuctionService {
 
         Page<Auction> auctionPage = auctionRepository.findByCustomStatus(status, oneHourFromNow, pageable);
 
-        List<AuctionResponse> responses = auctionPage.getContent().stream()
-                .map(auctionMapper::mapToResponse)
-                .toList();
-
-        populateImages(responses);
-
-        return PageResponse.<AuctionResponse>builder()
-                .currentPage(pageable.getPageNumber() + 1)
-                .pageSize(pageable.getPageSize())
-                .totalPage(auctionPage.getTotalPages())
-                .totalElements(auctionPage.getTotalElements())
-                .data(responses)
-                .build();
+        return getResponse(pageable, auctionPage);
     }
 
     @Override
@@ -85,13 +72,13 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     @Transactional
     public AuctionResponse saveDraft(CreateAuctionRequest request) {
         Auction auction = auctionMapper.mapToEntity(request);
         auction.setStatus(AuctionStatus.DRAFT);
 
-        Long sellerId = getCurrentUserId();
+        Long sellerId = SecurityUtils.getCurrentUserId();
         auction.setSeller(userRepository.getReferenceById(sellerId));
 
         auction = auctionRepository.save(auction);
@@ -101,7 +88,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     @Transactional
     public AuctionResponse scheduleAuction(CreateAuctionRequest request) {
         Instant now = Instant.now();
@@ -122,6 +109,8 @@ public class AuctionServiceImpl implements AuctionService {
                 throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
             }
 
+            checkAuctionOwnership(auction);
+
             auctionMapper.updateEntity(request, auction);
         } else {
             auction = auctionMapper.mapToEntity(request);
@@ -131,7 +120,7 @@ public class AuctionServiceImpl implements AuctionService {
         auction.setCurrentPrice(auction.getStartPrice());
 
         if (auction.getSeller() == null) {
-            Long sellerId = getCurrentUserId();
+            Long sellerId = SecurityUtils.getCurrentUserId();
             auction.setSeller(userRepository.getReferenceById(sellerId));
         }
 
@@ -142,7 +131,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     @Transactional
     public AuctionResponse updateDraftAuction(Long id, UpdateDraftAuctionRequest request) {
         Auction auction = auctionRepository.findById(id)
@@ -151,6 +140,8 @@ public class AuctionServiceImpl implements AuctionService {
         if (auction.getStatus() != AuctionStatus.DRAFT) {
             throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
         }
+
+        checkAuctionOwnership(auction);
 
         auctionMapper.updateEntity(request, auction);
         auction = auctionRepository.save(auction);
@@ -161,7 +152,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     @Transactional
     public AuctionResponse updateScheduledAuction(Long id, UpdateScheduledAuctionRequest request) {
         Instant now = Instant.now();
@@ -179,6 +170,8 @@ public class AuctionServiceImpl implements AuctionService {
             throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
         }
 
+        checkAuctionOwnership(auction);
+
         auctionMapper.updateEntity(request, auction);
         auction = auctionRepository.save(auction);
 
@@ -188,7 +181,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     @Transactional
     public CancelAuctionResponse cancelAuction(Long id, CancelAuctionRequest request) {
         Auction auction = auctionRepository.findByIdWithLock(id)
@@ -202,12 +195,16 @@ public class AuctionServiceImpl implements AuctionService {
             throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
         }
 
+        if (!SecurityUtils.isAdmin()) {
+            checkAuctionOwnership(auction);
+        }
+
         auction.setStatus(AuctionStatus.CANCELLED);
         auction = auctionRepository.save(auction);
 
         return CancelAuctionResponse.builder()
                 .auctionId(auction.getId())
-                .by(((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getSubject())
+                .by(SecurityUtils.getCurrentUserEmail())
                 .timestamp(Instant.now())
                 .reason(request.getReason())
                 .build();
@@ -247,30 +244,29 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public PageResponse<AuctionResponse> filterAuction(String keyword, Instant startTime, Instant endTime,
+    @PreAuthorize("hasAuthority('SELLER')")
+    public PageResponse<AuctionResponse> filterSellerAuction(String keyword, Instant startTime, Instant endTime,
                                                        AuctionStatus status, Pageable pageable) {
-        String statusStr = (status == null) ? AuctionStatus.ALL.name() : status.name();
-        Page<Auction> auctionPage = auctionRepository.filterAuctions(keyword, startTime, endTime, status, statusStr, pageable);
-
-        List<AuctionResponse> responses = auctionPage.getContent().stream()
-                .map(auctionMapper::mapToResponse)
-                .toList();
-
-        populateImages(responses);
-
-        return PageResponse.<AuctionResponse>builder()
-                .currentPage(pageable.getPageNumber() + 1)
-                .pageSize(pageable.getPageSize())
-                .totalPage(auctionPage.getTotalPages())
-                .totalElements(auctionPage.getTotalElements())
-                .data(responses)
-                .build();
+        Long sellerId = SecurityUtils.getCurrentUserId();
+        return filterAuction(sellerId, keyword, startTime, endTime, status, pageable);
     }
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
+    public PageResponse<AuctionResponse> filterAdminAuction(String keyword, Instant startTime, Instant endTime,
+                                                             AuctionStatus status, Pageable pageable) {
+        return filterAuction(null, keyword, startTime, endTime, status, pageable);
+    }
+
+    @Override
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     public PageResponse<AuctionHistoryResponse> getAuctionHistory(Long id, Pageable pageable) {
+        if (!SecurityUtils.isAdmin()) {
+            Auction auction = auctionRepository.findById(id)
+                    .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+            checkAuctionOwnership(auction);
+        }
+
         Page<Bid> bidPage = bidRepository.findByAuctionIdOrderByCreatedAtDesc(id, pageable);
 
         List<AuctionHistoryResponse> data = bidPage.stream()
@@ -329,12 +325,34 @@ public class AuctionServiceImpl implements AuctionService {
                 .ifPresent(img -> response.setImage(img.filePath() + "/" + img.storageName()));
     }
 
-    private Long getCurrentUserId() {
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+    private void checkAuctionOwnership(Auction auction) {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (!auction.getSeller().getId().equals(currentUserId)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
+    }
 
-        return jwt.getClaim("uid");
+    private PageResponse<AuctionResponse> filterAuction(Long sellerId, String keyword, Instant startTime, Instant endTime,
+                                                        AuctionStatus status, Pageable pageable) {
+        String statusStr = (status == null) ? AuctionStatus.ALL.name() : status.name();
+        Page<Auction> auctionPage = auctionRepository
+                .filterAuctions(keyword, startTime, endTime, status, statusStr, sellerId, pageable);
+        return getResponse(pageable, auctionPage);
+    }
+
+    private PageResponse<AuctionResponse> getResponse(Pageable pageable, Page<Auction> auctionPage) {
+        List<AuctionResponse> responses = auctionPage.getContent().stream()
+                .map(auctionMapper::mapToResponse)
+                .toList();
+
+        populateImages(responses);
+
+        return PageResponse.<AuctionResponse>builder()
+                .currentPage(pageable.getPageNumber() + 1)
+                .pageSize(pageable.getPageSize())
+                .totalPage(auctionPage.getTotalPages())
+                .totalElements(auctionPage.getTotalElements())
+                .data(responses)
+                .build();
     }
 }
