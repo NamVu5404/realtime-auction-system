@@ -12,8 +12,6 @@ import {
 const { Footer: AntFooter } = Layout;
 
 export const Footer = () => {
-  const currentYear = new Date().getFullYear();
-
   return (
     <AntFooter
       style={{
@@ -200,7 +198,7 @@ export const Footer = () => {
         {/* Bottom Banner */}
         <div className="border-t border-white/5 mt-[60px] pt-6 flex flex-wrap justify-between items-center gap-4">
           <p className="text-white/40 text-[12px] m-0">
-            © {currentYear} Auction Pro. All rights reserved.
+            © 2026 AuctionPro. All rights reserved.
           </p>
           <div className="flex items-center space-x-4">
             <a

@@ -76,7 +76,7 @@ export const authApi = {
         email: user.email,
         name: user.name,
         avatarUrl: user.avatarUrl,
-        role: user.role,
+        roles: (user as any).roles || [],
       };
 
       return {

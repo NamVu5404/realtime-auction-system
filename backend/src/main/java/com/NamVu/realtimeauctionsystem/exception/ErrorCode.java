@@ -41,6 +41,9 @@ public enum ErrorCode {
     TOKEN_GENERATION_FAILED(1029, "Token generate failed", HttpStatus.INTERNAL_SERVER_ERROR),
     FILE_DELETE_ERROR(1030, "Delete file failed", HttpStatus.INTERNAL_SERVER_ERROR),
     FILE_NOT_FOUND(1031, "File not found", HttpStatus.NOT_FOUND),
+    UNAUTHORIZED_ACTION(1032, "Bạn không có quyền thực hiện hành động này", HttpStatus.FORBIDDEN),
+    SELLER_REGISTRATION_NOT_FOUND(1033, "Seller registration not found", HttpStatus.NOT_FOUND),
+    SELLER_REGISTRATION_PENDING(1034, "Seller registration is pending", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

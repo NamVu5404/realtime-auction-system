@@ -39,6 +39,7 @@ import { formatAuctionTime, getTimeRemaining } from "../utils/dateUtils";
 import { formatCurrency } from "../utils/format";
 import { useUIStore } from "../store/useUIStore";
 import { AuctionImageCarousel } from "../components/common/AuctionImageCarousel";
+import LoadingPage from "../components/common/LoadingPage";
 
 // Tách phần bidding form ra component riêng với state nội bộ
 const BiddingSection = memo(
@@ -314,7 +315,7 @@ export const AuctionDetailPage = () => {
             prev.highestBidder?.name ||
             "Ng\u01b0\u1eddi \u0111\u1ea5u gi\u00e1",
           email: prev.highestBidder?.email || "",
-          role: prev.highestBidder?.role || UserRole.USER,
+          roles: message.roles || prev.highestBidder?.roles || [UserRole.USER],
         },
         endTime: newEndTime,
       };
@@ -450,9 +451,10 @@ export const AuctionDetailPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Spin size="large" />
-      </div>
+      <LoadingPage
+        tip="Loading Auction..."
+        message="Preparing real-time bidding room"
+      />
     );
   }
 
@@ -541,7 +543,8 @@ export const AuctionDetailPage = () => {
                   id: response.highestBidderId,
                   name: response.highestBidderName,
                   email: prev.highestBidder?.email || "",
-                  role: prev.highestBidder?.role || UserRole.USER,
+                  roles: response.highestBidderRoles ||
+                    prev.highestBidder?.roles || [UserRole.USER],
                 },
                 endTime: response.finalEndTime || prev.endTime,
               }
@@ -826,7 +829,7 @@ export const AuctionDetailPage = () => {
 
               {/* Description */}
               <div
-                className="prose prose-invert prose-sm prose-zinc max-w-none"
+                className="prose prose-invert prose-zinc max-w-none"
                 style={{ lineHeight: 1.75 }}
                 dangerouslySetInnerHTML={{
                   __html: auction.description || "No description provided.",
@@ -1252,70 +1255,54 @@ export const AuctionDetailPage = () => {
                   {auction.highestBidder && (
                     <Col xs={24} sm={12}>
                       <div>
+                        <div className="price-label">
+                          {auction.status === AuctionStatus.ENDED
+                            ? "Winner 🏆"
+                            : "Highest Bidder"}
+                        </div>
                         <div
                           style={{
-                            fontSize: "10px",
-                            fontWeight: 600,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.2em",
-                            color: "rgba(255,255,255,0.5)",
-                            marginBottom: "10px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
                           }}
                         >
-                          {isEnded ? "Winner 🏆" : "Highest Bidder"}
-                        </div>
-                        {!isEnded ? (
-                          <div
-                            style={{
-                              fontWeight: 600,
-                              color: "#FED469",
-                              fontSize: "14px",
-                            }}
-                          >
-                            {auction.highestBidder.name}
-                          </div>
-                        ) : (
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "10px",
-                            }}
-                          >
-                            {auction.highestBidder?.avatarUrl && (
-                              <Image
-                                src={auction.highestBidder.avatarUrl}
-                                alt={auction.highestBidder.name}
-                                style={{
-                                  width: "36px",
-                                  height: "36px",
-                                  borderRadius: "50%",
-                                  objectFit: "cover",
-                                }}
-                                preview={false}
-                              />
-                            )}
-                            <div>
-                              <div
-                                style={{
-                                  fontWeight: 600,
-                                  color: "#fff",
-                                  fontSize: "14px",
-                                }}
-                              >
-                                {auction.highestBidder?.name}
-                              </div>
-                              <div
-                                style={{
-                                  fontSize: "12px",
-                                  color: "rgba(255,255,255,0.4)",
-                                }}
-                              >
-                                {auction.highestBidder?.email}
-                              </div>
+                          {auction.highestBidder?.avatarUrl && (
+                            <Image
+                              src={auction.highestBidder.avatarUrl}
+                              alt={auction.highestBidder.name}
+                              style={{
+                                width: "36px",
+                                height: "36px",
+                                borderRadius: "50%",
+                                objectFit: "cover",
+                              }}
+                              preview={false}
+                            />
+                          )}
+                          <div>
+                            <div
+                              style={{
+                                fontWeight: 600,
+                                color:
+                                  auction.status === AuctionStatus.LIVE
+                                    ? "#FED469"
+                                    : "#fff",
+                                fontSize: "14px",
+                              }}
+                            >
+                              {auction.highestBidder?.name}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "12px",
+                                color: "rgba(255,255,255,0.4)",
+                              }}
+                            >
+                              {auction.highestBidder?.email}
                             </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     </Col>
                   )}

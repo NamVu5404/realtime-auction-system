@@ -10,9 +10,10 @@ import {
   User,
   UserAuditResponse,
   UserRole,
+  SellerRegResponse,
+  RequestStatus,
 } from "./types";
 
-// Mock data for missing endpoints
 export const mockUserHistory = [
   {
     id: 1,
@@ -44,7 +45,6 @@ export const mockViolations = [
 ];
 
 export const adminApi = {
-  // User Management
   getUsers: async (
     page: number = 1,
     size: number = 20,
@@ -52,45 +52,23 @@ export const adminApi = {
     role?: UserRole,
     status?: "ACTIVE" | "BLOCKED",
   ): Promise<PageResponse<User>> => {
-    try {
-      const response = await axiosClient.get<ApiResponse<PageResponse<User>>>(
-        "/users",
-        {
-          params: {
-            page,
-            size,
-            keyword,
-            role,
-            status,
-          },
-        },
-      );
-      return response.data.result;
-    } catch (error) {
-      console.error("Failed to fetch users:", error);
-      throw error;
-    }
+    const response = await axiosClient.get<ApiResponse<PageResponse<User>>>(
+      "/users",
+      {
+        params: { page, size, keyword, role, status },
+      },
+    );
+    return response.data.result;
   },
 
   blockUser: async (userId: number, reason: string): Promise<void> => {
-    try {
-      await axiosClient.patch(`/users/${userId}/block`, { reason });
-    } catch (error) {
-      console.error("Failed to block user:", error);
-      throw error;
-    }
+    await axiosClient.patch(`/users/${userId}/block`, { reason });
   },
 
   unblockUser: async (userId: number, reason: string): Promise<void> => {
-    try {
-      await axiosClient.patch(`/users/${userId}/unblock`, { reason });
-    } catch (error) {
-      console.error("Failed to unblock user:", error);
-      throw error;
-    }
+    await axiosClient.patch(`/users/${userId}/unblock`, { reason });
   },
 
-  // Auction Management
   filterAuctions: async (
     page: number = 1,
     size: number = 20,
@@ -99,143 +77,127 @@ export const adminApi = {
     startTime?: string,
     endTime?: string,
   ): Promise<PageResponse<Auction>> => {
-    try {
-      const response = await axiosClient.get<
-        ApiResponse<PageResponse<Auction>>
-      >("/auctions/filter", {
-        params: {
-          page,
-          size,
-          ...(keyword && { keyword }),
-          ...(status && { status }),
-          ...(startTime && { startTime }),
-          ...(endTime && { endTime }),
-        },
-      });
-      return response.data.result;
-    } catch (error) {
-      console.error("Failed to fetch auctions:", error);
-      throw error;
-    }
+    const response = await axiosClient.get<ApiResponse<PageResponse<Auction>>>(
+      "/auctions/filter",
+      {
+        params: { page, size, keyword, status, startTime, endTime },
+      },
+    );
+    return response.data.result;
   },
 
   saveDraft: async (auctionData: any): Promise<Auction> => {
-    try {
-      const response = await axiosClient.post<ApiResponse<Auction>>(
-        "/auctions/draft",
-        auctionData,
-      );
-      return response.data.result;
-    } catch (error) {
-      console.error("Failed to create auction:", error);
-      throw error;
-    }
+    const response = await axiosClient.post<ApiResponse<Auction>>(
+      "/auctions/draft",
+      auctionData,
+    );
+    return response.data.result;
   },
 
   scheduleAuction: async (auctionData: any): Promise<Auction> => {
-    try {
-      const response = await axiosClient.post<ApiResponse<Auction>>(
-        "/auctions/scheduler",
-        auctionData,
-      );
-      return response.data.result;
-    } catch (error) {
-      console.error("Failed to create auction:", error);
-      throw error;
-    }
+    const response = await axiosClient.post<ApiResponse<Auction>>(
+      "/auctions/scheduler",
+      auctionData,
+    );
+    return response.data.result;
   },
 
   cancelAuction: async (
     auctionId: number,
     request: CancelAuctionRequest,
   ): Promise<CancelAuctionResponse> => {
-    try {
-      const response = await axiosClient.patch<
-        ApiResponse<CancelAuctionResponse>
-      >(`/auctions/${auctionId}/cancel`, request);
-      return response.data.result;
-    } catch (error) {
-      console.error("Failed to cancel auction:", error);
-      throw error;
-    }
+    const response = await axiosClient.patch<
+      ApiResponse<CancelAuctionResponse>
+    >(`/auctions/${auctionId}/cancel`, request);
+    return response.data.result;
   },
 
-  // Update Draft Auction
   updateDraftAuction: async (
     auctionId: number,
     updateData: any,
   ): Promise<Auction> => {
-    try {
-      const response = await axiosClient.put<ApiResponse<Auction>>(
-        `/auctions/${auctionId}/draft`,
-        updateData,
-      );
-      return response.data.result;
-    } catch (error) {
-      console.error("Failed to update draft auction:", error);
-      throw error;
-    }
+    const response = await axiosClient.put<ApiResponse<Auction>>(
+      `/auctions/${auctionId}/draft`,
+      updateData,
+    );
+    return response.data.result;
   },
 
-  // Update Scheduled Auction
   updateScheduledAuction: async (
     auctionId: number,
     updateData: any,
   ): Promise<Auction> => {
-    try {
-      const response = await axiosClient.put<ApiResponse<Auction>>(
-        `/auctions/${auctionId}/scheduler`,
-        updateData,
-      );
-      return response.data.result;
-    } catch (error) {
-      console.error("Failed to update scheduled auction:", error);
-      throw error;
-    }
+    const response = await axiosClient.put<ApiResponse<Auction>>(
+      `/auctions/${auctionId}/scheduler`,
+      updateData,
+    );
+    return response.data.result;
   },
 
-  // User Audit - Fetch audit history for a user
   getUserAudit: async (
     userId: number,
     page: number = 1,
     size: number = 20,
   ): Promise<PageResponse<UserAuditResponse>> => {
-    try {
-      const response = await axiosClient.get<
-        ApiResponse<PageResponse<UserAuditResponse>>
-      >(`/users/${userId}/audit`, {
-        params: {
-          page,
-          size,
-        },
-      });
-      return response.data.result;
-    } catch (error) {
-      console.error("Failed to fetch user audit:", error);
-      throw error;
-    }
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<UserAuditResponse>>
+    >(`/users/${userId}/audit`, {
+      params: { page, size },
+    });
+    return response.data.result;
   },
 
-  // Auction Audit - Fetch audit logs for an auction
   getAuctionAudit: async (
     auctionId: number,
     page: number = 1,
     size: number = 20,
   ): Promise<PageResponse<AuctionAuditResponse>> => {
-    try {
-      const response = await axiosClient.get<
-        ApiResponse<PageResponse<AuctionAuditResponse>>
-      >(`/auctions/${auctionId}/audit`, {
-        params: {
-          page,
-          size,
-        },
-      });
-      return response.data.result;
-    } catch (error) {
-      console.error("Failed to fetch auction audit:", error);
-      throw error;
-    }
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<AuctionAuditResponse>>
+    >(`/auctions/${auctionId}/audit`, {
+      params: { page, size },
+    });
+    return response.data.result;
+  },
+
+  getRegistrations: async (
+    page: number = 1,
+    size: number = 20,
+  ): Promise<PageResponse<SellerRegResponse>> => {
+    const response = await axiosClient.get<
+      ApiResponse<PageResponse<SellerRegResponse>>
+    >("/sellers/registrations", {
+      params: { page, size },
+    });
+    return response.data.result;
+  },
+
+  approveSeller: async (registrationId: number): Promise<SellerRegResponse> => {
+    const response = await axiosClient.patch<ApiResponse<SellerRegResponse>>(
+      `/sellers/${registrationId}/approve`,
+    );
+    return response.data.result;
+  },
+
+  rejectSeller: async (
+    registrationId: number,
+    reason: string,
+  ): Promise<SellerRegResponse> => {
+    const response = await axiosClient.patch<ApiResponse<SellerRegResponse>>(
+      `/sellers/${registrationId}/reject`,
+      null,
+      {
+        params: { reason },
+      },
+    );
+    return response.data.result;
+  },
+
+  revokeSellerRole: async (userId: number): Promise<User> => {
+    const response = await axiosClient.patch<ApiResponse<User>>(
+      `/sellers/users/${userId}/revoke-role`,
+    );
+    return response.data.result;
   },
 };
 

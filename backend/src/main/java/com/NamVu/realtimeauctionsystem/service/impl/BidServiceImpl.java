@@ -16,13 +16,12 @@ import com.namvu.realtimeauctionsystem.repository.UserRepository;
 import com.namvu.realtimeauctionsystem.service.BidService;
 import com.namvu.realtimeauctionsystem.service.OutboxService;
 import com.namvu.realtimeauctionsystem.service.RedisLuaService;
+import com.namvu.realtimeauctionsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -130,14 +129,7 @@ public class BidServiceImpl implements BidService {
 
     @Override
     public PageResponse<MyBidHistoryResponse> getMyBidHistory(Pageable pageable) {
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        Long userId = jwt.getClaim("uid");
-
-        return getBidHistory(userId, pageable);
+        return getBidHistory(SecurityUtils.getCurrentUserId(), pageable);
     }
 
     @Override
@@ -147,7 +139,7 @@ public class BidServiceImpl implements BidService {
     }
 
     private PageResponse<MyBidHistoryResponse> getBidHistory(Long userId, Pageable pageable) {
-        Page<Bid> bidPage =  bidRepository.findByBidderIdOrderByCreatedAtDesc(userId, pageable);
+        Page<Bid> bidPage = bidRepository.findByBidderIdOrderByCreatedAtDesc(userId, pageable);
 
         List<MyBidHistoryResponse> data = bidPage.stream()
                 .map(this::mapToResponse)

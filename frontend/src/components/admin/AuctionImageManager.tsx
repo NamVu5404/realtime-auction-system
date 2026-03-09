@@ -320,7 +320,6 @@ export const AuctionImageManager: React.FC<AuctionImageManagerProps> = ({
         if (item.isLocal && item.file) {
           const result = await fileApi.uploadFile(
             item.file,
-            OwnerType.AUCTION_IMAGE,
             auctionId,
             item.isPrimary,
             item.sortOrder,
@@ -339,7 +338,7 @@ export const AuctionImageManager: React.FC<AuctionImageManagerProps> = ({
           sortOrder: index,
         }));
 
-      await fileApi.updateMetadataBatch(metaRequests);
+      await fileApi.updateMetadataBatch(metaRequests, auctionId);
 
       const finalImages = updatedImages.map((img, index) => ({
         ...(img as FileResponse),
@@ -366,7 +365,7 @@ export const AuctionImageManager: React.FC<AuctionImageManagerProps> = ({
       if (!imageToDelete) return;
 
       if (!imageToDelete.isLocal) {
-        await fileApi.deleteFile(imageToDelete.id as number);
+        await fileApi.deleteFile(imageToDelete.id as number, auctionId);
       } else if (imageToDelete.previewUrl) {
         URL.revokeObjectURL(imageToDelete.previewUrl);
       }

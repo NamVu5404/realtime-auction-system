@@ -10,13 +10,12 @@ import com.namvu.realtimeauctionsystem.enums.UserStatus;
 import com.namvu.realtimeauctionsystem.mapper.UserMapper;
 import com.namvu.realtimeauctionsystem.repository.UserRepository;
 import com.namvu.realtimeauctionsystem.service.UserService;
+import com.namvu.realtimeauctionsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -54,12 +53,7 @@ public class UserServiceImpl implements UserService {
         Instant now = Instant.now();
         userRepository.updateStatus(userId, UserStatus.BLOCKED, now);
 
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        String blockedBy = jwt.getSubject();
+        String blockedBy = SecurityUtils.getCurrentUserEmail();
 
         return BlockUserResponse.builder()
                 .userId(userId)
@@ -76,12 +70,7 @@ public class UserServiceImpl implements UserService {
         Instant now = Instant.now();
         userRepository.updateStatus(userId, UserStatus.ACTIVE, now);
 
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        String unblockedBy = jwt.getSubject();
+        String unblockedBy = SecurityUtils.getCurrentUserEmail();
 
         return BlockUserResponse.builder()
                 .userId(userId)

@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.service.impl;
 
-import com.namvu.realtimeauctionsystem.dto.auth.ExchangeTokenRequest;
 import com.namvu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
+import com.namvu.realtimeauctionsystem.dto.auth.ExchangeTokenRequest;
 import com.namvu.realtimeauctionsystem.dto.auth.ExchangeTokenResponse;
 import com.namvu.realtimeauctionsystem.dto.user.OutboundUserResponse;
 import com.namvu.realtimeauctionsystem.dto.user.UserResponse;
@@ -59,7 +59,7 @@ public class GoogleAuthenticationServiceImpl implements OutboundAuthenticationSe
                 .user(UserResponse.builder()
                         .id(user.getId())
                         .email(user.getEmail())
-                        .role(user.getRole())
+                        .roles(user.getRoles())
                         .avatarUrl(user.getAvatarUrl())
                         .name(user.getName())
                         .build())

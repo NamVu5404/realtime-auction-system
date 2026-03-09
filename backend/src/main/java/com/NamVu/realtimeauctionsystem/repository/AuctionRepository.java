@@ -50,7 +50,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             ") AND " +
             "(:startTime IS NULL OR a.startTime >= :startTime) AND " +
             "(:endTime IS NULL OR a.endTime <= :endTime) AND " +
-            "(:statusStr = 'ALL' OR a.status = :status) " +
+            "(:statusStr = 'ALL' OR a.status = :status) AND " +
+            "(:sellerId IS NULL OR s.id = :sellerId) " +
             "ORDER BY a.createdAt DESC")
     Page<Auction> filterAuctions(
             @Param("keyword") String keyword,
@@ -58,6 +59,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             @Param("endTime") Instant endTime,
             @Param("status") AuctionStatus status,
             @Param("statusStr") String statusStr,
+            @Param("sellerId") Long sellerId,
             Pageable pageable
     );
 
@@ -83,4 +85,10 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
     @EntityGraph(attributePaths = {"seller"})
     List<Auction> findByStatus(AuctionStatus status);
+
+    @Modifying
+    @Query("UPDATE Auction a SET a.status = 'CANCELLED' " +
+            "WHERE a.seller.id = :sellerId " +
+            "AND a.status IN ('DRAFT', 'SCHEDULED')")
+    void cancelFutureAuctions(@Param("sellerId") Long sellerId);
 }

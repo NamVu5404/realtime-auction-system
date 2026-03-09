@@ -30,7 +30,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
                 SELECT u FROM User u
                 WHERE (:status IS NULL OR u.status = :status)
-                  AND (:role IS NULL OR u.role = :role)
+                  AND (:role IS NULL OR :role MEMBER OF u.roles)
                   AND (:keyword IS NULL
                        OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
                        OR LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -48,7 +48,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
             UPDATE User u
             SET u.status = :status, u.updatedAt = :updatedAt
-            WHERE u.id = :id AND u.status != :status AND u.role != 'ADMIN'
+            WHERE u.id = :id AND u.status != :status AND com.namvu.realtimeauctionsystem.enums.Role.ADMIN NOT MEMBER OF u.roles
             """)
     void updateStatus(@Param("id") Long id, @Param("status") UserStatus status, @Param("updatedAt") Instant updatedAt);
 }

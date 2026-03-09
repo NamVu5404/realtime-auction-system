@@ -1,8 +1,10 @@
 import {
   AuditOutlined,
+  DashboardOutlined,
   HomeOutlined,
   LogoutOutlined,
   UserOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
 import { Avatar, Breadcrumb, Dropdown, Layout, Menu } from "antd";
 import { useState } from "react";
@@ -21,10 +23,22 @@ const AdminLayout = () => {
 
   const menuItems = [
     {
+      key: "dashboard",
+      icon: <DashboardOutlined />,
+      label: "Dashboard",
+      onClick: () => navigate("/admin"),
+    },
+    {
       key: "users",
       icon: <UserOutlined />,
       label: "User Management",
       onClick: () => navigate("/admin/users"),
+    },
+    {
+      key: "sellers",
+      icon: <ShopOutlined />,
+      label: "Seller Management",
+      onClick: () => navigate("/admin/sellers"),
     },
     {
       key: "auctions",
@@ -88,21 +102,38 @@ const AdminLayout = () => {
           }}
         >
           {collapsed ? (
-            <span style={{ fontSize: "22px" }}>⚡</span>
-          ) : (
             <span
-              style={{
-                fontSize: "18px",
-                fontWeight: 800,
-                letterSpacing: "-0.02em",
-                background: "linear-gradient(135deg, #FED469, #FEECBB)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
+              style={{ fontSize: "18px", cursor: "pointer" }}
+              onClick={() => navigate("/admin")}
             >
-              ⚡ Admin Panel
+              ⚡
             </span>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                cursor: "pointer",
+                gap: "10px",
+              }}
+              onClick={() => navigate("/admin")}
+            >
+              <span style={{ fontSize: "18px" }}>⚡</span>
+              <span
+                style={{
+                  fontSize: "18px",
+                  fontWeight: 800,
+                  letterSpacing: "-0.02em",
+                  background:
+                    "linear-gradient(135deg, #FED469 0%, #FEECBB 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Admin Panel
+              </span>
+            </div>
           )}
         </div>
 

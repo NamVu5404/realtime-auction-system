@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-import { Card, Empty } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../../store/useAuthStore';
+import { useEffect } from "react";
+import { Card, Empty } from "antd";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/useAuthStore";
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -9,19 +9,28 @@ export const AdminDashboard = () => {
 
   useEffect(() => {
     // Redirect to home if not an admin
-    if (user && user.role !== 'ADMIN') {
-      navigate('/');
+    if (user && !user.roles?.includes("ADMIN")) {
+      navigate("/");
     }
   }, [user, navigate]);
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white mb-6">Admin Dashboard</h1>
-      
+      <h1
+        style={{
+          fontSize: "24px",
+          fontWeight: 800,
+          letterSpacing: "-0.02em",
+          marginBottom: "28px",
+        }}
+      >
+        Admin Dashboard
+      </h1>
+
       <Card>
         <Empty
           description="Admin dashboard features coming soon"
-          style={{ padding: '50px 0' }}
+          style={{ padding: "50px 0" }}
         />
       </Card>
     </div>

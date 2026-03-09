@@ -1,9 +1,9 @@
 package com.namvu.realtimeauctionsystem.mapper;
 
+import com.namvu.realtimeauctionsystem.dto.auction.AuctionResponse;
 import com.namvu.realtimeauctionsystem.dto.auction.CreateAuctionRequest;
 import com.namvu.realtimeauctionsystem.dto.auction.UpdateDraftAuctionRequest;
 import com.namvu.realtimeauctionsystem.dto.auction.UpdateScheduledAuctionRequest;
-import com.namvu.realtimeauctionsystem.dto.auction.AuctionResponse;
 import com.namvu.realtimeauctionsystem.entity.Auction;
 import org.mapstruct.*;
 
