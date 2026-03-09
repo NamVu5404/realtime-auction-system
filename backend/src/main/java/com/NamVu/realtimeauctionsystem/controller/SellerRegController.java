@@ -59,9 +59,11 @@ public class SellerRegController {
     }
 
     @PatchMapping("/users/{userId}/revoke-role")
-    public ApiResponse<UserResponse> revokeSellerRole(@PathVariable Long userId) {
+    public ApiResponse<UserResponse> revokeSellerRole(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String reason) {
         return ApiResponse.<UserResponse>builder()
-                .result(sellerRegService.revokeSellerRole(userId) )
+                .result(sellerRegService.revokeSellerRole(userId, reason))
                 .build();
     }
 }

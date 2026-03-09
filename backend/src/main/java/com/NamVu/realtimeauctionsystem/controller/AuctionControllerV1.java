@@ -102,8 +102,8 @@ public class AuctionControllerV1 {
                 .build();
     }
 
-    @GetMapping("/filter")
-    public ApiResponse<PageResponse<AuctionResponse>> filterAuction(
+    @GetMapping("/filter-seller")
+    public ApiResponse<PageResponse<AuctionResponse>> filterSellerAuction(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Instant startTime,
             @RequestParam(required = false) Instant endTime,
@@ -114,7 +114,23 @@ public class AuctionControllerV1 {
         Pageable pageable = PageRequest.of(page - 1, size);
 
         return ApiResponse.<PageResponse<AuctionResponse>>builder()
-                .result(auctionService.filterAuction(keyword, startTime, endTime, status, pageable))
+                .result(auctionService.filterSellerAuction(keyword, startTime, endTime, status, pageable))
+                .build();
+    }
+
+    @GetMapping("/filter-admin")
+    public ApiResponse<PageResponse<AuctionResponse>> filterAdminAuction(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Instant startTime,
+            @RequestParam(required = false) Instant endTime,
+            @RequestParam(required = false) AuctionStatus status,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        return ApiResponse.<PageResponse<AuctionResponse>>builder()
+                .result(auctionService.filterAdminAuction(keyword, startTime, endTime, status, pageable))
                 .build();
     }
 

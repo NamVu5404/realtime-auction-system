@@ -76,6 +76,7 @@ const SellerManagementPage: React.FC = () => {
   );
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [revokeReason, setRevokeReason] = useState("");
 
   // Queries
   const { data: registrations, isLoading: isRegLoading } = useQuery({
@@ -113,7 +114,8 @@ const SellerManagementPage: React.FC = () => {
   });
 
   const revokeMutation = useMutation({
-    mutationFn: (userId: number) => adminApi.revokeSellerRole(userId),
+    mutationFn: ({ userId, reason }: { userId: number; reason: string }) =>
+      adminApi.revokeSellerRole(userId, reason),
     onSuccess: () => {
       message.success(
         "Seller role revoked successfully. All scheduled auctions by this user have been cancelled.",
@@ -157,8 +159,9 @@ const SellerManagementPage: React.FC = () => {
 
   const handleRevokeConfirm = () => {
     if (selectedUser) {
-      revokeMutation.mutate(selectedUser.id);
+      revokeMutation.mutate({ userId: selectedUser.id, reason: revokeReason });
       setRevokeModalVisible(false);
+      setRevokeReason("");
     }
   };
 
@@ -290,7 +293,7 @@ const SellerManagementPage: React.FC = () => {
               onClick={() => handleRevoke(record)}
               loading={
                 revokeMutation.isPending &&
-                revokeMutation.variables === record.id
+                revokeMutation.variables?.userId === record.id
               }
             >
               Revoke Seller Role
@@ -546,7 +549,13 @@ const SellerManagementPage: React.FC = () => {
         open={revokeModalVisible}
         onCancel={() => setRevokeModalVisible(false)}
         footer={[
-          <Button key="cancel" onClick={() => setRevokeModalVisible(false)}>
+          <Button
+            key="cancel"
+            onClick={() => {
+              setRevokeModalVisible(false);
+              setRevokeReason("");
+            }}
+          >
             Close
           </Button>,
           <Button
@@ -612,6 +621,26 @@ const SellerManagementPage: React.FC = () => {
                   <InfoCircleOutlined /> This will also cancel all of their
                   DRAFT and SCHEDULED auctions.
                 </p>
+              </div>
+              <div style={{ marginTop: "16px" }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Reason (optional)
+                </div>
+                <TextArea
+                  rows={3}
+                  placeholder="Provide a reason for revoking this seller's role..."
+                  value={revokeReason}
+                  onChange={(e) => setRevokeReason(e.target.value)}
+                />
               </div>
             </div>
           </div>

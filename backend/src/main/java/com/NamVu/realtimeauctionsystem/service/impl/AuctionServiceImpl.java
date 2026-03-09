@@ -56,19 +56,7 @@ public class AuctionServiceImpl implements AuctionService {
 
         Page<Auction> auctionPage = auctionRepository.findByCustomStatus(status, oneHourFromNow, pageable);
 
-        List<AuctionResponse> responses = auctionPage.getContent().stream()
-                .map(auctionMapper::mapToResponse)
-                .toList();
-
-        populateImages(responses);
-
-        return PageResponse.<AuctionResponse>builder()
-                .currentPage(pageable.getPageNumber() + 1)
-                .pageSize(pageable.getPageSize())
-                .totalPage(auctionPage.getTotalPages())
-                .totalElements(auctionPage.getTotalElements())
-                .data(responses)
-                .build();
+        return getResponse(pageable, auctionPage);
     }
 
     @Override
@@ -256,27 +244,18 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
-    public PageResponse<AuctionResponse> filterAuction(String keyword, Instant startTime, Instant endTime,
+    @PreAuthorize("hasAuthority('SELLER')")
+    public PageResponse<AuctionResponse> filterSellerAuction(String keyword, Instant startTime, Instant endTime,
                                                        AuctionStatus status, Pageable pageable) {
-        String statusStr = (status == null) ? AuctionStatus.ALL.name() : status.name();
+        Long sellerId = SecurityUtils.getCurrentUserId();
+        return filterAuction(sellerId, keyword, startTime, endTime, status, pageable);
+    }
 
-        Long sellerId = SecurityUtils.isAdmin() ? null : SecurityUtils.getCurrentUserId();
-        Page<Auction> auctionPage = auctionRepository.filterAuctions(keyword, startTime, endTime, status, statusStr, sellerId, pageable);
-
-        List<AuctionResponse> responses = auctionPage.getContent().stream()
-                .map(auctionMapper::mapToResponse)
-                .toList();
-
-        populateImages(responses);
-
-        return PageResponse.<AuctionResponse>builder()
-                .currentPage(pageable.getPageNumber() + 1)
-                .pageSize(pageable.getPageSize())
-                .totalPage(auctionPage.getTotalPages())
-                .totalElements(auctionPage.getTotalElements())
-                .data(responses)
-                .build();
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public PageResponse<AuctionResponse> filterAdminAuction(String keyword, Instant startTime, Instant endTime,
+                                                             AuctionStatus status, Pageable pageable) {
+        return filterAuction(null, keyword, startTime, endTime, status, pageable);
     }
 
     @Override
@@ -351,5 +330,29 @@ public class AuctionServiceImpl implements AuctionService {
         if (!auction.getSeller().getId().equals(currentUserId)) {
             throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
         }
+    }
+
+    private PageResponse<AuctionResponse> filterAuction(Long sellerId, String keyword, Instant startTime, Instant endTime,
+                                                        AuctionStatus status, Pageable pageable) {
+        String statusStr = (status == null) ? AuctionStatus.ALL.name() : status.name();
+        Page<Auction> auctionPage = auctionRepository
+                .filterAuctions(keyword, startTime, endTime, status, statusStr, sellerId, pageable);
+        return getResponse(pageable, auctionPage);
+    }
+
+    private PageResponse<AuctionResponse> getResponse(Pageable pageable, Page<Auction> auctionPage) {
+        List<AuctionResponse> responses = auctionPage.getContent().stream()
+                .map(auctionMapper::mapToResponse)
+                .toList();
+
+        populateImages(responses);
+
+        return PageResponse.<AuctionResponse>builder()
+                .currentPage(pageable.getPageNumber() + 1)
+                .pageSize(pageable.getPageSize())
+                .totalPage(auctionPage.getTotalPages())
+                .totalElements(auctionPage.getTotalElements())
+                .data(responses)
+                .build();
     }
 }

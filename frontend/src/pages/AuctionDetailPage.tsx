@@ -949,7 +949,7 @@ export const AuctionDetailPage = () => {
 
                   {/* Ghost gold action button */}
                   <button
-                    onClick={() => navigate(`/admin/auctions`)}
+                    onClick={() => navigate(`/seller/auctions`)}
                     style={{
                       width: "100%",
                       height: "42px",

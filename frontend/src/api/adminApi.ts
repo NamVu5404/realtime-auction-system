@@ -69,7 +69,7 @@ export const adminApi = {
     await axiosClient.patch(`/users/${userId}/unblock`, { reason });
   },
 
-  filterAuctions: async (
+  filterSellerAuctions: async (
     page: number = 1,
     size: number = 20,
     keyword?: string,
@@ -78,7 +78,24 @@ export const adminApi = {
     endTime?: string,
   ): Promise<PageResponse<Auction>> => {
     const response = await axiosClient.get<ApiResponse<PageResponse<Auction>>>(
-      "/auctions/filter",
+      "/auctions/filter-seller",
+      {
+        params: { page, size, keyword, status, startTime, endTime },
+      },
+    );
+    return response.data.result;
+  },
+
+  filterAdminAuctions: async (
+    page: number = 1,
+    size: number = 20,
+    keyword?: string,
+    status?: AuctionStatus,
+    startTime?: string,
+    endTime?: string,
+  ): Promise<PageResponse<Auction>> => {
+    const response = await axiosClient.get<ApiResponse<PageResponse<Auction>>>(
+      "/auctions/filter-admin",
       {
         params: { page, size, keyword, status, startTime, endTime },
       },
@@ -193,9 +210,13 @@ export const adminApi = {
     return response.data.result;
   },
 
-  revokeSellerRole: async (userId: number): Promise<User> => {
+  revokeSellerRole: async (userId: number, reason?: string): Promise<User> => {
     const response = await axiosClient.patch<ApiResponse<User>>(
       `/sellers/users/${userId}/revoke-role`,
+      null,
+      {
+        params: { reason },
+      },
     );
     return response.data.result;
   },

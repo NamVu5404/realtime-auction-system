@@ -45,7 +45,7 @@ export const Header = () => {
             key: "seller",
             label: "Seller Dashboard",
             icon: <ShopOutlined />,
-            onClick: () => navigate("/seller/dashboard"),
+            onClick: () => navigate("/seller"),
           },
         ]
       : []),

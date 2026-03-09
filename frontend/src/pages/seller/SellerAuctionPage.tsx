@@ -17,6 +17,7 @@ import {
   Image,
   Input,
   Modal,
+  Space,
   Table,
   Tabs,
   Tag,
@@ -34,23 +35,21 @@ import {
 } from "../../api/types";
 import CancelAuctionModal from "../../components/admin/CancelAuctionModal";
 import AuctionForm from "../../features/auction/AuctionForm";
-import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";
 import { convertUTCToLocal } from "../../utils/dateUtils";
-import { formatDateTime } from "../../utils/format";
-import { DEFAULT_AUCTION_IMAGE, getImageUrl } from "../../utils/imageUtils";
+import formatCurrency, { formatDateTime } from "../../utils/format";
 import { getStatusColor } from "../../utils/statusUtils";
-import AuctionAuditDrawer from "./drawers/AuctionAuditDrawer";
-import AuctionDetailDrawer from "./drawers/AuctionDetailDrawer";
+import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
+import AuctionAuditDrawer from "../admin/drawers/AuctionAuditDrawer";
+import AuctionDetailDrawer from "../admin/drawers/AuctionDetailDrawer";
 
 const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 
 const { RangePicker } = DatePicker;
 
-const AdminAuctionPage = () => {
+const SellerAuctionPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1", 10);
-  const { user } = useAuth();
   const setPage = (p: number) => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("page", p.toString());
@@ -102,9 +101,9 @@ const AdminAuctionPage = () => {
 
   // Manual trigger for search - initial query with LIVE status
   const { data, isLoading, refetch } = useQuery<PageResponse<Auction>>({
-    queryKey: ["admin-auctions", page, debouncedKeyword, status, dateRange],
+    queryKey: ["seller-auctions", page, debouncedKeyword, status, dateRange],
     queryFn: () =>
-      adminApi.filterAdminAuctions(
+      adminApi.filterSellerAuctions(
         page,
         20,
         debouncedKeyword,
@@ -143,7 +142,7 @@ const AdminAuctionPage = () => {
     mutationFn: adminApi.scheduleAuction,
     onSuccess: () => {
       message.success("Auction created successfully");
-      queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
+      queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
       setCreateModal(false);
       form.resetFields();
       refetch();
@@ -162,7 +161,7 @@ const AdminAuctionPage = () => {
     },
     onSuccess: () => {
       message.success("Auction updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
+      queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
       setEditModal({ visible: false });
       editForm.resetFields();
       refetch();
@@ -180,7 +179,7 @@ const AdminAuctionPage = () => {
     }) => adminApi.cancelAuction(id, request),
     onSuccess: () => {
       message.success("Auction cancelled successfully");
-      queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
+      queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
       setCancelModal({ visible: false });
       refetch();
     },
@@ -198,7 +197,7 @@ const AdminAuctionPage = () => {
     newParams.set("page", "1");
     newParams.set("status", AuctionStatus.LIVE);
     setSearchParams(newParams);
-    queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
+    queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
   };
 
   const handleCreateSuccess = () => {
@@ -253,10 +252,12 @@ const AdminAuctionPage = () => {
       key: "title",
     },
     {
-      title: "Seller",
-      dataIndex: "seller",
-      key: "seller",
-      render: (seller: any) => seller?.name,
+      title: "Price",
+      dataIndex: "currentPrice",
+      key: "currentPrice",
+      render: (currentPrice: number) => (
+        <span style={{ color: "#FED469" }}>{formatCurrency(currentPrice)}</span>
+      ),
     },
     {
       title: "Start Time",
@@ -287,8 +288,7 @@ const AdminAuctionPage = () => {
         const canEdit =
           (record.status === AuctionStatus.DRAFT ||
             record.status === AuctionStatus.SCHEDULED) &&
-          !isLiveNow &&
-          record?.seller?.id === Number(user?.id);
+          !isLiveNow;
         const canCancel =
           (record.status === AuctionStatus.DRAFT ||
             record.status === AuctionStatus.SCHEDULED) &&
@@ -407,7 +407,7 @@ const AdminAuctionPage = () => {
               Search
             </div>
             <Input
-              placeholder="Search by Title, Description, Seller"
+              placeholder="Search by Title, Description"
               prefix={
                 <SearchOutlined style={{ color: "rgba(255,255,255,0.3)" }} />
               }
@@ -552,4 +552,4 @@ const AdminAuctionPage = () => {
     </div>
   );
 };
-export default AdminAuctionPage;
+export default SellerAuctionPage;

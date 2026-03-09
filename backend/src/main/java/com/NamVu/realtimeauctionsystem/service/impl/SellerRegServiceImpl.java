@@ -15,6 +15,7 @@ import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
 import com.namvu.realtimeauctionsystem.repository.SellerRegRepository;
 import com.namvu.realtimeauctionsystem.repository.UserRepository;
 import com.namvu.realtimeauctionsystem.service.SellerRegService;
+import com.namvu.realtimeauctionsystem.service.UserAuditService;
 import com.namvu.realtimeauctionsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ public class SellerRegServiceImpl implements SellerRegService {
     private final UserRepository userRepository;
     private final AuctionRepository auctionRepository;
     private final UserMapper userMapper;
+    private final UserAuditService userAuditService;
 
     @Override
     @PreAuthorize("!hasAuthority('SELLER')")
@@ -76,6 +78,9 @@ public class SellerRegServiceImpl implements SellerRegService {
         registration.setStatus(RequestStatus.APPROVED);
         registration.setApprovedAt(Instant.now());
         registration = sellerRegRepository.save(registration);
+
+        // Save audit log
+        userAuditService.sellerApprovedAudit(user, SecurityUtils.getCurrentUserEmail());
 
         return SellerRegResponse.builder()
                 .id(registration.getId())
@@ -146,13 +151,13 @@ public class SellerRegServiceImpl implements SellerRegService {
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
-    public UserResponse revokeSellerRole(Long userId) {
-        if (SecurityUtils.isAdmin()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
-        }
-
+    public UserResponse revokeSellerRole(Long userId, String reason) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (user.getRoles().contains(Role.ADMIN)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
 
         if (user.getRoles().contains(Role.SELLER)) {
             user.getRoles().remove(Role.SELLER);
@@ -160,7 +165,13 @@ public class SellerRegServiceImpl implements SellerRegService {
 
             // Cancel DRAFT and SCHEDULED auctions
             auctionRepository.cancelFutureAuctions(userId);
-            log.info("Admin revoked SELLER role for user {}. Future auctions cancelled.", userId);
+
+            // Save audit log
+            String revokedBy = SecurityUtils.getCurrentUserEmail();
+            userAuditService.sellerRoleRevokedAudit(user, reason, revokedBy);
+
+            log.info("Admin {} revoked SELLER role for user {}. Reason: {}. Future auctions cancelled.",
+                    revokedBy, userId, reason);
         }
 
         return userMapper.mapToResponse(user);

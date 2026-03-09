@@ -4,6 +4,7 @@ import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
 import com.namvu.realtimeauctionsystem.dto.user.UserAuditResponse;
 import com.namvu.realtimeauctionsystem.entity.Auction;
 import com.namvu.realtimeauctionsystem.entity.Bid;
+import com.namvu.realtimeauctionsystem.entity.User;
 import com.namvu.realtimeauctionsystem.entity.UserAudit;
 import com.namvu.realtimeauctionsystem.enums.FraudType;
 import com.namvu.realtimeauctionsystem.enums.UserActionType;
@@ -41,6 +42,35 @@ public class UserAuditServiceImpl implements UserAuditService {
         auditRepository.save(UserAudit.builder()
                 .user(bid.getBidder())
                 .actionType(UserActionType.FRAUD)
+                .details(details)
+                .build());
+    }
+
+    @Override
+    public void sellerRoleRevokedAudit(User user, String reason, String revokedBy) {
+        Map<String, Object> details = new HashMap<>();
+        details.put("userId", user.getId());
+        details.put("userEmail", user.getEmail());
+        details.put("reason", reason != null ? reason : "No reason provided");
+        details.put("revokedBy", revokedBy);
+
+        auditRepository.save(UserAudit.builder()
+                .user(user)
+                .actionType(UserActionType.SELLER_ROLE_REVOKED)
+                .details(details)
+                .build());
+    }
+
+    @Override
+    public void sellerApprovedAudit(User user, String approvedBy) {
+        Map<String, Object> details = new HashMap<>();
+        details.put("userId", user.getId());
+        details.put("userEmail", user.getEmail());
+        details.put("approvedBy", approvedBy);
+
+        auditRepository.save(UserAudit.builder()
+                .user(user)
+                .actionType(UserActionType.SELLER_APPROVED)
                 .details(details)
                 .build());
     }
