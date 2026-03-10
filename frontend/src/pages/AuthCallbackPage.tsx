@@ -135,7 +135,7 @@ export const AuthCallbackPage = () => {
 
   return (
     <LoadingPage
-      tip="Authenticating..."
+      tip="Authenticating"
       message="Securing your connection to AuctionPro"
     />
   );

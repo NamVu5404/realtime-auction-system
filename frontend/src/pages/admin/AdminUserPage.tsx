@@ -187,14 +187,19 @@ const AdminUserPage = () => {
 
   const columns = [
     {
-      title: "Name",
+      title: "Full Name",
       dataIndex: "name",
       key: "name",
     },
     {
-      title: "Email",
+      title: "Email Address",
       dataIndex: "email",
       key: "email",
+    },
+    {
+      title: "Phone Number",
+      dataIndex: "phone",
+      key: "phone",
     },
     {
       title: "Roles",

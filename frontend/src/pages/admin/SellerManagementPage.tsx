@@ -37,6 +37,7 @@ import {
   UserRole,
 } from "../../api/types";
 import dayjs from "dayjs";
+import { getAvatarUrl } from "../../utils/imageUtils";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -172,7 +173,10 @@ const SellerManagementPage: React.FC = () => {
       key: "user",
       render: (record: SellerRegResponse) => (
         <Space>
-          <Avatar icon={<UserOutlined />} src={record.user?.avatarUrl} />
+          <Avatar
+            icon={<UserOutlined />}
+            src={getAvatarUrl(record.user?.avatarUrl)}
+          />
           <Space direction="vertical" size={0}>
             <Text strong>{record.user?.name}</Text>
             <Text type="secondary" style={{ fontSize: "12px" }}>
@@ -260,7 +264,10 @@ const SellerManagementPage: React.FC = () => {
       key: "user",
       render: (record: User) => (
         <Space>
-          <Avatar icon={<UserOutlined />} src={record.avatarUrl} />
+          <Avatar
+            icon={<UserOutlined />}
+            src={getAvatarUrl(record.avatarUrl)}
+          />
           <Space direction="vertical" size={0}>
             <Text strong>{record.name}</Text>
             <Text type="secondary" style={{ fontSize: "12px" }}>
@@ -515,7 +522,7 @@ const SellerManagementPage: React.FC = () => {
             <Space>
               <Avatar
                 icon={<UserOutlined />}
-                src={selectedReg?.user?.avatarUrl}
+                src={getAvatarUrl(selectedReg?.user?.avatarUrl)}
               />
               <Space direction="vertical" size={0}>
                 <Text strong style={{ color: "#fff" }}>

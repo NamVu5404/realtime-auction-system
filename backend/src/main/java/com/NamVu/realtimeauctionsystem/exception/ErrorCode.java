@@ -44,6 +44,9 @@ public enum ErrorCode {
     UNAUTHORIZED_ACTION(1032, "Bạn không có quyền thực hiện hành động này", HttpStatus.FORBIDDEN),
     SELLER_REGISTRATION_NOT_FOUND(1033, "Seller registration not found", HttpStatus.NOT_FOUND),
     SELLER_REGISTRATION_PENDING(1034, "Seller registration is pending", HttpStatus.BAD_REQUEST),
+    NAME_NOT_BLANK(1035, "Name is required", HttpStatus.BAD_REQUEST),
+    MAX_CHARACTERS(1036, "Name must not exceed 255 characters", HttpStatus.BAD_REQUEST),
+    INVALID_PHONE(1037, "Phone number must be 9–15 digits", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

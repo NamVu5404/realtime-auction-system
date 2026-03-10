@@ -1,33 +1,35 @@
 import {
-  Typography,
-  Button,
-  Card,
-  Row,
-  Col,
-  Space,
-  Divider,
-  message,
-} from "antd";
-import {
-  ShopOutlined,
-  RocketOutlined,
-  GlobalOutlined,
-  SafetyCertificateOutlined,
   CheckCircleFilled,
   ClockCircleOutlined,
+  GlobalOutlined,
+  RocketOutlined,
+  SafetyCertificateOutlined,
+  ShopOutlined,
 } from "@ant-design/icons";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Button,
+  Card,
+  Checkbox,
+  Col,
+  Divider,
+  message,
+  Row,
+  Space,
+  Typography,
+} from "antd";
+import React from "react";
 import sellerApi from "../../api/sellerApi";
+import { RequestStatus, UserRole } from "../../api/types";
 import sellerBg from "../../assets/images/seller-reg-bg.png";
 import { useAuthStore } from "../../store/useAuthStore";
-import { useQuery } from "@tanstack/react-query";
-import { UserRole, RequestStatus } from "../../api/types";
 
 const { Title, Text, Paragraph } = Typography;
 
 const SellerRegPage = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const [agreedToTerms, setAgreedToTerms] = React.useState(false);
   const isSeller = user?.roles?.includes(UserRole.SELLER);
 
   const { data: myReg, isLoading: isStatusLoading } = useQuery({
@@ -282,31 +284,71 @@ const SellerRegPage = () => {
                 size="large"
                 block
                 loading={isPending || isStatusLoading}
-                disabled={buttonState.disabled || isPending}
+                disabled={
+                  buttonState.disabled ||
+                  isPending ||
+                  (!buttonState.disabled && !agreedToTerms)
+                }
                 style={{
                   height: "54px",
                   borderRadius: "12px",
                   fontSize: "16px",
                   fontWeight: 700,
-                  boxShadow: buttonState.disabled
-                    ? "none"
-                    : "0 8px 24px rgba(254, 212, 105, 0.25)",
+                  boxShadow:
+                    buttonState.disabled || !agreedToTerms
+                      ? "none"
+                      : "0 8px 24px rgba(254, 212, 105, 0.25)",
+                  transition: "all 0.3s ease",
+                  ...(!buttonState.disabled && !agreedToTerms
+                    ? {
+                        background: "rgba(255, 255, 255, 0.05)",
+                        borderColor: "rgba(255, 255, 255, 0.1)",
+                        color: "rgba(255, 255, 255, 0.3)",
+                      }
+                    : {}),
                 }}
                 icon={buttonState.icon}
                 onClick={() => register()}
               >
                 {buttonState.text}
               </Button>
-              <Text
+              <div
                 style={{
-                  display: "block",
-                  textAlign: "center",
-                  color: "rgba(255,255,255,0.4)",
-                  fontSize: "12px",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "8px",
                 }}
               >
-                By enrolling, you agree to our Seller Terms & Conditions
-              </Text>
+                <Checkbox
+                  className="seller-terms-checkbox"
+                  id="agree-terms-checkbox"
+                  checked={agreedToTerms || buttonState.disabled}
+                  disabled={buttonState.disabled}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  style={{ marginTop: "2px", flexShrink: 0 }}
+                />
+                <Text
+                  style={{
+                    display: "block",
+                    color: "rgba(255,255,255,0.4)",
+                    fontSize: "12px",
+                    cursor: buttonState.disabled ? "default" : "pointer",
+                    userSelect: "none",
+                  }}
+                  onClick={() =>
+                    !buttonState.disabled && setAgreedToTerms((prev) => !prev)
+                  }
+                >
+                  By enrolling, you agree to our{" "}
+                  <a
+                    href="#"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-white/40 hover:text-[#FED469] underline transition-colors duration-300 text-[12px]"
+                  >
+                    Seller Terms & Conditions
+                  </a>
+                </Text>
+              </div>
             </Space>
           </Card>
         </Col>
@@ -319,6 +361,22 @@ const SellerRegPage = () => {
           background: rgba(255,255,255,0.06) !important;
           transform: translateY(-2px);
           border-color: rgba(254, 212, 105, 0.2) !important;
+        }
+
+        .seller-terms-checkbox .ant-checkbox-inner {
+          background-color: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+        .seller-terms-checkbox:hover .ant-checkbox-inner,
+        .seller-terms-checkbox .ant-checkbox-input:focus + .ant-checkbox-inner {
+          border-color: #FED469 !important;
+        }
+        .seller-terms-checkbox .ant-checkbox-checked .ant-checkbox-inner {
+          background-color: #FED469 !important;
+          border-color: #FED469 !important;
+        }
+        .seller-terms-checkbox .ant-checkbox-checked .ant-checkbox-inner::after {
+          border-color: #191B24 !important;
         }
       `,
         }}

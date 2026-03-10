@@ -40,6 +40,7 @@ import { formatCurrency } from "../utils/format";
 import { useUIStore } from "../store/useUIStore";
 import { AuctionImageCarousel } from "../components/common/AuctionImageCarousel";
 import LoadingPage from "../components/common/LoadingPage";
+import { getAvatarUrl } from "../utils/imageUtils";
 
 // Tách phần bidding form ra component riêng với state nội bộ
 const BiddingSection = memo(
@@ -1218,7 +1219,7 @@ export const AuctionDetailPage = () => {
                       >
                         {auction.seller?.avatarUrl && (
                           <Image
-                            src={auction.seller.avatarUrl}
+                            src={getAvatarUrl(auction.seller.avatarUrl)}
                             alt={auction.seller.name}
                             style={{
                               width: "36px",
@@ -1269,7 +1270,9 @@ export const AuctionDetailPage = () => {
                         >
                           {auction.highestBidder?.avatarUrl && (
                             <Image
-                              src={auction.highestBidder.avatarUrl}
+                              src={getAvatarUrl(
+                                auction.highestBidder.avatarUrl,
+                              )}
                               alt={auction.highestBidder.name}
                               style={{
                                 width: "36px",

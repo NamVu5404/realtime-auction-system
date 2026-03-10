@@ -1,14 +1,15 @@
 import {
+  AuditOutlined,
   BarChartOutlined,
   BellOutlined,
   HistoryOutlined,
-  LockOutlined,
+  IdcardOutlined,
   SafetyCertificateOutlined,
   SettingOutlined,
   ShopOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Menu, Layout, Grid } from "antd";
+import { Grid, Menu } from "antd";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -40,6 +41,12 @@ const AccountSidebar = () => {
           icon: <UserOutlined />,
           label: "Profile",
           onClick: () => navigate("/account/profile"),
+        },
+        {
+          key: "/account/identity-verification",
+          icon: <IdcardOutlined />,
+          label: "Identity Verification",
+          onClick: () => navigate("/account/identity-verification"),
         },
         {
           key: "/account/notifications",
@@ -84,6 +91,12 @@ const AccountSidebar = () => {
           icon: <SafetyCertificateOutlined />,
           label: isMobile ? "2FA" : "Two-factor Authentication",
           onClick: () => navigate("/account/2fa"),
+        },
+        {
+          key: "/account/security-logs",
+          icon: <AuditOutlined />,
+          label: "Security Logs",
+          onClick: () => navigate("/account/security-logs"),
         },
       ],
     },

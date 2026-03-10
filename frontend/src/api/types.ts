@@ -69,6 +69,7 @@ export interface User {
   roles: UserRole[];
   avatarUrl?: string;
   status?: "ACTIVE" | "BLOCKED";
+  phone?: string;
 }
 
 /**

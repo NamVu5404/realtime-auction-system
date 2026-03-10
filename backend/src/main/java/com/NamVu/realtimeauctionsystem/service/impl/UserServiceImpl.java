@@ -1,14 +1,18 @@
 package com.namvu.realtimeauctionsystem.service.impl;
 
 import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
-import com.namvu.realtimeauctionsystem.dto.user.BlockUserRequest;
-import com.namvu.realtimeauctionsystem.dto.user.BlockUserResponse;
-import com.namvu.realtimeauctionsystem.dto.user.ManagerUserResponse;
+import com.namvu.realtimeauctionsystem.dto.file.FileResponse;
+import com.namvu.realtimeauctionsystem.dto.user.*;
 import com.namvu.realtimeauctionsystem.entity.User;
+import com.namvu.realtimeauctionsystem.enums.OwnerType;
 import com.namvu.realtimeauctionsystem.enums.Role;
 import com.namvu.realtimeauctionsystem.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.exception.AppException;
+import com.namvu.realtimeauctionsystem.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.mapper.UserMapper;
+import com.namvu.realtimeauctionsystem.repository.FileRepository;
 import com.namvu.realtimeauctionsystem.repository.UserRepository;
+import com.namvu.realtimeauctionsystem.service.FileService;
 import com.namvu.realtimeauctionsystem.service.UserService;
 import com.namvu.realtimeauctionsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.List;
@@ -28,6 +34,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final FileService fileService;
+    private final FileRepository fileRepository;
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -79,5 +87,40 @@ public class UserServiceImpl implements UserService {
                 .reason(request.getReason())
                 .timestamp(now)
                 .build();
+    }
+
+    @Override
+    public UserResponse updateProfile(UpdateUserRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        user.setName(request.getName());
+        user.setPhone(request.getPhone());
+        user = userRepository.save(user);
+
+        return userMapper.mapToResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateAvatar(MultipartFile file) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Xóa avatar cũ
+        if (user.getAvatarUrl() != null) {
+            fileRepository.findByOwnerTypeAndOwnerId(OwnerType.USER_AVATAR, userId)
+                    .ifPresent(f -> fileService.deleteFile(f.getId()));
+        }
+
+        // Upload
+        FileResponse fileResponse = fileService.uploadFile(file, OwnerType.USER_AVATAR, userId, true, 0);
+
+        user.setAvatarUrl(fileResponse.storageName());
+        user = userRepository.save(user);
+
+        return userMapper.mapToResponse(user);
     }
 }
