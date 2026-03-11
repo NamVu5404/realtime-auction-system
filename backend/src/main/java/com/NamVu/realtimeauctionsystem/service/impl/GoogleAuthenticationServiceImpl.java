@@ -4,7 +4,6 @@ import com.namvu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
 import com.namvu.realtimeauctionsystem.dto.auth.ExchangeTokenRequest;
 import com.namvu.realtimeauctionsystem.dto.auth.ExchangeTokenResponse;
 import com.namvu.realtimeauctionsystem.dto.user.OutboundUserResponse;
-import com.namvu.realtimeauctionsystem.dto.user.UserResponse;
 import com.namvu.realtimeauctionsystem.entity.User;
 import com.namvu.realtimeauctionsystem.enums.TokenType;
 import com.namvu.realtimeauctionsystem.httpclient.GoogleAuthClient;

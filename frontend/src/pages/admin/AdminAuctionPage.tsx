@@ -82,6 +82,7 @@ const AdminAuctionPage = () => {
     auctionId?: number;
     auctionTitle?: string;
   }>({ visible: false });
+  const [auditPage, setAuditPage] = useState(1);
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState<{
     visible: boolean;
@@ -307,12 +308,14 @@ const AdminAuctionPage = () => {
           key: "audit-logs",
           icon: <HistoryOutlined />,
           label: "Audit Logs",
-          onClick: () =>
+          onClick: () => {
+            setAuditPage(1);
             setAuditDrawer({
               visible: true,
               auctionId: record.id,
               auctionTitle: record.title,
-            }),
+            });
+          },
         });
 
         // Show Edit only for editable statuses
@@ -500,6 +503,8 @@ const AdminAuctionPage = () => {
         auctionId={auditDrawer.auctionId || null}
         auctionTitle={auditDrawer.auctionTitle}
         onClose={() => setAuditDrawer({ visible: false })}
+        page={auditPage}
+        onPageChange={setAuditPage}
       />
 
       <CancelAuctionModal

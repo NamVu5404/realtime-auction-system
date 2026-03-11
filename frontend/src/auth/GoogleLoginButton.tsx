@@ -1,5 +1,7 @@
-import { Button } from "antd";
+import { Button, Grid } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
+
+const { useBreakpoint } = Grid;
 
 /**
  * GoogleLoginButton Component
@@ -21,14 +23,20 @@ import { GoogleOutlined } from "@ant-design/icons";
  *   * https://yourdomain.com/auth/callback (production)
  */
 export const GoogleLoginButton = () => {
+  const screens = useBreakpoint();
+  const isMobile = !screens.md;
+
   const GOOGLE_CLIENT_ID =
     "409023234267-l0ug806esjusfroo43fmmm5bcq24rc65.apps.googleusercontent.com";
   const REDIRECT_URI = `${window.location.origin}/auth/callback`;
 
   const handleGoogleLogin = () => {
     // Save current URL to return after login
-    sessionStorage.setItem("returnUrl", window.location.pathname + window.location.search);
-    
+    sessionStorage.setItem(
+      "returnUrl",
+      window.location.pathname + window.location.search,
+    );
+
     // Generate state token to prevent CSRF attacks (OAuth 2.0 security best practice)
     const state =
       Math.random().toString(36).substring(7) + Date.now().toString(36);
@@ -52,10 +60,11 @@ export const GoogleLoginButton = () => {
   return (
     <Button
       type="primary"
-      size="large"
+      size={isMobile ? "middle" : "large"}
       icon={<GoogleOutlined />}
       onClick={handleGoogleLogin}
       className="bg-red-500 hover:bg-red-600 border-red-500"
+      block={isMobile}
     >
       Sign in with Google
     </Button>

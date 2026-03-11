@@ -176,7 +176,7 @@ export const AccountTrackingDrawer = ({
       size={800}
       styles={{
         body: {
-          paddingBottom: "60px",
+          paddingBottom: "32px",
           backgroundColor: "#191B24",
         },
         header: {
@@ -213,10 +213,7 @@ export const AccountTrackingDrawer = ({
             <div
               style={{
                 display: "flex",
-                justifyContent: "center",
-                marginTop: "24px",
-                paddingTop: "16px",
-                borderTop: "1px solid #27272a",
+                justifyContent: "end",
               }}
             >
               <Pagination
@@ -225,11 +222,6 @@ export const AccountTrackingDrawer = ({
                 total={data.totalElements}
                 onChange={onPageChange}
                 showSizeChanger={false}
-                showTotal={(total, range) => (
-                  <span style={{ color: "#9ca3af" }}>
-                    {range[0]}-{range[1]} of {total} items
-                  </span>
-                )}
               />
             </div>
           )}

@@ -1,5 +1,5 @@
 import axiosClient from "./axiosClient";
-import { ApiResponse, User } from "./types";
+import { ApiResponse, PageResponse, User } from "./types";
 
 export interface UpdateUserRequest {
   name: string;
@@ -26,6 +26,19 @@ const userApi = {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+      },
+    );
+    return response.data.result;
+  },
+
+  getMyAccountAudit: async (
+    page: number,
+    size: number,
+  ): Promise<PageResponse<any>> => {
+    const response = await axiosClient.get<ApiResponse<PageResponse<any>>>(
+      "/users/audit",
+      {
+        params: { page, size },
       },
     );
     return response.data.result;

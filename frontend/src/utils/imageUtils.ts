@@ -47,5 +47,5 @@ export const getAvatarUrl = (path?: string | null): string | undefined => {
   if (path.startsWith("http") || path.startsWith("data:")) return path;
 
   const cleanPath = path.startsWith("/") ? path.substring(1) : path;
-  return `${API_IMAGE_BASE}/${cleanPath}`;
+  return `${API_IMAGE_BASE}/avatars/${cleanPath}`;
 };

@@ -16,4 +16,6 @@ public interface UserAuditService {
     void sellerApprovedAudit(User user, String approvedBy);
 
     PageResponse<UserAuditResponse> getUserAudit(Long userId, Pageable pageable);
+
+    PageResponse<UserAuditResponse> getMyAccountAudit(Pageable pageable);
 }

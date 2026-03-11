@@ -65,6 +65,18 @@ public class UserController {
                 .build();
     }
 
+    @GetMapping("/audit")
+    public ApiResponse<PageResponse<UserAuditResponse>> getMyAccountAudit(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        return ApiResponse.<PageResponse<UserAuditResponse>>builder()
+                .result(auditService.getMyAccountAudit(pageable))
+                .build();
+    }
+
     @PutMapping("/profile")
     public ApiResponse<UserResponse> updateProfile(@RequestBody @Valid UpdateUserRequest request) {
         return ApiResponse.<UserResponse>builder()
