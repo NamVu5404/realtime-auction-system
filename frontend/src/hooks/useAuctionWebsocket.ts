@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import React from "react";
 import { Client, Message } from "@stomp/stompjs";
 // @ts-ignore - sockjs-client doesn't have TypeScript definitions
 import SockJS from "sockjs-client";
 import { useQueryClient } from "@tanstack/react-query";
-import { notification } from "antd";
+import { notification } from "../utils/antdStatic";
 import { BidUpdateMessage } from "../api/types";
 import formatCurrency from "../utils/format";
 
@@ -98,13 +99,10 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
 
           notification.info({
             key: `extend-${auctionId}`,
-            message: "⏱ Time Extended!",
+            message: "⏰ Time Extended!",
             description: "Auction time extended due to a last-moment bid!",
             duration: 3,
-            style: {
-              backgroundColor: "#FFC107",
-              color: "#000",
-            },
+            className: "bid-notification bid-notification--info",
           });
         }
 
@@ -114,6 +112,7 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
           message: "New Bid Placed",
           description: `${bidUpdate.highestBidderName || "Người đấu giá"} đã đặt giá ${formatCurrency(bidUpdate.currentPrice || 0)}!`,
           duration: 3,
+          className: "bid-notification bid-notification--success",
         });
       } catch (error) {
         console.error("[WS] Failed to parse bid update message:", error);

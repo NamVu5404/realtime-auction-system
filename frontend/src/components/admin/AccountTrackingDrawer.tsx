@@ -3,6 +3,7 @@ import {
   CheckCircleOutlined,
   LockOutlined,
   UnlockOutlined,
+  UserDeleteOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Card, Drawer, Empty, Pagination, Skeleton, Tag, Timeline } from "antd";
@@ -49,6 +50,20 @@ const createTimelineItem = (tracking: UserAuditResponse) => {
         icon: <UnlockOutlined />,
         color: "green",
         label: "UNBLOCKED",
+      };
+    }
+    if (actionType === "SELLER_ROLE_REVOKED") {
+      return {
+        icon: <UserDeleteOutlined />,
+        color: "red",
+        label: "SELLER_ROLE_REVOKED",
+      };
+    }
+    if (actionType === "SELLER_APPROVED") {
+      return {
+        icon: <CheckCircleOutlined />,
+        color: "green",
+        label: "SELLER_APPROVED",
       };
     }
     return {

@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { message, Result, notification } from "antd";
+import { message, Result } from "antd";
+import { notification } from "../utils/antdStatic";
 import { useAuth } from "../hooks/useAuth";
 import LoadingPage from "../components/common/LoadingPage";
 

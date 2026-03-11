@@ -111,7 +111,7 @@ export const auctionApi = {
   placeBidV2: async (
     auctionId: number,
     amount: number,
-  ): Promise<PlaceBidResponseV2> => {
+  ): Promise<ApiResponse<PlaceBidResponseV2>> => {
     try {
       // NOTE: We manually override baseURL for V2 endpoint
       const response = await axiosClient.post<ApiResponse<PlaceBidResponseV2>>(
@@ -120,7 +120,7 @@ export const auctionApi = {
           amount,
         },
       );
-      return response.data.result;
+      return response.data;
     } catch (error) {
       console.error("Failed to place bid (V2):", error);
       throw error;

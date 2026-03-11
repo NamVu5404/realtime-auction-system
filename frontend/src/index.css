@@ -39,6 +39,16 @@
   --color-accent-red: #f87171;
   --color-accent-green: #4ade80;
 
+  /* Toast */
+  --color-accent-yellow: #fbbf24;
+  --color-toast-bg: rgba(40, 44, 56, 0.9);
+  --color-toast-border: var(--color-border-md);
+  --toast-shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.35);
+  --toast-shadow-strong: 0 20px 45px rgba(0, 0, 0, 0.55);
+  --toast-glow-gold:
+    0 0 0 1px rgba(254, 212, 105, 0.15), 0 0 20px rgba(254, 212, 105, 0.08);
+
+  /* Font */
   --font-sans:
     system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans",
     "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
@@ -766,4 +776,401 @@ button:focus-visible {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: pulseDot 2s infinite ease-in-out;
+}
+
+/* -------------------------------------------------------
+   21. Ultra Premium Toast & Notification System
+   ------------------------------------------------------- */
+
+:root {
+  --color-accent-yellow: #fbbf24;
+
+  --color-toast-bg: rgba(40, 44, 56, 0.9);
+  --color-toast-border: var(--color-border-md);
+
+  --toast-shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.35);
+  --toast-shadow-strong: 0 20px 45px rgba(0, 0, 0, 0.55);
+
+  --toast-glow-gold:
+    0 0 0 1px rgba(254, 212, 105, 0.15), 0 0 20px rgba(254, 212, 105, 0.08);
+}
+
+/* ─────────────────────────────────────
+   Animations
+   ───────────────────────────────────── */
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+/* subtle glow pulse */
+
+@keyframes gold-glow {
+  0% {
+    box-shadow: var(--toast-shadow-soft), var(--toast-glow-gold);
+  }
+  50% {
+    box-shadow: var(--toast-shadow-strong), var(--toast-glow-gold);
+  }
+  100% {
+    box-shadow: var(--toast-shadow-soft), var(--toast-glow-gold);
+  }
+}
+
+/* -------------------------------------------------------
+   Ant Design message (global toast)
+   ------------------------------------------------------- */
+
+.ant-message .ant-message-notice-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 4px 0 !important;
+}
+
+.ant-message .ant-message-notice-content {
+  background: rgba(28, 30, 38, 0.95) !important;
+
+  backdrop-filter: blur(12px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(140%) !important;
+
+  border: 1px solid rgba(254, 212, 105, 0.3) !important;
+  border-radius: 12px !important;
+
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.8) !important;
+
+  padding: 10px 20px !important;
+  animation: toast-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden !important;
+}
+
+/* hover elevation */
+.ant-message .ant-message-notice-content:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 45px -8px rgba(0, 0, 0, 0.9) !important;
+  background: rgba(35, 38, 48, 0.98) !important;
+}
+
+/* toast content */
+.ant-message .ant-message-custom-content {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+/* success toast */
+.ant-message .ant-message-success .ant-message-notice-content {
+  border-color: var(--color-gold-border) !important;
+  animation: gold-glow 4s ease-in-out infinite;
+}
+
+.ant-message .ant-message-success .anticon {
+  color: var(--color-gold-start) !important;
+}
+
+/* error */
+.ant-message .ant-message-error .anticon {
+  color: var(--color-accent-red) !important;
+}
+
+/* info */
+.ant-message .ant-message-info .anticon {
+  color: var(--color-accent-blue) !important;
+}
+
+/* warning */
+.ant-message .ant-message-warning .anticon {
+  color: var(--color-accent-yellow) !important;
+}
+
+/* -------------------------------------------------------
+   Ant Design notification (panel)
+   ------------------------------------------------------- */
+
+.ant-notification-notice {
+  background: var(--color-toast-bg) !important;
+
+  backdrop-filter: blur(12px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(120%) !important;
+
+  border: 1px solid var(--color-toast-border) !important;
+  border-radius: var(--radius-md) !important;
+
+  box-shadow: var(--toast-shadow-soft) !important;
+
+  animation: toast-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* hover */
+.ant-notification-notice:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--toast-shadow-strong) !important;
+}
+
+/* title */
+.ant-notification-notice-message {
+  color: var(--color-text-primary) !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+}
+
+/* Ant Design v5 CSS-in-JS có thể override 1 class đơn — dùng specificity cao hơn */
+.ant-notification-notice .ant-notification-notice-message {
+  color: var(--color-text-primary) !important;
+}
+
+/* description */
+.ant-notification-notice-description {
+  color: var(--color-text-secondary) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.ant-notification-notice .ant-notification-notice-description {
+  color: var(--color-text-secondary) !important;
+}
+
+/* success */
+.ant-notification-notice-success {
+  border-color: var(--color-gold-border) !important;
+}
+
+.ant-notification-notice-icon-success {
+  color: var(--color-gold-start) !important;
+}
+
+/* error */
+.ant-notification-notice-error {
+  border-color: rgba(248, 113, 113, 0.35) !important;
+}
+.ant-notification-notice-icon-error {
+  color: var(--color-accent-red) !important;
+}
+
+/* info */
+.ant-notification-notice-icon-info {
+  color: var(--color-accent-blue) !important;
+}
+
+/* warning */
+.ant-notification-notice-icon-warning {
+  color: var(--color-accent-yellow) !important;
+}
+
+/* close button */
+.ant-notification-notice-close {
+  color: var(--color-text-muted) !important;
+  transition: color 0.2s ease;
+}
+
+.ant-notification-notice-close:hover {
+  color: var(--color-text-primary) !important;
+}
+
+/* -------------------------------------------------------
+   22. Bid-Specific Notification (Scoped Override)
+   Applies only to notifications with className="bid-notification"
+   ------------------------------------------------------- */
+
+/* ── Base container ── */
+.bid-notification.ant-notification-notice {
+  background: rgba(40, 44, 56, 0.95) !important;
+  backdrop-filter: blur(12px) saturate(140%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(140%) !important;
+  border-radius: var(--radius-md) !important;
+  /* Deep shadow — lifts it above the page content */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7) !important;
+  /* Entrance animation inherited from global .ant-notification-notice */
+}
+
+/* ── Error variant ── */
+.bid-notification.bid-notification--error.ant-notification-notice {
+  border: 1px solid rgba(248, 113, 113, 0.35) !important;
+}
+
+.bid-notification.bid-notification--error .ant-notification-notice-icon {
+  color: var(--color-accent-red) !important;
+}
+
+/* ── Title: pure white, bold, authoritative ── */
+.bid-notification .ant-notification-notice-message {
+  color: var(--color-text-primary) !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  letter-spacing: -0.01em !important;
+  margin-bottom: 4px !important;
+}
+
+/* ── Description: silver/muted ── */
+.bid-notification .ant-notification-notice-description {
+  color: var(--color-text-secondary) !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+}
+
+/* ── Close button ── */
+.bid-notification .ant-notification-notice-close {
+  color: var(--color-text-muted) !important;
+  transition: color 0.2s ease;
+}
+
+.bid-notification .ant-notification-notice-close:hover {
+  color: var(--color-text-primary) !important;
+}
+
+/* ── Success variant — gold border + gold icon ── */
+.bid-notification.bid-notification--success.ant-notification-notice {
+  border: 1px solid rgba(254, 212, 105, 0.3) !important;
+}
+
+.bid-notification.bid-notification--success .ant-notification-notice-icon,
+.bid-notification.bid-notification--success .anticon {
+  color: var(--color-gold-start) !important;
+}
+
+/* ── Info variant (time extended) — gold border + gold icon ── */
+.bid-notification.bid-notification--info.ant-notification-notice {
+  border: 1px solid rgba(254, 212, 105, 0.3) !important;
+}
+
+.bid-notification.bid-notification--info .ant-notification-notice-icon,
+.bid-notification.bid-notification--info .anticon {
+  color: var(--color-gold-start) !important;
+}
+
+/* ── Kill the inner white underlay ──
+   Antd wraps content in .ant-notification-notice-content which may carry
+   a default white background. Force it fully transparent. ── */
+.bid-notification .ant-notification-notice-content,
+.bid-notification .ant-notification-notice-with-icon {
+  background: transparent !important;
+  color: var(--color-text-primary) !important;
+}
+
+/* ── High-specificity title override (beats Antd's internal color: unset) ── */
+.bid-notification.ant-notification-notice .ant-notification-notice-message {
+  color: var(--color-text-primary) !important;
+  font-weight: 700 !important;
+  font-size: 15px !important;
+  letter-spacing: -0.01em !important;
+  margin-bottom: 4px !important;
+}
+
+/* ── High-specificity description override ── */
+.bid-notification.ant-notification-notice .ant-notification-notice-description {
+  color: var(--color-text-secondary) !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+}
+
+/* ── Hover: keep dark bg, no bright overlay ──
+   Antd v5 may apply a lighter bg-color on hover.
+   Pin the background so it never brightens. ── */
+.bid-notification.ant-notification-notice:hover {
+  background: rgba(40, 44, 56, 0.98) !important;
+}
+
+/* ── Progress bar (Antd v5 countdown strip) ──
+   This is the "white layer at the bottom" — Antd renders
+   .ant-notification-notice-progress as a light thin bar.
+   Restyle it to match the dark theme instead of hiding it. ── */
+.bid-notification .ant-notification-notice-progress {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.bid-notification .ant-notification-notice-progress-bar {
+  background: var(--color-gold-start) !important;
+}
+
+/* If Antd renders it as a linear-gradient track, override that too */
+.bid-notification .ant-notification-notice-progress::before {
+  background: var(--color-gold-start) !important;
+}
+
+/* ── Kill any pseudo-element hover overlays ──
+   Some Antd versions inject ::before ripple on hover ── */
+.bid-notification.ant-notification-notice::before {
+  display: none !important;
+  background: transparent !important;
+}
+
+/* ── Ensure no child element carries a white background ── */
+.bid-notification.ant-notification-notice
+  *:not(svg):not(path):not(span[style]) {
+  background-color: transparent;
+}
+
+.ant-notification-notice-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding-bottom: 0 !important;
+}
+
+.ant-notification-notice.bid-notification {
+  background: rgba(28, 30, 38, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(254, 212, 105, 0.3) !important; /* Viền Gold mảnh */
+  border-radius: 12px !important;
+
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.8) !important;
+
+  overflow: hidden !important;
+  margin-bottom: 16px !important;
+}
+
+.ant-notification-notice.bid-notification:hover {
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.9) !important;
+  background: rgba(35, 38, 48, 0.98) !important;
+}
+
+.bid-notification .ant-notification-notice-icon-success {
+  color: #fed469 !important;
+}
+
+/* ── Nuclear override: đảm bảo message/description luôn có màu đúng ──
+   Ant Design v5 inject inline color token qua CSS var — override toàn bộ.
+   Sử dụng specificity cực cao để thắng CSS-in-JS. ── */
+:where(.ant-notification)
+  .ant-notification-notice
+  .ant-notification-notice-message,
+.ant-notification-notice .ant-notification-notice-message,
+.ant-notification-notice-message {
+  color: #ffffff !important;
+}
+
+:where(.ant-notification)
+  .ant-notification-notice
+  .ant-notification-notice-description,
+.ant-notification-notice .ant-notification-notice-description,
+.ant-notification-notice-description {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Fix cho cả icon và nút close nếu cần */
+.ant-notification-notice .ant-notification-notice-close {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+.ant-notification-notice .ant-notification-notice-close:hover {
+  color: #ffffff !important;
 }
