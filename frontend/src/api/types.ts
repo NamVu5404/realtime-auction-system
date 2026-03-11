@@ -41,6 +41,8 @@ export enum UserActionType {
   BLOCKED = "BLOCKED",
   UNBLOCKED = "UNBLOCKED",
   FRAUD = "FRAUD",
+  SELLER_ROLE_REVOKED = "SELLER_ROLE_REVOKED",
+  SELLER_APPROVED = "SELLER_APPROVED",
 }
 
 export enum AuctionActionType {
@@ -69,6 +71,7 @@ export interface User {
   roles: UserRole[];
   avatarUrl?: string;
   status?: "ACTIVE" | "BLOCKED";
+  phone?: string;
 }
 
 /**

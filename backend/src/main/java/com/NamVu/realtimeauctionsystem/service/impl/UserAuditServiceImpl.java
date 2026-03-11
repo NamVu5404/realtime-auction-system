@@ -11,6 +11,7 @@ import com.namvu.realtimeauctionsystem.enums.UserActionType;
 import com.namvu.realtimeauctionsystem.mapper.UserAuditMapper;
 import com.namvu.realtimeauctionsystem.repository.UserAuditRepository;
 import com.namvu.realtimeauctionsystem.service.UserAuditService;
+import com.namvu.realtimeauctionsystem.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -78,6 +79,16 @@ public class UserAuditServiceImpl implements UserAuditService {
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<UserAuditResponse> getUserAudit(Long userId, Pageable pageable) {
+        return getAccountAudit(userId, pageable);
+    }
+
+    @Override
+    public PageResponse<UserAuditResponse> getMyAccountAudit(Pageable pageable) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return getAccountAudit(userId, pageable);
+    }
+
+    private PageResponse<UserAuditResponse> getAccountAudit(Long userId, Pageable pageable) {
         Page<UserAudit> userAuditPage = auditRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
 
         List<UserAuditResponse> data = userAuditPage.stream()

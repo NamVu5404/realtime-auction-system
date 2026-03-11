@@ -4,11 +4,11 @@ import com.namvu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
 import com.namvu.realtimeauctionsystem.dto.auth.ExchangeTokenRequest;
 import com.namvu.realtimeauctionsystem.dto.auth.ExchangeTokenResponse;
 import com.namvu.realtimeauctionsystem.dto.user.OutboundUserResponse;
-import com.namvu.realtimeauctionsystem.dto.user.UserResponse;
 import com.namvu.realtimeauctionsystem.entity.User;
 import com.namvu.realtimeauctionsystem.enums.TokenType;
 import com.namvu.realtimeauctionsystem.httpclient.GoogleAuthClient;
 import com.namvu.realtimeauctionsystem.httpclient.GoogleUserClient;
+import com.namvu.realtimeauctionsystem.mapper.UserMapper;
 import com.namvu.realtimeauctionsystem.service.OutboundAuthenticationService;
 import com.namvu.realtimeauctionsystem.service.OutboundUserService;
 import com.namvu.realtimeauctionsystem.service.TokenService;
@@ -26,6 +26,7 @@ public class GoogleAuthenticationServiceImpl implements OutboundAuthenticationSe
     private final GoogleUserClient googleUserClient;
     private final TokenService tokenService;
     private final OutboundUserService outboundUserService;
+    private final UserMapper userMapper;
 
     @Value("${outbound.google.client-id}")
     private String googleClientId;
@@ -56,13 +57,7 @@ public class GoogleAuthenticationServiceImpl implements OutboundAuthenticationSe
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
-                .user(UserResponse.builder()
-                        .id(user.getId())
-                        .email(user.getEmail())
-                        .roles(user.getRoles())
-                        .avatarUrl(user.getAvatarUrl())
-                        .name(user.getName())
-                        .build())
+                .user(userMapper.mapToResponse(user))
                 .build();
     }
 

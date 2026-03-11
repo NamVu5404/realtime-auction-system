@@ -124,7 +124,7 @@ export const AuctionImageCarousel = ({
                     }
                     fallback={DEFAULT_AUCTION_IMAGE}
                     preview={{
-                      mask: (
+                      cover: (
                         <div className="flex flex-col items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                           <span className="text-2xl text-white">🔍</span>
                           <span className="text-white text-xs font-semibold tracking-wider uppercase">

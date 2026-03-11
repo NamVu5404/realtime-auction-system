@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FileRepository extends JpaRepository<File, Long> {
@@ -22,4 +23,6 @@ public interface FileRepository extends JpaRepository<File, Long> {
             "WHERE f.ownerType = :type AND f.ownerId IN :ids " +
             "ORDER BY f.sortOrder ASC")
     List<FileResponse> findAllByOwnerTypeAndIds(OwnerType type, List<Long> ids);
+
+    Optional<File> findByOwnerTypeAndOwnerId(OwnerType ownerType, Long ownerId);
 }

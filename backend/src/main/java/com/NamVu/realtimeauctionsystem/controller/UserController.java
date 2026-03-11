@@ -2,10 +2,7 @@ package com.namvu.realtimeauctionsystem.controller;
 
 import com.namvu.realtimeauctionsystem.dto.common.ApiResponse;
 import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
-import com.namvu.realtimeauctionsystem.dto.user.BlockUserRequest;
-import com.namvu.realtimeauctionsystem.dto.user.BlockUserResponse;
-import com.namvu.realtimeauctionsystem.dto.user.ManagerUserResponse;
-import com.namvu.realtimeauctionsystem.dto.user.UserAuditResponse;
+import com.namvu.realtimeauctionsystem.dto.user.*;
 import com.namvu.realtimeauctionsystem.enums.Role;
 import com.namvu.realtimeauctionsystem.enums.UserStatus;
 import com.namvu.realtimeauctionsystem.service.UserAuditService;
@@ -14,7 +11,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/v1/users")
@@ -63,6 +62,32 @@ public class UserController {
 
         return ApiResponse.<PageResponse<UserAuditResponse>>builder()
                 .result(auditService.getUserAudit(userId, pageable))
+                .build();
+    }
+
+    @GetMapping("/audit")
+    public ApiResponse<PageResponse<UserAuditResponse>> getMyAccountAudit(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+
+        return ApiResponse.<PageResponse<UserAuditResponse>>builder()
+                .result(auditService.getMyAccountAudit(pageable))
+                .build();
+    }
+
+    @PutMapping("/profile")
+    public ApiResponse<UserResponse> updateProfile(@RequestBody @Valid UpdateUserRequest request) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.updateProfile(request))
+                .build();
+    }
+
+    @PostMapping(value = "/profile/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<UserResponse> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.updateAvatar(file))
                 .build();
     }
 }

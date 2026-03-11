@@ -2,14 +2,12 @@ package com.namvu.realtimeauctionsystem.service.impl;
 
 import com.namvu.realtimeauctionsystem.dto.file.FileMetadataRequest;
 import com.namvu.realtimeauctionsystem.dto.file.FileResponse;
-import com.namvu.realtimeauctionsystem.entity.Auction;
 import com.namvu.realtimeauctionsystem.entity.File;
 import com.namvu.realtimeauctionsystem.enums.OwnerType;
 import com.namvu.realtimeauctionsystem.exception.AppException;
 import com.namvu.realtimeauctionsystem.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.repository.FileRepository;
 import com.namvu.realtimeauctionsystem.service.FileService;
-import com.namvu.realtimeauctionsystem.utils.SecurityUtils;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +53,7 @@ public class FileServiceImpl implements FileService {
 
         try {
             String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
-            String storageName = UUID.randomUUID() + "." + extension;
+            String storageName = UUID.randomUUID() + "_" + ownerType + "_" + ownerId + "." + extension;
             String relativePath = ownerType.getFolderName();
 
             Path targetDir = Paths.get(uploadDir).resolve(relativePath);

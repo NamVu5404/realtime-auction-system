@@ -64,6 +64,8 @@ public class AuctionServiceImpl implements AuctionService {
         Auction auction = auctionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
 
+        canViewAuction(auction);
+
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         response.setImages(fileRepository.findAllByOwnerTypeAndIds(OwnerType.AUCTION_IMAGE, List.of(id)));
         populateImages(response);
@@ -354,5 +356,19 @@ public class AuctionServiceImpl implements AuctionService {
                 .totalElements(auctionPage.getTotalElements())
                 .data(responses)
                 .build();
+    }
+
+    private void canViewAuction(Auction auction) {
+        if (auction.getStatus() != AuctionStatus.DRAFT && auction.getStatus() != AuctionStatus.CANCELLED) {
+            return;
+        }
+
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        boolean isSeller = auction.getSeller().getId().equals(currentUserId);
+        boolean isAdmin = SecurityUtils.isAdmin();
+
+        if (!isSeller && !isAdmin) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
     }
 }

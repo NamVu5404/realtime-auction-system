@@ -18,11 +18,11 @@ import {
   Spin,
   Tag,
   Tooltip,
-  message,
-  notification,
 } from "antd";
+import { message, notification } from "../utils/antdStatic";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, memo, useCallback, useRef } from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { auctionApi } from "../api/auctionApi";
 import {
@@ -40,6 +40,7 @@ import { formatCurrency } from "../utils/format";
 import { useUIStore } from "../store/useUIStore";
 import { AuctionImageCarousel } from "../components/common/AuctionImageCarousel";
 import LoadingPage from "../components/common/LoadingPage";
+import { getAvatarUrl } from "../utils/imageUtils";
 
 // Tách phần bidding form ra component riêng với state nội bộ
 const BiddingSection = memo(
@@ -528,11 +529,14 @@ export const AuctionDetailPage = () => {
         return;
       }
 
-      // Place bid using updated endpoint (V2)
-      const response = await auctionApi.placeBidV2(auction.id, bidAmountNum);
+      // Place bid using updated endpoint (V2) — returns full ApiResponse wrapper
+      const apiResponse = await auctionApi.placeBidV2(auction.id, bidAmountNum);
+      const response = apiResponse.result;
 
-      if (response.success) {
-        message.success(response.message || "Bid placed successfully!");
+      if (apiResponse.code === 1000 && response.success) {
+        // ✅ Bid accepted — hardcoded success notification
+        message.success("🎉 Bid placed successfully!");
+
         // Update locally for instant feedback
         setAuction((prev) =>
           prev && prev.id === auction.id
@@ -554,20 +558,40 @@ export const AuctionDetailPage = () => {
         if (response.extended && response.finalEndTime) {
           onTimeExtended(response.finalEndTime);
         }
+      } else if (apiResponse.code === 9999) {
+        // ⚠️ Concurrency conflict (e.g. outbid during submission) — hardcoded message
+        message.error(
+          "Your bid was not accepted. You may have been outbid. Please try again.",
+        );
       } else {
-        message.error(response.message || "Failed to place bid");
+        // ❌ Other business error — show dynamic server message
+        message.error(
+          apiResponse.message || response?.message || "Failed to place bid",
+        );
       }
-    } catch (error) {
-      let errorMessage = "Failed to place bid";
-      if (error instanceof Error) {
-        errorMessage = error.message;
+    } catch (error: any) {
+      // Intelligent error routing for thrown (network/HTTP) errors
+      const apiData = error?.response?.data;
+      let notifTitle = "Bid Submission Failed";
+      let notifDesc =
+        "An error occurred while placing your bid. Please try again.";
+
+      if (apiData?.code === 9999) {
+        // ⚠️ Concurrency conflict surfaced as an HTTP error — hardcoded message
+        notifDesc =
+          "Your bid was not accepted. You may have been outbid. Please try again.";
+      } else if (apiData?.message) {
+        // ❌ Dynamic server message takes precedence
+        notifDesc = apiData.message;
+      } else if (error instanceof Error && error.message) {
+        notifDesc = error.message;
       }
+
       notification.error({
-        message: "Bid Submission Failed",
-        description:
-          errorMessage ||
-          "An error occurred while placing your bid. Please try again.",
-        duration: 3,
+        message: notifTitle,
+        description: notifDesc,
+        duration: 5,
+        className: "bid-notification bid-notification--error",
       });
     } finally {
       setBidLoading(false);
@@ -708,22 +732,8 @@ export const AuctionDetailPage = () => {
             marginBottom: "28px",
           }}
         >
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate(-1)}
-            style={{
-              color: "rgba(255,255,255,0.6)",
-              fontWeight: 600,
-              fontSize: "14px",
-              padding: "0 12px 0 4px",
-              height: "36px",
-              borderRadius: "100px",
-              border: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(255,255,255,0.04)",
-            }}
-          >
-            Back to Auctions
+          <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
+            Back
           </Button>
 
           {/* Connection Status Indicator */}
@@ -1218,7 +1228,7 @@ export const AuctionDetailPage = () => {
                       >
                         {auction.seller?.avatarUrl && (
                           <Image
-                            src={auction.seller.avatarUrl}
+                            src={getAvatarUrl(auction.seller.avatarUrl)}
                             alt={auction.seller.name}
                             style={{
                               width: "36px",
@@ -1269,7 +1279,9 @@ export const AuctionDetailPage = () => {
                         >
                           {auction.highestBidder?.avatarUrl && (
                             <Image
-                              src={auction.highestBidder.avatarUrl}
+                              src={getAvatarUrl(
+                                auction.highestBidder.avatarUrl,
+                              )}
                               alt={auction.highestBidder.name}
                               style={{
                                 width: "36px",

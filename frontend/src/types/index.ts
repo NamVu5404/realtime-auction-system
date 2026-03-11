@@ -43,6 +43,7 @@ export interface UserInfo {
   name: string;
   avatarUrl?: string;
   roles: string[];
+  phone?: string;
 }
 
 export interface ExchangeTokenResponse {

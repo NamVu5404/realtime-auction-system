@@ -27,6 +27,8 @@ public class User extends Auditable {
     @Column(nullable = false)
     private String name;
 
+    private String phone;
+
     @Column(name = "avatar_url")
     private String avatarUrl;
 

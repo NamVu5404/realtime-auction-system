@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GoogleLoginButton from "../../auth/GoogleLoginButton";
 import { useAuth } from "../../hooks/useAuth";
+import { getAvatarUrl } from "../../utils/imageUtils";
 
 const { Header: AntHeader } = Layout;
 
@@ -131,7 +132,7 @@ export const Header = () => {
               <Avatar
                 size={34}
                 icon={<UserOutlined />}
-                src={user.avatarUrl}
+                src={getAvatarUrl(user.avatarUrl)}
                 alt={user.name}
                 style={{
                   background: "rgba(254,212,105,0.12)",

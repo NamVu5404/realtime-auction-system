@@ -77,6 +77,7 @@ export const authApi = {
         name: user.name,
         avatarUrl: user.avatarUrl,
         roles: (user as any).roles || [],
+        phone: user.phone,
       };
 
       return {

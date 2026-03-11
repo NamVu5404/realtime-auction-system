@@ -1,12 +1,12 @@
-import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "antd";
-import { useState, memo } from "react";
+import { memo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Auction, AuctionStatus } from "../../api/types";
 import { formatAuctionTime, getTimeRemaining } from "../../utils/dateUtils";
+import { formatCurrency } from "../../utils/format";
+import { DEFAULT_AUCTION_IMAGE, getImageUrl } from "../../utils/imageUtils";
 import Countdown from "./Countdown";
-import { formatCurrency, stripHtml } from "../../utils/format";
-import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
 
 const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 
@@ -151,22 +151,6 @@ export const AuctionCard = memo(
           >
             {auction.title}
           </h3>
-
-          {/* Description */}
-          <p
-            style={{
-              fontSize: "13px",
-              color: "rgba(255,255,255,0.52)",
-              margin: 0,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-              lineHeight: 1.55,
-            }}
-          >
-            {stripHtml(auction.description)}
-          </p>
 
           {/* Price */}
           <div

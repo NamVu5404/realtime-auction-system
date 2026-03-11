@@ -6,12 +6,16 @@ import {
   PlusCircleOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { Card, Drawer, Tag } from "antd";
+import { useQuery } from "@tanstack/react-query";
+import { Card, Drawer, Empty, Pagination, Skeleton, Tag } from "antd";
 import type { TimelineItemProps } from "antd";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
 import adminApi from "../../../api/adminApi";
-import { AuctionActionType, AuctionAuditResponse } from "../../../api/types";
+import {
+  AuctionActionType,
+  AuctionAuditResponse,
+  PageResponse,
+} from "../../../api/types";
 import AuditTimeline from "../../../components/common/AuditTimeline";
 
 interface AuctionAuditDrawerProps {
@@ -19,6 +23,8 @@ interface AuctionAuditDrawerProps {
   auctionId: number | null;
   auctionTitle?: string;
   onClose: () => void;
+  page: number;
+  onPageChange: (page: number) => void;
 }
 
 /**
@@ -172,28 +178,14 @@ export const AuctionAuditDrawer = ({
   auctionId,
   auctionTitle,
   onClose,
+  page,
+  onPageChange,
 }: AuctionAuditDrawerProps) => {
-  const [auditLogs, setAuditLogs] = useState<AuctionAuditResponse[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Fetch audit logs when drawer opens
-  useEffect(() => {
-    if (visible && auctionId) {
-      setIsLoading(true);
-      adminApi
-        .getAuctionAudit(auctionId)
-        .then((response) => {
-          setAuditLogs(response.data);
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          console.error("Failed to fetch auction audit logs:", error);
-          setIsLoading(false);
-        });
-    } else {
-      setAuditLogs([]);
-    }
-  }, [visible, auctionId]);
+  const { data, isLoading } = useQuery<PageResponse<AuctionAuditResponse>>({
+    queryKey: ["auction-audit", auctionId, page],
+    queryFn: () => adminApi.getAuctionAudit(auctionId!, page, 20),
+    enabled: visible && !!auctionId,
+  });
 
   return (
     <Drawer
@@ -219,7 +211,7 @@ export const AuctionAuditDrawer = ({
       size={800}
       styles={{
         body: {
-          paddingBottom: "60px",
+          paddingBottom: "32px",
           backgroundColor: "#191B24",
         },
         header: {
@@ -229,11 +221,46 @@ export const AuctionAuditDrawer = ({
         },
       }}
     >
-      <AuditTimeline
-        data={auditLogs}
-        isLoading={isLoading}
-        renderItem={renderAuditItem}
-      />
+      {isLoading ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <Skeleton active paragraph={{ rows: 4 }} />
+          <Skeleton active paragraph={{ rows: 4 }} />
+          <Skeleton active paragraph={{ rows: 4 }} />
+        </div>
+      ) : !data?.data || data.data.length === 0 ? (
+        <Empty
+          description="No tracking history found"
+          style={{
+            marginTop: "60px",
+          }}
+        />
+      ) : (
+        <div style={{ padding: "0 16px" }}>
+          <AuditTimeline
+            data={data.data}
+            isLoading={isLoading}
+            renderItem={renderAuditItem}
+          />
+
+          {data && data.totalElements > 20 && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "end",
+                marginTop: "16px",
+              }}
+            >
+              <Pagination
+                current={page}
+                pageSize={20}
+                total={data.totalElements}
+                onChange={onPageChange}
+                showSizeChanger={false}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </Drawer>
   );
 };

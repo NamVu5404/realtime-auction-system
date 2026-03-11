@@ -33,6 +33,7 @@ import { formatAuctionTime, getTimeRemaining } from "../../../utils/dateUtils";
 import { AuctionImageCarousel } from "../../../components/common/AuctionImageCarousel";
 import { formatCurrency } from "../../../utils/format";
 import { getStatusColor } from "../../../utils/statusUtils";
+import { getAvatarUrl } from "../../../utils/imageUtils";
 
 interface AuctionDetailDrawerProps {
   auction?: Auction;
@@ -552,7 +553,7 @@ export const AuctionDetailDrawer = ({
                       >
                         {auction.seller?.avatarUrl && (
                           <Image
-                            src={auction.seller.avatarUrl}
+                            src={getAvatarUrl(auction.seller.avatarUrl)}
                             alt={auction.seller.name}
                             style={{
                               width: "36px",
@@ -603,7 +604,9 @@ export const AuctionDetailDrawer = ({
                         >
                           {auction.highestBidder?.avatarUrl && (
                             <Image
-                              src={auction.highestBidder.avatarUrl}
+                              src={getAvatarUrl(
+                                auction.highestBidder.avatarUrl,
+                              )}
                               alt={auction.highestBidder.name}
                               style={{
                                 width: "36px",

@@ -37,3 +37,15 @@ export const getImageUrl = (
   const cleanPath = path.startsWith("/") ? path.substring(1) : path;
   return `${API_IMAGE_BASE}/${cleanPath}`;
 };
+
+/**
+ * Construct full avatar URL from relative path
+ * Return undefined if none is provided, allowing antd Avatar to fallback to icon
+ */
+export const getAvatarUrl = (path?: string | null): string | undefined => {
+  if (!path) return undefined;
+  if (path.startsWith("http") || path.startsWith("data:")) return path;
+
+  const cleanPath = path.startsWith("/") ? path.substring(1) : path;
+  return `${API_IMAGE_BASE}/avatars/${cleanPath}`;
+};

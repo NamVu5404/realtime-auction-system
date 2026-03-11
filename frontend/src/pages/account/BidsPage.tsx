@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Table, Tag, Typography, Button, Empty } from "antd";
+import { Button, Empty, Table, Tag, Typography } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import bidApi from "../../api/bidApi";
 import {
   AuctionStatus,
-  BidStatus,
   MyBidHistoryResponse,
   PageResponse,
 } from "../../api/types";
@@ -53,7 +52,7 @@ const BidsPage = () => {
       dataIndex: "amount",
       key: "amount",
       render: (amt: number) => (
-        <span style={{ color: "#fff", fontWeight: 700 }}>
+        <span style={{ color: "#FED469", fontWeight: 700 }}>
           {formatCurrency(amt)}
         </span>
       ),
@@ -100,21 +99,31 @@ const BidsPage = () => {
 
   if (!isLoading && data && data.data.length === 0) {
     return (
-      <Empty
-        description={
-          <span style={{ color: "rgba(255,255,255,0.45)" }}>
-            You haven't placed any bids yet
-          </span>
-        }
-      >
-        <Button
-          type="primary"
-          onClick={() => navigate("/")}
-          style={{ borderRadius: "100px", padding: "0 24px" }}
+      <div>
+        <Title
+          level={2}
+          style={{ color: "#fff", marginBottom: "16px", fontSize: "24px" }}
         >
-          Browse Auctions
-        </Button>
-      </Empty>
+          Bid History
+        </Title>
+
+        <Empty
+          description={
+            <span style={{ color: "rgba(255,255,255,0.45)" }}>
+              You haven't placed any bids yet
+            </span>
+          }
+        >
+          <Button
+            type="primary"
+            onClick={() => navigate("/")}
+            style={{ padding: "0 24px" }}
+            size="large"
+          >
+            Browse Auctions
+          </Button>
+        </Empty>
+      </div>
     );
   }
 
@@ -122,7 +131,7 @@ const BidsPage = () => {
     <div className="account-table-wrapper">
       <Title
         level={2}
-        style={{ color: "#fff", marginBottom: "32px", fontSize: "24px" }}
+        style={{ color: "#fff", marginBottom: "16px", fontSize: "24px" }}
       >
         Bid History
       </Title>

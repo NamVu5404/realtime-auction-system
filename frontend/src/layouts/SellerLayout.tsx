@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthStore } from "../store/useAuthStore";
+import { getAvatarUrl } from "../utils/imageUtils";
 
 const { Sider, Header, Content } = Layout;
 
@@ -170,7 +171,7 @@ const SellerLayout = () => {
               <Avatar
                 size="default"
                 icon={<UserOutlined />}
-                src={user?.avatarUrl}
+                src={getAvatarUrl(user?.avatarUrl)}
                 alt={user?.name}
                 style={{
                   background: "rgba(254,212,105,0.12)",

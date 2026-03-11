@@ -24,6 +24,9 @@ import AuthCallbackPage from './pages/AuthCallbackPage';
 import HomePage from './pages/HomePage';
 import NotFound from './pages/NotFound';
 import { useUIStore } from './store/useUIStore';
+import IdentityVerificationPage from './pages/account/IdentityVerificationPage';
+import SecurityLogsPage from './pages/account/SecurityLogsPage';
+import { AntdStaticSetter } from './components/AntdStaticSetter';
 
 // Create a client for React Query
 const queryClient = new QueryClient();
@@ -56,10 +59,13 @@ function App() {
           components: {
             Message: {
               colorBgElevated: '#2A2D3A',
+              colorText: '#FFFFFF',
               boxShadowSecondary: '0 15px 50px rgba(0,0,0,0.8)',
             },
             Notification: {
               colorBgElevated: '#2A2D3A',
+              colorText: 'rgba(255, 255, 255, 0.65)',
+              colorTextHeading: '#FFFFFF',
               boxShadowSecondary: '0 15px 50px rgba(0,0,0,0.8)',
             },
             Button: {
@@ -86,6 +92,7 @@ function App() {
         }}
       >
         <AppAntd>
+          <AntdStaticSetter />
           <Router>
             <Routes>
               {/* Public Routes with MainLayout (Header + Footer) */}
@@ -143,6 +150,8 @@ function App() {
                   <Route path="bid-stats" element={<BidStatisticsPage />} />
                   <Route path="bids" element={<BidsPage />} />
                   <Route path="seller-reg" element={<SellerRegPage />} />
+                  <Route path="identity-verification" element={<IdentityVerificationPage />} />
+                  <Route path="security-logs" element={<SecurityLogsPage />} />
                 </Route>
               </Route>
 
