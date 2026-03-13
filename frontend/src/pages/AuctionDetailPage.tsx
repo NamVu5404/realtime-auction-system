@@ -24,6 +24,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, memo, useCallback, useRef } from "react";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import confetti from "canvas-confetti";
 import { auctionApi } from "../api/auctionApi";
 import {
   Auction,
@@ -571,21 +572,8 @@ export const AuctionDetailPage = () => {
       }
     } catch (error: any) {
       // Intelligent error routing for thrown (network/HTTP) errors
-      const apiData = error?.response?.data;
       let notifTitle = "Bid Submission Failed";
-      let notifDesc =
-        "An error occurred while placing your bid. Please try again.";
-
-      if (apiData?.code === 9999) {
-        // ⚠️ Concurrency conflict surfaced as an HTTP error — hardcoded message
-        notifDesc =
-          "Your bid was not accepted. You may have been outbid. Please try again.";
-      } else if (apiData?.message) {
-        // ❌ Dynamic server message takes precedence
-        notifDesc = apiData.message;
-      } else if (error instanceof Error && error.message) {
-        notifDesc = error.message;
-      }
+      let notifDesc = error.message || "An error occurred while placing your bid. Please try again.";
 
       notification.error({
         message: notifTitle,
@@ -606,6 +594,68 @@ export const AuctionDetailPage = () => {
       // Countdown for end time → auction finished
       setIsCountdownFinished(true);
       message.info("Auction has ended - bidding is closed");
+
+      // Celebration Flow: Wait briefly for backend scheduler to process final result
+      setTimeout(async () => {
+        try {
+          // Fetch the definitive result from DB audit logs as requested
+          const result = await auctionApi.getAuctionResult(auction.id);
+          const winnerEmail = result?.details?.winner;
+
+          console.log("[Celebration] Final Result from DB:", result);
+
+          // Compare with current user's email for absolute accuracy
+          if (user?.email && winnerEmail === user.email) {
+            console.log("🏆 YOU WON! Triggering fireworks...");
+
+            // Premium Fireworks Effect
+            const duration = 10 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = {
+              startVelocity: 30,
+              spread: 360,
+              ticks: 60,
+              zIndex: 9999,
+            };
+
+            const randomInRange = (min: number, max: number) =>
+              Math.random() * (max - min) + min;
+
+            const interval: any = setInterval(function () {
+              const timeLeft = animationEnd - Date.now();
+
+              if (timeLeft <= 0) {
+                return clearInterval(interval);
+              }
+
+              const particleCount = 50 * (timeLeft / duration);
+              // since particles fall down, start a bit higher than random
+              confetti({
+                ...defaults,
+                particleCount,
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+              });
+              confetti({
+                ...defaults,
+                particleCount,
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+              });
+            }, 250);
+
+            notification.success({
+              message: "Congratulations! 🏆",
+              description: `You won the auction for "${auction.title}" with a bid of ${formatCurrency(auction.currentPrice)}!`,
+              duration: 10,
+              placement: "top",
+            });
+          }
+        } catch (error) {
+          console.error(
+            "Failed to fetch auction result for celebration:",
+            error,
+          );
+        }
+      }, 2000); // 2s delay to ensure backend has logged the RESULT
     } else if (isScheduled) {
       // Countdown for start time → auction started
       setIsCountdownStarted(true);

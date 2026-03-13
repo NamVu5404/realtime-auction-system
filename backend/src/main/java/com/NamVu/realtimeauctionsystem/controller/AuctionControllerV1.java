@@ -166,4 +166,11 @@ public class AuctionControllerV1 {
                 .result(auctionAuditService.getAuctionAudit(auctionId, pageable))
                 .build();
     }
+
+    @GetMapping("/{auctionId}/result")
+    public ApiResponse<AuctionAuditResponse> getAuctionResult(@PathVariable Long auctionId) {
+        return ApiResponse.<AuctionAuditResponse>builder()
+                .result(auctionAuditService.getAuctionResult(auctionId))
+                .build();
+    }
 }

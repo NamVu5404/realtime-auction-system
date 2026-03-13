@@ -96,11 +96,20 @@ export const AuctionCard = memo(
             src={auctionImageUrl}
             alt={auction.title}
             preview={false}
+            styles={{
+              root: {
+                width: "100%",
+                height: "200px",
+                display: "block",
+                overflow: "hidden",
+              },
+            }}
             style={{
               width: "100%",
               height: "200px",
               objectFit: "cover",
               display: "block",
+              objectPosition: "center center",
               transition: "transform 0.4s cubic-bezier(0.4,0,0.2,1)",
             }}
             className="group-hover:scale-[1.04]"

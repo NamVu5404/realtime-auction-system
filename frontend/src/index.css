@@ -38,6 +38,7 @@
   --color-accent-blue: #60a5fa;
   --color-accent-red: #f87171;
   --color-accent-green: #4ade80;
+  --color-green-glow: rgba(74, 222, 128, 0.15);
 
   /* Toast */
   --color-accent-yellow: #fbbf24;
@@ -47,6 +48,8 @@
   --toast-shadow-strong: 0 20px 45px rgba(0, 0, 0, 0.55);
   --toast-glow-gold:
     0 0 0 1px rgba(254, 212, 105, 0.15), 0 0 20px rgba(254, 212, 105, 0.08);
+  --toast-glow-green:
+    0 0 0 1px rgba(74, 222, 128, 0.15), 0 0 20px rgba(74, 222, 128, 0.08);
 
   /* Font */
   --font-sans:
@@ -835,6 +838,18 @@ button:focus-visible {
   }
 }
 
+@keyframes success-glow {
+  0% {
+    box-shadow: var(--toast-shadow-soft), var(--toast-glow-green);
+  }
+  50% {
+    box-shadow: var(--toast-shadow-strong), var(--toast-glow-green);
+  }
+  100% {
+    box-shadow: var(--toast-shadow-soft), var(--toast-glow-green);
+  }
+}
+
 /* -------------------------------------------------------
    Ant Design message (global toast)
    ------------------------------------------------------- */
@@ -882,7 +897,7 @@ button:focus-visible {
 }
 
 .ant-message .ant-message-success .anticon {
-  color: var(--color-gold-start) !important;
+  color: var(--color-accent-green) !important;
 }
 
 /* error */
@@ -897,7 +912,7 @@ button:focus-visible {
 
 /* warning */
 .ant-message .ant-message-warning .anticon {
-  color: var(--color-accent-yellow) !important;
+  color: var(--color-gold-start) !important;
 }
 
 /* -------------------------------------------------------
@@ -957,7 +972,7 @@ button:focus-visible {
 }
 
 .ant-notification-notice-icon-success {
-  color: var(--color-gold-start) !important;
+  color: var(--color-accent-green) !important;
 }
 
 /* error */
@@ -1046,7 +1061,7 @@ button:focus-visible {
 
 .bid-notification.bid-notification--success .ant-notification-notice-icon,
 .bid-notification.bid-notification--success .anticon {
-  color: var(--color-gold-start) !important;
+  color: var(--color-accent-green) !important;
 }
 
 /* ── Info variant (time extended) — gold border + gold icon ── */
@@ -1145,7 +1160,7 @@ button:focus-visible {
 }
 
 .bid-notification .ant-notification-notice-icon-success {
-  color: #fed469 !important;
+  color: var(--color-accent-green) !important;
 }
 
 /* ── Nuclear override: đảm bảo message/description luôn có màu đúng ──

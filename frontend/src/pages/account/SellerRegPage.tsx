@@ -53,7 +53,7 @@ const SellerRegPage = () => {
     },
     onError: (error: any) => {
       message.error(
-        error.response?.data?.message ||
+        error.message ||
           "Failed to submit registration. You might already have a pending request.",
       );
     },
