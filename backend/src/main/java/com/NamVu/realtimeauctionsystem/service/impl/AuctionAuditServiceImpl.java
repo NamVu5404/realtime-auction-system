@@ -4,6 +4,7 @@ import com.namvu.realtimeauctionsystem.dto.auction.AuctionAuditResponse;
 import com.namvu.realtimeauctionsystem.dto.common.PageResponse;
 import com.namvu.realtimeauctionsystem.entity.Auction;
 import com.namvu.realtimeauctionsystem.entity.AuctionAudit;
+import com.namvu.realtimeauctionsystem.enums.AuctionActionType;
 import com.namvu.realtimeauctionsystem.exception.AppException;
 import com.namvu.realtimeauctionsystem.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.mapper.AuctionAuditMapper;
@@ -55,5 +56,14 @@ public class AuctionAuditServiceImpl implements AuctionAuditService {
                 .totalPage(auctionAuditPage.getTotalPages())
                 .totalElements(auctionAuditPage.getTotalElements())
                 .build();
+    }
+
+    @Override
+    public AuctionAuditResponse getAuctionResult(Long auctionId) {
+        AuctionAudit audit = auctionAuditRepository
+                .findFirstByAuctionIdAndActionTypeOrderByCreatedAtDesc(auctionId, AuctionActionType.RESULT)
+                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+
+        return auctionAuditMapper.mapToResponse(audit);
     }
 }

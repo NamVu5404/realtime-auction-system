@@ -1,4 +1,5 @@
 import axiosClient from "./axiosClient";
+import { extractErrorMessage } from "./apiUtils";
 import {
   Auction,
   ApiResponse,
@@ -8,6 +9,7 @@ import {
   PageResponse,
   AuctionHistoryResponse,
   PlaceBidResponseV2,
+  AuctionAuditResponse,
 } from "./types";
 
 /**
@@ -46,7 +48,7 @@ export const auctionApi = {
       return response.data.result;
     } catch (error) {
       console.error("Failed to fetch auctions by status:", error);
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   },
 
@@ -64,7 +66,7 @@ export const auctionApi = {
       return response.data.result;
     } catch (error) {
       console.error("Failed to fetch auction detail:", error);
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   },
 
@@ -95,7 +97,7 @@ export const auctionApi = {
       return response.data.result;
     } catch (error) {
       console.error("Failed to place bid:", error);
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   },
 
@@ -123,7 +125,7 @@ export const auctionApi = {
       return response.data;
     } catch (error) {
       console.error("Failed to place bid (V2):", error);
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   },
 
@@ -152,7 +154,7 @@ export const auctionApi = {
       return response.data.result;
     } catch (error) {
       console.error("Failed to fetch auction history:", error);
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   },
 
@@ -170,7 +172,26 @@ export const auctionApi = {
       return response.data.result;
     } catch (error) {
       console.error("Failed to fetch current price:", error);
-      throw error;
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+  /**
+   * Fetch final auction result (audit log)
+   *
+   * @param auctionId - Auction ID
+   * @returns Promise with auction result details
+   */
+  getAuctionResult: async (
+    auctionId: number,
+  ): Promise<AuctionAuditResponse> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<AuctionAuditResponse>>(
+        `/auctions/${auctionId}/result`,
+      );
+      return response.data.result;
+    } catch (error) {
+      console.error("Failed to fetch auction result:", error);
+      throw new Error(extractErrorMessage(error));
     }
   },
 };

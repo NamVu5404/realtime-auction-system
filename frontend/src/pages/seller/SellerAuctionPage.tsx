@@ -243,6 +243,12 @@ const SellerAuctionPage = () => {
           width={50}
           height={50}
           fallback={DEFAULT_IMAGE}
+          style={{
+            width: "50px",
+            height: "50px",
+            objectFit: "cover",
+            objectPosition: "center center",
+          }}
         />
       ),
     },

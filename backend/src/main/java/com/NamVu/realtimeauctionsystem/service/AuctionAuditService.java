@@ -6,4 +6,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface AuctionAuditService {
     PageResponse<AuctionAuditResponse> getAuctionAudit(Long auctionId, Pageable pageable);
+
+    AuctionAuditResponse getAuctionResult(Long auctionId);
 }

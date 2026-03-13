@@ -1,4 +1,5 @@
 import axiosClient from './axiosClient';
+import { extractErrorMessage } from './apiUtils';
 import { ApiResponse, PageResponse, MyBidHistoryResponse } from './types';
 
 export const bidApi = {
@@ -26,7 +27,7 @@ export const bidApi = {
 			return response.data.result;
 		} catch (error) {
 			console.error('Failed to fetch my bid history', error);
-			throw error;
+			throw new Error(extractErrorMessage(error));
 		}
 	},
 
@@ -55,7 +56,7 @@ export const bidApi = {
 			return response.data.result;
 		} catch (error) {
 			console.error(`Failed to fetch bid history for user ${userId}`, error);
-			throw error;
+			throw new Error(extractErrorMessage(error));
 		}
 	},
 };

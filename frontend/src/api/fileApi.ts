@@ -1,4 +1,5 @@
 import axiosClient from "./axiosClient";
+import { extractErrorMessage } from "./apiUtils";
 import {
   ApiResponse,
   FileMetadataRequest,
@@ -42,7 +43,7 @@ export const fileApi = {
       return response.data.result;
     } catch (error) {
       console.error("Failed to upload file:", error);
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   },
 
@@ -61,7 +62,7 @@ export const fileApi = {
       );
     } catch (error) {
       console.error("Failed to update metadata batch:", error);
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   },
 
@@ -74,7 +75,7 @@ export const fileApi = {
       await axiosClient.delete(`/files/seller/${id}?ownerId=${ownerId}`);
     } catch (error) {
       console.error("Failed to delete file:", error);
-      throw error;
+      throw new Error(extractErrorMessage(error));
     }
   },
 };

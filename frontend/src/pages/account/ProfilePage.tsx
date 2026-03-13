@@ -32,9 +32,7 @@ const ProfilePage = () => {
       message.success("Profile updated successfully!");
     },
     onError: (error: any) => {
-      message.error(
-        error.response?.data?.message || "Failed to update profile",
-      );
+      message.error(error.message || "Failed to update profile");
     },
   });
 
@@ -45,7 +43,7 @@ const ProfilePage = () => {
       message.success("Avatar updated successfully!");
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || "Failed to upload avatar");
+      message.error(error.message || "Failed to upload avatar");
     },
   });
 
