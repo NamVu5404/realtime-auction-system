@@ -39,7 +39,7 @@ spring:
           min-idle: 10
           max-wait: 10000
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:9094
     producer:
       acks: 1
       retries: 1
@@ -65,7 +65,6 @@ spring:
         spring.json.trusted.packages: "*"
 
 server:
-  address: 0.0.0.0
   port: 8080
   servlet:
     context-path: /api

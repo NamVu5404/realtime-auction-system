@@ -490,7 +490,7 @@ const AdminUserPage = () => {
         }}
         styles={{
           body: {
-            backgroundColor: "#191B24",
+            backgroundColor: "var(--color-card)",
             padding: "24px",
           },
         }}

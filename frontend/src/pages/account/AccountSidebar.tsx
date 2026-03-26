@@ -105,8 +105,9 @@ const AccountSidebar = () => {
   return (
     <div
       style={{
-        background: "#0F111A",
+        background: "var(--color-bg)",
         border: "1px solid rgba(255,255,255,0.05)",
+        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
         borderRadius: "12px",
         height: "fit-content",
         position: isMobile ? "static" : "sticky",

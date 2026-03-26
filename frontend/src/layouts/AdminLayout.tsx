@@ -36,16 +36,16 @@ const AdminLayout = () => {
       onClick: () => navigate("/admin/users"),
     },
     {
-      key: "sellers",
-      icon: <ShopOutlined />,
-      label: "Seller Management",
-      onClick: () => navigate("/admin/sellers"),
-    },
-    {
       key: "auctions",
       icon: <AuditOutlined />,
       label: "Auction Management",
       onClick: () => navigate("/admin/auctions"),
+    },
+    {
+      key: "sellers",
+      icon: <ShopOutlined />,
+      label: "Seller Management",
+      onClick: () => navigate("/admin/sellers"),
     },
   ];
 

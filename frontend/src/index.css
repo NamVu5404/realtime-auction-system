@@ -94,6 +94,36 @@ body {
 }
 
 /* -------------------------------------------------------
+   Custom Scrollbar Styling
+   ------------------------------------------------------- */
+/* Webkit Browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-card-high);
+  border-radius: 10px;
+  border: 2px solid var(--color-bg);
+  transition: var(--transition);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-border);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-card-high) var(--color-bg);
+}
+
+/* -------------------------------------------------------
    4. Animations
    ------------------------------------------------------- */
 @keyframes fadeIn {
@@ -172,7 +202,7 @@ body {
 }
 
 .filter-container {
-  background: #191b24 !important;
+  background: var(--color-card) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -183,7 +213,7 @@ body {
 }
 
 .stats-card.ant-card {
-  background: #191b24 !important;
+  background: var(--color-card) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
@@ -191,10 +221,10 @@ body {
    6. Layout
    ------------------------------------------------------- */
 .ant-layout {
-  background: transparent !important;
+  background: transparent;
 }
 .ant-layout-content {
-  background: transparent !important;
+  background: transparent;
 }
 
 /* -------------------------------------------------------
@@ -417,7 +447,7 @@ body {
 }
 
 :where(.ant-table-wrapper) {
-  background: #191b24 !important;
+  background: var(--color-surface) !important;
   border-radius: var(--radius-md) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -431,7 +461,7 @@ body {
 }
 
 :where(.ant-table-thead > tr > th) {
-  background: #191b24 !important;
+  background: var(--color-surface) !important;
   border-bottom: 1px solid var(--color-border) !important;
   color: var(--color-text-muted) !important;
   font-size: 11px !important;
@@ -482,6 +512,12 @@ body {
 /* -------------------------------------------------------
    13. Select / DatePicker
    ------------------------------------------------------- */
+.ant-select-outlined {
+  background-color: #2a2d36 !important;
+  border: 1px solid var(--color-border-md) !important;
+  border-radius: var(--radius-sm) !important;
+}
+
 :where(.ant-select-selector) {
   background-color: rgba(255, 255, 255, 0.04) !important;
   border-color: var(--color-border-md) !important;
@@ -551,7 +587,7 @@ body {
   border-top: 1px solid var(--color-border) !important;
 }
 :where(.ant-drawer-content) {
-  background: var(--color-surface) !important;
+  background: var(--color-card) !important;
 }
 :where(.ant-drawer-header) {
   background: transparent !important;
