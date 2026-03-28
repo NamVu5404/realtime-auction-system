@@ -17,4 +17,6 @@ public interface UserService {
     UserResponse updateProfile(UpdateUserRequest request);
 
     UserResponse updateAvatar(MultipartFile file);
+
+    UserResponse upgradeToSeller(Long userId);
 }

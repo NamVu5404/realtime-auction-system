@@ -2,7 +2,11 @@ package com.namvu.realtimeauctionsystem.entity;
 
 import com.namvu.realtimeauctionsystem.enums.OwnerType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Entity
 @Table(name = "file", indexes = {
@@ -10,14 +14,10 @@ import lombok.*;
 })
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 public class File extends Auditable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(nullable = false)
     private String fileName;

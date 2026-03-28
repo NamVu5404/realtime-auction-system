@@ -605,7 +605,10 @@ const SellerManagementPage: React.FC = () => {
                 }}
               >
                 Are you sure you want to revoke the SELLER role from{" "}
-                <strong>{selectedUser?.name}</strong>?
+                <span style={{ color: "var(--color-gold-start)" }}>
+                  {selectedUser?.name}
+                </span>
+                ?
               </p>
               <div
                 style={{

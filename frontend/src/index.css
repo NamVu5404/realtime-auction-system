@@ -123,6 +123,15 @@ body {
   scrollbar-color: var(--color-card-high) var(--color-bg);
 }
 
+.notification-list-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+}
+
+.notification-list-container {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
 /* -------------------------------------------------------
    4. Animations
    ------------------------------------------------------- */
@@ -570,7 +579,7 @@ body {
    14. Modal / Drawer
    ------------------------------------------------------- */
 :where(.ant-modal-content) {
-  background: var(--color-surface) !important;
+  background: var(--color-card) !important;
   border: 1px solid var(--color-border) !important;
   border-radius: var(--radius-lg) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
@@ -1224,4 +1233,22 @@ button:focus-visible {
 }
 .ant-notification-notice .ant-notification-notice-close:hover {
   color: #ffffff !important;
+}
+/* -------------------------------------------------------
+   26. Notifications
+   ------------------------------------------------------- */
+.notification-popover .ant-popover-inner {
+  background-color: var(--color-card) !important;
+  border: 1px solid var(--color-border) !important;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.notification-popover .ant-popover-arrow::before {
+  background-color: var(--color-card) !important;
+}
+
+.notification-popover .ant-list-item:hover {
+  background-color: rgba(255, 255, 255, 0.03) !important;
 }

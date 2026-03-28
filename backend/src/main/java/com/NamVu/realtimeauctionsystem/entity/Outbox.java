@@ -3,7 +3,11 @@ package com.namvu.realtimeauctionsystem.entity;
 import com.namvu.realtimeauctionsystem.enums.OutboxEventType;
 import com.namvu.realtimeauctionsystem.enums.OutboxStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 
@@ -11,16 +15,12 @@ import java.time.Instant;
 @Table(name = "outbox", indexes = {
         @Index(name = "idx_status_created", columnList = "status, created_at")
 })
-@Builder
+@SuperBuilder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Outbox extends Auditable {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false, length = 50)

@@ -4,6 +4,7 @@ import com.namvu.realtimeauctionsystem.dto.auth.AuthenticationResponse;
 import com.namvu.realtimeauctionsystem.dto.auth.InfoOsDto;
 import com.namvu.realtimeauctionsystem.dto.common.ApiResponse;
 import com.namvu.realtimeauctionsystem.dto.user.BlockUserResponse;
+import com.namvu.realtimeauctionsystem.dto.user.UserResponse;
 import com.namvu.realtimeauctionsystem.entity.User;
 import com.namvu.realtimeauctionsystem.entity.UserAudit;
 import com.namvu.realtimeauctionsystem.enums.UserActionType;
@@ -147,6 +148,31 @@ public class UserAspect {
         userAuditRepository.save(UserAudit.builder()
                 .user(user)
                 .actionType(UserActionType.UNBLOCKED)
+                .details(details)
+                .build());
+    }
+
+    @AfterReturning(
+            value = "execution(* com.namvu.realtimeauctionsystem.controller.UserController.upgradeToSeller(..))",
+            returning = "response"
+    )
+    public void afterUpgradeToSellerReturning(ApiResponse<UserResponse> response) {
+        if (response.getCode() != 1000) {
+            return;
+        }
+
+        Long userId = response.getResult().getId();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("user", user.getEmail());
+        details.put("new_roles", response.getResult().getRoles());
+
+        userAuditRepository.save(UserAudit.builder()
+                .user(user)
+                .actionType(UserActionType.UPDATED)
                 .details(details)
                 .build());
     }

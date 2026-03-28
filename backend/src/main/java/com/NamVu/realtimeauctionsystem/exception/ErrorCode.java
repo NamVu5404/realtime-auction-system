@@ -47,6 +47,8 @@ public enum ErrorCode {
     NAME_NOT_BLANK(1035, "Name is required", HttpStatus.BAD_REQUEST),
     MAX_CHARACTERS(1036, "Name must not exceed 255 characters", HttpStatus.BAD_REQUEST),
     INVALID_PHONE(1037, "Phone number must be 9–15 digits", HttpStatus.BAD_REQUEST),
+    USER_ALREADY_SELLER(1038, "User already becomes seller", HttpStatus.BAD_REQUEST),
+    NOTIFICATION_NOT_FOUND(1039, "Notification not found", HttpStatus.NOT_FOUND),
     ;
 
     private final int code;

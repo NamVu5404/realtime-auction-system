@@ -90,12 +90,11 @@ export const adminApi = {
     endTime?: string,
   ): Promise<PageResponse<Auction>> => {
     try {
-      const response = await axiosClient.get<ApiResponse<PageResponse<Auction>>>(
-        "/auctions/filter-seller",
-        {
-          params: { page, size, keyword, status, startTime, endTime },
-        },
-      );
+      const response = await axiosClient.get<
+        ApiResponse<PageResponse<Auction>>
+      >("/auctions/filter-seller", {
+        params: { page, size, keyword, status, startTime, endTime },
+      });
       return response.data.result;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
@@ -111,12 +110,11 @@ export const adminApi = {
     endTime?: string,
   ): Promise<PageResponse<Auction>> => {
     try {
-      const response = await axiosClient.get<ApiResponse<PageResponse<Auction>>>(
-        "/auctions/filter-admin",
-        {
-          params: { page, size, keyword, status, startTime, endTime },
-        },
-      );
+      const response = await axiosClient.get<
+        ApiResponse<PageResponse<Auction>>
+      >("/auctions/filter-admin", {
+        params: { page, size, keyword, status, startTime, endTime },
+      });
       return response.data.result;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
@@ -278,6 +276,17 @@ export const adminApi = {
         {
           params: { reason },
         },
+      );
+      return response.data.result;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  upgradeToSeller: async (userId: number): Promise<User> => {
+    try {
+      const response = await axiosClient.patch<ApiResponse<User>>(
+        `/users/${userId}/upgrade-to-seller`,
       );
       return response.data.result;
     } catch (error) {

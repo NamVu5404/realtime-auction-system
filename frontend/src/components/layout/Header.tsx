@@ -12,12 +12,18 @@ import GoogleLoginButton from "../../auth/GoogleLoginButton";
 import { useAuth } from "../../hooks/useAuth";
 import { getAvatarUrl } from "../../utils/imageUtils";
 
+import NotificationBell from "../common/NotificationBell";
+import { useNotificationWebSocket } from "../../hooks/useNotificationWebSocket";
+
 const { Header: AntHeader } = Layout;
 
 export const Header = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  // Initialize real-time notification socket
+  useNotificationWebSocket();
 
   const handleLogout = async () => {
     setLoading(true);
@@ -112,7 +118,9 @@ export const Header = () => {
       </div>
 
       {/* Right */}
-      <Space size={12}>
+      <Space size={16}>
+        {isAuthenticated && user && <NotificationBell />}
+
         {isAuthenticated && user ? (
           <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
             <div

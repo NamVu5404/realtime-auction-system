@@ -20,4 +20,6 @@ public class BidEvent {
     private boolean extended;
     private Instant finalEndTime;
     private Long timestamp;
+    private Long previousBidderId;
+    private Long sellerId;
 }

@@ -9,18 +9,18 @@ import {
   ShopOutlined,
   UserOutlined,
 } from "@ant-design/icons";
-import { Grid, Menu } from "antd";
+import { Badge, Grid, Menu } from "antd";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../store/useAuthStore";
+import { useNotificationStore } from "../../store/useNotificationStore";
 
 const { useBreakpoint } = Grid;
 
 const AccountSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuthStore();
   const screens = useBreakpoint();
+  const { unreadCount } = useNotificationStore();
   const [selectedKey, setSelectedKey] = useState(location.pathname);
 
   // Determine if we are on mobile/small screen
@@ -50,7 +50,11 @@ const AccountSidebar = () => {
         },
         {
           key: "/account/notifications",
-          icon: <BellOutlined />,
+          icon: (
+            <Badge dot={unreadCount > 0} offset={[2, 0]}>
+              <BellOutlined />
+            </Badge>
+          ),
           label: "Notifications",
           onClick: () => navigate("/account/notifications"),
         },
