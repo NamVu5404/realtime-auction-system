@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.entity;
 
-import com.namvu.realtimeauctionsystem.enums.NotificationConstant;
+import com.namvu.realtimeauctionsystem.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,12 +25,9 @@ public class Notification extends Auditable {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private NotificationConstant.NotificationType type;
+    private NotificationType type;
 
     private String content;
-
-    @Column(columnDefinition = "TEXT")
-    private String metadata;
 
     @Column(name = "is_read", nullable = false)
     private boolean read;
