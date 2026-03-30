@@ -1,7 +1,8 @@
-import ComingSoon from "./ComingSoon";
+import React from "react";
+import NotificationList from "../../features/notification/NotificationList";
 
-const NotificationsPage = () => {
-  return <ComingSoon title="Notifications" />;
+const NotificationsPage: React.FC = () => {
+  return <NotificationList title="Notifications" />;
 };
 
 export default NotificationsPage;

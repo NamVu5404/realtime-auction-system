@@ -1,91 +1,77 @@
 import {
-  AuditOutlined,
   BellOutlined,
   CheckCircleOutlined,
-  InfoCircleOutlined,
-  ShoppingOutlined,
-  ThunderboltOutlined,
+  CloseCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
-import { Avatar, Badge, Button, Empty, List, Popover, Typography } from "antd";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Avatar,
+  Badge,
+  Button,
+  Empty,
+  List,
+  message,
+  Popover,
+  Typography,
+} from "antd";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { notificationApi } from "../../api/notificationApi";
 import {
   Notification,
-  NotificationType,
   useNotificationStore,
 } from "../../store/useNotificationStore";
 
 dayjs.extend(relativeTime);
 
-const { Text, Title } = Typography;
+const { Text, Title, Paragraph } = Typography;
 
 /**
- * Default titles based on NotificationType (sync with backend enum titles)
+ * Get color and icon based on notification title keywords as a fallback
+ * since type was removed from the DTO.
  */
-const NotificationTypeTitles: Record<NotificationType, string> = {
-  [NotificationType.OUTBID]: "Bạn đã bị vượt giá",
-  [NotificationType.AUCTION_START]: "Phiên đấu giá đã bắt đầu",
-  [NotificationType.AUCTION_ENDING_SOON]: "Phiên đấu giá sắp kết thúc",
-  [NotificationType.AUCTION_ENDED_WINNER]: "Chúc mừng! Bạn đã thắng đấu giá",
-  [NotificationType.AUCTION_ENDED_LOSER]: "Phiên đấu giá đã kết thúc",
-  [NotificationType.AUCTION_CANCELLED]: "Phiên đấu giá đã bị hủy",
-  [NotificationType.BID_PLACED]: "Có lượt đấu giá mới",
-  [NotificationType.AUCTION_ENDED_SELLER]: "Phiên đấu giá của bạn đã kết thúc",
-  [NotificationType.AUCTION_ENDED_NO_BIDS]:
-    "Phiên đấu giá kết thúc không có lượt đặt giá",
-  [NotificationType.AUCTION_APPROVED]: "Phiên đấu giá đã được phê duyệt",
-  [NotificationType.AUCTION_REJECTED]: "Phiên đấu giá bị từ chối",
-  [NotificationType.SELLER_REGISTRATION_APPROVED]:
-    "Đăng ký tài khoản người bán đã được chấp thuận",
-  [NotificationType.SELLER_REGISTRATION_REJECTED]:
-    "Đăng ký tài khoản người bán bị từ chối",
-  [NotificationType.ACCOUNT_LOCKED]: "Tài khoản của bạn đã bị khóa",
-  [NotificationType.ACCOUNT_SECURITY_ALERT]: "Cảnh báo bảo mật tài khoản",
-  [NotificationType.FRAUD_DETECTION_ALERT]: "Cảnh báo gian lận",
-  [NotificationType.SYSTEM_ANNOUNCEMENT]: "Thông báo hệ thống",
-};
-
-/**
- * Get color and icon based on notification type
- */
-const getNotifMeta = (type: NotificationType) => {
-  switch (type) {
-    case NotificationType.OUTBID:
-      return { color: "#ff4d4f", icon: <WarningOutlined /> };
-    case NotificationType.AUCTION_ENDED_WINNER:
-    case NotificationType.SELLER_REGISTRATION_APPROVED:
-    case NotificationType.AUCTION_APPROVED:
-      return { color: "#52c41a", icon: <CheckCircleOutlined /> };
-    case NotificationType.AUCTION_START:
-    case NotificationType.AUCTION_ENDING_SOON:
-      return { color: "#faad14", icon: <ThunderboltOutlined /> };
-    case NotificationType.BID_PLACED:
-      return { color: "#1890ff", icon: <ShoppingOutlined /> };
-    case NotificationType.FRAUD_DETECTION_ALERT:
-    case NotificationType.AUCTION_REJECTED:
-    case NotificationType.SELLER_REGISTRATION_REJECTED:
-    case NotificationType.AUCTION_CANCELLED:
-    case NotificationType.AUCTION_ENDED_LOSER:
-    case NotificationType.AUCTION_ENDED_NO_BIDS:
-    case NotificationType.ACCOUNT_LOCKED:
-      return { color: "#f5222d", icon: <AuditOutlined /> };
-    case NotificationType.ACCOUNT_SECURITY_ALERT:
-    case NotificationType.AUCTION_ENDED_SELLER:
-      return { color: "#fa8c16", icon: <InfoCircleOutlined /> };
-    case NotificationType.SYSTEM_ANNOUNCEMENT:
-    default:
-      return { color: "#8c8c8c", icon: <InfoCircleOutlined /> };
+const getNotifMeta = (title: string) => {
+  const t = title.toLowerCase();
+  if (t.includes("hủy") || t.includes("từ chối") || t.includes("khóa")) {
+    return { color: "#ff4d4f", icon: <CloseCircleOutlined /> };
   }
+  if (
+    t.includes("thắng") ||
+    t.includes("phê duyệt") ||
+    t.includes("chấp thuận")
+  ) {
+    return { color: "#52c41a", icon: <CheckCircleOutlined /> };
+  }
+  if (
+    t.includes("vượt giá") ||
+    t.includes("bắt đầu") ||
+    t.includes("kết thúc")
+  ) {
+    return { color: "#faad14", icon: <WarningOutlined /> };
+  }
+  return { color: "#1890ff", icon: <BellOutlined /> };
 };
 
 const NotificationBell: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
     useNotificationStore();
   const [visible, setVisible] = useState(false);
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: notificationApi.markAllAsRead,
+    onSuccess: () => {
+      markAllAsRead();
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (error: any) => {
+      message.error(error.message);
+    },
+  });
 
   const handleNotifClick = (notif: Notification) => {
     markAsRead(notif.id);
@@ -129,7 +115,8 @@ const NotificationBell: React.FC = () => {
           <Button
             type="link"
             size="small"
-            onClick={markAllAsRead}
+            onClick={() => markAllAsReadMutation.mutate()}
+            loading={markAllAsReadMutation.isPending}
             style={{
               padding: 0,
               color: "var(--color-gold-start)",
@@ -143,11 +130,11 @@ const NotificationBell: React.FC = () => {
           </Button>
         )}
       </div>
-      <div 
-        style={{ 
-          overflowY: "auto", 
+      <div
+        style={{
+          overflowY: "auto",
           overflowX: "hidden",
-          flex: 1, 
+          flex: 1,
           padding: "4px 0",
         }}
         className="notification-list-container"
@@ -157,13 +144,13 @@ const NotificationBell: React.FC = () => {
           locale={{
             emptyText: (
               <Empty
-                description="Không có thông báo nào"
+                description="Không có thông báo mới nào"
                 style={{ padding: "24px 0" }}
               />
             ),
           }}
           renderItem={(notif) => {
-            const { color, icon } = getNotifMeta(notif.type);
+            const { color, icon } = getNotifMeta(notif.title);
             return (
               <List.Item
                 onClick={() => handleNotifClick(notif)}
@@ -204,7 +191,7 @@ const NotificationBell: React.FC = () => {
                         strong={!notif.isRead}
                         style={{ fontSize: "13px", color: "#fff" }}
                       >
-                        {notif.title || NotificationTypeTitles[notif.type]}
+                        {notif.title}
                       </Text>
                       <Text
                         type="secondary"

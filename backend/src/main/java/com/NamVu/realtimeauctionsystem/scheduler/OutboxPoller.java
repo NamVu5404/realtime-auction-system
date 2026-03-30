@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static com.namvu.realtimeauctionsystem.enums.KafkaTopicConstant.BID_EVENTS_TOPIC;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -22,7 +24,6 @@ public class OutboxPoller {
     private final OutboxRepository outboxRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    private static final String TOPIC = "bid-events";
     private static final int BATCH_SIZE = 100;
 
     @Scheduled(fixedDelay = 500) // Poll mỗi 500ms
@@ -38,7 +39,7 @@ public class OutboxPoller {
 
         for (Outbox outbox : pendingEvents) {
             CompletableFuture<Void> future = kafkaTemplate
-                    .send(TOPIC, String.valueOf(outbox.getAuctionId()), outbox.getPayload())
+                    .send(BID_EVENTS_TOPIC, String.valueOf(outbox.getAuctionId()), outbox.getPayload())
                     .whenComplete((result, ex) -> {
                         if (ex == null) {
                             outbox.markSent();

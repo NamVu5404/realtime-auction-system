@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -45,6 +46,12 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public List<NotificationResponse> getNotificationsForBell(Long userId) {
+        List<Notification> notifications = notificationRepository.findTop5ByRecipientIdAndReadOrderByCreatedAtDesc(userId, false);
+        return notifications.stream().map(notificationMapper::mapToResponse).toList();
+    }
+
+    @Override
     public PageResponse<NotificationResponse> getNotificationsForUser(Long userId, Pageable pageable) {
         Page<Notification> notificationPage = notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId, pageable);
         return PageResponse.<NotificationResponse>builder()
@@ -54,6 +61,11 @@ public class NotificationServiceImpl implements NotificationService {
                 .totalElements(notificationPage.getTotalElements())
                 .data(notificationPage.map(notificationMapper::mapToResponse).toList())
                 .build();
+    }
+
+    @Override
+    public Integer getUnreadCountNotifications(Long userId) {
+        return notificationRepository.countByRecipientIdAndRead(userId, false);
     }
 
     @Override
@@ -71,15 +83,37 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    @Override
+    public Integer markAllNotificationsAsReadForUser(Long userId) {
+        return notificationRepository.markAllAsReadForUser(userId);
+    }
+
+    @Override
+    public void deleteNotification(Long id) {
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
+
+        if (!Objects.equals(notification.getRecipient().getId(), SecurityUtils.getCurrentUserId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        notificationRepository.delete(notification);
+    }
+
+    @Override
+    public void deleteAllNotificationsForUser(Long userId) {
+        notificationRepository.deleteAllNotificationsForUser(userId);
+    }
+
     private void pushNotification(Notification notification) {
         NotificationResponse response = notificationMapper.mapToResponse(notification);
 
         // Gửi WebSocket đích danh (Private topic)
         messagingTemplate.convertAndSend(
-                "/user/" + response.getUserId() + "/topic/notifications",
+                "/topic/notifications/" + response.getUserId(),
                 response
         );
 
-        log.info("Pushed {} notification to user {}", response.getType(), response.getUserId());
+        log.info("Pushed {} notification to user {}", notification.getType(), response.getUserId());
     }
 }

@@ -57,6 +57,7 @@ public class AuctionScheduler {
                 // Init Redis
                 AuctionInitRequest request = AuctionInitRequest.builder()
                         .auctionId(auction.getId())
+                        .title(auction.getTitle())
                         .startPrice(auction.getStartPrice())
                         .minStep(auction.getMinStep())
                         .sellerId(auction.getSeller().getId())

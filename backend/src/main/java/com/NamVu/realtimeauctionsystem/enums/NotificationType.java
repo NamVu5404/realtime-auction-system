@@ -50,7 +50,7 @@ public enum NotificationType {
 
     BID_PLACED(
             "Có lượt đấu giá mới",
-            "Sản phẩm '%s' vừa có lượt đặt giá mới: $%s từ người dùng %s.",
+            "Sản phẩm '%s' vừa có lượt đặt giá mới: $%s.",
             SELLER_AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_SELLER(

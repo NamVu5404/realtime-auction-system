@@ -47,6 +47,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         String key = AUCTION_KEY_PREFIX + request.getAuctionId();
 
         Map<String, String> data = new HashMap<>();
+        data.put(AuctionCacheKey.TITLE.getValue(), request.getTitle());
         data.put(AuctionCacheKey.CURRENT_PRICE.getValue(), request.getStartPrice().toString());
         data.put(AuctionCacheKey.MIN_STEP.getValue(), request.getMinStep().toString());
         data.put(AuctionCacheKey.HIGHEST_BIDDER_ID.getValue(), "");
@@ -160,6 +161,26 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     }
 
     /**
+     * Lấy title của auction
+     */
+    @Override
+    public String getAuctionTitle(Long auctionId) {
+        try {
+            String key = AUCTION_KEY_PREFIX + auctionId;
+            Object priceObj = stringRedisTemplate.opsForHash().get(key, AuctionCacheKey.TITLE.getValue());
+
+            if (priceObj == null) {
+                log.warn("Title not found for auction {}", auctionId);
+                return null;
+            }
+
+            return String.valueOf(priceObj);
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.REDIS_DOWN);
+        }
+    }
+
+    /**
      * Lấy giá hiện tại của auction
      */
     @Override
@@ -267,6 +288,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         String key = AUCTION_KEY_PREFIX + auction.getId();
 
         Map<String, String> data = new HashMap<>();
+        data.put(AuctionCacheKey.TITLE.getValue(), auction.getTitle());
         data.put(AuctionCacheKey.CURRENT_PRICE.getValue(), auction.getCurrentPrice().toString());
         data.put(AuctionCacheKey.MIN_STEP.getValue(), auction.getMinStep().toString());
         data.put(AuctionCacheKey.SELLER_ID.getValue(), auction.getSeller().getId().toString());

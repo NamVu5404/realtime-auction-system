@@ -5,6 +5,7 @@ import {
 } from "../store/useNotificationStore";
 import { useAuthStore } from "../store/useAuthStore";
 import { notificationApi } from "../api/notificationApi";
+import notificationSound from "../assets/audio/notification-sound.mp3";
 import { notification as antdNotification } from "antd";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -14,23 +15,29 @@ import SockJS from "sockjs-client";
  */
 export const useNotificationWebSocket = () => {
   const { user, isAuthenticated } = useAuthStore();
-  const { addNotification, setNotifications } = useNotificationStore();
+  const { addNotification, setNotifications, setUnreadCount } =
+    useNotificationStore();
   const stompClient = useRef<Client | null>(null);
 
-  // Initial fetch of notifications
+  // Initial fetch of notifications & unread count
   useEffect(() => {
     if (isAuthenticated && user) {
-      notificationApi.getNotifications().then((res) => {
-        setNotifications(res.data);
+      // 1. Fetch unread count for the Badge
+      notificationApi.getUnreadCount().then((count) => {
+        setUnreadCount(count);
+      });
+
+      // 2. Fetch recent notifications for the Bell list
+      notificationApi.getNotificationsForBell().then((notifs) => {
+        setNotifications(notifs);
       });
     }
-  }, [isAuthenticated, user, setNotifications]);
+  }, [isAuthenticated, user, setNotifications, setUnreadCount]);
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
 
-    const socketUrl =
-      import.meta.env.VITE_WS_URL || "http://localhost:8080/api/ws";
+    const socketUrl = import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
 
     // Set up STOMP client
     const client = new Client({
@@ -41,21 +48,26 @@ export const useNotificationWebSocket = () => {
       onConnect: () => {
         console.log("[NotificationWS] Connected");
 
-        // Subscribe to user-specific private topic
-        // Backend pattern: messagingTemplate.convertAndSendToUser(userId, "/topic/notifications", message)
-        client.subscribe(`/user/${user.id}/topic/notifications`, (message) => {
-          const newNotif: Notification = JSON.parse(message.body);
+        // Subscribe to user-specific topic (Matches Backend mapping)
+        client.subscribe(`/topic/notifications/${user.id}`, (message) => {
+          const data = JSON.parse(message.body);
 
-          // Add to store
+          // Map backend fields to frontend Notification interface
+          const newNotif: Notification = {
+            id: String(data.id),
+            title: data.title,
+            content: data.content,
+            isRead: data.read, // Map 'read' to 'isRead'
+            createdAt: data.createdAt,
+            redirectUrl: data.redirectUrl,
+            metadata: data.metadata,
+          };
+
+          // Add to store (updates Bell and Badge)
           addNotification(newNotif);
 
-          // Show browser/app toast for immediate feedback
-          antdNotification.info({
-            message: newNotif.title || "Thông báo mới",
-            description: newNotif.content,
-            placement: "topRight",
-            duration: 5,
-          });
+          // Play sound
+          new Audio(notificationSound).play().catch(() => {});
         });
       },
       onStompError: (frame) => {

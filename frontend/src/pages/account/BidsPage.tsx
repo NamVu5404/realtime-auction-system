@@ -97,20 +97,21 @@ const BidsPage = () => {
     },
   ];
 
-  if (!isLoading && data && data.data.length === 0) {
-    return (
-      <div>
-        <Title
-          level={2}
-          style={{ color: "#fff", marginBottom: "16px", fontSize: "24px" }}
-        >
-          Bid History
-        </Title>
+  return (
+    <div className="account-table-wrapper">
+      <Title
+        level={2}
+        style={{ color: "#fff", marginBottom: "16px", fontSize: "24px" }}
+      >
+        My Bids
+      </Title>
 
+      {data && data.data.length === 0 ? (
         <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
             <span style={{ color: "rgba(255,255,255,0.45)" }}>
-              You haven't placed any bids yet
+              Bạn chưa tham gia phiên đấu giá nào
             </span>
           }
         >
@@ -120,40 +121,29 @@ const BidsPage = () => {
             style={{ padding: "0 24px" }}
             size="large"
           >
-            Browse Auctions
+            Xem các phiên đấu giá
           </Button>
         </Empty>
-      </div>
-    );
-  }
-
-  return (
-    <div className="account-table-wrapper">
-      <Title
-        level={2}
-        style={{ color: "#fff", marginBottom: "16px", fontSize: "24px" }}
-      >
-        Bid History
-      </Title>
-
-      <Table
-        columns={columns}
-        dataSource={data?.data || []}
-        rowKey={(record) => `${record.auctionId}-${record.createdAt}`}
-        pagination={{
-          current: page,
-          pageSize: data?.pageSize || 20,
-          total: data?.totalElements || 0,
-          onChange: handlePageChange,
-          showSizeChanger: false,
-        }}
-        loading={isLoading}
-        style={{
-          background: "transparent",
-        }}
-        scroll={{ x: 800 }}
-        className="custom-table"
-      />
+      ) : (
+        <Table
+          columns={columns}
+          dataSource={data?.data || []}
+          rowKey={(record) => `${record.auctionId}-${record.createdAt}`}
+          pagination={{
+            current: page,
+            pageSize: data?.pageSize || 20,
+            total: data?.totalElements || 0,
+            onChange: handlePageChange,
+            showSizeChanger: false,
+          }}
+          loading={isLoading}
+          style={{
+            background: "transparent",
+          }}
+          scroll={{ x: 800 }}
+          className="custom-table"
+        />
+      )}
     </div>
   );
 };

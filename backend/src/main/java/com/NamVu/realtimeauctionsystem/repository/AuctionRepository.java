@@ -91,7 +91,4 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             "WHERE a.seller.id = :sellerId " +
             "AND a.status IN ('DRAFT', 'SCHEDULED')")
     void cancelFutureAuctions(@Param("sellerId") Long sellerId);
-
-    @Query("SELECT a.title FROM Auction a WHERE a.id = :id")
-    String getAuctionTitleById(@Param("id") Long id);
 }
