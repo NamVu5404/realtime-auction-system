@@ -13,6 +13,8 @@ public interface RedisAuctionService {
 
     BidUpdateResult updateBidWithLock(Long auctionId, Long bidderId, BigDecimal newPrice);
 
+    String getAuctionTitle(Long auctionId);
+
     BigDecimal getCurrentPrice(Long auctionId);
 
     Long getHighestBidderId(Long auctionId);

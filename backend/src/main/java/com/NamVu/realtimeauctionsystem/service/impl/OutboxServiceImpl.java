@@ -24,7 +24,7 @@ public class OutboxServiceImpl implements OutboxService {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void save(Long auctionId, Bid bid, boolean extended, Instant finalEndTime) throws JsonProcessingException {
+    public void save(Long auctionId, Bid bid, boolean extended, Instant finalEndTime, Long previousBidderId, Long sellerId) throws JsonProcessingException {
         Map<String, Object> payload = Map.of(
                 "auctionId", auctionId,
                 "bidderId", bid.getBidder().getId(),
@@ -32,7 +32,9 @@ public class OutboxServiceImpl implements OutboxService {
                 "amount", bid.getAmount(),
                 "extended", extended,
                 "finalEndTime", finalEndTime,
-                "timestamp", bid.getCreatedAt().getEpochSecond()
+                "timestamp", bid.getCreatedAt().getEpochSecond(),
+                "previousBidderId", previousBidderId != null ? previousBidderId : -1L,
+                "sellerId", sellerId != null ? sellerId : -1L
         );
 
         Outbox outbox = Outbox.builder()

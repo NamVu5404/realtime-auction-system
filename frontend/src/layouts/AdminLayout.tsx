@@ -1,16 +1,20 @@
+import { Avatar, Badge, Breadcrumb, Dropdown, Layout, Menu, Space } from "antd";
 import {
   AuditOutlined,
+  BellOutlined,
   DashboardOutlined,
   HomeOutlined,
   LogoutOutlined,
   UserOutlined,
   ShopOutlined,
 } from "@ant-design/icons";
-import { Avatar, Breadcrumb, Dropdown, Layout, Menu } from "antd";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useAuthStore } from "../store/useAuthStore";
+import { useNotificationStore } from "../store/useNotificationStore";
+import NotificationBell from "../components/common/NotificationBell";
+import { useNotificationWebSocket } from "../hooks/useNotificationWebSocket";
 import { getAvatarUrl } from "../utils/imageUtils";
 
 const { Sider, Header, Content } = Layout;
@@ -21,6 +25,10 @@ const AdminLayout = () => {
   const location = useLocation();
   const { user } = useAuthStore();
   const { logout } = useAuth();
+  const { unreadCount } = useNotificationStore();
+
+  // Initialize real-time notification socket
+  useNotificationWebSocket();
 
   const menuItems = [
     {
@@ -36,16 +44,26 @@ const AdminLayout = () => {
       onClick: () => navigate("/admin/users"),
     },
     {
-      key: "sellers",
-      icon: <ShopOutlined />,
-      label: "Seller Management",
-      onClick: () => navigate("/admin/sellers"),
-    },
-    {
       key: "auctions",
       icon: <AuditOutlined />,
       label: "Auction Management",
       onClick: () => navigate("/admin/auctions"),
+    },
+    {
+      key: "notifications",
+      icon: (
+        <Badge dot={unreadCount > 0} offset={[2, 0]}>
+          <BellOutlined />
+        </Badge>
+      ),
+      label: "Notifications",
+      onClick: () => navigate("/admin/notifications"),
+    },
+    {
+      key: "sellers",
+      icon: <ShopOutlined />,
+      label: "Seller Management",
+      onClick: () => navigate("/admin/sellers"),
     },
   ];
 
@@ -166,57 +184,61 @@ const AdminLayout = () => {
         >
           <Breadcrumb items={breadcrumbItems} />
 
-          <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                cursor: "pointer",
-                padding: "6px 14px 6px 6px",
-                borderRadius: "100px",
-                border: "0.5px solid rgba(255,255,255,0.07)",
-                background: "rgba(255,255,255,0.03)",
-                transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
-              }}
-              className="hover:border-[rgba(254,212,105,0.3)] hover:bg-[rgba(254,212,105,0.05)]"
-            >
-              <Avatar
-                size="default"
-                icon={<UserOutlined />}
-                src={getAvatarUrl(user?.avatarUrl)}
-                alt={user?.name}
+          <Space size={16}>
+            <NotificationBell />
+
+            <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
+              <div
                 style={{
-                  background: "rgba(254,212,105,0.12)",
-                  border: "0.5px solid rgba(254,212,105,0.4)",
-                  color: "#FED469",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  cursor: "pointer",
+                  padding: "6px 14px 6px 6px",
+                  borderRadius: "100px",
+                  border: "0.5px solid rgba(255,255,255,0.07)",
+                  background: "rgba(255,255,255,0.03)",
+                  transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)",
                 }}
-              />
-              <div className="hidden sm:block">
-                <p
+                className="hover:border-[rgba(254,212,105,0.3)] hover:bg-[rgba(254,212,105,0.05)]"
+              >
+                <Avatar
+                  size="default"
+                  icon={<UserOutlined />}
+                  src={getAvatarUrl(user?.avatarUrl)}
+                  alt={user?.name}
                   style={{
-                    color: "#fff",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    lineHeight: 1.2,
-                    margin: 0,
+                    background: "rgba(254,212,105,0.12)",
+                    border: "0.5px solid rgba(254,212,105,0.4)",
+                    color: "#FED469",
                   }}
-                >
-                  {user?.name}
-                </p>
-                <p
-                  style={{
-                    color: "rgba(255,255,255,0.4)",
-                    fontSize: "11px",
-                    lineHeight: 1.2,
-                    margin: 0,
-                  }}
-                >
-                  {user?.email}
-                </p>
+                />
+                <div className="hidden sm:block">
+                  <p
+                    style={{
+                      color: "#fff",
+                      fontSize: "13px",
+                      fontWeight: 600,
+                      lineHeight: 1.2,
+                      margin: 0,
+                    }}
+                  >
+                    {user?.name}
+                  </p>
+                  <p
+                    style={{
+                      color: "rgba(255,255,255,0.4)",
+                      fontSize: "11px",
+                      lineHeight: 1.2,
+                      margin: 0,
+                    }}
+                  >
+                    {user?.email}
+                  </p>
+                </div>
               </div>
-            </div>
-          </Dropdown>
+            </Dropdown>
+          </Space>
         </Header>
 
         <Content

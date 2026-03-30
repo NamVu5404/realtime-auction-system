@@ -733,7 +733,7 @@ export const AuctionDetailDrawer = ({
       size={1000}
       styles={{
         body: {
-          backgroundColor: "#191B24", // zinc-950
+          backgroundColor: "var(--color-card)", // zinc-950
           padding: "0",
         },
       }}

@@ -90,4 +90,11 @@ public class UserController {
                 .result(userService.updateAvatar(file))
                 .build();
     }
+
+    @PatchMapping("/{userId}/upgrade-to-seller")
+    public ApiResponse<UserResponse> upgradeToSeller(@PathVariable Long userId) {
+        return ApiResponse.<UserResponse>builder()
+                .result(userService.upgradeToSeller(userId))
+                .build();
+    }
 }

@@ -17,7 +17,7 @@ const AccountLayout = () => {
         <Content
           style={{
             flex: 1,
-            background: "#191b24",
+            background: "var(--color-card)",
             borderRadius: "12px",
             border: "1px solid rgba(255, 255, 255, 0.08)",
             boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",

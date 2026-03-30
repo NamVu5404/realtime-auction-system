@@ -93,7 +93,7 @@ const renderAuditItem = (log: AuctionAuditResponse): TimelineItemProps => {
         <Card
           size="small"
           style={{
-            backgroundColor: "#191B24",
+            backgroundColor: "var(--color-bg)",
             borderColor: "#3f3f46",
             marginBottom: "16px",
           }}
@@ -212,10 +212,10 @@ export const AuctionAuditDrawer = ({
       styles={{
         body: {
           paddingBottom: "32px",
-          backgroundColor: "#191B24",
+          backgroundColor: "var(--color-card)",
         },
         header: {
-          backgroundColor: "#191B24",
+          backgroundColor: "var(--color-card)",
           borderBottom: "1px solid #404040",
           color: "#ffffff",
         },

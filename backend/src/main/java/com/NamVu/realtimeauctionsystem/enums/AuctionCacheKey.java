@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum AuctionCacheKey {
+    TITLE("title"),
     CURRENT_PRICE("currentPrice"),
     MIN_STEP("minStep"),
     HIGHEST_BIDDER_ID("highestBidderId"),

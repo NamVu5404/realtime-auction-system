@@ -72,7 +72,7 @@ public class BidServiceTest {
     void testPlaceBidSuccess() throws JsonProcessingException {
         // Mock Lua return success
         when(redisLuaService.executePlaceBid(any(), any(), any(), anyLong(), anyInt()))
-                .thenAnswer(invocation -> List.of(1L, "Success", "normal", "1234567890", 0L));
+                .thenAnswer(invocation -> List.of(1L, "Success", "normal", "1234567890", 0L, "999", "888"));
 
         when(auctionRepository.updateAuctionPriceAndEndTime(anyLong(), any(BigDecimal.class), anyLong(), any(Instant.class), any(Integer.class)))
                 .thenReturn(1);
@@ -90,7 +90,7 @@ public class BidServiceTest {
         );
 
         verify(bidRepository, times(1)).save(any());
-        verify(outboxService, times(1)).save(any(), any(), anyBoolean(), any());
+        verify(outboxService, times(1)).save(any(), any(), anyBoolean(), any(), anyLong(), anyLong());
         verify(auctionRepository, times(1)).getReferenceById(AUCTION_ID);
     }
 
@@ -105,7 +105,7 @@ public class BidServiceTest {
         assertFalse(result.isSuccess());
         verify(auctionRepository, never()).save(any()); // KHÔNG update auction khi thất bại
         verify(bidRepository, never()).save(any());
-        verify(outboxService, never()).save(any(), any(), anyBoolean(), any());
+        verify(outboxService, never()).save(any(), any(), anyBoolean(), any(), anyLong(), anyLong());
     }
 
     // ✅ Test extended bid
@@ -119,7 +119,7 @@ public class BidServiceTest {
         // 2. Mock Lua: Trả về 5 phần tử để khớp với logic parse trong Service
         // Index: 0-Status, 1-Msg, 2-Flag, 3-EndTime, 4-Count
         when(redisLuaService.executePlaceBid(anyLong(), any(BigDecimal.class), anyLong(), anyLong(), anyInt()))
-                .thenAnswer(invocation -> List.of(1L, "Success", "extended", newEndTimeStr, nextExtCount));
+                .thenAnswer(invocation -> List.of(1L, "Success", "extended", newEndTimeStr, nextExtCount, "999", "888"));
 
         when(auctionRepository.updateAuctionPriceAndEndTime(anyLong(), any(), anyLong(), any(), anyInt()))
                 .thenReturn(1);
@@ -142,7 +142,7 @@ public class BidServiceTest {
         );
 
         // 6. Kiểm chứng Outbox Pattern nhận đúng cờ extended = true
-        verify(outboxService, times(1)).save(any(), any(), eq(true), any());
+        verify(outboxService, times(1)).save(any(), any(), eq(true), any(), anyLong(), anyLong());
 
         // Đảm bảo không lưu bid nếu transaction fail
         verify(bidRepository, times(1)).save(any());

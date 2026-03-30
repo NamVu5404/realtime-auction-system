@@ -73,6 +73,7 @@ public class GlobalExceptionHandler {
 
         Map<String, Object> attributes = null;
         ErrorCode errorCode = ErrorCode.INVALID_KEY;
+        String plainMessage = null;
 
         try {
             errorCode = ErrorCode.valueOf(enumKey);
@@ -80,10 +81,20 @@ public class GlobalExceptionHandler {
             ConstraintViolation<?> violation = firstError.unwrap(ConstraintViolation.class);
             attributes = violation.getConstraintDescriptor().getAttributes();
         } catch (IllegalArgumentException ex) {
+            plainMessage = enumKey;
             log.warn(">>> [Validation Warning] Invalid ErrorCode enum key: {} at [{} {}]",
                     enumKey, request.getMethod(), request.getRequestURI());
         } catch (Exception ex) {
             log.error(">>> [Validation Error] Unexpected error while parsing attributes", ex);
+        }
+
+        // nếu là plain message thì trả thẳng, không qua errorCode
+        if (plainMessage != null) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.builder()
+                            .code(ErrorCode.INVALID_KEY.getCode())
+                            .message(plainMessage)
+                            .build());
         }
 
         String errorMessage = attributes != null

@@ -5,15 +5,15 @@ import {
   HistoryOutlined,
   MoreOutlined,
   SearchOutlined,
-  StopOutlined,
   ShopOutlined,
+  StopOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  App,
   Button,
   Drawer,
   Dropdown,
-  Form,
   Input,
   message,
   Modal,
@@ -22,7 +22,7 @@ import {
   Table,
   Tag,
 } from "antd";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import adminApi, { mockViolations } from "../../api/adminApi";
 import bidApi from "../../api/bidApi";
@@ -34,11 +34,12 @@ import {
   User,
   UserRole,
 } from "../../api/types";
+import AccountTrackingDrawer from "../../components/admin/AccountTrackingDrawer";
 import { useDebounce } from "../../hooks/useDebounce";
 import formatCurrency, { formatDateTime } from "../../utils/format";
-import AccountTrackingDrawer from "../../components/admin/AccountTrackingDrawer";
 
 const AdminUserPage = () => {
+  const { modal } = App.useApp();
   const [searchParams, setSearchParams] = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1", 10);
   const setPage = (p: number) => {
@@ -142,6 +143,16 @@ const AdminUserPage = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
     onError: () => message.error("Failed to unblock user"),
+  });
+
+  const becomeSellerMutation = useMutation({
+    mutationFn: (userId: number) => adminApi.upgradeToSeller(userId),
+    onSuccess: () => {
+      message.success("Role updated to SELLER successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (error: any) =>
+      message.error(error.message || "Failed to update role"),
   });
 
   const handleBlock = (userId: number) => {
@@ -250,6 +261,32 @@ const AdminUserPage = () => {
                     userId: record.id,
                   }),
               },
+              !record.roles?.includes(UserRole.SELLER) &&
+              !record.roles?.includes(UserRole.ADMIN)
+                ? {
+                    key: "become-seller",
+                    icon: <ShopOutlined />,
+                    label: "Upgrade to Seller",
+                    onClick: () => {
+                      modal.confirm({
+                        title: "Confirm Role Change",
+                        content: (
+                          <span>
+                            Are you sure you want to upgrade{" "}
+                            <span style={{ color: "var(--color-gold-start)" }}>
+                              {record.name}
+                            </span>{" "}
+                            to SELLER?
+                          </span>
+                        ),
+                        onOk: () => becomeSellerMutation.mutate(record.id),
+                        okText: "Confirm",
+                        cancelText: "Cancel",
+                        maskClosable: true,
+                      });
+                    },
+                  }
+                : null,
               {
                 key: "user-audit",
                 icon: <HistoryOutlined />,
@@ -280,7 +317,7 @@ const AdminUserPage = () => {
                       label: "Unblock",
                       onClick: () => handleUnblock(record.id),
                     },
-            ],
+            ].filter(Boolean) as any,
           }}
         >
           <Button type="text" icon={<MoreOutlined />} />
@@ -490,7 +527,7 @@ const AdminUserPage = () => {
         }}
         styles={{
           body: {
-            backgroundColor: "#191B24",
+            backgroundColor: "var(--color-card)",
             padding: "24px",
           },
         }}

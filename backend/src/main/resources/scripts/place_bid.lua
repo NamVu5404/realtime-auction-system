@@ -26,7 +26,7 @@ local now = tonumber(ARGV[3])
 local maxExtension = tonumber(ARGV[4])
 
 -- 1. Dùng HMGET lấy 1 lượt toàn bộ field cần thiết
-local data = redis.call('HMGET', key, 'status', 'sellerId', 'currentPrice', 'minStep', 'endTime', 'antiSnipeSeconds', 'extensionSeconds', 'extensionCount')
+local data = redis.call('HMGET', key, 'status', 'sellerId', 'currentPrice', 'minStep', 'endTime', 'antiSnipeSeconds', 'extensionSeconds', 'extensionCount', 'highestBidderId')
 
 local status = data[1]
 if not status then return { 0, 'Auction not found' } end
@@ -75,4 +75,6 @@ redis.call('HMSET', key, unpack(updates))
 redis.call('HINCRBY', key, 'bidCount', 1)
 redis.call('HINCRBY', key, 'version', 1)
 
-return { 1, 'Success', extended and 'extended' or 'normal', tostring(finalEndTime), nextExtensionCount }
+local previousBidderId = data[9] or "NONE"
+
+return { 1, 'Success', extended and 'extended' or 'normal', tostring(finalEndTime), nextExtensionCount, previousBidderId, sellerId }

@@ -78,6 +78,13 @@ public class BidServiceImpl implements BidService {
         long finalEndTimeEpoch = Long.parseLong((String) result.get(3));
         Instant finalEndTime = Instant.ofEpochSecond(finalEndTimeEpoch);
         Integer nextExtensionCount = ((Long) result.get(4)).intValue();
+        
+        String previousBidderIdStr = (String) result.get(5);
+        Long previousBidderId = (previousBidderIdStr != null && !previousBidderIdStr.equals("NONE") && !previousBidderIdStr.isEmpty()) 
+                                ? Long.parseLong(previousBidderIdStr) : null;
+                                
+        String sellerIdStr = (String) result.get(6);
+        Long sellerId = (sellerIdStr != null && !sellerIdStr.isEmpty()) ? Long.parseLong(sellerIdStr) : null;
 
         // Ghi MySQL + Outbox (trong 1 transaction)
         Bid bid = Bid.builder()
@@ -88,7 +95,7 @@ public class BidServiceImpl implements BidService {
                 .build();
 
         bidRepository.save(bid);
-        outboxService.save(auctionId, bid, extended, finalEndTime);
+        outboxService.save(auctionId, bid, extended, finalEndTime, previousBidderId, sellerId);
 
         // Update auction
         int updatedRows = auctionRepository.updateAuctionPriceAndEndTime(auctionId, newPrice, bidderId, finalEndTime, nextExtensionCount);

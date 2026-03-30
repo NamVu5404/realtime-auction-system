@@ -14,11 +14,13 @@ import SecurityPage from './pages/account/SecurityPage';
 import SellerRegPage from './pages/account/SellerRegPage';
 import AdminAuctionPage from './pages/admin/AdminAuctionPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminNotificationPage from './pages/admin/AdminNotificationPage';
 import AdminUserPage from './pages/admin/AdminUserPage';
 import SellerManagementPage from './pages/admin/SellerManagementPage';
 import SellerLayout from './layouts/SellerLayout';
 import SellerAuctionPage from './pages/seller/SellerAuctionPage';
 import SellerDashboard from './pages/seller/SellerDashboard';
+import SellerNotificationPage from './pages/seller/SellerNotificationPage';
 import AuctionDetailPage from './pages/AuctionDetailPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import HomePage from './pages/HomePage';
@@ -119,6 +121,7 @@ function App() {
                 <Route path="users" element={<AdminUserPage />} />
                 <Route path="auctions" element={<AdminAuctionPage />} />
                 <Route path="sellers" element={<SellerManagementPage />} />
+                <Route path="notifications" element={<AdminNotificationPage />} />
               </Route>
 
               {/* Seller Routes with SellerLayout (Sidebar + Seller Header) */}
@@ -132,6 +135,7 @@ function App() {
               >
                 <Route index element={<SellerDashboard />} />
                 <Route path="auctions" element={<SellerAuctionPage />} />
+                <Route path="notifications" element={<SellerNotificationPage />} />
               </Route>
 
               {/* User Account Routes */}

@@ -14,6 +14,7 @@ import java.time.Instant;
 @AllArgsConstructor
 public class AuctionInitRequest {
     private Long auctionId;
+    private String title;
     private BigDecimal startPrice;
     private BigDecimal minStep;
     private Long sellerId;

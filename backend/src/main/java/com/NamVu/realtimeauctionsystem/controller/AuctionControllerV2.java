@@ -22,6 +22,7 @@ public class AuctionControllerV2 {
                                                    @RequestBody @Valid PlaceBidRequestV2 request) throws JsonProcessingException {
         Long bidderId = SecurityUtils.getCurrentUserId();
 
+        // Chưa check bidderId != sellerId
         return ApiResponse.<BidUpdateResult>builder()
                 .result(bidService.placeBidV2(auctionId, bidderId, request.getAmount()))
                 .build();

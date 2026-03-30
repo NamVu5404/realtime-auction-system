@@ -123,4 +123,20 @@ public class UserServiceImpl implements UserService {
 
         return userMapper.mapToResponse(user);
     }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public UserResponse upgradeToSeller(Long userId) {
+        User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (user.getRoles().contains(Role.SELLER)) {
+            throw new AppException(ErrorCode.USER_ALREADY_SELLER);
+        }
+
+        user.getRoles().add(Role.SELLER);
+        user = userRepository.save(user);
+
+        return userMapper.mapToResponse(user);
+    }
 }
