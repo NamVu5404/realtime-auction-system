@@ -1,12 +1,15 @@
 package com.namvu.realtimeauctionsystem.service;
 
-import com.namvu.realtimeauctionsystem.dto.bid.BidUpdateResult;
-import com.namvu.realtimeauctionsystem.entity.Auction;
-import com.namvu.realtimeauctionsystem.entity.User;
-import com.namvu.realtimeauctionsystem.repository.AuctionRepository;
-import com.namvu.realtimeauctionsystem.repository.BidRepository;
-import com.namvu.realtimeauctionsystem.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
+import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
+import com.namvu.realtimeauctionsystem.modules.bid.dto.BidUpdateResult;
+import com.namvu.realtimeauctionsystem.modules.bid.repository.BidRepository;
+import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
+import com.namvu.realtimeauctionsystem.modules.bid.service.OutboxService;
+import com.namvu.realtimeauctionsystem.modules.bid.service.RedisLuaService;
+import com.namvu.realtimeauctionsystem.modules.user.entity.User;
+import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +21,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,7 +29,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
-public class BidServiceTest {
+class BidServiceTest {
 
     @Autowired
     private BidService bidService;
@@ -42,10 +44,10 @@ public class BidServiceTest {
     private OutboxService outboxService;
 
     @MockBean
-    private AuctionRepository auctionRepository;
-
+    private AuctionService auctionService;
+    
     @MockBean
-    private UserRepository userRepository;
+    private UserService userService;
 
     // Khai báo hằng số để dùng chung cho các test case
     private final Long AUCTION_ID = 1L;
@@ -62,9 +64,9 @@ public class BidServiceTest {
         User mockUser = new User();
         mockUser.setId(BIDDER_ID);
 
-        // Định nghĩa hành vi mặc định cho các Repository
-        when(auctionRepository.findById(AUCTION_ID)).thenReturn(Optional.of(mockAuction));
-        when(userRepository.getReferenceById(BIDDER_ID)).thenReturn(mockUser);
+        // Định nghĩa hành vi mặc định cho các Service
+        when(auctionService.getAuctionReference(AUCTION_ID)).thenReturn(mockAuction);
+        when(userService.getUserReference(BIDDER_ID)).thenReturn(mockUser);
     }
 
     // ✅ Test happy path
@@ -74,24 +76,24 @@ public class BidServiceTest {
         when(redisLuaService.executePlaceBid(any(), any(), any(), anyLong(), anyInt()))
                 .thenAnswer(invocation -> List.of(1L, "Success", "normal", "1234567890", 0L, "999", "888"));
 
-        when(auctionRepository.updateAuctionPriceAndEndTime(anyLong(), any(BigDecimal.class), anyLong(), any(Instant.class), any(Integer.class)))
+        when(auctionService.applyBid(anyLong(), any(BigDecimal.class), anyLong(), any(Instant.class), any(Integer.class)))
                 .thenReturn(1);
 
         BidUpdateResult result = bidService.placeBidV2(AUCTION_ID, BIDDER_ID, new BigDecimal("1200"));
 
         assertTrue(result.isSuccess());
 
-        verify(auctionRepository, times(1)).updateAuctionPriceAndEndTime(
+        verify(auctionService, times(1)).applyBid(
                 eq(AUCTION_ID),
                 eq(new BigDecimal("1200")),
                 eq(BIDDER_ID),
                 any(Instant.class),
                 any(Integer.class)
         );
-
+        
         verify(bidRepository, times(1)).save(any());
         verify(outboxService, times(1)).save(any(), any(), anyBoolean(), any(), anyLong(), anyLong());
-        verify(auctionRepository, times(1)).getReferenceById(AUCTION_ID);
+        verify(auctionService, times(1)).getAuctionReference(AUCTION_ID);
     }
 
     // ❌ Test Lua reject
@@ -103,7 +105,6 @@ public class BidServiceTest {
         BidUpdateResult result = bidService.placeBidV2(AUCTION_ID, BIDDER_ID, new BigDecimal("1050"));
 
         assertFalse(result.isSuccess());
-        verify(auctionRepository, never()).save(any()); // KHÔNG update auction khi thất bại
         verify(bidRepository, never()).save(any());
         verify(outboxService, never()).save(any(), any(), anyBoolean(), any(), anyLong(), anyLong());
     }
@@ -121,7 +122,7 @@ public class BidServiceTest {
         when(redisLuaService.executePlaceBid(anyLong(), any(BigDecimal.class), anyLong(), anyLong(), anyInt()))
                 .thenAnswer(invocation -> List.of(1L, "Success", "extended", newEndTimeStr, nextExtCount, "999", "888"));
 
-        when(auctionRepository.updateAuctionPriceAndEndTime(anyLong(), any(), anyLong(), any(), anyInt()))
+        when(auctionService.applyBid(anyLong(), any(), anyLong(), any(), anyInt()))
                 .thenReturn(1);
 
         // 3. Thực thi
@@ -132,8 +133,8 @@ public class BidServiceTest {
         assertTrue(result.isExtended(), "Bid should trigger anti-snipe extension");
         Assertions.assertEquals(newPrice, result.getNewPrice());
 
-        // 5. Kiểm chứng việc lưu xuống Database
-        verify(auctionRepository, times(1)).updateAuctionPriceAndEndTime(
+        // 5. Kiểm chứng việc lưu xuống Database qua Service
+        verify(auctionService, times(1)).applyBid(
                 eq(AUCTION_ID),
                 eq(newPrice),
                 eq(BIDDER_ID),

@@ -1,5 +1,6 @@
 package com.namvu.realtimeauctionsystem.service;
 
+import com.namvu.realtimeauctionsystem.modules.bid.service.RedisLuaService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @AutoConfigureDataRedis
 @ActiveProfiles("test")
-public class RedisLuaServiceTest {
+class RedisLuaServiceTest {
 
     @Autowired
     private RedisLuaService redisLuaService;
@@ -41,6 +42,7 @@ public class RedisLuaServiceTest {
     void setup() {
         String key = "auction:" + AUCTION_ID;
         Map<String, String> data = new HashMap<>();  // ← String, String
+        data.put("title", "ABC");
         data.put("currentPrice", "1000");
         data.put("minStep", "100");
         data.put("sellerId", SELLER_ID.toString());

@@ -1,0 +1,50 @@
+package com.namvu.realtimeauctionsystem.modules.bid.service.impl;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
+import com.namvu.realtimeauctionsystem.modules.bid.entity.Outbox;
+import com.namvu.realtimeauctionsystem.common.enums.OutboxEventType;
+import com.namvu.realtimeauctionsystem.common.enums.OutboxStatus;
+import com.namvu.realtimeauctionsystem.modules.bid.repository.OutboxRepository;
+import com.namvu.realtimeauctionsystem.modules.bid.service.OutboxService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class OutboxServiceImpl implements OutboxService {
+
+    private final OutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
+
+    @Override
+    public void save(Long auctionId, Bid bid, boolean extended, Instant finalEndTime, Long previousBidderId, Long sellerId) throws JsonProcessingException {
+        Map<String, Object> payload = Map.of(
+                "auctionId", auctionId,
+                "bidderId", bid.getBidder().getId(),
+                "bidderName", bid.getBidder().getName(),
+                "amount", bid.getAmount(),
+                "extended", extended,
+                "finalEndTime", finalEndTime,
+                "timestamp", bid.getCreatedAt().getEpochSecond(),
+                "previousBidderId", previousBidderId != null ? previousBidderId : -1L,
+                "sellerId", sellerId != null ? sellerId : -1L
+        );
+
+        Outbox outbox = Outbox.builder()
+                .eventType(OutboxEventType.BID_PLACED)
+                .auctionId(auctionId)
+                .payload(objectMapper.writeValueAsString(payload))
+                .status(OutboxStatus.PENDING)
+                .retryCount(0)
+                .build();
+
+        outboxRepository.save(outbox);
+    }
+}
