@@ -80,14 +80,14 @@ const SellerNotificationPage: React.FC = () => {
           >
             Read all
           </Button>
-          <Tooltip title="Clear all read notifications">
+          <Tooltip title="Delete all read notifications">
             <Button
               danger
               onClick={() => deleteAllMutation.mutate()}
               loading={deleteAllMutation.isPending}
               disabled={!data?.data || data.data.length === 0}
             >
-              Xóa tất cả
+              Delete all
             </Button>
           </Tooltip>
         </Space>
