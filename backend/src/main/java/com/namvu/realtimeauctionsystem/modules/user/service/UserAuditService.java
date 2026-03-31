@@ -15,6 +15,8 @@ public interface UserAuditService {
 
     void sellerApprovedAudit(User user, String approvedBy);
 
+    void sellerRejectedAudit(User user, String rejectedBy, String reason);
+
     PageResponse<UserAuditResponse> getUserAudit(Long userId, Pageable pageable);
 
     PageResponse<UserAuditResponse> getMyAccountAudit(Pageable pageable);

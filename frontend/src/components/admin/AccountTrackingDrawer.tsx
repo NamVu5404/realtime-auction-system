@@ -1,6 +1,7 @@
 import {
   AlertOutlined,
   CheckCircleOutlined,
+  CloseCircleOutlined,
   LockOutlined,
   UnlockOutlined,
   UserDeleteOutlined,
@@ -57,6 +58,13 @@ const createTimelineItem = (tracking: UserAuditResponse) => {
         icon: <UserDeleteOutlined />,
         color: "red",
         label: "SELLER_ROLE_REVOKED",
+      };
+    }
+    if (actionType === "SELLER_REJECTED") {
+      return {
+        icon: <CloseCircleOutlined />,
+        color: "red",
+        label: "SELLER_REJECTED",
       };
     }
     if (actionType === "SELLER_APPROVED") {

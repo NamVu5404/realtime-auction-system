@@ -3,7 +3,6 @@ package com.namvu.realtimeauctionsystem.modules.seller_registration.service.impl
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.common.enums.RequestStatus;
 import com.namvu.realtimeauctionsystem.common.enums.Role;
-import com.namvu.realtimeauctionsystem.common.enums.UserStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
@@ -99,6 +98,9 @@ public class SellerRegServiceImpl implements SellerRegService {
         registration.setStatus(RequestStatus.REJECTED);
         registration.setRejectReason(reason);
         registration = sellerRegRepository.save(registration);
+
+        // Save audit log
+        userAuditService.sellerRejectedAudit(registration.getUser(), SecurityUtils.getCurrentUserEmail(), reason);
 
         return SellerRegResponse.builder()
                 .id(registration.getId())
