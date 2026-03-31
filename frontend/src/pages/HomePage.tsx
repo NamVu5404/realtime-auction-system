@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, Button, Space, Empty, Spin } from "antd";
-import { ReloadOutlined, WifiOutlined } from "@ant-design/icons";
+import { WifiOutlined } from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { AuctionStatus } from "../api/types";
 import { useAuctions } from "../hooks/useAuctions";
@@ -44,7 +44,7 @@ export const HomePage = () => {
   const currentStatus = statusMap[activeTab] || AuctionStatus.LIVE;
 
   // Fetch auctions with React Query
-  const { data, isLoading, error, refetch } = useAuctions(
+  const { data, isLoading, error } = useAuctions(
     currentStatus,
     currentPage,
     pageSize,
@@ -60,11 +60,6 @@ export const HomePage = () => {
   const { isConnected } = useWebSocket({
     onPriceUpdate,
   });
-
-  // Manual refresh button
-  const handleRefresh = useCallback(async () => {
-    await refetch();
-  }, [refetch]);
 
   // Callback for when countdown reaches 00:00:00
   // Called from AuctionCard component
@@ -204,25 +199,6 @@ export const HomePage = () => {
               )}
             </div>
           </div>
-
-          {/* Refresh button */}
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={handleRefresh}
-            loading={isLoading}
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.7)",
-              borderRadius: "100px",
-              padding: "0 18px",
-              height: "36px",
-              fontWeight: 600,
-              fontSize: "13px",
-            }}
-          >
-            Refresh
-          </Button>
         </div>
 
         {/* Error Display */}
