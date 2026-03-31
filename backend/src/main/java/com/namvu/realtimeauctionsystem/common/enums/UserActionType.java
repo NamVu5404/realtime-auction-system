@@ -9,4 +9,5 @@ public enum UserActionType {
     FRAUD,
     SELLER_ROLE_REVOKED,
     SELLER_APPROVED,
+    SELLER_REJECTED,
 }

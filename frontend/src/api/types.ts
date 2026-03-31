@@ -43,6 +43,7 @@ export enum UserActionType {
   FRAUD = "FRAUD",
   SELLER_ROLE_REVOKED = "SELLER_ROLE_REVOKED",
   SELLER_APPROVED = "SELLER_APPROVED",
+  SELLER_REJECTED = "SELLER_REJECTED",
 }
 
 export enum AuctionActionType {
