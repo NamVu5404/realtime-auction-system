@@ -1,7 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.auth.service.impl;
 
-import com.namvu.realtimeauctionsystem.common.enums.TokenType;
-import com.namvu.realtimeauctionsystem.common.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.common.constant.TokenType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.utils.RequestUtils;
 import com.namvu.realtimeauctionsystem.modules.auth.dto.*;

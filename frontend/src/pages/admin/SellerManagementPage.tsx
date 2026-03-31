@@ -94,36 +94,34 @@ const SellerManagementPage: React.FC = () => {
   // Mutations
   const approveMutation = useMutation({
     mutationFn: (id: number) => adminApi.approveSeller(id),
-    onSuccess: () => {
-      message.success("Seller registration approved successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["seller-registrations"] });
       queryClient.invalidateQueries({ queryKey: ["sellers-list"] });
     },
-    onError: () => message.error("Failed to approve registration"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const rejectMutation = useMutation({
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
       adminApi.rejectSeller(id, reason),
-    onSuccess: () => {
-      message.success("Seller registration rejected");
+    onSuccess: (data) => {
+      message.success(data.message);
       setRejectModalVisible(false);
       setRejectReason("");
       queryClient.invalidateQueries({ queryKey: ["seller-registrations"] });
     },
-    onError: () => message.error("Failed to reject registration"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const revokeMutation = useMutation({
     mutationFn: ({ userId, reason }: { userId: number; reason: string }) =>
       adminApi.revokeSellerRole(userId, reason),
-    onSuccess: () => {
-      message.success(
-        "Seller role revoked successfully. All scheduled auctions by this user have been cancelled.",
-      );
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["sellers-list"] });
     },
-    onError: () => message.error("Failed to revoke seller role"),
+    onError: (error: any) => message.error(error.message),
   });
 
   // Handlers

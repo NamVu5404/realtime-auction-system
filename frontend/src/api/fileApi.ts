@@ -40,7 +40,7 @@ export const fileApi = {
           onUploadProgress,
         },
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to upload file:", error);
       throw new Error(extractErrorMessage(error));

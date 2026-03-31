@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.*;
+
 @RestController
 @RequestMapping("/v1/notifications")
 @RequiredArgsConstructor
@@ -22,10 +24,7 @@ public class NotificationController {
     @GetMapping("/bell")
     public ApiResponse<List<NotificationResponse>> getNotificationsForBell() {
         Long userId = SecurityUtils.getCurrentUserId();
-
-        return ApiResponse.<List<NotificationResponse>>builder()
-                .result(notificationService.getNotificationsForBell(userId))
-                .build();
+        return ApiResponse.ok(notificationService.getNotificationsForBell(userId));
     }
 
     @GetMapping
@@ -35,45 +34,38 @@ public class NotificationController {
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
         Long userId = SecurityUtils.getCurrentUserId();
-
-        return ApiResponse.<PageResponse<NotificationResponse>>builder()
-                .result(notificationService.getNotificationsForUser(userId, pageable))
-                .build();
+        return ApiResponse.ok(notificationService.getNotificationsForUser(userId, pageable));
     }
 
     @GetMapping("/unread-count")
     public ApiResponse<Integer> getUnreadCountNotifications() {
         Long userId = SecurityUtils.getCurrentUserId();
-
-        return ApiResponse.<Integer>builder()
-                .result(notificationService.getUnreadCountNotifications(userId))
-                .build();
+        return ApiResponse.ok(notificationService.getUnreadCountNotifications(userId));
     }
 
     @PatchMapping("/{id}/read")
     public ApiResponse<Void> markNotificationAsRead(@PathVariable Long id) {
         notificationService.markNotificationAsRead(id);
-        return ApiResponse.<Void>builder().build();
+        return ApiResponse.of(NOTIFICATION_READ, null);
     }
 
     @PatchMapping("/mark-all-as-read")
     public ApiResponse<Integer> markAllNotificationsAsRead() {
         Long userId = SecurityUtils.getCurrentUserId();
-        return ApiResponse.<Integer>builder()
-                .result(notificationService.markAllNotificationsAsReadForUser(userId))
-                .build();
+        return ApiResponse.of(ALL_NOTIFICATIONS_READ,
+                notificationService.markAllNotificationsAsReadForUser(userId));
     }
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteNotification(@PathVariable Long id) {
         notificationService.deleteNotification(id);
-        return ApiResponse.<Void>builder().build();
+        return ApiResponse.of(NOTIFICATION_DELETED, null);
     }
 
     @DeleteMapping("/all")
     public ApiResponse<Void> deleteAllNotificationsForUser() {
         Long userId = SecurityUtils.getCurrentUserId();
         notificationService.deleteAllNotificationsForUser(userId);
-        return ApiResponse.<Void>builder().build();
+        return ApiResponse.of(ALL_NOTIFICATIONS_DELETED, null);
     }
 }

@@ -3,7 +3,7 @@ package com.namvu.realtimeauctionsystem.infrastructure.aop;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
-import com.namvu.realtimeauctionsystem.common.enums.AuctionActionType;
+import com.namvu.realtimeauctionsystem.common.constant.AuctionActionType;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionResponse;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.CancelAuctionResponse;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.CreateAuctionRequest;
@@ -33,7 +33,7 @@ public class AuctionAspect {
             returning = "response"
     )
     public void afterSaveDraftReturning(ApiResponse<AuctionResponse> response) {
-        if (response.getCode() != 1000) {
+        if (response.getCode() >= 4000) {
             return;
         }
 
@@ -45,7 +45,7 @@ public class AuctionAspect {
             returning = "response",
             argNames = "request,response")
     public void afterScheduleAuctionReturning(CreateAuctionRequest request, ApiResponse<AuctionResponse> response) {
-        if (response.getCode() != 1000) {
+        if (response.getCode() >= 4000) {
             return;
         }
 
@@ -60,7 +60,7 @@ public class AuctionAspect {
             returning = "response"
     )
     public void afterAuctionUpdateReturning(ApiResponse<AuctionResponse> response) {
-        if (response.getCode() != 1000) {
+        if (response.getCode() >= 4000) {
             return;
         }
         saveAuctionAudit(response, AuctionActionType.UPDATED);
@@ -71,7 +71,7 @@ public class AuctionAspect {
             returning = "response"
     )
     public void afterCancelAuctionReturning(ApiResponse<CancelAuctionResponse> response) {
-        if (response.getCode() != 1000) {
+        if (response.getCode() >= 4000) {
             return;
         }
 

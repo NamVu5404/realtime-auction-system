@@ -47,15 +47,10 @@ const SellerRegPage = () => {
       // Also invalidate to sync with server
       queryClient.invalidateQueries({ queryKey: ["my-seller-registration"] });
 
-      message.success(
-        "Registration submitted successfully! Please wait for admin approval.",
-      );
+      message.success(data.message);
     },
     onError: (error: any) => {
-      message.error(
-        error.message ||
-          "Failed to submit registration. You might already have a pending request.",
-      );
+      message.error(error.message);
     },
   });
 

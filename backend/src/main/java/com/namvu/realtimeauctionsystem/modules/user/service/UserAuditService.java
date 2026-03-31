@@ -5,7 +5,7 @@ import com.namvu.realtimeauctionsystem.modules.user.dto.UserAuditResponse;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
-import com.namvu.realtimeauctionsystem.common.enums.FraudType;
+import com.namvu.realtimeauctionsystem.common.constant.FraudType;
 import org.springframework.data.domain.Pageable;
 
 public interface UserAuditService {

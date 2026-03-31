@@ -1,4 +1,4 @@
-package com.namvu.realtimeauctionsystem.common.enums;
+package com.namvu.realtimeauctionsystem.common.constant;
 
 public final class KafkaTopicConstant {
     private KafkaTopicConstant() {

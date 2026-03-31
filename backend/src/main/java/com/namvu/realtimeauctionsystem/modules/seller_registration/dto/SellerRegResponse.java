@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.seller_registration.dto;
 
 import com.namvu.realtimeauctionsystem.modules.user.dto.UserResponse;
-import com.namvu.realtimeauctionsystem.common.enums.RequestStatus;
+import com.namvu.realtimeauctionsystem.common.constant.RequestStatus;
 import lombok.Builder;
 import lombok.Data;
 

@@ -2,6 +2,7 @@ import axiosClient from "./axiosClient";
 import { extractErrorMessage } from "./apiUtils";
 import {
   ApiResponse,
+  ApiResult,
   Auction,
   AuctionStatus,
   AuctionAuditResponse,
@@ -59,23 +60,25 @@ export const adminApi = {
           params: { page, size, keyword, role, status },
         },
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },
 
-  blockUser: async (userId: number, reason: string): Promise<void> => {
+  blockUser: async (userId: number, reason: string): Promise<ApiResult<void>> => {
     try {
-      await axiosClient.patch(`/users/${userId}/block`, { reason });
+      const res = await axiosClient.patch<ApiResponse<void>>(`/users/${userId}/block`, { reason });
+      return { message: res.data.message, result: undefined as void };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },
 
-  unblockUser: async (userId: number, reason: string): Promise<void> => {
+  unblockUser: async (userId: number, reason: string): Promise<ApiResult<void>> => {
     try {
-      await axiosClient.patch(`/users/${userId}/unblock`, { reason });
+      const res = await axiosClient.patch<ApiResponse<void>>(`/users/${userId}/unblock`, { reason });
+      return { message: res.data.message, result: undefined as void };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -95,7 +98,7 @@ export const adminApi = {
       >("/auctions/filter-seller", {
         params: { page, size, keyword, status, startTime, endTime },
       });
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -115,7 +118,7 @@ export const adminApi = {
       >("/auctions/filter-admin", {
         params: { page, size, keyword, status, startTime, endTime },
       });
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -127,19 +130,19 @@ export const adminApi = {
         "/auctions/draft",
         auctionData,
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },
 
-  scheduleAuction: async (auctionData: any): Promise<Auction> => {
+  scheduleAuction: async (auctionData: any): Promise<ApiResult<Auction>> => {
     try {
       const response = await axiosClient.post<ApiResponse<Auction>>(
         "/auctions/scheduler",
         auctionData,
       );
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -148,12 +151,12 @@ export const adminApi = {
   cancelAuction: async (
     auctionId: number,
     request: CancelAuctionRequest,
-  ): Promise<CancelAuctionResponse> => {
+  ): Promise<ApiResult<CancelAuctionResponse>> => {
     try {
       const response = await axiosClient.patch<
         ApiResponse<CancelAuctionResponse>
       >(`/auctions/${auctionId}/cancel`, request);
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -162,13 +165,13 @@ export const adminApi = {
   updateDraftAuction: async (
     auctionId: number,
     updateData: any,
-  ): Promise<Auction> => {
+  ): Promise<ApiResult<Auction>> => {
     try {
       const response = await axiosClient.put<ApiResponse<Auction>>(
         `/auctions/${auctionId}/draft`,
         updateData,
       );
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -177,13 +180,13 @@ export const adminApi = {
   updateScheduledAuction: async (
     auctionId: number,
     updateData: any,
-  ): Promise<Auction> => {
+  ): Promise<ApiResult<Auction>> => {
     try {
       const response = await axiosClient.put<ApiResponse<Auction>>(
         `/auctions/${auctionId}/scheduler`,
         updateData,
       );
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -200,7 +203,7 @@ export const adminApi = {
       >(`/users/${userId}/audit`, {
         params: { page, size },
       });
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -217,7 +220,7 @@ export const adminApi = {
       >(`/auctions/${auctionId}/audit`, {
         params: { page, size },
       });
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -233,18 +236,18 @@ export const adminApi = {
       >("/sellers/registrations", {
         params: { page, size },
       });
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },
 
-  approveSeller: async (registrationId: number): Promise<SellerRegResponse> => {
+  approveSeller: async (registrationId: number): Promise<ApiResult<SellerRegResponse>> => {
     try {
       const response = await axiosClient.patch<ApiResponse<SellerRegResponse>>(
         `/sellers/${registrationId}/approve`,
       );
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -253,7 +256,7 @@ export const adminApi = {
   rejectSeller: async (
     registrationId: number,
     reason: string,
-  ): Promise<SellerRegResponse> => {
+  ): Promise<ApiResult<SellerRegResponse>> => {
     try {
       const response = await axiosClient.patch<ApiResponse<SellerRegResponse>>(
         `/sellers/${registrationId}/reject`,
@@ -262,13 +265,13 @@ export const adminApi = {
           params: { reason },
         },
       );
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },
 
-  revokeSellerRole: async (userId: number, reason?: string): Promise<User> => {
+  revokeSellerRole: async (userId: number, reason?: string): Promise<ApiResult<User>> => {
     try {
       const response = await axiosClient.patch<ApiResponse<User>>(
         `/sellers/users/${userId}/revoke-role`,
@@ -277,18 +280,18 @@ export const adminApi = {
           params: { reason },
         },
       );
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },
 
-  upgradeToSeller: async (userId: number): Promise<User> => {
+  upgradeToSeller: async (userId: number): Promise<ApiResult<User>> => {
     try {
       const response = await axiosClient.patch<ApiResponse<User>>(
         `/users/${userId}/upgrade-to-seller`,
       );
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }

@@ -45,7 +45,7 @@ export const auctionApi = {
           },
         },
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auctions by status:", error);
       throw new Error(extractErrorMessage(error));
@@ -63,7 +63,7 @@ export const auctionApi = {
       const response = await axiosClient.get<ApiResponse<Auction>>(
         `/auctions/${auctionId}`,
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auction detail:", error);
       throw new Error(extractErrorMessage(error));
@@ -94,7 +94,7 @@ export const auctionApi = {
           amount,
         },
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to place bid:", error);
       throw new Error(extractErrorMessage(error));
@@ -151,7 +151,7 @@ export const auctionApi = {
           size,
         },
       });
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auction history:", error);
       throw new Error(extractErrorMessage(error));
@@ -169,7 +169,7 @@ export const auctionApi = {
       const response = await axiosClient.get<ApiResponse<number>>(
         `/auctions/${auctionId}/current-price`,
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch current price:", error);
       throw new Error(extractErrorMessage(error));
@@ -188,7 +188,7 @@ export const auctionApi = {
       const response = await axiosClient.get<ApiResponse<AuctionAuditResponse>>(
         `/auctions/${auctionId}/result`,
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auction result:", error);
       throw new Error(extractErrorMessage(error));

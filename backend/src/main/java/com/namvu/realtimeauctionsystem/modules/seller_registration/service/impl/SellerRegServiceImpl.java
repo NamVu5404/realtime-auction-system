@@ -1,8 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.seller_registration.service.impl;
 
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.enums.RequestStatus;
-import com.namvu.realtimeauctionsystem.common.enums.Role;
+import com.namvu.realtimeauctionsystem.common.constant.RequestStatus;
+import com.namvu.realtimeauctionsystem.common.constant.Role;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;

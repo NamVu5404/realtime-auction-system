@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.user.dto;
 
-import com.namvu.realtimeauctionsystem.common.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.common.constant.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

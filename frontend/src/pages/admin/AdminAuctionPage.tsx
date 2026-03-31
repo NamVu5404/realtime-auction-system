@@ -142,14 +142,14 @@ const AdminAuctionPage = () => {
 
   const createMutation = useMutation({
     mutationFn: adminApi.scheduleAuction,
-    onSuccess: () => {
-      message.success("Auction created successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
       setCreateModal(false);
       form.resetFields();
       refetch();
     },
-    onError: () => message.error("Failed to create auction"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const updateMutation = useMutation({
@@ -161,14 +161,14 @@ const AdminAuctionPage = () => {
       }
       throw new Error("Unknown auction status");
     },
-    onSuccess: () => {
-      message.success("Auction updated successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
       setEditModal({ visible: false });
       editForm.resetFields();
       refetch();
     },
-    onError: () => message.error("Failed to update auction"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const cancelMutation = useMutation({
@@ -179,13 +179,13 @@ const AdminAuctionPage = () => {
       id: number;
       request: CancelAuctionRequest;
     }) => adminApi.cancelAuction(id, request),
-    onSuccess: () => {
-      message.success("Auction cancelled successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["admin-auctions"] });
       setCancelModal({ visible: false });
       refetch();
     },
-    onError: () => message.error("Failed to cancel auction"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const handleSearch = () => {

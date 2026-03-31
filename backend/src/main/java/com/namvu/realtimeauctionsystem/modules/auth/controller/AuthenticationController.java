@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.text.ParseException;
 
+import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.*;
+
 @RestController
 @RequestMapping("/v1/auth")
 @RequiredArgsConstructor
@@ -23,22 +25,18 @@ public class AuthenticationController {
     @PostMapping("/introspect")
     public ApiResponse<IntrospectResponse> introspect(@RequestBody @Valid IntrospectRequest request)
             throws ParseException, JOSEException {
-        return ApiResponse.<IntrospectResponse>builder()
-                .result(authenticationService.introspect(request))
-                .build();
+        return ApiResponse.of(TOKEN_VERIFIED, authenticationService.introspect(request));
     }
 
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@RequestBody @Valid LogoutRequest request) throws ParseException, JOSEException {
         authenticationService.logout(request);
-        return ApiResponse.<Void>builder().build();
+        return ApiResponse.of(LOGOUT, null);
     }
 
     @PostMapping("/refresh")
     public ApiResponse<RefreshResponse> refreshToken(@RequestBody @Valid RefreshRequest request)
             throws ParseException, JOSEException {
-        return ApiResponse.<RefreshResponse>builder()
-                .result(authenticationService.refreshToken(request))
-                .build();
+        return ApiResponse.of(TOKEN_REFRESH, authenticationService.refreshToken(request));
     }
 }

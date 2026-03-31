@@ -2,7 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.file.repository;
 
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.file.entity.File;
-import com.namvu.realtimeauctionsystem.common.enums.OwnerType;
+import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

@@ -80,10 +80,10 @@ export const AuthCallbackPage = () => {
         setIsLoading(true);
         setError(null); // Reset error before attempt
 
-        await login(code);
+        const loginResult = await login(code);
 
         // Only show success and redirect if login completed successfully
-        message.success("Login successful!");
+        message.success(loginResult.message);
         setIsLoading(false);
 
         // Get return URL from sessionStorage, default to home

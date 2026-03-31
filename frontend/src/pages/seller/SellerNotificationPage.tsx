@@ -27,9 +27,9 @@ const SellerNotificationPage: React.FC = () => {
 
   const markAllReadMutation = useMutation({
     mutationFn: notificationApi.markAllAsRead,
-    onSuccess: () => {
+    onSuccess: (data) => {
       markAllAsReadStore();
-      message.success("Tất cả thông báo đã được đánh dấu là đã đọc");
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
@@ -39,10 +39,10 @@ const SellerNotificationPage: React.FC = () => {
 
   const deleteAllMutation = useMutation({
     mutationFn: notificationApi.deleteAll,
-    onSuccess: () => {
+    onSuccess: (data) => {
       const { clearNotifications } = useNotificationStore.getState();
       clearNotifications();
-      message.success("Đã xóa tất cả thông báo");
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
@@ -78,9 +78,9 @@ const SellerNotificationPage: React.FC = () => {
             disabled={!data?.data || !data.data.some((n) => !n.isRead)}
             type="primary"
           >
-            Đọc tất cả
+            Read all
           </Button>
-          <Tooltip title="Xóa tất cả thông báo đã đọc">
+          <Tooltip title="Clear all read notifications">
             <Button
               danger
               onClick={() => deleteAllMutation.mutate()}

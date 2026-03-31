@@ -1,0 +1,8 @@
+﻿src/api/fileApi.ts(43,7): error TS2322: Type 'FileResponse | undefined' is not assignable to type 'FileResponse'.
+  Type 'undefined' is not assignable to type 'FileResponse'.
+src/features/notification/NotificationList.tsx(97,23): error TS2552: Cannot find name 'response'. Did you mean 'Response'?
+src/features/notification/NotificationList.tsx(110,23): error TS2552: Cannot find name 'response'. Did you mean 'Response'?
+src/features/notification/NotificationList.tsx(121,23): error TS2552: Cannot find name 'response'. Did you mean 'Response'?
+src/pages/admin/drawers/AuctionDetailDrawer.tsx(285,23): error TS2552: Cannot find name 'response'. Did you mean 'Response'?
+src/pages/seller/SellerNotificationPage.tsx(32,23): error TS2552: Cannot find name 'response'. Did you mean 'Response'?
+src/pages/seller/SellerNotificationPage.tsx(45,23): error TS2552: Cannot find name 'response'. Did you mean 'Response'?

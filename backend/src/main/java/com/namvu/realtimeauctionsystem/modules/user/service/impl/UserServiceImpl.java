@@ -1,9 +1,9 @@
 package com.namvu.realtimeauctionsystem.modules.user.service.impl;
 
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.enums.OwnerType;
-import com.namvu.realtimeauctionsystem.common.enums.Role;
-import com.namvu.realtimeauctionsystem.common.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
+import com.namvu.realtimeauctionsystem.common.constant.Role;
+import com.namvu.realtimeauctionsystem.common.constant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
@@ -91,7 +91,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateProfile(UpdateUserRequest request) {
         Long userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         user.setName(request.getName());
         user.setPhone(request.getPhone());
@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateAvatar(MultipartFile file) {
         Long userId = SecurityUtils.getCurrentUserId();
         User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         // Xóa avatar cũ
         if (user.getAvatarUrl() != null) {
@@ -134,7 +134,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getActiveUserById(Long userId) {
         return userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 
     @Override
@@ -147,7 +147,7 @@ public class UserServiceImpl implements UserService {
     @PreAuthorize("hasAuthority('ADMIN')")
     public UserResponse upgradeToSeller(Long userId) {
         User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (user.getRoles().contains(Role.SELLER)) {
             throw new AppException(ErrorCode.USER_ALREADY_SELLER);

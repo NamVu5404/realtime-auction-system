@@ -3,7 +3,7 @@ package com.namvu.realtimeauctionsystem.modules.seller_registration.entity;
 import com.namvu.realtimeauctionsystem.common.entity.Auditable;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 
-import com.namvu.realtimeauctionsystem.common.enums.RequestStatus;
+import com.namvu.realtimeauctionsystem.common.constant.RequestStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.notification.service.impl;
 
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.enums.NotificationType;
+import com.namvu.realtimeauctionsystem.common.constant.NotificationType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;

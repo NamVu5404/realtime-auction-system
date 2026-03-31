@@ -40,8 +40,8 @@ import { convertUTCToLocal } from "../../utils/dateUtils";
 import formatCurrency, { formatDateTime } from "../../utils/format";
 import { getStatusColor } from "../../utils/statusUtils";
 import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
-import AuctionAuditDrawer from "../admin/drawers/AuctionAuditDrawer";
 import AuctionDetailDrawer from "../admin/drawers/AuctionDetailDrawer";
+import AuctionAuditDrawer from "../admin/drawers/AuctionAuditDrawer";
 
 const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 
@@ -81,6 +81,7 @@ const SellerAuctionPage = () => {
     auctionId?: number;
     auctionTitle?: string;
   }>({ visible: false });
+  const [auditPage, setAuditPage] = useState(1);
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState<{
     visible: boolean;
@@ -140,14 +141,14 @@ const SellerAuctionPage = () => {
 
   const createMutation = useMutation({
     mutationFn: adminApi.scheduleAuction,
-    onSuccess: () => {
-      message.success("Auction created successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
       setCreateModal(false);
       form.resetFields();
       refetch();
     },
-    onError: () => message.error("Failed to create auction"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const updateMutation = useMutation({
@@ -159,14 +160,14 @@ const SellerAuctionPage = () => {
       }
       throw new Error("Unknown auction status");
     },
-    onSuccess: () => {
-      message.success("Auction updated successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
       setEditModal({ visible: false });
       editForm.resetFields();
       refetch();
     },
-    onError: () => message.error("Failed to update auction"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const cancelMutation = useMutation({
@@ -177,13 +178,13 @@ const SellerAuctionPage = () => {
       id: number;
       request: CancelAuctionRequest;
     }) => adminApi.cancelAuction(id, request),
-    onSuccess: () => {
-      message.success("Auction cancelled successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
       setCancelModal({ visible: false });
       refetch();
     },
-    onError: () => message.error("Failed to cancel auction"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const handleSearch = () => {
@@ -313,12 +314,14 @@ const SellerAuctionPage = () => {
           key: "audit-logs",
           icon: <HistoryOutlined />,
           label: "Audit Logs",
-          onClick: () =>
+          onClick: () => {
+            setAuditPage(1);
             setAuditDrawer({
               visible: true,
               auctionId: record.id,
               auctionTitle: record.title,
-            }),
+            });
+          },
         });
 
         // Show Edit only for editable statuses
@@ -506,6 +509,8 @@ const SellerAuctionPage = () => {
         auctionId={auditDrawer.auctionId || null}
         auctionTitle={auditDrawer.auctionTitle}
         onClose={() => setAuditDrawer({ visible: false })}
+        page={auditPage}
+        onPageChange={setAuditPage}
       />
 
       <CancelAuctionModal

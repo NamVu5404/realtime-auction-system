@@ -1,16 +1,16 @@
 package com.namvu.realtimeauctionsystem.modules.file.controller;
 
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
+import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
-import com.namvu.realtimeauctionsystem.modules.file.dto.FileMetadataRequest;
-import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
-import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
-import com.namvu.realtimeauctionsystem.common.enums.AuctionStatus;
-import com.namvu.realtimeauctionsystem.common.enums.OwnerType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
-import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
-import com.namvu.realtimeauctionsystem.modules.file.service.FileService;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
+import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
+import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.modules.file.dto.FileMetadataRequest;
+import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
+import com.namvu.realtimeauctionsystem.modules.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+
+import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.*;
 
 @RestController
 @RequestMapping("/v1/files/seller")
@@ -36,10 +38,7 @@ public class FileSellerController {
             @RequestParam(value = "sortOrder", required = false) Integer sortOrder) {
 
         checkAuctionStatusAndFileOwnership(ownerId);
-
-        return ApiResponse.<FileResponse>builder()
-                .result(fileService.uploadFile(file, OwnerType.AUCTION_IMAGE, ownerId, isPrimary, sortOrder))
-                .build();
+        return ApiResponse.of(FILE_UPLOADED, fileService.uploadFile(file, OwnerType.AUCTION_IMAGE, ownerId, isPrimary, sortOrder));
     }
 
     @PatchMapping("/metadata/batch")
@@ -48,7 +47,7 @@ public class FileSellerController {
             @RequestBody List<FileMetadataRequest> requests) {
         checkAuctionStatusAndFileOwnership(ownerId);
         fileService.updateMetadataBatch(requests);
-        return ApiResponse.<Void>builder().build();
+        return ApiResponse.of(UPDATED, null);
     }
 
     @DeleteMapping("/{id}")
@@ -57,7 +56,7 @@ public class FileSellerController {
             @RequestParam("ownerId") Long ownerId) {
         checkAuctionStatusAndFileOwnership(ownerId);
         fileService.deleteFile(id);
-        return ApiResponse.<Void>builder().build();
+        return ApiResponse.of(FILE_DELETED, null);
     }
 
     private void checkAuctionStatusAndFileOwnership(Long auctionId) {

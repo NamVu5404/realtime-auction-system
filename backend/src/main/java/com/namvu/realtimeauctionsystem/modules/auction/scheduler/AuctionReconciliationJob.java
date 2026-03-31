@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static com.namvu.realtimeauctionsystem.common.enums.AuctionStatus.LIVE;
+import static com.namvu.realtimeauctionsystem.common.constant.AuctionStatus.LIVE;
 
 @Component
 @RequiredArgsConstructor

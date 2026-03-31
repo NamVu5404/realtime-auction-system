@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.bid.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.namvu.realtimeauctionsystem.common.enums.NotificationType;
+import com.namvu.realtimeauctionsystem.common.constant.NotificationType;
 import com.namvu.realtimeauctionsystem.common.utils.MoneyUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidEvent;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
-import static com.namvu.realtimeauctionsystem.common.enums.KafkaTopicConstant.BID_EVENTS_TOPIC;
+import static com.namvu.realtimeauctionsystem.common.constant.KafkaTopicConstant.BID_EVENTS_TOPIC;
 
 @Component
 @RequiredArgsConstructor

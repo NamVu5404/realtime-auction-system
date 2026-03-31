@@ -10,13 +10,13 @@ import lombok.Data;
 @Builder
 public class UpdateUserRequest {
 
-    @NotBlank(message = "NAME_NOT_BLANK")
-    @Size(max = 255, message = "MAX_CHARACTERS")
+    @NotBlank(message = "Name is required")
+    @Size(max = 255, message = "Name must not exceed 255 characters")
     private String name;
 
     @Pattern(
             regexp = "^\\d{9,15}$",
-            message = "INVALID_PHONE"
+            message = "Phone number must be between 9 and 15 digits"
     )
     private String phone;
 }

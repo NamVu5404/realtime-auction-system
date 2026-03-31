@@ -1,14 +1,16 @@
 package com.namvu.realtimeauctionsystem.modules.auction.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
+import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidUpdateResult;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.PlaceBidRequestV2;
-import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
-import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.BID_PLACED;
 
 @RestController
 @RequestMapping("/v2/auctions")
@@ -23,8 +25,6 @@ public class AuctionControllerV2 {
         Long bidderId = SecurityUtils.getCurrentUserId();
 
         // Chưa check bidderId != sellerId
-        return ApiResponse.<BidUpdateResult>builder()
-                .result(bidService.placeBidV2(auctionId, bidderId, request.getAmount()))
-                .build();
+        return ApiResponse.of(BID_PLACED, bidService.placeBidV2(auctionId, bidderId, request.getAmount()));
     }
 }

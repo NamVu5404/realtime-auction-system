@@ -4,7 +4,7 @@ import com.namvu.realtimeauctionsystem.common.entity.Auditable;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 
-import com.namvu.realtimeauctionsystem.common.enums.BidStatus;
+import com.namvu.realtimeauctionsystem.common.constant.BidStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
