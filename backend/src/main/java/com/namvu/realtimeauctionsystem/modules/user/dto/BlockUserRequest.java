@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class BlockUserRequest {
 
-    @NotBlank(message = "REASON_NOT_BLANK")
+    @NotBlank(message = "Reason is required")
     private String reason;
 }

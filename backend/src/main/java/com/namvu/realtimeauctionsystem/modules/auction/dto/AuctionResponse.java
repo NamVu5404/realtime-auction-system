@@ -2,7 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.auction.dto;
 
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.user.dto.UserResponse;
-import com.namvu.realtimeauctionsystem.common.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

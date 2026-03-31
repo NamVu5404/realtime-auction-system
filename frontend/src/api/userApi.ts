@@ -1,6 +1,6 @@
 import axiosClient from "./axiosClient";
 import { extractErrorMessage } from "./apiUtils";
-import { ApiResponse, PageResponse, User } from "./types";
+import { ApiResponse, ApiResult, PageResponse, User } from "./types";
 
 export interface UpdateUserRequest {
   name: string;
@@ -8,19 +8,19 @@ export interface UpdateUserRequest {
 }
 
 const userApi = {
-  updateProfile: async (request: UpdateUserRequest): Promise<User> => {
+  updateProfile: async (request: UpdateUserRequest): Promise<ApiResult<User>> => {
     try {
       const response = await axiosClient.put<ApiResponse<User>>(
         "/users/profile",
         request,
       );
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },
 
-  uploadAvatar: async (file: File): Promise<User> => {
+  uploadAvatar: async (file: File): Promise<ApiResult<User>> => {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -34,7 +34,7 @@ const userApi = {
           },
         },
       );
-      return response.data.result;
+      return { message: response.data.message, result: response.data.result! };
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
@@ -51,7 +51,7 @@ const userApi = {
           params: { page, size },
         },
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }

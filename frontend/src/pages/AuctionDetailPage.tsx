@@ -26,6 +26,7 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import confetti from "canvas-confetti";
 import { auctionApi } from "../api/auctionApi";
+import { extractErrorMessage } from "../api/apiUtils";
 import {
   Auction,
   AuctionStatus,
@@ -440,8 +441,8 @@ export const AuctionDetailPage = () => {
       try {
         const data = await auctionApi.getAuctionDetail(auctionId);
         setAuction(data);
-      } catch (error) {
-        message.error("Failed to fetch auction details");
+      } catch (error: any) {
+        message.error(extractErrorMessage(error));
         navigate(-1);
       } finally {
         setLoading(false);
@@ -532,11 +533,13 @@ export const AuctionDetailPage = () => {
 
       // Place bid using updated endpoint (V2) — returns full ApiResponse wrapper
       const apiResponse = await auctionApi.placeBidV2(auction.id, bidAmountNum);
-      const response = apiResponse.result;
+      const response = apiResponse.result!;
 
-      if (apiResponse.code === 1000 && response.success) {
-        // ✅ Bid accepted — hardcoded success notification
-        message.success("🎉 Bid placed successfully!");
+      if (apiResponse.code < 4000 && response.success) {
+        // ✅ Bid accepted — use dynamic success notification from backend
+        message.success(
+          `🎉 ${apiResponse.message || "Bid placed successfully!"}`,
+        );
 
         // Update locally for instant feedback
         setAuction((prev) =>
@@ -560,24 +563,17 @@ export const AuctionDetailPage = () => {
           onTimeExtended(response.finalEndTime);
         }
       } else if (apiResponse.code === 9999) {
-        // ⚠️ Concurrency conflict (e.g. outbid during submission) — hardcoded message
-        message.error(
-          "Your bid was not accepted. You may have been outbid. Please try again.",
-        );
+        // ⚠️ Concurrency conflict — show the server's message directly
+        message.error(apiResponse.message);
       } else {
         // ❌ Other business error — show dynamic server message
-        message.error(
-          apiResponse.message || response?.message || "Failed to place bid",
-        );
+        message.error(apiResponse.message);
       }
     } catch (error: any) {
       // Intelligent error routing for thrown (network/HTTP) errors
-      let notifTitle = "Bid Submission Failed";
-      let notifDesc = error.message || "An error occurred while placing your bid. Please try again.";
-
       notification.error({
-        message: notifTitle,
-        description: notifDesc,
+        message: "Bid Submission Failed",
+        description: extractErrorMessage(error),
         duration: 5,
         className: "bid-notification bid-notification--error",
       });

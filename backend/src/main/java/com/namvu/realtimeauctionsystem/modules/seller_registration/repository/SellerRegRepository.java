@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.seller_registration.repository;
 
 import com.namvu.realtimeauctionsystem.modules.seller_registration.entity.SellerRegistration;
-import com.namvu.realtimeauctionsystem.common.enums.RequestStatus;
+import com.namvu.realtimeauctionsystem.common.constant.RequestStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;

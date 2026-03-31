@@ -2,7 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.file.entity;
 
 import com.namvu.realtimeauctionsystem.common.entity.Auditable;
 
-import com.namvu.realtimeauctionsystem.common.enums.OwnerType;
+import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -22,7 +22,7 @@ export const useAuth = () => {
         setTokens(response.accessToken, response.refreshToken);
         setUser(response.user);
 
-        return response;
+        return response; // includes .message from backend
       } catch (error) {
         console.error("Login failed:", error);
         throw error;

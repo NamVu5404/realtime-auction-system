@@ -14,16 +14,16 @@ import java.time.Instant;
 @AllArgsConstructor
 public class UpdateScheduledAuctionRequest {
 
-    @NotBlank(message = "INVALID_INPUT")
+    @NotBlank(message = "Title is required")
     private String title;
 
     private String description;
 
-    @NotNull(message = "INVALID_INPUT")
-    @Future(message = "INVALID_INPUT")
+    @NotNull(message = "Start time is required")
+    @Future(message = "Start time must be in the future")
     private Instant startTime;
 
-    @NotNull(message = "INVALID_INPUT")
-    @Future(message = "INVALID_INPUT")
+    @NotNull(message = "End time is required")
+    @Future(message = "End time must be in the future")
     private Instant endTime;
 }

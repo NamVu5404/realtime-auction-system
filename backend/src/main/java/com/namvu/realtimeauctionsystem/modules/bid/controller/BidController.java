@@ -22,10 +22,7 @@ public class BidController {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<MyBidHistoryResponse>>builder()
-                .result(bidService.getMyBidHistory(pageable))
-                .build();
+        return ApiResponse.ok(bidService.getMyBidHistory(pageable));
     }
 
     @GetMapping("/users/{userId}/history")
@@ -35,9 +32,6 @@ public class BidController {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<MyBidHistoryResponse>>builder()
-                .result(bidService.getBidHistoryForAdmin(userId, pageable))
-                .build();
+        return ApiResponse.ok(bidService.getBidHistoryForAdmin(userId, pageable));
     }
 }

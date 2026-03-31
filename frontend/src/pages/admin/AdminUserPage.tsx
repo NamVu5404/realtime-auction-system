@@ -128,31 +128,30 @@ const AdminUserPage = () => {
   const blockMutation = useMutation({
     mutationFn: ([userId, reason]: [number, string]) =>
       adminApi.blockUser(userId, reason),
-    onSuccess: () => {
-      message.success("User blocked successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: () => message.error("Failed to block user"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const unblockMutation = useMutation({
     mutationFn: ([userId, reason]: [number, string]) =>
       adminApi.unblockUser(userId, reason),
-    onSuccess: () => {
-      message.success("User unblocked successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: () => message.error("Failed to unblock user"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const becomeSellerMutation = useMutation({
     mutationFn: (userId: number) => adminApi.upgradeToSeller(userId),
-    onSuccess: () => {
-      message.success("Role updated to SELLER successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: (error: any) =>
-      message.error(error.message || "Failed to update role"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const handleBlock = (userId: number) => {

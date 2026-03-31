@@ -3,7 +3,7 @@ package com.namvu.realtimeauctionsystem.modules.notification.entity;
 import com.namvu.realtimeauctionsystem.common.entity.Auditable;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 
-import com.namvu.realtimeauctionsystem.common.enums.NotificationType;
+import com.namvu.realtimeauctionsystem.common.constant.NotificationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.bid.repository;
 
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Outbox;
-import com.namvu.realtimeauctionsystem.common.enums.OutboxStatus;
+import com.namvu.realtimeauctionsystem.common.constant.OutboxStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

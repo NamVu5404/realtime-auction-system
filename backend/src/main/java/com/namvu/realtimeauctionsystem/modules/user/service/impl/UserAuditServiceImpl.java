@@ -1,8 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.user.service.impl;
 
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.enums.FraudType;
-import com.namvu.realtimeauctionsystem.common.enums.UserActionType;
+import com.namvu.realtimeauctionsystem.common.constant.FraudType;
+import com.namvu.realtimeauctionsystem.common.constant.UserActionType;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;

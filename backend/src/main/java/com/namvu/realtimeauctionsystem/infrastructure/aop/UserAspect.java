@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.infrastructure.aop;
 
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
-import com.namvu.realtimeauctionsystem.common.enums.UserActionType;
+import com.namvu.realtimeauctionsystem.common.constant.UserActionType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
@@ -41,7 +41,7 @@ public class UserAspect {
             returning = "response"
     )
     public void afterLoginReturning(ApiResponse<AuthenticationResponse> response) {
-        if (response.getCode() != 1000) {
+        if (response.getCode() >= 4000) {
             return;
         }
 
@@ -71,7 +71,7 @@ public class UserAspect {
             returning = "response"
     )
     public void afterLogoutReturning(ApiResponse<?> response) {
-        if (response.getCode() != 1000) {
+        if (response.getCode() >= 4000) {
             return;
         }
 
@@ -101,7 +101,7 @@ public class UserAspect {
             returning = "response"
     )
     public void afterBlockReturning(ApiResponse<BlockUserResponse> response) {
-        if (response.getCode() != 1000) {
+        if (response.getCode() >= 4000) {
             return;
         }
 
@@ -110,7 +110,7 @@ public class UserAspect {
         String reason = response.getResult().getReason();
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Map<String, Object> details = new HashMap<>();
         details.put("user", user.getEmail());
@@ -129,7 +129,7 @@ public class UserAspect {
             returning = "response"
     )
     public void afterUnblockReturning(ApiResponse<BlockUserResponse> response) {
-        if (response.getCode() != 1000) {
+        if (response.getCode() >= 4000) {
             return;
         }
 
@@ -138,7 +138,7 @@ public class UserAspect {
         String reason = response.getResult().getReason();
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Map<String, Object> details = new HashMap<>();
         details.put("user", user.getEmail());
@@ -157,14 +157,14 @@ public class UserAspect {
             returning = "response"
     )
     public void afterUpgradeToSellerReturning(ApiResponse<UserResponse> response) {
-        if (response.getCode() != 1000) {
+        if (response.getCode() >= 4000) {
             return;
         }
 
         Long userId = response.getResult().getId();
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Map<String, Object> details = new HashMap<>();
         details.put("user", user.getEmail());

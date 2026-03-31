@@ -123,9 +123,27 @@ export interface PageResponse<T> {
 /**
  * API Response Wrapper - Derived from ApiResponse<T>.java
  */
+/**
+ * API Response Wrapper — mirrors backend ApiResponse<T> + ValidationErrorResponse.
+ * - `code`: SuccessCode (1xxx–3xxx) or ErrorCode (4xxx+, 9999)
+ * - `message`: always present from backend SuccessCode/ErrorCode
+ * - `result`: present on success, omitted (undefined) on error (@JsonInclude NON_NULL)
+ * - `errors`: only present for validation failures (ValidationErrorResponse extends ApiResponse)
+ */
 export interface ApiResponse<T> {
   code: number;
-  message?: string;
+  message: string;
+  result?: T;
+  errors?: Record<string, string>;
+}
+
+/**
+ * ApiResult<T> — returned by API layer functions used in mutations
+ * so that `onSuccess(data)` can call `message.success(data.message)`
+ * using the exact backend message instead of hardcoded strings.
+ */
+export interface ApiResult<T> {
+  message: string;
   result: T;
 }
 

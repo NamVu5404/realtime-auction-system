@@ -25,7 +25,7 @@ public class Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    protected Long id;
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)

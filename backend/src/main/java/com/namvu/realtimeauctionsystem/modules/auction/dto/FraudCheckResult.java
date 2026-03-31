@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.auction.dto;
 
-import com.namvu.realtimeauctionsystem.common.enums.FraudType;
+import com.namvu.realtimeauctionsystem.common.constant.FraudType;
 import lombok.Data;
 
 import java.util.ArrayList;

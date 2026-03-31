@@ -1,8 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.auction.service.impl;
 
-import com.namvu.realtimeauctionsystem.common.enums.AuctionStatus;
-import com.namvu.realtimeauctionsystem.common.enums.BidStatus;
-import com.namvu.realtimeauctionsystem.common.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
+import com.namvu.realtimeauctionsystem.common.constant.BidStatus;
+import com.namvu.realtimeauctionsystem.common.constant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.FraudCheckResult;

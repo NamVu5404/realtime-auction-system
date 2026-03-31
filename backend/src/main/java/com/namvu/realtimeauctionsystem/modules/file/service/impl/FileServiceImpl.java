@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.file.service.impl;
 
-import com.namvu.realtimeauctionsystem.common.enums.OwnerType;
+import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileMetadataRequest;

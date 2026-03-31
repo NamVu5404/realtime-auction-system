@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.auction.dto;
 
-import com.namvu.realtimeauctionsystem.common.enums.AuctionActionType;
+import com.namvu.realtimeauctionsystem.common.constant.AuctionActionType;
 import lombok.Builder;
 import lombok.Data;
 

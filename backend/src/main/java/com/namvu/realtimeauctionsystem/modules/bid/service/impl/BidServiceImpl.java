@@ -2,7 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.bid.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.enums.BidStatus;
+import com.namvu.realtimeauctionsystem.common.constant.BidStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;

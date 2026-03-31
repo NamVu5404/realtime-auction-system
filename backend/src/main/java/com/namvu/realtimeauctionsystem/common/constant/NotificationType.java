@@ -1,4 +1,4 @@
-package com.namvu.realtimeauctionsystem.common.enums;
+package com.namvu.realtimeauctionsystem.common.constant;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.MissingFormatArgumentException;
 
-import static com.namvu.realtimeauctionsystem.common.enums.RedirectUrlsConstant.*;
+import static com.namvu.realtimeauctionsystem.common.constant.RedirectUrlsConstant.*;
 
 @Getter
 @RequiredArgsConstructor

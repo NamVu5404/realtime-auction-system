@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CancelAuctionRequest {
 
-    @NotBlank(message = "REASON_NOT_BLANK")
+    @NotBlank(message = "Reason is required")
     private String reason;
 }

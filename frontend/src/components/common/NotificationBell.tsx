@@ -64,8 +64,20 @@ const NotificationBell: React.FC = () => {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: notificationApi.markAllAsRead,
-    onSuccess: () => {
+    onSuccess: (data) => {
       markAllAsRead();
+      message.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: (error: any) => {
+      message.error(error.message);
+    },
+  });
+
+  const markReadMutation = useMutation({
+    mutationFn: notificationApi.markAsRead,
+    onSuccess: (data, id) => {
+      markAsRead(id);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error: any) => {
@@ -74,7 +86,9 @@ const NotificationBell: React.FC = () => {
   });
 
   const handleNotifClick = (notif: Notification) => {
-    markAsRead(notif.id);
+    if (!notif.isRead) {
+      markReadMutation.mutate(notif.id);
+    }
     setVisible(false);
     if (notif.redirectUrl) {
       navigate(notif.redirectUrl);
@@ -109,7 +123,7 @@ const NotificationBell: React.FC = () => {
             fontWeight: 700,
           }}
         >
-          Thông báo
+          Notifications
         </Title>
         {unreadCount > 0 && (
           <Button
@@ -126,7 +140,7 @@ const NotificationBell: React.FC = () => {
             }}
             className="hover:brightness-110"
           >
-            Đánh dấu đã đọc tất cả
+            Mark all as read
           </Button>
         )}
       </div>
@@ -144,7 +158,7 @@ const NotificationBell: React.FC = () => {
           locale={{
             emptyText: (
               <Empty
-                description="Không có thông báo mới nào"
+                description="No new notifications"
                 style={{ padding: "24px 0" }}
               />
             ),
@@ -245,7 +259,7 @@ const NotificationBell: React.FC = () => {
           style={{ color: "var(--color-gold-start)", fontWeight: 500 }}
           className="hover:brightness-110"
         >
-          Xem tất cả thông báo
+          View all
         </Button>
       </div>
     </div>

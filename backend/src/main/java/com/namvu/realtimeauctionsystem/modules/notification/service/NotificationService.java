@@ -2,7 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.notification.service;
 
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.modules.notification.dto.NotificationResponse;
-import com.namvu.realtimeauctionsystem.common.enums.NotificationType;
+import com.namvu.realtimeauctionsystem.common.constant.NotificationType;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

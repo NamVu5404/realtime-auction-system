@@ -2,7 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.auction.entity;
 
 import com.namvu.realtimeauctionsystem.common.entity.Auditable;
 
-import com.namvu.realtimeauctionsystem.common.enums.AuctionActionType;
+import com.namvu.realtimeauctionsystem.common.constant.AuctionActionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

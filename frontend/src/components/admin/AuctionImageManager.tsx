@@ -27,6 +27,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { fileApi } from "../../api/fileApi";
+import { extractErrorMessage } from "../../api/apiUtils";
 import {
   FileResponse,
   OwnerType,
@@ -266,9 +267,9 @@ export const AuctionImageManager: React.FC<AuctionImageManagerProps> = ({
 
       setIsDirty(true);
       onSuccess(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload preparation error:", error);
-      message.error(`Failed to prepare ${browserFile.name}`);
+      message.error(extractErrorMessage(error));
       onError(error);
     }
   };
@@ -351,7 +352,7 @@ export const AuctionImageManager: React.FC<AuctionImageManagerProps> = ({
       message.success("Image settings saved successfully");
     } catch (error) {
       console.error("Batch save error:", error);
-      message.error("Failed to save image settings");
+      message.error(extractErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -377,7 +378,7 @@ export const AuctionImageManager: React.FC<AuctionImageManagerProps> = ({
       setIsDirty(true);
       message.success("Image removed");
     } catch (error) {
-      message.error("Failed to remove image");
+      message.error(extractErrorMessage(error));
     }
   };
 

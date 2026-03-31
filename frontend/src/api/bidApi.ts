@@ -24,7 +24,7 @@ export const bidApi = {
 				}
 			);
 
-			return response.data.result;
+			return response.data.result!;
 		} catch (error) {
 			console.error('Failed to fetch my bid history', error);
 			throw new Error(extractErrorMessage(error));
@@ -53,7 +53,7 @@ export const bidApi = {
 				}
 			);
 
-			return response.data.result;
+			return response.data.result!;
 		} catch (error) {
 			console.error(`Failed to fetch bid history for user ${userId}`, error);
 			throw new Error(extractErrorMessage(error));
