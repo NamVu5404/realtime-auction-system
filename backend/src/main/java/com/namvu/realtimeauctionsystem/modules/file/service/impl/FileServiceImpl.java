@@ -129,6 +129,7 @@ public class FileServiceImpl implements FileService {
             Path filePath = Paths.get(uploadDir).resolve(file.getFilePath()).resolve(file.getStorageName());
             Files.deleteIfExists(filePath);
             fileRepository.delete(file);
+
             log.info("Deleted file id: {}, storageName: {}", id, file.getStorageName());
         } catch (IOException e) {
             log.error("Failed to delete physical file: {}", file.getStorageName(), e);
@@ -137,8 +138,9 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public List<FileResponse> getAuctionImages(List<Long> ids) {
-        return fileRepository.findAllByOwnerTypeAndIds(OwnerType.AUCTION_IMAGE, ids);
+    public List<FileResponse> getAuctionImages(List<Long> auctionIds) {
+        if (auctionIds == null || auctionIds.isEmpty()) return List.of();
+        return fileRepository.findAllByOwnerTypeAndIds(OwnerType.AUCTION_IMAGE, auctionIds);
     }
 
     @Override

@@ -1,16 +1,15 @@
 package com.namvu.realtimeauctionsystem.modules.file.controller;
 
 import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
-import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
-import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionImageService;
+import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileMetadataRequest;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
-import com.namvu.realtimeauctionsystem.modules.file.service.FileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,10 +24,10 @@ import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.*;
 @RequestMapping("/v1/files/seller")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
-public class FileSellerController {
+public class FileAuctionController {
 
-    private final FileService fileService;
-    private final AuctionRepository auctionRepository;
+    private final AuctionImageService auctionImageService;
+    private final AuctionService auctionService;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<FileResponse> upload(
@@ -38,15 +37,17 @@ public class FileSellerController {
             @RequestParam(value = "sortOrder", required = false) Integer sortOrder) {
 
         checkAuctionStatusAndFileOwnership(ownerId);
-        return ApiResponse.of(FILE_UPLOADED, fileService.uploadFile(file, OwnerType.AUCTION_IMAGE, ownerId, isPrimary, sortOrder));
+        return ApiResponse.of(FILE_UPLOADED, auctionImageService.uploadAuctionImage(file, ownerId, isPrimary, sortOrder));
     }
 
     @PatchMapping("/metadata/batch")
     public ApiResponse<Void> updateMetadataBatch(
             @RequestParam("ownerId") Long ownerId,
-            @RequestBody List<FileMetadataRequest> requests) {
+            @RequestBody(required = false) List<FileMetadataRequest> requests) {
         checkAuctionStatusAndFileOwnership(ownerId);
-        fileService.updateMetadataBatch(requests);
+        if (requests != null && !requests.isEmpty()) {
+            auctionImageService.updateAuctionImageMetadataBatch(ownerId, requests);
+        }
         return ApiResponse.of(UPDATED, null);
     }
 
@@ -55,13 +56,12 @@ public class FileSellerController {
             @PathVariable Long id,
             @RequestParam("ownerId") Long ownerId) {
         checkAuctionStatusAndFileOwnership(ownerId);
-        fileService.deleteFile(id);
+        auctionImageService.deleteAuctionImage(id, ownerId);
         return ApiResponse.of(FILE_DELETED, null);
     }
 
     private void checkAuctionStatusAndFileOwnership(Long auctionId) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+        Auction auction = auctionService.getAuctionDetailById(auctionId);
 
         if (auction.getStatus() != AuctionStatus.DRAFT && auction.getStatus() != AuctionStatus.SCHEDULED) {
             throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);

@@ -1,5 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.notification.service.impl;
 
+import com.namvu.realtimeauctionsystem.common.constant.CacheNameConstant;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.common.constant.NotificationType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
@@ -18,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,6 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
+    @CacheEvict(value = {CacheNameConstant.NOTIFICATION_COUNT, CacheNameConstant.NOTIFICATION_BELL}, key = "#recipientId")
     public void createAndPushNotification(Long recipientId, NotificationType type, String content, String redirectUrl) {
         Notification notification = Notification.builder()
                 .recipient(userService.getUserReference(recipientId))
@@ -46,9 +51,10 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Cacheable(value = CacheNameConstant.NOTIFICATION_BELL, key = "#userId")
     public List<NotificationResponse> getNotificationsForBell(Long userId) {
         List<Notification> notifications = notificationRepository.findTop5ByRecipientIdAndReadOrderByCreatedAtDesc(userId, false);
-        return notifications.stream().map(notificationMapper::mapToResponse).toList();
+        return new ArrayList<>(notifications.stream().map(notificationMapper::mapToResponse).toList());
     }
 
     @Override
@@ -64,11 +70,13 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Cacheable(value = CacheNameConstant.NOTIFICATION_COUNT, key = "#userId")
     public Integer getUnreadCountNotifications(Long userId) {
         return notificationRepository.countByRecipientIdAndRead(userId, false);
     }
 
     @Override
+    @CacheEvict(value = {CacheNameConstant.NOTIFICATION_COUNT, CacheNameConstant.NOTIFICATION_BELL}, key = "T(com.namvu.realtimeauctionsystem.common.utils.SecurityUtils).getCurrentUserId()")
     public void markNotificationAsRead(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
@@ -84,11 +92,13 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @CacheEvict(value = {CacheNameConstant.NOTIFICATION_COUNT, CacheNameConstant.NOTIFICATION_BELL}, key = "#userId")
     public Integer markAllNotificationsAsReadForUser(Long userId) {
         return notificationRepository.markAllAsReadForUser(userId);
     }
 
     @Override
+    @CacheEvict(value = {CacheNameConstant.NOTIFICATION_COUNT, CacheNameConstant.NOTIFICATION_BELL}, key = "T(com.namvu.realtimeauctionsystem.common.utils.SecurityUtils).getCurrentUserId()")
     public void deleteNotification(Long id) {
         Notification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
@@ -101,6 +111,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @CacheEvict(value = {CacheNameConstant.NOTIFICATION_COUNT, CacheNameConstant.NOTIFICATION_BELL}, key = "#userId")
     public void deleteAllNotificationsForUser(Long userId) {
         notificationRepository.deleteAllNotificationsForUser(userId);
     }
