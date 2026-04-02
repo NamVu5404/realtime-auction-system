@@ -14,7 +14,7 @@ public interface FileService {
 
     void deleteFile(Long id);
 
-    List<FileResponse> getAuctionImages(List<Long> ids);
+    List<FileResponse> getAuctionImages(List<Long> auctionIds);
 
     void deleteUserAvatarIfExists(Long userId);
 }

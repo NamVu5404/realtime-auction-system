@@ -22,7 +22,7 @@ public interface FileRepository extends JpaRepository<File, Long> {
             "FROM File f " +
             "WHERE f.ownerType = :type AND f.ownerId IN :ids " +
             "ORDER BY f.sortOrder ASC")
-    List<FileResponse> findAllByOwnerTypeAndIds(OwnerType type, List<Long> ids);
+    List<FileResponse> findAllByOwnerTypeAndIds(OwnerType type, List<Long> ids); // OwnerType and AuctionIds
 
     Optional<File> findByOwnerTypeAndOwnerId(OwnerType ownerType, Long ownerId);
 }
