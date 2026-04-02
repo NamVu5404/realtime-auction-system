@@ -40,10 +40,12 @@ public class CustomJwtDecoder implements JwtDecoder {
                     IntrospectRequest.builder().accessToken(accessToken).build());
 
             if (!response.isValid()) {
-                log.warn("Unauthenticated");
+                log.warn("JWT validation failed: reason=INTROSPECT_INVALID, message=Token is invalid or expired");
             }
         } catch (JOSEException | ParseException e) {
-            log.warn("Token Invalid");
+            log.warn("JWT validation failed: reason=INTROSPECT_ERROR, errorType={}, message={}",
+                    e.getClass().getSimpleName(), e.getMessage());
+            throw new JwtException("Token invalid", e);
         }
 
         if (Objects.isNull(nimbusJwtDecoder)) {

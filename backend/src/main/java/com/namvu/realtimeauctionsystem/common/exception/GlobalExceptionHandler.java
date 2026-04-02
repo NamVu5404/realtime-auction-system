@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.common.exception;
 
-import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
+import com.namvu.realtimeauctionsystem.common.dto.ErrorResponse;
 import com.namvu.realtimeauctionsystem.common.dto.ValidationErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,44 +20,51 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = Exception.class)
-    public ResponseEntity<ApiResponse<?>> exceptionHandler(Exception e, HttpServletRequest request) {
-        log.error(">>> [System Error] Unhandled exception occurred at [{} {}]: ",
-                request.getMethod(), request.getRequestURI(), e);
+    public ResponseEntity<ErrorResponse> exceptionHandler(Exception e, HttpServletRequest request) {
+        ErrorCode errorCode = ErrorCode.INTERNAL_ERROR;
+        log.error(">>> [System Error] Unhandled exception occurred at [{}]: ",
+                buildLogContext(request, errorCode.getStatusCode().value()), e);
 
         return ResponseEntity
-                .status(ErrorCode.INTERNAL_ERROR.getStatusCode())
-                .body(ApiResponse.builder()
-                        .code(ErrorCode.INTERNAL_ERROR.getCode())
-                        .message(ErrorCode.INTERNAL_ERROR.getMessage())
-                        .build());
+                .status(errorCode.getStatusCode())
+                .body(new ErrorResponse(
+                        errorCode.getCode(),
+                        errorCode.getMessage(),
+                        errorCode.getStatusCode().value(),
+                        request
+                ));
     }
 
     @ExceptionHandler(value = AppException.class)
-    public ResponseEntity<ApiResponse<?>> customExceptionHandler(AppException e, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> customExceptionHandler(AppException e, HttpServletRequest request) {
         ErrorCode errorCode = e.getErrorCode();
-        log.warn(">>> [Business Error] at [{} {}]: Code: {}, Message: {}",
-                request.getMethod(), request.getRequestURI(), errorCode.getCode(), errorCode.getMessage());
+        log.warn(">>> [Business Error] at [{}]: Code: {}, Message: {}",
+                buildLogContext(request, errorCode.getStatusCode().value()), errorCode.getCode(), errorCode.getMessage());
 
         return ResponseEntity
                 .status(errorCode.getStatusCode())
-                .body(ApiResponse.builder()
-                        .code(errorCode.getCode())
-                        .message(errorCode.getMessage())
-                        .build());
+                .body(new ErrorResponse(
+                        errorCode.getCode(),
+                        errorCode.getMessage(),
+                        errorCode.getStatusCode().value(),
+                        request
+                ));
     }
 
     @ExceptionHandler(value = AccessDeniedException.class)
-    public ResponseEntity<ApiResponse<?>> accessDeniedExceptionHandler(AccessDeniedException e, HttpServletRequest request) {
-        log.warn(">>> [Security Error] Access Denied at [{} {}]: {}",
-                request.getMethod(), request.getRequestURI(), e.getMessage());
-
+    public ResponseEntity<ErrorResponse> accessDeniedExceptionHandler(AccessDeniedException e, HttpServletRequest request) {
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+        log.warn(">>> [Security Error] Access Denied at [{}]: {}",
+                buildLogContext(request, errorCode.getStatusCode().value()), e.getMessage());
+
         return ResponseEntity
                 .status(errorCode.getStatusCode())
-                .body(ApiResponse.builder()
-                        .code(errorCode.getCode())
-                        .message(errorCode.getMessage())
-                        .build());
+                .body(new ErrorResponse(
+                        errorCode.getCode(),
+                        errorCode.getMessage(),
+                        errorCode.getStatusCode().value(),
+                        request
+                ));
     }
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
@@ -68,15 +76,22 @@ public class GlobalExceptionHandler {
             fieldErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
 
-        log.warn(">>> [Validation Failed] at [{} {}]: {}",
-                request.getMethod(), request.getRequestURI(), fieldErrors);
+        log.warn(">>> [Validation Failed] at [{}]: {}",
+                buildLogContext(request, ErrorCode.FIELD_INVALID.getStatusCode().value()), fieldErrors);
 
         return ResponseEntity
                 .badRequest()
                 .body(new ValidationErrorResponse(
                         ErrorCode.FIELD_INVALID.getCode(),
                         ErrorCode.FIELD_INVALID.getMessage(),
+                        ErrorCode.FIELD_INVALID.getStatusCode().value(),
+                        request,
                         fieldErrors
                 ));
+    }
+
+    private String buildLogContext(HttpServletRequest request, int statusCode) {
+        return String.format("timestamp=%s, method=%s, uri=%s, status=%d",
+                Instant.now(), request.getMethod(), request.getRequestURI(), statusCode);
     }
 }
