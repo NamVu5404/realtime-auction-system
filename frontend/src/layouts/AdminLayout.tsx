@@ -16,6 +16,7 @@ import { useNotificationStore } from "../store/useNotificationStore";
 import NotificationBell from "../components/common/NotificationBell";
 import { useNotificationWebSocket } from "../hooks/useNotificationWebSocket";
 import { getAvatarUrl } from "../utils/imageUtils";
+import logo from "../assets/images/logo.png";
 
 const { Sider, Header, Content } = Layout;
 
@@ -121,12 +122,18 @@ const AdminLayout = () => {
           }}
         >
           {collapsed ? (
-            <span
-              style={{ fontSize: "18px", cursor: "pointer" }}
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                height: "22px",
+                width: "auto",
+                objectFit: "contain",
+                display: "inline-block",
+                cursor: "pointer",
+              }}
               onClick={() => navigate("/admin")}
-            >
-              ⚡
-            </span>
+            />
           ) : (
             <div
               style={{
@@ -137,7 +144,16 @@ const AdminLayout = () => {
               }}
               onClick={() => navigate("/admin")}
             >
-              <span style={{ fontSize: "18px" }}>⚡</span>
+              <img
+                src={logo}
+                alt="Logo"
+                style={{
+                  height: "24px",
+                  width: "auto",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
               <span
                 style={{
                   fontSize: "18px",

@@ -26,7 +26,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                          AuthenticationException authException) throws IOException {
         ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
 
-        log.warn(">>> [Unauthenticated] at [timestamp={}, method={}, uri={}, status={}]: errorType={}, message={}",
+        log.warn(">>> [Security Error] Unauthenticated at [timestamp={}, method={}, uri={}, status={}]: errorType={}, message={}",
                 Instant.now(),
                 request.getMethod(),
                 request.getRequestURI(),

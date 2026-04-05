@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import GoogleLoginButton from "../../auth/GoogleLoginButton";
 import { useAuth } from "../../hooks/useAuth";
 import { getAvatarUrl } from "../../utils/imageUtils";
+import logo from "../../assets/images/logo.png";
 
 import NotificationBell from "../common/NotificationBell";
 import { useNotificationWebSocket } from "../../hooks/useNotificationWebSocket";
@@ -101,7 +102,16 @@ export const Header = () => {
         }}
         onClick={() => navigate("/")}
       >
-        <span style={{ fontSize: "24px" }}>⚡</span>
+        <img
+          src={logo}
+          alt="AuctionPro Logo"
+          style={{
+            height: "32px",
+            width: "auto",
+            objectFit: "contain",
+            display: "block",
+          }}
+        />
         <span
           style={{
             fontSize: "24px",

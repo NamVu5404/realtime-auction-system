@@ -1,12 +1,12 @@
-import { useState, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Tabs, Button, Space, Empty, Spin } from "antd";
 import { WifiOutlined } from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
-import { AuctionStatus } from "../api/types";
-import { useAuctions } from "../hooks/useAuctions";
-import { useWebSocket } from "../hooks/useWebSocket";
-import AuctionList from "../features/auction/AuctionList";
+import { Empty, Spin, Tabs } from "antd";
+import { useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
+import { AuctionStatus } from "../../api/types";
+import AuctionList from "../../features/auction/AuctionList";
+import { useAuctions } from "../../hooks/useAuctions";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 /**
  * Home Page Component

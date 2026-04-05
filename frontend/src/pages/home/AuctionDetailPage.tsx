@@ -1,14 +1,14 @@
 import {
   ArrowLeftOutlined,
+  DisconnectOutlined,
   EditOutlined,
   RiseOutlined,
   SettingOutlined,
   WifiOutlined,
-  DisconnectOutlined,
 } from "@ant-design/icons";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
-  Card,
   Col,
   Empty,
   Image,
@@ -16,33 +16,30 @@ import {
   Row,
   Space,
   Spin,
-  Tag,
   Tooltip,
 } from "antd";
-import { message, notification } from "../utils/antdStatic";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, memo, useCallback, useRef } from "react";
-import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import confetti from "canvas-confetti";
-import { auctionApi } from "../api/auctionApi";
-import { extractErrorMessage } from "../api/apiUtils";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { extractErrorMessage } from "../../api/apiUtils";
+import { auctionApi } from "../../api/auctionApi";
 import {
   Auction,
   AuctionStatus,
   BidUpdateMessage,
   UserRole,
-} from "../api/types";
-import LoginModal from "../components/LoginModal";
-import Countdown from "../features/auction/Countdown";
-import { useAuth } from "../hooks/useAuth";
-import { useAuctionWebsocket } from "../hooks/useAuctionWebsocket";
-import { formatAuctionTime, getTimeRemaining } from "../utils/dateUtils";
-import { formatCurrency } from "../utils/format";
-import { useUIStore } from "../store/useUIStore";
-import { AuctionImageCarousel } from "../components/common/AuctionImageCarousel";
-import LoadingPage from "../components/common/LoadingPage";
-import { getAvatarUrl } from "../utils/imageUtils";
+} from "../../api/types";
+import { AuctionImageCarousel } from "../../components/common/AuctionImageCarousel";
+import LoadingPage from "../../components/common/LoadingPage";
+import LoginModal from "../../components/LoginModal";
+import Countdown from "../../features/auction/Countdown";
+import { useAuctionWebsocket } from "../../hooks/useAuctionWebsocket";
+import { useAuth } from "../../hooks/useAuth";
+import { useUIStore } from "../../store/useUIStore";
+import { message, notification } from "../../utils/antdStatic";
+import { formatAuctionTime, getTimeRemaining } from "../../utils/dateUtils";
+import { formatCurrency } from "../../utils/format";
+import { getAvatarUrl } from "../../utils/imageUtils";
 
 // Tách phần bidding form ra component riêng với state nội bộ
 const BiddingSection = memo(

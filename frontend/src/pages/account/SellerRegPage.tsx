@@ -70,7 +70,7 @@ const SellerRegPage = () => {
       };
     }
     return {
-      text: "Enroll as Seller",
+      text: "Apply as Seller",
       disabled: false,
       icon: <ShopOutlined />,
     };
@@ -334,9 +334,11 @@ const SellerRegPage = () => {
                     !buttonState.disabled && setAgreedToTerms((prev) => !prev)
                   }
                 >
-                  By enrolling, you agree to our{" "}
+                  By applying, you agree to our{" "}
                   <a
-                    href="#"
+                    href="https://auctionpro-psi.vercel.app/seller-terms/"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     className="text-white/40 hover:text-[#FED469] underline transition-colors duration-300 text-[12px]"
                   >

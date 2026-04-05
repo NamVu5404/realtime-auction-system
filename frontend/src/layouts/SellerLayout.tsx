@@ -15,6 +15,7 @@ import { useNotificationStore } from "../store/useNotificationStore";
 import { getAvatarUrl } from "../utils/imageUtils";
 import NotificationBell from "../components/common/NotificationBell";
 import { useNotificationWebSocket } from "../hooks/useNotificationWebSocket";
+import logo from "../assets/images/logo.png";
 
 const { Sider, Header, Content } = Layout;
 
@@ -108,12 +109,18 @@ const SellerLayout = () => {
           }}
         >
           {collapsed ? (
-            <span
-              style={{ fontSize: "18px", cursor: "pointer" }}
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                height: "22px",
+                width: "auto",
+                objectFit: "contain",
+                display: "inline-block",
+                cursor: "pointer",
+              }}
               onClick={() => navigate("/seller")}
-            >
-              ⚡
-            </span>
+            />
           ) : (
             <div
               style={{
@@ -124,7 +131,16 @@ const SellerLayout = () => {
               }}
               onClick={() => navigate("/seller")}
             >
-              <span style={{ fontSize: "18px" }}>⚡</span>
+              <img
+                src={logo}
+                alt="Logo"
+                style={{
+                  height: "24px",
+                  width: "auto",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
               <span
                 style={{
                   fontSize: "18px",
