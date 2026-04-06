@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -31,6 +32,7 @@ public class AuctionAuditServiceImpl implements AuctionAuditService {
     private final AuctionService auctionService;
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     public PageResponse<AuctionAuditResponse> getAuctionAudit(Long auctionId, Pageable pageable) {
         if (!SecurityUtils.isAdmin()) {
@@ -58,6 +60,7 @@ public class AuctionAuditServiceImpl implements AuctionAuditService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AuctionAuditResponse getAuctionResult(Long auctionId) {
         AuctionAudit audit = auctionAuditRepository
                 .findFirstByAuctionIdAndActionTypeOrderByCreatedAtDesc(auctionId, AuctionActionType.RESULT)

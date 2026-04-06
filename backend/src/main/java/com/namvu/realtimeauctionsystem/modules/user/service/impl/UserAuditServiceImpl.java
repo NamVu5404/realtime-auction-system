@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -96,12 +97,14 @@ public class UserAuditServiceImpl implements UserAuditService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<UserAuditResponse> getUserAudit(Long userId, Pageable pageable) {
         return getAccountAudit(userId, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<UserAuditResponse> getMyAccountAudit(Pageable pageable) {
         Long userId = SecurityUtils.getCurrentUserId();
         return getAccountAudit(userId, pageable);

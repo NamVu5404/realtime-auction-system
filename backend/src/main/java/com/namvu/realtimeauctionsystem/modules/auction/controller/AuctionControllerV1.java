@@ -142,4 +142,9 @@ public class AuctionControllerV1 {
     public ApiResponse<AuctionAuditResponse> getAuctionResult(@PathVariable Long auctionId) {
         return ApiResponse.ok(auctionAuditService.getAuctionResult(auctionId));
     }
+
+    @GetMapping("/{auctionId}/state")
+    public ApiResponse<AuctionStateSnapshot> getAuctionState(@PathVariable Long auctionId) {
+        return ApiResponse.ok(auctionService.getAuctionState(auctionId));
+    }
 }

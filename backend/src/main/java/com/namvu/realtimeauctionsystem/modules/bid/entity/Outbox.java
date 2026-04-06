@@ -1,9 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.bid.entity;
 
-import com.namvu.realtimeauctionsystem.common.entity.Auditable;
-
 import com.namvu.realtimeauctionsystem.common.constant.OutboxEventType;
 import com.namvu.realtimeauctionsystem.common.constant.OutboxStatus;
+import com.namvu.realtimeauctionsystem.common.entity.Auditable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

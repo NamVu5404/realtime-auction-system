@@ -135,11 +135,13 @@ public class BidServiceImpl implements BidService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<MyBidHistoryResponse> getMyBidHistory(Pageable pageable) {
         return getBidHistory(SecurityUtils.getCurrentUserId(), pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<MyBidHistoryResponse> getBidHistoryForAdmin(Long userId, Pageable pageable) {
         return getBidHistory(userId, pageable);
@@ -151,11 +153,13 @@ public class BidServiceImpl implements BidService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public int countRecentBids(Long bidderId, Long auctionId, Instant since) {
         return bidRepository.countRecentBids(bidderId, auctionId, since);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Bid> getRecentBids(Long bidderId, Long auctionId) {
         return bidRepository.findTop10ByBidderIdAndAuctionIdOrderByCreatedAtDesc(bidderId, auctionId);
     }

@@ -1,11 +1,11 @@
 package com.namvu.realtimeauctionsystem.modules.auth.service.impl;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.TokenType;
 import com.namvu.realtimeauctionsystem.modules.auth.dto.AuthenticationResponse;
 import com.namvu.realtimeauctionsystem.modules.auth.dto.ExchangeTokenRequest;
 import com.namvu.realtimeauctionsystem.modules.auth.dto.ExchangeTokenResponse;
 import com.namvu.realtimeauctionsystem.modules.user.dto.OutboundUserResponse;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
-import com.namvu.realtimeauctionsystem.common.constant.TokenType;
 import com.namvu.realtimeauctionsystem.infrastructure.http_clients.GoogleAuthClient;
 import com.namvu.realtimeauctionsystem.infrastructure.http_clients.GoogleUserClient;
 import com.namvu.realtimeauctionsystem.modules.user.mapper.UserMapper;

@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.AUCTION_TOPIC_PREFIX;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -54,6 +56,7 @@ public class AuctionServiceImpl implements AuctionService {
     private final BidQueryService bidQueryService;
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = CacheNameConstant.AUCTIONS, key = "#status.name() + '-' + #pageable.pageNumber")
     public PageResponse<AuctionResponse> getAuctionsByStatus(AuctionStatus status, Pageable pageable) {
         Instant oneHourFromNow = Instant.now().plus(1, ChronoUnit.HOURS);
@@ -64,6 +67,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AuctionResponse getAuctionDetail(Long id) {
         Auction auction = auctionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
@@ -236,7 +240,7 @@ public class AuctionServiceImpl implements AuctionService {
                     .build();
 
             messagingTemplate.convertAndSend(
-                    "/topic/auction/" + request.getAuctionId(),
+                    AUCTION_TOPIC_PREFIX + request.getAuctionId(),
                     message
             );
         }
@@ -253,6 +257,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('SELLER')")
     public PageResponse<AuctionResponse> filterSellerAuction(String keyword, Instant startTime, Instant endTime,
                                                              AuctionStatus status, Pageable pageable) {
@@ -261,6 +266,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<AuctionResponse> filterAdminAuction(String keyword, Instant startTime, Instant endTime,
                                                             AuctionStatus status, Pageable pageable) {
@@ -268,6 +274,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     public PageResponse<AuctionHistoryResponse> getAuctionHistory(Long id, Pageable pageable) {
         if (!SecurityUtils.isAdmin()) {
@@ -323,6 +330,12 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     public Auction saveAuction(Auction auction) {
         return auctionRepository.save(auction);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuctionStateSnapshot getAuctionState(Long auctionId) {
+        return redisAuctionService.getAuctionStateFromRedis(auctionId);
     }
 
     private void populateImages(List<AuctionResponse> responses) {

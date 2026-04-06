@@ -283,11 +283,6 @@ export const AuctionDetailPage = () => {
 
   // ✅ Single source of truth for ALL WebSocket state updates
   const onBidUpdate = useCallback((message: BidUpdateMessage) => {
-    // Update lastActive whenever a message is received
-    setLastActive(Date.now());
-    // Reset polling interval on recovery
-    setPollingInterval(2000);
-
     setAuction((prev) => {
       if (!prev || prev.id !== message.auctionId) return prev;
 
@@ -322,6 +317,7 @@ export const AuctionDetailPage = () => {
     });
   }, []);
 
+
   // ✅ Visual effects ONLY — no state update here
   const onTimeExtended = useCallback((_newEndTime: string) => {
     setHasTimeExtension(true);
@@ -345,90 +341,51 @@ export const AuctionDetailPage = () => {
     onDisconnect,
   });
 
-  // --- Smart Fallback Logic (Polling) ---
-  const [lastActive, setLastActive] = useState<number>(Date.now());
-  const [pollingInterval, setPollingInterval] = useState<number>(2000);
+  // Read Kafka health from global store (set by useHeartbeat mounted in App.jsx)
+  const isKafkaAlive = useUIStore((state) => state.isKafkaAlive);
+
+  // --- Kafka Fallback Polling ---
+  // Only activates when useHeartbeat detects the Kafka pipeline is down
+  // Polls /state endpoint (Redis snapshot) to keep price, bidder, and endTime in sync
   const isFetchingRef = useRef<boolean>(false);
-  const lastPollTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    if (!auction || auction.status !== AuctionStatus.LIVE || !auctionId) return;
+    if (isKafkaAlive || !auction || auction.status !== AuctionStatus.LIVE || !auctionId) return;
 
-    const silenceDetector = setInterval(async () => {
-      const now = Date.now();
-      const timeSinceLastActive = now - lastActive;
-      const timeSinceLastPoll = now - lastPollTimeRef.current;
+    console.warn("[Fallback] Kafka down — starting state polling at 5s interval");
 
-      // Maintenance Mode Recovery Probe:
-      // Even in maintenance mode, we poll to see if service is back
-      const pollerInterval = isMaintenanceMode ? 5000 : pollingInterval;
+    const intervalId = setInterval(async () => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
 
-      // Silence Detection: more than 2 seconds of silence FROM WEBSOCKET
-      // OR if we are in Maintenance Mode (active probing)
-      // AND respect the current dynamic pollingInterval for the NEXT API call
-      if (
-        (timeSinceLastActive > 2000 || isMaintenanceMode) &&
-        timeSinceLastPoll >= pollerInterval &&
-        !isFetchingRef.current
-      ) {
-        console.log(
-          `Silence/Maintenance detected. Polling API (Interval: ${pollerInterval}ms)...`,
-        );
-        isFetchingRef.current = true;
-        lastPollTimeRef.current = now;
-
-        try {
-          const apiPrice = await auctionApi.getCurrentPrice(auctionId);
-          isFetchingRef.current = false;
-
-          // If we are here, the API call was successful (no 1020 or 503)
-          if (isMaintenanceMode) {
-            console.log("System recovered from Maintenance Mode!");
-            setMaintenanceMode(false);
-            setPollingInterval(2000); // Reset frequency
-          }
-
-          setAuction((prev) => {
-            if (!prev) return null;
-
-            // Scenario A: Kafka/Websocket Failure or save DB Failure (apiPrice != currentPrice)
-            if (apiPrice !== prev.currentPrice) {
-              setPollingInterval(2000); // Maintain high frequency
-              return {
-                ...prev,
-                currentPrice: apiPrice,
-                // We keep the existing highestBidder as the API only returns price
-              };
-            }
-
-            // Scenario B: No new bids (apiPrice <= currentPrice)
-            // Apply Exponential Backoff: +1s, max 10s
-            // Only backoff if NOT in maintenance mode (maintenance mode has fixed 5s interval)
-            if (!isMaintenanceMode) {
-              setPollingInterval((current) => Math.min(10000, current + 1000));
-            }
-            return prev;
-          });
-        } catch (error) {
-          console.error("Fallback polling failed:", error);
-          isFetchingRef.current = false;
-          // On error, also backoff if not in maintenance mode
-          if (!isMaintenanceMode) {
-            setPollingInterval((current) => Math.min(10000, current + 1000));
-          }
-        }
+      try {
+        const snapshot = await auctionApi.getAuctionState(auctionId);
+        setAuction((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            currentPrice: snapshot.currentPrice,
+            endTime: snapshot.endTime,
+            highestBidder: snapshot.highestBidderId
+              ? {
+                  id: snapshot.highestBidderId,
+                  name: snapshot.highestBidderName ?? "",
+                  email: snapshot.highestBidderEmail ?? "",
+                  roles: prev.highestBidder?.roles ?? [UserRole.USER],
+                }
+              : prev.highestBidder,
+          };
+        });
+      } catch (err) {
+        console.error("[Fallback] getAuctionState failed:", err);
+      } finally {
+        isFetchingRef.current = false;
       }
-    }, 1000); // Check silence status every second
+    }, 5000);
 
-    return () => clearInterval(silenceDetector);
-  }, [
-    auction?.status,
-    auctionId,
-    lastActive,
-    pollingInterval,
-    isMaintenanceMode,
-  ]);
-  // --- End Smart Fallback Logic ---
+    return () => clearInterval(intervalId);
+  }, [isKafkaAlive, auction?.status, auctionId]);
+  // --- End Kafka Fallback Polling ---
 
   // Fetch auction details on mount
   useEffect(() => {

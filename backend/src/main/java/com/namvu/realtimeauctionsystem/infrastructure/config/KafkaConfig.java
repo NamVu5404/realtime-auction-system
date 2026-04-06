@@ -10,6 +10,8 @@ import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.KafkaTopic.BID_EVENTS_TOPIC;
+
 @Configuration
 @EnableKafka
 public class KafkaConfig {
@@ -29,9 +31,9 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic bidEventsTopic() {
-        return TopicBuilder.name("auction.bid.events")
-                .partitions(3)
-                .replicas(1)
+        return TopicBuilder.name(BID_EVENTS_TOPIC)
+                .partitions(6)
+                .replicas(3)
                 .build();
     }
 }

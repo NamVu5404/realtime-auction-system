@@ -1,5 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.auction.scheduler;
 
+import com.namvu.realtimeauctionsystem.common.constant.CacheNameConstant;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionInitRequest;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.AuctionAudit;
@@ -10,6 +11,7 @@ import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionReposit
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -35,6 +37,7 @@ public class AuctionScheduler {
      */
     @Scheduled(fixedDelay = 1000) // 1 seconds
     @Transactional
+    @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public void startScheduledAuctions() {
         Instant now = Instant.now();
 
@@ -89,6 +92,7 @@ public class AuctionScheduler {
      */
     @Scheduled(fixedDelay = 1000)
     @Transactional
+    @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public void endLiveAuctions() {
         Instant now = Instant.now();
 

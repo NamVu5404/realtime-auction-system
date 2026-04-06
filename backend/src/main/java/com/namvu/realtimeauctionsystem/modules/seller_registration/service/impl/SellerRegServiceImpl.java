@@ -1,8 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.seller_registration.service.impl;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.common.constant.RequestStatus;
-import com.namvu.realtimeauctionsystem.common.constant.Role;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
@@ -111,6 +111,7 @@ public class SellerRegServiceImpl implements SellerRegService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<SellerRegResponse> getRegistrations(Pageable pageable) {
         Page<SellerRegistration> page = sellerRegRepository.findAllByOrderByCreatedAtDesc(pageable);
@@ -136,6 +137,7 @@ public class SellerRegServiceImpl implements SellerRegService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SellerRegResponse getMyRegistration() {
         Long userId = SecurityUtils.getCurrentUserId();
         return sellerRegRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)

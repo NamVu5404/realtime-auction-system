@@ -1,9 +1,9 @@
 package com.namvu.realtimeauctionsystem.modules.user.service.impl;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
-import com.namvu.realtimeauctionsystem.common.constant.Role;
-import com.namvu.realtimeauctionsystem.common.constant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
@@ -36,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final FileService fileService;
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<ManagerUserResponse> getUsers(String keyword, Role role, UserStatus status, Pageable pageable) {
         Page<User> userPage = userRepository.findAll(keyword, role, status, pageable);
@@ -132,12 +133,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User getActiveUserById(Long userId) {
         return userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User getActiveUserByEmail(String email) {
         return userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE)
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));

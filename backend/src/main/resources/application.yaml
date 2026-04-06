@@ -45,7 +45,7 @@ spring:
     producer:
       acks: 1
       retries: 1
-      batch-size: 16384
+      batch-size: 65536
       compression-type: snappy
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -55,7 +55,6 @@ spring:
         retry.backoff.ms: 200
         linger.ms: 10
     consumer:
-      group-id: auction-db-sync-group
       auto-offset-reset: earliest
       enable-auto-commit: false
       max-poll-records: 100
