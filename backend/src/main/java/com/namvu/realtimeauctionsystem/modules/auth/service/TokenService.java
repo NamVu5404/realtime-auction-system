@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.auth.service;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.TokenType;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
-import com.namvu.realtimeauctionsystem.common.constant.TokenType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 

@@ -2,6 +2,7 @@ package com.namvu.realtimeauctionsystem.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -20,8 +21,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final String[] PUBLIC_ENDPOINTS = {
-        "/v1/auth/**", "/v1/auctions", "/v1/auctions/*", "/v1/auctions/*/current-price", "/uploads/**"
+    private static final String[] PUBLIC_POST_ENDPOINTS = {
+            "/v1/auth/**",
+    };
+
+    private static final String[] PUBLIC_GET_ENDPOINTS = {
+            "/v1/auctions/**",
+            "/uploads/**",
     };
 
     @Bean
@@ -42,9 +48,10 @@ public class SecurityConfig {
         httpSecurity
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(requests -> requests
-                                .requestMatchers("/ws/**").permitAll()
-                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                                .anyRequest().authenticated()
+                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
+                        .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable);
 

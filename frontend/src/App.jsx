@@ -29,12 +29,17 @@ import { useUIStore } from './store/useUIStore';
 import IdentityVerificationPage from './pages/account/IdentityVerificationPage';
 import SecurityLogsPage from './pages/account/SecurityLogsPage';
 import { AntdStaticSetter } from './components/AntdStaticSetter';
+import { useHeartbeat } from './hooks/useHeartbeat';
 
 // Create a client for React Query
 const queryClient = new QueryClient();
 
 function App() {
   const darkMode = useUIStore((state) => state.darkMode);
+
+  // Mount once globally — writes Kafka health to useUIStore
+  // All components read isKafkaAlive from useUIStore, no extra connections
+  useHeartbeat();
 
   return (
     <QueryClientProvider client={queryClient}>

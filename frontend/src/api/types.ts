@@ -110,6 +110,19 @@ export interface Auction {
 }
 
 /**
+ * Auction State Snapshot - Derived from AuctionStateSnapshot.java
+ * Returned by GET /v1/auctions/{id}/state
+ * Used as lightweight polling fallback when Kafka pipeline is down
+ */
+export interface AuctionStateSnapshot {
+  currentPrice: number;
+  highestBidderId: number | null;
+  highestBidderName: string | null;
+  highestBidderEmail: string | null;
+  endTime: string; // ISO string - reflects actual endTime including anti-snipe extensions
+}
+
+/**
  * Pagination Response - Derived from PageResponse<T>.java
  */
 export interface PageResponse<T> {

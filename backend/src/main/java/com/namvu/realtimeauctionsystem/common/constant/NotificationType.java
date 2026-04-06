@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.MissingFormatArgumentException;
 
-import static com.namvu.realtimeauctionsystem.common.constant.RedirectUrlsConstant.*;
+import static com.namvu.realtimeauctionsystem.common.constant.NotificationType.RedirectUrlsConstant.*;
 
 @Getter
 @RequiredArgsConstructor
@@ -132,5 +132,19 @@ public enum NotificationType {
                     this.name(), this.redirectUrl, args.length);
             return "/"; // fallback về trang chủ
         }
+    }
+
+    public static final class RedirectUrlsConstant {
+        private RedirectUrlsConstant() {
+            /* This utility class should not be instantiated */
+        }
+
+        public static final String AUCTION_DETAIL_URL = "/auction/%d";
+        public static final String SELLER_AUCTION_DETAIL_URL = "/seller/auctions/%d";
+        public static final String SELLER_DASHBOARD_URL = "/seller/dashboard";
+        public static final String SELLER_REGISTRATION_URL = "/account/seller-reg";
+        public static final String SUPPORT_CONTACT_URL = "/support/contact";
+        public static final String ACCOUNT_SECURITY_URL = "/account/security-logs";
+        public static final String ACCOUNT_VERIFY_URL = "/account/verify";
     }
 }

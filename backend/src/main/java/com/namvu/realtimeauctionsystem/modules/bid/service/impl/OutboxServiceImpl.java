@@ -2,10 +2,10 @@ package com.namvu.realtimeauctionsystem.modules.bid.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
-import com.namvu.realtimeauctionsystem.modules.bid.entity.Outbox;
 import com.namvu.realtimeauctionsystem.common.constant.OutboxEventType;
 import com.namvu.realtimeauctionsystem.common.constant.OutboxStatus;
+import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
+import com.namvu.realtimeauctionsystem.modules.bid.entity.Outbox;
 import com.namvu.realtimeauctionsystem.modules.bid.repository.OutboxRepository;
 import com.namvu.realtimeauctionsystem.modules.bid.service.OutboxService;
 import lombok.RequiredArgsConstructor;

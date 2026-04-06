@@ -16,7 +16,9 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
-import static com.namvu.realtimeauctionsystem.common.constant.KafkaTopicConstant.BID_EVENTS_TOPIC;
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.KafkaGroup.BID_PROCESSOR_GROUP;
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.KafkaTopic.BID_EVENTS_TOPIC;
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.AUCTION_TOPIC_PREFIX;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +30,7 @@ public class BidEventConsumerV2 {
     private final NotificationService notificationService;
     private final RedisAuctionService redisAuctionService;
 
-    @KafkaListener(topics = BID_EVENTS_TOPIC, groupId = "auction-db-sync-group")
+    @KafkaListener(topics = BID_EVENTS_TOPIC, groupId = BID_PROCESSOR_GROUP)
     public void consumeBidEvent(
             ConsumerRecord<String, String> consumerRecord,
             Acknowledgment ack
@@ -38,7 +40,7 @@ public class BidEventConsumerV2 {
 
             // Broadcast thông tin giá mới qua WebSocket (chung phòng đấu giá)
             messagingTemplate.convertAndSend(
-                    "/topic/auction/" + event.getAuctionId(),
+                    AUCTION_TOPIC_PREFIX + event.getAuctionId(),
                     event
             );
 

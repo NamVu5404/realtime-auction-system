@@ -6,7 +6,6 @@ import com.namvu.realtimeauctionsystem.modules.bid.dto.BidPlacedEvent;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidUpdateResult;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.MyBidHistoryResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;

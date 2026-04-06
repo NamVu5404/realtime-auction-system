@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static com.namvu.realtimeauctionsystem.common.constant.KafkaTopicConstant.BID_EVENTS_TOPIC;
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.KafkaTopic.BID_EVENTS_TOPIC;
 
 @Component
 @RequiredArgsConstructor

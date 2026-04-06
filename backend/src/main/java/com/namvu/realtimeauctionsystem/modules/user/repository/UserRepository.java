@@ -1,8 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.user.repository;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
-import com.namvu.realtimeauctionsystem.common.constant.Role;
-import com.namvu.realtimeauctionsystem.common.constant.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -46,7 +46,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
             UPDATE User u
             SET u.status = :status, u.updatedAt = :updatedAt
-            WHERE u.id = :id AND u.status != :status AND com.namvu.realtimeauctionsystem.common.constant.Role.ADMIN NOT MEMBER OF u.roles
+            WHERE u.id = :id AND u.status != :status AND com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role.ADMIN NOT MEMBER OF u.roles
             """)
     void updateStatus(@Param("id") Long id, @Param("status") UserStatus status, @Param("updatedAt") Instant updatedAt);
 }

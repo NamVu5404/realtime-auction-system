@@ -5,6 +5,7 @@ import {
   ApiResponse,
   PaginatedAuctions,
   AuctionStatus,
+  AuctionStateSnapshot,
   PlaceBidResponse,
   PageResponse,
   AuctionHistoryResponse,
@@ -191,6 +192,28 @@ export const auctionApi = {
       return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auction result:", error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  /**
+   * Fetch lightweight auction state snapshot from Redis
+   * Used as polling fallback when Kafka pipeline is down
+   * Returns currentPrice, highestBidder info, and actual endTime (with anti-snipe extensions)
+   *
+   * @param auctionId - Auction ID
+   * @returns Promise with AuctionStateSnapshot
+   */
+  getAuctionState: async (
+    auctionId: number,
+  ): Promise<AuctionStateSnapshot> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<AuctionStateSnapshot>>(
+        `/auctions/${auctionId}/state`,
+      );
+      return response.data.result!;
+    } catch (error) {
+      console.error("Failed to fetch auction state:", error);
       throw new Error(extractErrorMessage(error));
     }
   },

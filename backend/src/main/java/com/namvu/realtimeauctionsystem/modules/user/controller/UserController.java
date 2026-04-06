@@ -1,5 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.user.controller;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.modules.user.dto.BlockUserRequest;
 import com.namvu.realtimeauctionsystem.modules.user.dto.BlockUserResponse;
 import com.namvu.realtimeauctionsystem.modules.user.dto.ManagerUserResponse;
@@ -9,8 +11,6 @@ import com.namvu.realtimeauctionsystem.modules.user.dto.UserResponse;
 
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.constant.Role;
-import com.namvu.realtimeauctionsystem.common.constant.UserStatus;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserAuditService;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import jakarta.validation.Valid;

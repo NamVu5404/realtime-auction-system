@@ -1,8 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.user.service.impl;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.modules.user.dto.OutboundUserResponse;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
-import com.namvu.realtimeauctionsystem.common.constant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.modules.user.repository.UserRepository;

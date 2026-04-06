@@ -20,10 +20,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.NOTIFICATION_TOPIC_PREFIX;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +54,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = CacheNameConstant.NOTIFICATION_BELL, key = "#userId")
     public List<NotificationResponse> getNotificationsForBell(Long userId) {
         List<Notification> notifications = notificationRepository.findTop5ByRecipientIdAndReadOrderByCreatedAtDesc(userId, false);
@@ -58,6 +62,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResponse<NotificationResponse> getNotificationsForUser(Long userId, Pageable pageable) {
         Page<Notification> notificationPage = notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId, pageable);
         return PageResponse.<NotificationResponse>builder()
@@ -70,6 +75,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = CacheNameConstant.NOTIFICATION_COUNT, key = "#userId")
     public Integer getUnreadCountNotifications(Long userId) {
         return notificationRepository.countByRecipientIdAndRead(userId, false);
@@ -121,7 +127,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         // Gửi WebSocket đích danh (Private topic)
         messagingTemplate.convertAndSend(
-                "/topic/notifications/" + response.getUserId(),
+                NOTIFICATION_TOPIC_PREFIX + response.getUserId(),
                 response
         );
 

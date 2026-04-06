@@ -1,9 +1,9 @@
 package com.namvu.realtimeauctionsystem.modules.user.entity;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.entity.Auditable;
 
-import com.namvu.realtimeauctionsystem.common.constant.Role;
-import com.namvu.realtimeauctionsystem.common.constant.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;

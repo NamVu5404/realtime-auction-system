@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.AUCTION_TOPIC_PREFIX;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -65,7 +67,7 @@ public class BidEventConsumerV1 {
 
         // Gửi đến topic của auction (tất cả người xem thấy)
         messagingTemplate.convertAndSend(
-                "/topic/auction/" + event.getAuctionId() + "/bid-failed",
+                AUCTION_TOPIC_PREFIX + event.getAuctionId() + "/bid-failed",
                 message
         );
 

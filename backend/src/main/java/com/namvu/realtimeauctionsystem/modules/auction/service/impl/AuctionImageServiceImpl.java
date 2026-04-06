@@ -36,6 +36,7 @@ public class AuctionImageServiceImpl implements AuctionImageService {
      * @return danh sách FileResponse chứa thông tin ảnh của các auction
      */
     @Override
+    @Transactional(readOnly = true)
     public List<FileResponse> getAuctionImages(List<Long> auctionIds) {
         if (auctionIds == null || auctionIds.isEmpty()) return List.of();
 

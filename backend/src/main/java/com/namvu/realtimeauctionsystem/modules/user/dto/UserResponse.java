@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.user.dto;
 
-import com.namvu.realtimeauctionsystem.common.constant.Role;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

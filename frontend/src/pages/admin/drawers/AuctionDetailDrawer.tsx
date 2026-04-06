@@ -94,12 +94,8 @@ export const AuctionDetailDrawer = ({
 
   // ✅ Single source of truth for ALL WebSocket state updates
   const onBidUpdate = useCallback((message: BidUpdateMessage) => {
-    // Update lastActive whenever a message is received
-    setLastActive(Date.now());
-    // Reset polling interval on recovery
-    setPollingInterval(2000);
-
     // Update auction price, bidder AND endTime
+
     setLocalAuction((prev) => {
       if (!prev || prev.id !== message.auctionId) return prev;
 
@@ -175,14 +171,16 @@ export const AuctionDetailDrawer = ({
 
   const [hasTimeExtension, setHasTimeExtension] = useState(false);
 
-  // --- Smart Fallback Logic (Polling) ---
-  const [lastActive, setLastActive] = useState<number>(Date.now());
-  const [pollingInterval, setPollingInterval] = useState<number>(2000);
+  // Read Kafka health from global store (set by useHeartbeat mounted in App.jsx)
+  const isKafkaAlive = useUIStore((state) => state.isKafkaAlive);
+
+  // --- Kafka Fallback Polling ---
+  // Only activates when useHeartbeat detects the Kafka pipeline is down
   const isFetchingRef = useRef<boolean>(false);
-  const lastPollTimeRef = useRef<number>(0);
 
   useEffect(() => {
     if (
+      isKafkaAlive ||
       !localAuction ||
       localAuction.status !== AuctionStatus.LIVE ||
       !auctionId ||
@@ -190,70 +188,40 @@ export const AuctionDetailDrawer = ({
     )
       return;
 
-    const silenceDetector = setInterval(async () => {
-      const now = Date.now();
-      const timeSinceLastActive = now - lastActive;
-      const timeSinceLastPoll = now - lastPollTimeRef.current;
+    console.warn("[Fallback Drawer] Kafka down — starting state polling at 5s interval");
 
-      const pollerInterval = isMaintenanceMode ? 5000 : pollingInterval;
+    const intervalId = setInterval(async () => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
 
-      if (
-        (timeSinceLastActive > 2000 || isMaintenanceMode) &&
-        timeSinceLastPoll >= pollerInterval &&
-        !isFetchingRef.current
-      ) {
-        console.log(
-          `Silence/Maintenance detected in Drawer. Polling API (Interval: ${pollerInterval}ms)...`,
-        );
-        isFetchingRef.current = true;
-        lastPollTimeRef.current = now;
-
-        try {
-          const apiPrice = await auctionApi.getCurrentPrice(auctionId);
-          isFetchingRef.current = false;
-
-          if (isMaintenanceMode) {
-            console.log("System recovered from Maintenance Mode!");
-            setMaintenanceMode(false);
-            setPollingInterval(2000);
-          }
-
-          setLocalAuction((prev) => {
-            if (!prev) return null;
-
-            if (apiPrice !== prev.currentPrice) {
-              setPollingInterval(2000);
-              return {
-                ...prev,
-                currentPrice: apiPrice,
-              };
-            }
-
-            if (!isMaintenanceMode) {
-              setPollingInterval((current) => Math.min(10000, current + 1000));
-            }
-            return prev;
-          });
-        } catch (error) {
-          console.error("Fallback polling failed in Drawer:", error);
-          isFetchingRef.current = false;
-          if (!isMaintenanceMode) {
-            setPollingInterval((current) => Math.min(10000, current + 1000));
-          }
-        }
+      try {
+        const snapshot = await auctionApi.getAuctionState(auctionId);
+        setLocalAuction((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            currentPrice: snapshot.currentPrice,
+            endTime: snapshot.endTime,
+            highestBidder: snapshot.highestBidderId
+              ? {
+                  id: snapshot.highestBidderId,
+                  name: snapshot.highestBidderName ?? "",
+                  email: snapshot.highestBidderEmail ?? "",
+                  roles: prev.highestBidder?.roles ?? [UserRole.USER],
+                }
+              : prev.highestBidder,
+          };
+        });
+      } catch (err) {
+        console.error("[Fallback Drawer] getAuctionState failed:", err);
+      } finally {
+        isFetchingRef.current = false;
       }
-    }, 1000);
+    }, 5000);
 
-    return () => clearInterval(silenceDetector);
-  }, [
-    localAuction?.status,
-    auctionId,
-    lastActive,
-    pollingInterval,
-    isMaintenanceMode,
-    visible,
-  ]);
-  // --- End Smart Fallback Logic ---
+    return () => clearInterval(intervalId);
+  }, [isKafkaAlive, localAuction?.status, auctionId, visible]);
+  // --- End Kafka Fallback Polling ---
 
   if (!localAuction) {
     return null;

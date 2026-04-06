@@ -5,10 +5,13 @@ import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionInitRequest;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionRedisData;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionStateSnapshot;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidPlacedEvent;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidUpdateResult;
+import com.namvu.realtimeauctionsystem.modules.user.entity.User;
+import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -25,7 +28,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import static com.namvu.realtimeauctionsystem.common.constant.AuctionCacheKeyConstant.*;
+import static com.namvu.realtimeauctionsystem.common.constant.CacheNameConstant.AuctionCacheKeyConstant.*;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +42,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final UserService userService;
 
     /**
      * Khởi tạo dữ liệu auction trong Redis khi auction chuyển sang LIVE
@@ -202,21 +206,6 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     }
 
     /**
-     * Lấy ID của người bid cao nhất
-     */
-    @Override
-    public Long getHighestBidderId(Long auctionId) {
-        String key = AUCTION_KEY_PREFIX + auctionId;
-        Object bidderIdObj = stringRedisTemplate.opsForHash().get(key, HIGHEST_BIDDER_ID);
-
-        if (bidderIdObj == null) {
-            return null;
-        }
-
-        return Long.parseLong(String.valueOf(bidderIdObj));
-    }
-
-    /**
      * Lấy toàn bộ thông tin auction từ Redis
      */
     @Override
@@ -243,16 +232,6 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     }
 
     /**
-     * Cập nhật thời gian kết thúc (cho anti-sniping)
-     */
-    @Override
-    public void updateEndTime(Long auctionId, Instant newEndTime) {
-        String key = AUCTION_KEY_PREFIX + auctionId;
-        stringRedisTemplate.opsForHash().put(key, END_TIME, newEndTime.toString());
-        log.info("Updated end time for auction {} to {}", auctionId, newEndTime);
-    }
-
-    /**
      * Cập nhật trạng thái auction
      */
     @Override
@@ -270,15 +249,6 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         String key = AUCTION_KEY_PREFIX + auctionId;
         stringRedisTemplate.delete(key);
         log.info("Deleted auction {} from Redis", auctionId);
-    }
-
-    /**
-     * Kiểm tra auction có tồn tại trong Redis không
-     */
-    @Override
-    public boolean exists(Long auctionId) {
-        String key = AUCTION_KEY_PREFIX + auctionId;
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
     }
 
     /**
@@ -313,6 +283,27 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         stringRedisTemplate.expire(key, Duration.ofSeconds(finalTtl));
 
         log.info("Synced auction {} from DB to Redis with currentPrice {}", auction.getId(), auction.getCurrentPrice());
+    }
+
+    @Override
+    public AuctionStateSnapshot getAuctionStateFromRedis(Long auctionId) {
+        String key = AUCTION_KEY_PREFIX + auctionId;
+        Map<Object, Object> data = stringRedisTemplate.opsForHash().entries(key);
+
+        if (data.isEmpty()) {
+            return null;
+        }
+
+        Long highestBidderId = parseLong(data.get(HIGHEST_BIDDER_ID));
+        User user = userService.getActiveUserById(highestBidderId);
+
+        return AuctionStateSnapshot.builder()
+                .currentPrice(parseBigDecimal(data.get(CURRENT_PRICE)))
+                .highestBidderId(highestBidderId)
+                .highestBidderName(user.getName())
+                .highestBidderEmail(user.getEmail())
+                .endTime(parseInstant(data.get(END_TIME)))
+                .build();
     }
 
     private boolean antiSniping(Long auctionId, Instant now, Map<Object, Object> auctionData) {
@@ -366,5 +357,45 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
                         log.debug("Published bid event for auction {}", auctionId);
                     }
                 });
+    }
+
+    private String clean(Object value) {
+        if (value == null) return null;
+        String raw = String.valueOf(value).trim();
+        return raw.isEmpty() ? null : raw;
+    }
+
+    private BigDecimal parseBigDecimal(Object value) {
+        String raw = clean(value);
+        if (raw == null) return BigDecimal.ZERO;
+        try {
+            return new BigDecimal(raw);
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private Long parseLong(Object value) {
+        String raw = clean(value);
+        if (raw == null) return 0L;
+        try {
+            return Long.parseLong(raw);
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    private Instant parseInstant(Object value) {
+        String raw = clean(value);
+        if (raw == null) return null;
+        try {
+            return Instant.parse(raw);
+        } catch (Exception e) {
+            try {
+                return Instant.ofEpochSecond(Long.parseLong(raw));
+            } catch (Exception ex) {
+                return null;
+            }
+        }
     }
 }

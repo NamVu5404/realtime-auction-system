@@ -61,6 +61,9 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
       try {
         const rawBody = JSON.parse(message.body);
 
+        // Ignore PING messages — handled globally by useHeartbeat
+        if (rawBody.type === "PING") return;
+
         // Normalize fields (V1 uses currentPrice, V2 uses amount)
         const bidUpdate: BidUpdateMessage = {
           ...rawBody,
@@ -120,6 +123,7 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
     },
     [auctionId, onBidUpdate, onTimeExtended],
   );
+
 
   /**
    * Create STOMP client with native reconnection mechanism
