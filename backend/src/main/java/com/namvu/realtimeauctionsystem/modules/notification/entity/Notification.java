@@ -27,7 +27,7 @@ public class Notification extends Auditable {
     private User recipient;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private NotificationConstant type;
 
     private String content;

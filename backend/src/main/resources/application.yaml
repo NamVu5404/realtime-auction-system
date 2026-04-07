@@ -85,8 +85,8 @@ outbound:
 jwt:
   access-key: ${JWT_ACCESS_KEY}
   refresh-key: ${JWT_REFRESH_KEY}
-  valid-duration: 2 # in hours
-  refreshable-duration: 48 # in hours
+  valid-duration: 300
+  refreshable-duration: 604800
 
 app:
   file:

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 public interface NotificationService {
     void createAndPushNotification(Long recipientId, NotificationConstant type, String content, String redirectUrl);
@@ -27,4 +28,20 @@ public interface NotificationService {
     void deleteAllNotificationsForUser(Long userId);
 
     void processBidNotifications(BidEvent event, String title, BigDecimal currentPrice);
+
+    void processAuctionEndingSoonNotifications(Long auctionId, String title, BigDecimal currentPrice, Set<Long> bidderIds);
+
+    void processWinnerAuctionNotifications(Long auctionId, Long userId, String title, BigDecimal currentPrice);
+
+    void processNoBidderNotifications(Long auctionId, Long userId, String title);
+
+    void processAuctionEndSellerNotifications(Long auctionId, Long sellerId, String title, BigDecimal currentPrice, String highestBidderName);
+
+    void processLoserBidderNotifications(Long auctionId, String title, Set<Long> bidderIds);
+
+    void processApproveSellerNotifications(Long userId);
+
+    void processRejectSellerNotifications(Long userId, String reason);
+
+    void processRevokeSellerNotifications(Long userId, String reason);
 }

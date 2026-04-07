@@ -7,6 +7,7 @@ import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
+import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.dto.SellerRegResponse;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.entity.SellerRegistration;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.repository.SellerRegRepository;
@@ -37,6 +38,7 @@ public class SellerRegServiceImpl implements SellerRegService {
     private final UserMapper userMapper;
     private final UserAuditService userAuditService;
     private final AuctionService auctionService;
+    private final NotificationService notificationService;
 
     @Override
     @PreAuthorize("!hasAuthority('SELLER')")
@@ -80,6 +82,9 @@ public class SellerRegServiceImpl implements SellerRegService {
         // Save audit log
         userAuditService.sellerApprovedAudit(user, SecurityUtils.getCurrentUserEmail());
 
+        // Push notification
+        notificationService.processApproveSellerNotifications(user.getId());
+
         return SellerRegResponse.builder()
                 .id(registration.getId())
                 .user(userMapper.mapToResponse(user))
@@ -101,6 +106,9 @@ public class SellerRegServiceImpl implements SellerRegService {
 
         // Save audit log
         userAuditService.sellerRejectedAudit(registration.getUser(), SecurityUtils.getCurrentUserEmail(), reason);
+
+        // Push notification
+        notificationService.processRejectSellerNotifications(registration.getUser().getId(), reason);
 
         return SellerRegResponse.builder()
                 .id(registration.getId())
@@ -171,6 +179,9 @@ public class SellerRegServiceImpl implements SellerRegService {
             // Save audit log
             String revokedBy = SecurityUtils.getCurrentUserEmail();
             userAuditService.sellerRoleRevokedAudit(user, reason, revokedBy);
+
+            // Push notification
+            notificationService.processRevokeSellerNotifications(user.getId(), reason);
 
             log.info("Admin {} revoked SELLER role for user {}. Reason: {}. Future auctions cancelled.",
                     revokedBy, userId, reason);

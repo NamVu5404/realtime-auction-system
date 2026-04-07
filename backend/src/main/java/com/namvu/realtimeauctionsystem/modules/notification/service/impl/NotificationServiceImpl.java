@@ -30,6 +30,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.NOTIFICATION_TOPIC_PREFIX;
 
@@ -160,6 +161,116 @@ public class NotificationServiceImpl implements NotificationService {
             }
         } catch (Exception e) {
             log.error("Failed to process bid notifications for auction {}: {}", event.getAuctionId(), e.getMessage());
+        }
+    }
+
+    @Override
+    @Async("notificationExecutor")
+    public void processAuctionEndingSoonNotifications(Long auctionId, String title, BigDecimal currentPrice, Set<Long> bidderIds) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_ENDING_SOON;
+            String content = type.buildContent(title, MoneyUtils.format(currentPrice));
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+
+            bidderIds.forEach(userId ->
+                    self().createAndPushNotification(userId, type, content, redirectUrl)
+            );
+        } catch (Exception e) {
+            log.warn("Failed to process auction ending soon notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    @Async("notificationExecutor")
+    public void processWinnerAuctionNotifications(Long auctionId, Long userId, String title, BigDecimal currentPrice) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_ENDED_WINNER;
+            String content = type.buildContent(title, MoneyUtils.format(currentPrice));
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+
+            self().createAndPushNotification(userId, type, content, redirectUrl);
+        } catch (Exception e) {
+            log.warn("Failed to process winner auction notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    @Async("notificationExecutor")
+    public void processNoBidderNotifications(Long auctionId, Long userId, String title) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_ENDED_NO_BIDS;
+            String content = type.buildContent(title);
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+
+            self().createAndPushNotification(userId, type, content, redirectUrl);
+        } catch (Exception e) {
+            log.warn("Failed to process no bidder notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    @Async("notificationExecutor")
+    public void processAuctionEndSellerNotifications(Long auctionId, Long sellerId, String title, BigDecimal currentPrice, String highestBidderName) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_ENDED_SELLER;
+            String content = type.buildContent(title, MoneyUtils.format(currentPrice), highestBidderName);
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+
+            self().createAndPushNotification(sellerId, type, content, redirectUrl);
+        } catch (Exception e) {
+            log.warn("Failed to process auction end seller notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    @Async("notificationExecutor")
+    public void processLoserBidderNotifications(Long auctionId, String title, Set<Long> bidderIds) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_ENDED_LOSER;
+            String content = type.buildContent(title);
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+
+            bidderIds.forEach(userId ->
+                    self().createAndPushNotification(userId, type, content, redirectUrl)
+            );
+        } catch (Exception e) {
+            log.warn("Failed to process loser bidder notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    /**
+     *  Removed @Async: admin action không cần response nhanh
+     *  Dùng @Async trực tiếp trong @Transactional có thể gây race condition (thread async đọc DB trước khi commit)
+     */
+    @Override
+    public void processApproveSellerNotifications(Long userId) {
+        try {
+            NotificationConstant type = NotificationConstant.SELLER_REGISTRATION_APPROVED;
+            self().createAndPushNotification(userId, type, type.getContent(), type.getRedirectUrl());
+        } catch (Exception e) {
+            log.warn("Failed to process approve seller notifications for user {}: {}", userId, e.getMessage());
+        }
+    }
+
+    @Override
+    public void processRejectSellerNotifications(Long userId, String reason) {
+        try {
+            NotificationConstant type = NotificationConstant.SELLER_REGISTRATION_REJECTED;
+            String content = type.buildContent(reason);
+            self().createAndPushNotification(userId, type, content, type.getRedirectUrl());
+        } catch (Exception e) {
+            log.warn("Failed to process reject seller notifications for user {}: {}", userId, e.getMessage());
+        }
+    }
+
+    @Override
+    public void processRevokeSellerNotifications(Long userId, String reason) {
+        try {
+            NotificationConstant type = NotificationConstant.REVOKE_SELLER_ROLE;
+            String content = type.buildContent(reason);
+            self().createAndPushNotification(userId, type, content, type.getRedirectUrl());
+        } catch (Exception e) {
+            log.warn("Failed to process revoke seller notifications for user {}: {}", userId, e.getMessage());
         }
     }
 

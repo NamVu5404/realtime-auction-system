@@ -1,13 +1,11 @@
 package com.namvu.realtimeauctionsystem.modules.auction.scheduler;
 
+import com.namvu.realtimeauctionsystem.common.constant.AuctionActionType;
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import com.namvu.realtimeauctionsystem.common.constant.CacheNameConstant;
-import com.namvu.realtimeauctionsystem.common.constant.NotificationConstant;
-import com.namvu.realtimeauctionsystem.common.utils.MoneyUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionInitRequest;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.AuctionAudit;
-import com.namvu.realtimeauctionsystem.common.constant.AuctionActionType;
-import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionAuditRepository;
 import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
@@ -134,13 +132,47 @@ public class AuctionScheduler {
 
                 Map<String, Object> details = new HashMap<>();
                 details.put("title", auction.getTitle());
-                details.put("highest price", auction.getCurrentPrice());
-                details.put("seller", auction.getSeller().getEmail());
 
                 if (auction.getHighestBidder() != null) {
                     details.put("winner", auction.getHighestBidder().getEmail());
+                    details.put("highest price", auction.getCurrentPrice());
+
+                    // AUCTION_ENDED_WINNER
+                    notificationService.processWinnerAuctionNotifications(
+                            auction.getId(),
+                            auction.getHighestBidder().getId(),
+                            auction.getTitle(),
+                            auction.getCurrentPrice()
+                    );
+
+                    // AUCTION_ENDED_SELLER
+                    notificationService.processAuctionEndSellerNotifications(
+                            auction.getId(),
+                            auction.getSeller().getId(),
+                            auction.getTitle(),
+                            auction.getCurrentPrice(),
+                            auction.getHighestBidder().getName()
+                    );
+
+                    // AUCTION_ENDED_LOSER
+                    Set<Long> bidderIds = bidService.getParticipantIds(auction.getId());
+                    bidderIds.remove(auction.getHighestBidder().getId()); // Xóa winner
+
+                    notificationService.processLoserBidderNotifications(
+                            auction.getId(),
+                            auction.getTitle(),
+                            bidderIds
+                    );
+
                 } else {
                     details.put("winner", "NO BIDDER");
+
+                    // AUCTION_ENDED_NO_BIDS
+                    notificationService.processNoBidderNotifications(
+                            auction.getId(),
+                            auction.getSeller().getId(),
+                            auction.getTitle()
+                    );
                 }
 
                 auctionAuditRepository.save(AuctionAudit.builder()
@@ -156,26 +188,30 @@ public class AuctionScheduler {
     }
 
     @Scheduled(fixedDelay = 60000)
+    @Transactional
     public void notifyAuctionsEndingSoon() {
         Instant now = Instant.now();
         Instant fiveMinutesFromNow = now.plus(5, ChronoUnit.MINUTES);
 
         List<Auction> auctions = auctionRepository.findByNotifiedEndingSoonFalse(now, fiveMinutesFromNow);
 
+        if (auctions.isEmpty()) return;
+
+        log.info("Processing {} ending soon auctions.", auctions.size());
+
         for (Auction auction : auctions) {
             // Đánh dấu đã gửi thông báo
             auction.setNotifiedEndingSoon(true);
-            auctionRepository.save(auction);
 
             Set<Long> bidderIds = bidService.getParticipantIds(auction.getId());
             if (bidderIds.isEmpty()) continue;
 
-            NotificationConstant type = NotificationConstant.AUCTION_ENDING_SOON;
-            String content = type.buildContent(auction.getTitle(), MoneyUtils.format(auction.getCurrentPrice()));
-            String redirectUrl = type.buildRedirectUrl(auction.getId());
-
-            bidderIds.forEach(userId ->
-                    notificationService.createAndPushNotification(userId, type, content, redirectUrl));
+            notificationService.processAuctionEndingSoonNotifications(
+                    auction.getId(),
+                    auction.getTitle(),
+                    auction.getCurrentPrice(),
+                    bidderIds
+            );
         }
     }
 }

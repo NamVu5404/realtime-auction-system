@@ -282,13 +282,18 @@ export const AuctionDetailPage = () => {
   const auctionId = id ? parseInt(id, 10) : null;
   const hasCelebratedRef = useRef(false);
 
-  // ✅ Premium Celebration Effect (Confetti + Notification)
+  // ✅ Premium Celebration Effect (Confetti + Notification) with Persistence
   const triggerCelebration = useCallback((title: string, price: number) => {
     if (hasCelebratedRef.current) return;
     hasCelebratedRef.current = true;
 
-    console.log("🏆 YOU WON! Triggering premium celebration...");
+    // Persist to localStorage to prevent re-triggering across sessions
+    if (user?.id && auction?.id) {
+      localStorage.setItem(`celebrated_auction_${user.id}_${auction.id}`, "true");
+    }
 
+    console.log("🏆 YOU WON! Triggering premium celebration...");
+    // ... animation logic stays the same ...
     const duration = 10 * 1000;
     const animationEnd = Date.now() + duration;
     const defaults = {
@@ -328,13 +333,22 @@ export const AuctionDetailPage = () => {
       placement: "top",
       className: "celebration-notification",
     });
-  }, []);
+  }, [user?.id, auction?.id]);
 
   // ✅ Persistent Celebration Switch:
   // Fires whenever an auction moves to ENDED status and the current user is the winner.
   // Covers both live transitions and direct entry (sync/reload).
   useEffect(() => {
     const checkWinnerAndCelebrate = async () => {
+      if (!auction || !user?.id) return;
+
+      // Check localStorage first for absolute persistence
+      const isAlreadyCelebrated = localStorage.getItem(`celebrated_auction_${user.id}_${auction.id}`);
+      if (isAlreadyCelebrated) {
+        hasCelebratedRef.current = true;
+        return;
+      }
+
       // Condition: Auction ended, user is authenticated, and hasn't celebrated yet
       if (
         auction?.status === AuctionStatus.ENDED &&
@@ -366,7 +380,7 @@ export const AuctionDetailPage = () => {
     };
 
     checkWinnerAndCelebrate();
-  }, [auction?.status, user?.email, auction?.id, triggerCelebration]);
+  }, [auction?.status, user?.email, user?.id, auction?.id, triggerCelebration]);
 
   // ✅ Single source of truth for ALL WebSocket state updates
   const onBidUpdate = useCallback((message: BidUpdateMessage) => {
