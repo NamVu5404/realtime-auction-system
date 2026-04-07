@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 public interface BidService {
     BidUpdateResult placeBidV2(Long auctionId, Long bidderId, BigDecimal newPrice) throws JsonProcessingException;
@@ -26,4 +27,6 @@ public interface BidService {
     int countRecentBids(Long bidderId, Long auctionId, Instant since);
 
     List<Bid> getRecentBids(Long bidderId, Long auctionId);
+
+    Set<Long> getParticipantIds(Long auctionId);
 }

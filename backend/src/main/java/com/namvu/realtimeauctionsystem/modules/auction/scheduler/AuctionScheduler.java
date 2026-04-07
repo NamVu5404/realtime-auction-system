@@ -1,6 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.auction.scheduler;
 
 import com.namvu.realtimeauctionsystem.common.constant.CacheNameConstant;
+import com.namvu.realtimeauctionsystem.common.constant.NotificationConstant;
+import com.namvu.realtimeauctionsystem.common.utils.MoneyUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionInitRequest;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.AuctionAudit;
@@ -9,6 +11,8 @@ import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionAuditRepository;
 import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
+import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
+import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -18,9 +22,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -31,6 +37,8 @@ public class AuctionScheduler {
     private final AuctionRepository auctionRepository;
     private final RedisAuctionService redisAuctionService;
     private final AuctionAuditRepository auctionAuditRepository;
+    private final BidService bidService;
+    private final NotificationService notificationService;
 
     /**
      * Chạy mỗi 1 giây, tìm auctions cần start
@@ -144,6 +152,30 @@ public class AuctionScheduler {
             } catch (Exception e) {
                 log.error("Failed to end auction {}", auction.getId(), e);
             }
+        }
+    }
+
+    @Scheduled(fixedDelay = 60000)
+    public void notifyAuctionsEndingSoon() {
+        Instant now = Instant.now();
+        Instant fiveMinutesFromNow = now.plus(5, ChronoUnit.MINUTES);
+
+        List<Auction> auctions = auctionRepository.findByNotifiedEndingSoonFalse(now, fiveMinutesFromNow);
+
+        for (Auction auction : auctions) {
+            // Đánh dấu đã gửi thông báo
+            auction.setNotifiedEndingSoon(true);
+            auctionRepository.save(auction);
+
+            Set<Long> bidderIds = bidService.getParticipantIds(auction.getId());
+            if (bidderIds.isEmpty()) continue;
+
+            NotificationConstant type = NotificationConstant.AUCTION_ENDING_SOON;
+            String content = type.buildContent(auction.getTitle(), MoneyUtils.format(auction.getCurrentPrice()));
+            String redirectUrl = type.buildRedirectUrl(auction.getId());
+
+            bidderIds.forEach(userId ->
+                    notificationService.createAndPushNotification(userId, type, content, redirectUrl));
         }
     }
 }

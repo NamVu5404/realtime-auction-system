@@ -6,33 +6,33 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.MissingFormatArgumentException;
 
-import static com.namvu.realtimeauctionsystem.common.constant.NotificationType.RedirectUrlsConstant.*;
+import static com.namvu.realtimeauctionsystem.common.constant.NotificationConstant.RedirectUrlsConstant.*;
 
 @Getter
 @RequiredArgsConstructor
 @Slf4j
-public enum NotificationType {
+public enum NotificationConstant {
 
     // ==================== BIDDER ====================
 
     OUTBID(
             "Bạn đã bị vượt giá",
-            "Sản phẩm '%s' vừa bị vượt giá. Giá cao nhất hiện tại: $%s. Đặt lại ngay để không bỏ lỡ!",
+            "Sản phẩm '%s' vừa bị vượt giá. Giá cao nhất hiện tại: %s. Đặt lại ngay để không bỏ lỡ!",
             AUCTION_DETAIL_URL
     ),
-    AUCTION_START(
+    AUCTION_START( // wish list
             "Phiên đấu giá đã bắt đầu",
-            "Phiên đấu giá '%s' bạn quan tâm vừa chính thức bắt đầu. Giá khởi điểm: $%s.",
+            "Phiên đấu giá '%s' bạn quan tâm vừa chính thức bắt đầu. Giá khởi điểm: %s.",
             AUCTION_DETAIL_URL
     ),
     AUCTION_ENDING_SOON(
             "Phiên đấu giá sắp kết thúc",
-            "Phiên đấu giá '%s' sẽ kết thúc sau %s phút. Giá hiện tại: $%s. Đừng để vuột mất!",
+            "Phiên đấu giá '%s' sắp kết thúc. Giá hiện tại: %s. Đừng để vuột mất!",
             AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_WINNER(
             "Chúc mừng! Bạn đã thắng đấu giá",
-            "Bạn đã thắng phiên đấu giá '%s' với mức giá $%s.",
+            "Bạn đã thắng phiên đấu giá '%s' với mức giá %s.",
             AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_LOSER(
@@ -40,7 +40,7 @@ public enum NotificationType {
             "Phiên đấu giá '%s' đã kết thúc. Rất tiếc, bạn không phải người chiến thắng lần này.",
             AUCTION_DETAIL_URL
     ),
-    AUCTION_CANCELLED(
+    AUCTION_CANCELLED( // wish list
             "Phiên đấu giá đã bị hủy",
             "Phiên đấu giá '%s' đã bị hủy bởi người tổ chức. Tiền đặt cọc (nếu có) sẽ được hoàn trả.",
             AUCTION_DETAIL_URL
@@ -50,12 +50,12 @@ public enum NotificationType {
 
     BID_PLACED(
             "Có lượt đấu giá mới",
-            "Sản phẩm '%s' vừa có lượt đặt giá mới: $%s.",
+            "Sản phẩm '%s' vừa có lượt đặt giá mới: %s.",
             SELLER_AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_SELLER(
             "Phiên đấu giá của bạn đã kết thúc",
-            "Phiên đấu giá '%s' đã kết thúc. Giá thắng cuộc: $%s — người thắng: %s.",
+            "Phiên đấu giá '%s' đã kết thúc. Giá thắng cuộc: %s — người thắng: %s.",
             SELLER_AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_NO_BIDS(
@@ -63,12 +63,12 @@ public enum NotificationType {
             "Phiên đấu giá '%s' đã kết thúc mà không có lượt đặt giá nào.",
             SELLER_AUCTION_DETAIL_URL
     ),
-    AUCTION_APPROVED(
+    AUCTION_APPROVED( // pending
             "Phiên đấu giá đã được phê duyệt",
             "Phiên đấu giá '%s' của bạn đã được kiểm duyệt và sẽ bắt đầu vào lúc %s.",
             SELLER_AUCTION_DETAIL_URL
     ),
-    AUCTION_REJECTED(
+    AUCTION_REJECTED( // pending
             "Phiên đấu giá bị từ chối",
             "Phiên đấu giá '%s' của bạn bị từ chối kiểm duyệt. Lý do: %s.",
             SELLER_AUCTION_DETAIL_URL

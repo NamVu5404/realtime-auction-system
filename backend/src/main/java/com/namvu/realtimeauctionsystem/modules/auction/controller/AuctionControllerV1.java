@@ -143,6 +143,10 @@ public class AuctionControllerV1 {
         return ApiResponse.ok(auctionAuditService.getAuctionResult(auctionId));
     }
 
+    /**
+     *  Dùng khi Kafka down
+     *  Trade off: mất notifications
+     */
     @GetMapping("/{auctionId}/state")
     public ApiResponse<AuctionStateSnapshot> getAuctionState(@PathVariable Long auctionId) {
         return ApiResponse.ok(auctionService.getAuctionState(auctionId));

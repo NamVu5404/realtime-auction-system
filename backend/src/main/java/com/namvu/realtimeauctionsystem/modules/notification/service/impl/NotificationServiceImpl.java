@@ -1,13 +1,13 @@
 package com.namvu.realtimeauctionsystem.modules.notification.service.impl;
 
 import com.namvu.realtimeauctionsystem.common.constant.CacheNameConstant;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import com.namvu.realtimeauctionsystem.common.constant.NotificationConstant;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.constant.NotificationType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
+import com.namvu.realtimeauctionsystem.common.utils.MoneyUtils;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
+import com.namvu.realtimeauctionsystem.modules.bid.dto.BidEvent;
 import com.namvu.realtimeauctionsystem.modules.notification.dto.NotificationResponse;
 import com.namvu.realtimeauctionsystem.modules.notification.entity.Notification;
 import com.namvu.realtimeauctionsystem.modules.notification.mapper.NotificationMapper;
@@ -16,12 +16,17 @@ import com.namvu.realtimeauctionsystem.modules.notification.service.Notification
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,10 +42,15 @@ public class NotificationServiceImpl implements NotificationService {
     private final UserService userService;
     private final NotificationMapper notificationMapper;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationContext applicationContext;
+
+    private NotificationService self() {
+        return applicationContext.getBean(NotificationService.class);
+    }
 
     @Override
     @CacheEvict(value = {CacheNameConstant.NOTIFICATION_COUNT, CacheNameConstant.NOTIFICATION_BELL}, key = "#recipientId")
-    public void createAndPushNotification(Long recipientId, NotificationType type, String content, String redirectUrl) {
+    public void createAndPushNotification(Long recipientId, NotificationConstant type, String content, String redirectUrl) {
         Notification notification = Notification.builder()
                 .recipient(userService.getUserReference(recipientId))
                 .type(type)
@@ -120,6 +130,37 @@ public class NotificationServiceImpl implements NotificationService {
     @CacheEvict(value = {CacheNameConstant.NOTIFICATION_COUNT, CacheNameConstant.NOTIFICATION_BELL}, key = "#userId")
     public void deleteAllNotificationsForUser(Long userId) {
         notificationRepository.deleteAllNotificationsForUser(userId);
+    }
+
+    @Override
+    @Async("notificationExecutor")
+    public void processBidNotifications(BidEvent event, String title, BigDecimal currentPrice) {
+        try {
+            // Xử lý gửi Notification: OUTBID
+            // Chỉ gửi khi có người từng dẫn đầu trước đó và không phải tự outbid chính mình
+            if (event.getPreviousBidderId() != null && event.getPreviousBidderId() > 0
+                    && !event.getPreviousBidderId().equals(event.getBidderId())) {
+
+                NotificationConstant type = NotificationConstant.OUTBID;
+                String content = type.buildContent(title, MoneyUtils.format(currentPrice));
+                String redirectUrl = type.buildRedirectUrl(event.getAuctionId());
+
+                self().createAndPushNotification(event.getPreviousBidderId(), type, content, redirectUrl);
+            }
+
+            // Xử lý gửi Notification: BID_PLACED (Chỉ gửi cho người bán - Seller)
+            if (event.getSellerId() != null && event.getSellerId() > 0
+                    && !event.getSellerId().equals(event.getBidderId())) {
+
+                NotificationConstant type = NotificationConstant.BID_PLACED;
+                String content = type.buildContent(title, MoneyUtils.format(currentPrice));
+                String redirectUrl = type.buildRedirectUrl(event.getAuctionId());
+
+                self().createAndPushNotification(event.getSellerId(), type, content, redirectUrl);
+            }
+        } catch (Exception e) {
+            log.error("Failed to process bid notifications for auction {}: {}", event.getAuctionId(), e.getMessage());
+        }
     }
 
     private void pushNotification(Notification notification) {

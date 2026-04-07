@@ -280,6 +280,93 @@ export const AuctionDetailPage = () => {
   const [hasTimeExtension, setHasTimeExtension] = useState(false);
 
   const auctionId = id ? parseInt(id, 10) : null;
+  const hasCelebratedRef = useRef(false);
+
+  // ✅ Premium Celebration Effect (Confetti + Notification)
+  const triggerCelebration = useCallback((title: string, price: number) => {
+    if (hasCelebratedRef.current) return;
+    hasCelebratedRef.current = true;
+
+    console.log("🏆 YOU WON! Triggering premium celebration...");
+
+    const duration = 10 * 1000;
+    const animationEnd = Date.now() + duration;
+    const defaults = {
+      startVelocity: 30,
+      spread: 360,
+      ticks: 60,
+      zIndex: 9999,
+    };
+
+    const randomInRange = (min: number, max: number) =>
+      Math.random() * (max - min) + min;
+
+    const interval: any = setInterval(function () {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      });
+    }, 250);
+
+    notification.success({
+      message: "Congratulations! 🏆",
+      description: `You won the auction for "${title}" with a bid of ${formatCurrency(price)}!`,
+      duration: 10,
+      placement: "top",
+      className: "celebration-notification",
+    });
+  }, []);
+
+  // ✅ Persistent Celebration Switch:
+  // Fires whenever an auction moves to ENDED status and the current user is the winner.
+  // Covers both live transitions and direct entry (sync/reload).
+  useEffect(() => {
+    const checkWinnerAndCelebrate = async () => {
+      // Condition: Auction ended, user is authenticated, and hasn't celebrated yet
+      if (
+        auction?.status === AuctionStatus.ENDED &&
+        user?.email &&
+        !hasCelebratedRef.current
+      ) {
+        // Optimization: Quick check local bidder first
+        if (auction.highestBidder?.email === user.email) {
+          try {
+            // Definitive check: Fetch DB results to confirm winner
+            const result = await auctionApi.getAuctionResult(auction.id);
+            if (result?.details?.winner === user.email) {
+              triggerCelebration(auction.title, auction.currentPrice);
+            } else {
+              hasCelebratedRef.current = true; // Not the winner, stop checking
+            }
+          } catch (err) {
+            console.error(
+              "Failed to verify auction winner for celebration:",
+              err,
+            );
+            // Fallback: If result fetch fails but local state says so, trigger anyway
+            triggerCelebration(auction.title, auction.currentPrice);
+          }
+        } else {
+          hasCelebratedRef.current = true; // Clearly not the winner
+        }
+      }
+    };
+
+    checkWinnerAndCelebrate();
+  }, [auction?.status, user?.email, auction?.id, triggerCelebration]);
 
   // ✅ Single source of truth for ALL WebSocket state updates
   const onBidUpdate = useCallback((message: BidUpdateMessage) => {
@@ -317,7 +404,6 @@ export const AuctionDetailPage = () => {
     });
   }, []);
 
-
   // ✅ Visual effects ONLY — no state update here
   const onTimeExtended = useCallback((_newEndTime: string) => {
     setHasTimeExtension(true);
@@ -350,9 +436,17 @@ export const AuctionDetailPage = () => {
   const isFetchingRef = useRef<boolean>(false);
 
   useEffect(() => {
-    if (isKafkaAlive || !auction || auction.status !== AuctionStatus.LIVE || !auctionId) return;
+    if (
+      isKafkaAlive ||
+      !auction ||
+      auction.status !== AuctionStatus.LIVE ||
+      !auctionId
+    )
+      return;
 
-    console.warn("[Fallback] Kafka down — starting state polling at 5s interval");
+    console.warn(
+      "[Fallback] Kafka down — starting state polling at 5s interval",
+    );
 
     const intervalId = setInterval(async () => {
       if (isFetchingRef.current) return;
@@ -545,67 +639,10 @@ export const AuctionDetailPage = () => {
       setIsCountdownFinished(true);
       message.info("Auction has ended - bidding is closed");
 
-      // Celebration Flow: Wait briefly for backend scheduler to process final result
-      setTimeout(async () => {
-        try {
-          // Fetch the definitive result from DB audit logs as requested
-          const result = await auctionApi.getAuctionResult(auction.id);
-          const winnerEmail = result?.details?.winner;
-
-          console.log("[Celebration] Final Result from DB:", result);
-
-          // Compare with current user's email for absolute accuracy
-          if (user?.email && winnerEmail === user.email) {
-            console.log("🏆 YOU WON! Triggering fireworks...");
-
-            // Premium Fireworks Effect
-            const duration = 10 * 1000;
-            const animationEnd = Date.now() + duration;
-            const defaults = {
-              startVelocity: 30,
-              spread: 360,
-              ticks: 60,
-              zIndex: 9999,
-            };
-
-            const randomInRange = (min: number, max: number) =>
-              Math.random() * (max - min) + min;
-
-            const interval: any = setInterval(function () {
-              const timeLeft = animationEnd - Date.now();
-
-              if (timeLeft <= 0) {
-                return clearInterval(interval);
-              }
-
-              const particleCount = 50 * (timeLeft / duration);
-              // since particles fall down, start a bit higher than random
-              confetti({
-                ...defaults,
-                particleCount,
-                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-              });
-              confetti({
-                ...defaults,
-                particleCount,
-                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-              });
-            }, 250);
-
-            notification.success({
-              message: "Congratulations! 🏆",
-              description: `You won the auction for "${auction.title}" with a bid of ${formatCurrency(auction.currentPrice)}!`,
-              duration: 10,
-              placement: "top",
-            });
-          }
-        } catch (error) {
-          console.error(
-            "Failed to fetch auction result for celebration:",
-            error,
-          );
-        }
-      }, 2000); // 2s delay to ensure backend has logged the RESULT
+      // Update local state status to trigger the celebration Effect
+      setAuction((prev) =>
+        prev ? { ...prev, status: AuctionStatus.ENDED } : null,
+      );
     } else if (isScheduled) {
       // Countdown for start time → auction started
       setIsCountdownStarted(true);

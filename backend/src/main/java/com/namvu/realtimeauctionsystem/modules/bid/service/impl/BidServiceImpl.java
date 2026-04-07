@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -162,6 +163,11 @@ public class BidServiceImpl implements BidService {
     @Transactional(readOnly = true)
     public List<Bid> getRecentBids(Long bidderId, Long auctionId) {
         return bidRepository.findTop10ByBidderIdAndAuctionIdOrderByCreatedAtDesc(bidderId, auctionId);
+    }
+
+    @Override
+    public Set<Long> getParticipantIds(Long auctionId) {
+        return bidRepository.findAllBidderIdsByAuctionId(auctionId);
     }
 
     private PageResponse<MyBidHistoryResponse> getBidHistory(Long userId, Pageable pageable) {

@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.auction.repository;
 
-import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
+import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -91,4 +91,10 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             "WHERE a.seller.id = :sellerId " +
             "AND a.status IN ('DRAFT', 'SCHEDULED')")
     void cancelFutureAuctions(@Param("sellerId") Long sellerId);
+
+    @Query("SELECT a FROM Auction a WHERE a.status = 'LIVE' " +
+            "AND a.endTime > :now " +
+            "AND a.endTime <= :targetTime " +
+            "AND a.notifiedEndingSoon = false")
+    List<Auction> findByNotifiedEndingSoonFalse(@Param("now") Instant now, @Param("targetTime") Instant targetTime);
 }

@@ -24,8 +24,9 @@ import {
   message,
 } from "antd";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams, useParams, useNavigate } from "react-router-dom";
+import { auctionApi } from "../../api/auctionApi";
 import adminApi from "../../api/adminApi";
 import {
   Auction,
@@ -99,6 +100,33 @@ const SellerAuctionPage = () => {
 
   // Debounce the keyword input (300ms delay)
   const debouncedKeyword = useDebounce(keyword, 300);
+
+  const { id: urlId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  // Fetch auction detail if id is in the URL (Deep Linking support)
+  const { data: detailAuction } = useQuery<Auction>({
+    queryKey: ["auction-detail", urlId],
+    queryFn: () => auctionApi.getAuctionDetail(Number(urlId)),
+    enabled: !!urlId && !isNaN(Number(urlId)),
+    retry: false,
+  });
+
+  // Automatically open drawer if we have a detail fetched from URL
+  useEffect(() => {
+    if (urlId && detailAuction) {
+      setDetailDrawer({ visible: true, auction: detailAuction });
+    }
+  }, [urlId, detailAuction]);
+
+  // Handle Close Drawer and clean URL
+  const handleCloseDetail = () => {
+    setDetailDrawer({ visible: false });
+    // Navigate back to the list page without the ID parameter
+    // Preserve current list search params (page, status, etc)
+    const currentParams = searchParams.toString();
+    navigate(`/seller/auctions${currentParams ? `?${currentParams}` : ""}`);
+  };
 
   // Manual trigger for search - initial query with LIVE status
   const { data, isLoading, refetch } = useQuery<PageResponse<Auction>>({
@@ -306,7 +334,7 @@ const SellerAuctionPage = () => {
           key: "view-detail",
           icon: <EyeOutlined />,
           label: "View Detail",
-          onClick: () => setDetailDrawer({ visible: true, auction: record }),
+          onClick: () => navigate(`/seller/auctions/${record.id}?${searchParams.toString()}`),
         });
 
         // Show Audit Logs
@@ -500,7 +528,7 @@ const SellerAuctionPage = () => {
           key={detailDrawer.auction.id}
           auction={detailDrawer.auction}
           visible={detailDrawer.visible}
-          onClose={() => setDetailDrawer({ visible: false })}
+          onClose={handleCloseDetail}
         />
       )}
 
