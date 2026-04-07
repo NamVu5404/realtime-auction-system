@@ -58,8 +58,8 @@ public class TokenServiceImpl implements TokenService {
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString())
                 .expirationTime(type == TokenType.ACCESS_TOKEN
-                        ? Date.from(Instant.now().plus(validDuration, ChronoUnit.HOURS))
-                        : Date.from(Instant.now().plus(refreshableDuration, ChronoUnit.HOURS))
+                        ? Date.from(Instant.now().plus(validDuration, ChronoUnit.SECONDS))
+                        : Date.from(Instant.now().plus(refreshableDuration, ChronoUnit.SECONDS))
                 )
                 .build();
 

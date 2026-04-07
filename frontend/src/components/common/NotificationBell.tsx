@@ -35,7 +35,12 @@ const { Text, Title, Paragraph } = Typography;
  */
 const getNotifMeta = (title: string) => {
   const t = title.toLowerCase();
-  if (t.includes("hủy") || t.includes("từ chối") || t.includes("khóa")) {
+  if (
+    t.includes("hủy") ||
+    t.includes("từ chối") ||
+    t.includes("khóa") ||
+    t.includes("thu hồi")
+  ) {
     return { color: "#ff4d4f", icon: <CloseCircleOutlined /> };
   }
   if (

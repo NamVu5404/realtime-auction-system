@@ -139,7 +139,9 @@ function App() {
                 }
               >
                 <Route index element={<SellerDashboard />} />
-                <Route path="auctions" element={<SellerAuctionPage />} />
+                <Route path="auctions" element={<SellerAuctionPage />}>
+                  <Route path=":id" element={<SellerAuctionPage />} />
+                </Route>
                 <Route path="notifications" element={<SellerNotificationPage />} />
               </Route>
 

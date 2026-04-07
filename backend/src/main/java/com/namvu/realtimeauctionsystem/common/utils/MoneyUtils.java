@@ -11,21 +11,19 @@ public class MoneyUtils {
         /* This utility class should not be instantiated */
     }
 
-    private static final Locale VN_LOCALE = Locale.of("vi", "VN");
-
     /**
-     * Format số tiền theo định dạng: 1.200.000,00
+     * Format currency to US standard: $1,234,567.89
      */
     public static String format(BigDecimal amount) {
         if (amount == null) {
-            return "0,00";
+            return "$0.00";
         }
 
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(VN_LOCALE);
-        symbols.setGroupingSeparator('.');
-        symbols.setDecimalSeparator(',');
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
+        symbols.setGroupingSeparator(',');
+        symbols.setDecimalSeparator('.');
 
-        DecimalFormat df = new DecimalFormat("#,##0.00", symbols);
+        DecimalFormat df = new DecimalFormat("$#,##0.00", symbols);
 
         return df.format(amount);
     }

@@ -75,6 +75,9 @@ public class Auction extends Auditable {
     @Builder.Default
     private Integer extensionCount = 0;
 
+    @Column(name = "notified_ending_soon", nullable = false)
+    private boolean notifiedEndingSoon = false;
+
     @Version
     @Column(name = "version")
     private Long version;

@@ -6,33 +6,33 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.MissingFormatArgumentException;
 
-import static com.namvu.realtimeauctionsystem.common.constant.NotificationType.RedirectUrlsConstant.*;
+import static com.namvu.realtimeauctionsystem.common.constant.NotificationConstant.RedirectUrlsConstant.*;
 
 @Getter
 @RequiredArgsConstructor
 @Slf4j
-public enum NotificationType {
+public enum NotificationConstant {
 
     // ==================== BIDDER ====================
 
     OUTBID(
             "Bạn đã bị vượt giá",
-            "Sản phẩm '%s' vừa bị vượt giá. Giá cao nhất hiện tại: $%s. Đặt lại ngay để không bỏ lỡ!",
+            "Sản phẩm '%s' vừa bị vượt giá. Giá cao nhất hiện tại: %s. Đặt lại ngay để không bỏ lỡ!",
             AUCTION_DETAIL_URL
     ),
-    AUCTION_START(
+    AUCTION_START( // Pending
             "Phiên đấu giá đã bắt đầu",
-            "Phiên đấu giá '%s' bạn quan tâm vừa chính thức bắt đầu. Giá khởi điểm: $%s.",
+            "Phiên đấu giá '%s' bạn quan tâm vừa chính thức bắt đầu. Giá khởi điểm: %s.",
             AUCTION_DETAIL_URL
     ),
     AUCTION_ENDING_SOON(
             "Phiên đấu giá sắp kết thúc",
-            "Phiên đấu giá '%s' sẽ kết thúc sau %s phút. Giá hiện tại: $%s. Đừng để vuột mất!",
+            "Phiên đấu giá '%s' sắp kết thúc. Giá hiện tại: %s. Đừng để vuột mất!",
             AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_WINNER(
             "Chúc mừng! Bạn đã thắng đấu giá",
-            "Bạn đã thắng phiên đấu giá '%s' với mức giá $%s.",
+            "Bạn đã thắng phiên đấu giá '%s' với mức giá %s.",
             AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_LOSER(
@@ -40,7 +40,7 @@ public enum NotificationType {
             "Phiên đấu giá '%s' đã kết thúc. Rất tiếc, bạn không phải người chiến thắng lần này.",
             AUCTION_DETAIL_URL
     ),
-    AUCTION_CANCELLED(
+    AUCTION_CANCELLED( // Pending
             "Phiên đấu giá đã bị hủy",
             "Phiên đấu giá '%s' đã bị hủy bởi người tổ chức. Tiền đặt cọc (nếu có) sẽ được hoàn trả.",
             AUCTION_DETAIL_URL
@@ -50,12 +50,12 @@ public enum NotificationType {
 
     BID_PLACED(
             "Có lượt đấu giá mới",
-            "Sản phẩm '%s' vừa có lượt đặt giá mới: $%s.",
+            "Sản phẩm '%s' vừa có lượt đặt giá mới: %s.",
             SELLER_AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_SELLER(
             "Phiên đấu giá của bạn đã kết thúc",
-            "Phiên đấu giá '%s' đã kết thúc. Giá thắng cuộc: $%s — người thắng: %s.",
+            "Phiên đấu giá '%s' đã kết thúc. Giá thắng cuộc: %s — người thắng: %s.",
             SELLER_AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_NO_BIDS(
@@ -63,12 +63,12 @@ public enum NotificationType {
             "Phiên đấu giá '%s' đã kết thúc mà không có lượt đặt giá nào.",
             SELLER_AUCTION_DETAIL_URL
     ),
-    AUCTION_APPROVED(
+    AUCTION_APPROVED( // Pending
             "Phiên đấu giá đã được phê duyệt",
             "Phiên đấu giá '%s' của bạn đã được kiểm duyệt và sẽ bắt đầu vào lúc %s.",
             SELLER_AUCTION_DETAIL_URL
     ),
-    AUCTION_REJECTED(
+    AUCTION_REJECTED( // Pending
             "Phiên đấu giá bị từ chối",
             "Phiên đấu giá '%s' của bạn bị từ chối kiểm duyệt. Lý do: %s.",
             SELLER_AUCTION_DETAIL_URL
@@ -78,7 +78,7 @@ public enum NotificationType {
 
     SELLER_REGISTRATION_APPROVED(
             "Đăng ký tài khoản người bán đã được chấp thuận",
-            "Chúc mừng! Tài khoản người bán của bạn đã được phê duyệt. Bạn có thể bắt đầu đăng phiên đấu giá ngay bây giờ.",
+            "Chúc mừng! Bạn đã trở thành người bán. Hãy đăng nhập lại để có hiệu lực",
             SELLER_DASHBOARD_URL
     ),
     SELLER_REGISTRATION_REJECTED(
@@ -86,12 +86,12 @@ public enum NotificationType {
             "Yêu cầu đăng ký người bán của bạn bị từ chối. Lý do: %s.",
             SELLER_REGISTRATION_URL
     ),
-    ACCOUNT_LOCKED(
-            "Tài khoản của bạn đã bị khóa",
-            "Tài khoản của bạn đã bị khóa vào lúc %s. Lý do: %s. Vui lòng liên hệ bộ phận hỗ trợ để được giải quyết.",
-            SUPPORT_CONTACT_URL
+    REVOKE_SELLER_ROLE(
+            "Thu hồi quyền người bán",
+            "Quyền người bán của bạn đã bị thu hồi. Lý do: %s. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.",
+            SELLER_REGISTRATION_URL
     ),
-    ACCOUNT_SECURITY_ALERT(
+    ACCOUNT_SECURITY_ALERT( // Pending
             "Cảnh báo bảo mật tài khoản",
             "Chúng tôi phát hiện đăng nhập bất thường vào tài khoản của bạn lúc %s từ thiết bị %s. Nếu không phải bạn, hãy đổi mật khẩu ngay.",
             ACCOUNT_SECURITY_URL
@@ -99,12 +99,12 @@ public enum NotificationType {
 
     // ==================== SYSTEM ====================
 
-    FRAUD_DETECTION_ALERT(
+    FRAUD_DETECTION_ALERT( // Pending
             "Cảnh báo gian lận",
             "Hệ thống phát hiện hoạt động đáng ngờ liên quan đến tài khoản của bạn vào lúc %s.",
             ACCOUNT_VERIFY_URL
     ),
-    SYSTEM_ANNOUNCEMENT(
+    SYSTEM_ANNOUNCEMENT( // Pending
             "Thông báo hệ thống",
             "%s",
             "%s"
@@ -141,9 +141,8 @@ public enum NotificationType {
 
         public static final String AUCTION_DETAIL_URL = "/auction/%d";
         public static final String SELLER_AUCTION_DETAIL_URL = "/seller/auctions/%d";
-        public static final String SELLER_DASHBOARD_URL = "/seller/dashboard";
+        public static final String SELLER_DASHBOARD_URL = "/seller";
         public static final String SELLER_REGISTRATION_URL = "/account/seller-reg";
-        public static final String SUPPORT_CONTACT_URL = "/support/contact";
         public static final String ACCOUNT_SECURITY_URL = "/account/security-logs";
         public static final String ACCOUNT_VERIFY_URL = "/account/verify";
     }

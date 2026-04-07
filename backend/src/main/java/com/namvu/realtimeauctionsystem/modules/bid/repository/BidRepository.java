@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface BidRepository extends JpaRepository<Bid, Long> {
@@ -36,6 +37,10 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
 
     @EntityGraph(attributePaths = {"bidder"})
     Page<Bid> findByAuctionIdOrderByCreatedAtDesc(Long auctionId, Pageable pageable);
+
+    @Query("SELECT DISTINCT b.bidder.id FROM Bid b " +
+            "WHERE b.auction.id = :auctionId ")
+    Set<Long> findAllBidderIdsByAuctionId(@Param("auctionId") Long auctionId);
 
     // Helper method
     default List<Bid> findTop10ByBidderIdAndAuctionIdOrderByCreatedAtDesc(Long bidderId, Long auctionId) {

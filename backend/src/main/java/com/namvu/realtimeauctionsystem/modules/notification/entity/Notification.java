@@ -3,7 +3,7 @@ package com.namvu.realtimeauctionsystem.modules.notification.entity;
 import com.namvu.realtimeauctionsystem.common.entity.Auditable;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 
-import com.namvu.realtimeauctionsystem.common.constant.NotificationType;
+import com.namvu.realtimeauctionsystem.common.constant.NotificationConstant;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,8 +27,8 @@ public class Notification extends Auditable {
     private User recipient;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private NotificationType type;
+    @Column(nullable = false, length = 50)
+    private NotificationConstant type;
 
     private String content;
 

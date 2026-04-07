@@ -1,8 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.bid.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.namvu.realtimeauctionsystem.common.constant.NotificationType;
-import com.namvu.realtimeauctionsystem.common.utils.MoneyUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidEvent;
 import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
@@ -44,42 +42,16 @@ public class BidEventConsumerV2 {
                     event
             );
 
-            handlePushNotification(event);
-
             // Manual commit sau khi xử lý thành công
             ack.acknowledge();
+
+            String title = redisAuctionService.getAuctionTitle(event.getAuctionId());
+            BigDecimal currentPrice = redisAuctionService.getCurrentPrice(event.getAuctionId());
+            notificationService.processBidNotifications(event, title, currentPrice);
 
         } catch (Exception e) {
             log.error("Failed to process bid event at offset {}: {}", consumerRecord.offset(), e.getMessage());
             // Không ack → Kafka retry
-        }
-    }
-
-    private void handlePushNotification(BidEvent event) {
-        String title = redisAuctionService.getAuctionTitle(event.getAuctionId());
-        BigDecimal currentPrice = redisAuctionService.getCurrentPrice(event.getAuctionId());
-
-        // Xử lý gửi Notification: OUTBID
-        // Chỉ gửi khi có người từng dẫn đầu trước đó và không phải tự outbid chính mình
-        if (event.getPreviousBidderId() != null && event.getPreviousBidderId() > 0
-                && !event.getPreviousBidderId().equals(event.getBidderId())) {
-
-            NotificationType type = NotificationType.OUTBID;
-            String content = type.buildContent(title, MoneyUtils.format(currentPrice));
-            String redirectUrl = type.buildRedirectUrl(event.getAuctionId());
-
-            notificationService.createAndPushNotification(event.getPreviousBidderId(), type, content, redirectUrl);
-        }
-
-        // Xử lý gửi Notification: BID_PLACED (Chỉ gửi cho người bán - Seller)
-        if (event.getSellerId() != null && event.getSellerId() > 0
-                && !event.getSellerId().equals(event.getBidderId())) {
-
-            NotificationType type = NotificationType.BID_PLACED;
-            String content = type.buildContent(title, MoneyUtils.format(currentPrice));
-            String redirectUrl = type.buildRedirectUrl(event.getAuctionId());
-
-            notificationService.createAndPushNotification(event.getSellerId(), type, content, redirectUrl);
         }
     }
 }
