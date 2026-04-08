@@ -8,6 +8,8 @@ import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Set;
+
 public interface UserService {
     PageResponse<ManagerUserResponse> getUsers(String keyword, Role role, UserStatus status, Pageable pageable);
 
@@ -28,4 +30,6 @@ public interface UserService {
     User saveUser(User user);
 
     User getUserReference(Long userId);
+
+    Set<Long> getAllAdminIds();
 }

@@ -12,8 +12,9 @@ import {
 } from "../types";
 import axiosClient from "./axiosClient";
 import { extractErrorMessage } from "./apiUtils";
+import { ENV } from "../config/env";
 
-const API_BASE_URL = "http://localhost:8080/api/v1";
+const API_BASE_URL = ENV.API_V1_URL;
 
 export const authApi = {
   // Step 1: Exchange authorization code for tokens
@@ -35,7 +36,12 @@ export const authApi = {
       const response = await axios.post<ApiResponse<AuthenticationResponse>>(
         `${API_BASE_URL}/auth/oauth2/authentication?code=${encodeURIComponent(request.code)}`,
         {},
-        { signal: controller.signal },
+        {
+          signal: controller.signal,
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        },
       );
 
       clearTimeout(timeoutId);

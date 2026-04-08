@@ -3,7 +3,6 @@ package com.namvu.realtimeauctionsystem.modules.auth.service.impl;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.TokenType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.utils.RequestUtils;
-import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.auth.dto.*;
 import com.namvu.realtimeauctionsystem.modules.auth.service.AuthenticationService;
 import com.namvu.realtimeauctionsystem.modules.auth.service.BlacklistTokenService;

@@ -44,4 +44,6 @@ public interface NotificationService {
     void processRejectSellerNotifications(Long userId, String reason);
 
     void processRevokeSellerNotifications(Long userId, String reason);
+
+    void processApplySellerNotifications(Set<Long> adminIds);
 }

@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { authApi } from "../api/authApi";
 import { ExchangeTokenRequest } from "../types";
+import { ENV } from "../config/env";
 
 export const useAuth = () => {
   const {
@@ -33,11 +34,10 @@ export const useAuth = () => {
 
   const loginWithGoogle = useCallback(async () => {
     try {
-      const GOOGLE_CLIENT_ID =
-        "409023234267-l0ug806esjusfroo43fmmm5bcq24rc65.apps.googleusercontent.com";
-      const REDIRECT_URI = `${window.location.origin}/auth/callback`;
+      const GOOGLE_CLIENT_ID = ENV.GOOGLE_CLIENT_ID;
+      const REDIRECT_URI = ENV.GOOGLE_REDIRECT_URI;
 
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?${new URLSearchParams(
+      const googleAuthUrl = `${ENV.GOOGLE_AUTH_URL}?${new URLSearchParams(
         {
           client_id: GOOGLE_CLIENT_ID,
           redirect_uri: REDIRECT_URI,

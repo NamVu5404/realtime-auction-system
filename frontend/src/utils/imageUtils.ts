@@ -1,11 +1,12 @@
 import DEFAULT_IMAGE_LOCAL from "../assets/images/default-auction-image.jpg";
+import { ENV } from "../config/env";
 
 /**
  * Image Utility Functions
  */
 
 // Base URL for images served by the backend (includes context-path /api)
-export const API_IMAGE_BASE = "http://localhost:8080/api/uploads";
+export const API_IMAGE_BASE = ENV.IMAGE_BASE_URL;
 
 /**
  * Placeholder image for auctions

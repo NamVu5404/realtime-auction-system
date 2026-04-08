@@ -57,6 +57,9 @@ public class SellerRegServiceImpl implements SellerRegService {
                         .build()
         );
 
+        // Push notification cho Admin
+        notificationService.processApplySellerNotifications(userService.getAllAdminIds());
+
         return SellerRegResponse.builder()
                 .id(res.getId())
                 .user(userMapper.mapToResponse(user))

@@ -6,14 +6,16 @@ import axios, {
 } from "axios";
 import { useAuthStore } from "../store/useAuthStore";
 import { useUIStore } from "../store/useUIStore";
+import { ENV } from "../config/env";
 
-const API_BASE_URL = "http://localhost:8080/api/v1";
+const API_BASE_URL = ENV.API_V1_URL;
 
 // Create axios instance
 const axiosClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": "true",
   },
 });
 

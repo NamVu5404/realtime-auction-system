@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -49,4 +50,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             WHERE u.id = :id AND u.status != :status AND com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role.ADMIN NOT MEMBER OF u.roles
             """)
     void updateStatus(@Param("id") Long id, @Param("status") UserStatus status, @Param("updatedAt") Instant updatedAt);
+
+    @Query("""
+            SELECT DISTINCT u.id FROM User u
+            WHERE 'ADMIN' MEMBER OF u.roles AND u.status = 'ACTIVE'
+            """)
+    Set<Long> findAllAdminIds();
 }

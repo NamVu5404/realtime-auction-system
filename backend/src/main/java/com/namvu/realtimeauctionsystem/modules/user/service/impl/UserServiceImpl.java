@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -160,5 +161,11 @@ public class UserServiceImpl implements UserService {
         user = userRepository.save(user);
 
         return userMapper.mapToResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Set<Long> getAllAdminIds() {
+        return userRepository.findAllAdminIds();
     }
 }

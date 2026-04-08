@@ -23,6 +23,7 @@ import sellerApi from "../../api/sellerApi";
 import { RequestStatus, UserRole } from "../../api/types";
 import sellerBg from "../../assets/images/seller-reg-bg.png";
 import { useAuthStore } from "../../store/useAuthStore";
+import { ENV } from "../../config/env";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -336,7 +337,7 @@ const SellerRegPage = () => {
                 >
                   By applying, you agree to our{" "}
                   <a
-                    href="https://auctionpro-psi.vercel.app/seller-terms/"
+                      href={ENV.SELLER_TERMS_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}

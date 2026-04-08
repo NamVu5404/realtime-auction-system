@@ -274,6 +274,19 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    @Override
+    public void processApplySellerNotifications(Set<Long> adminIds) {
+        try {
+            NotificationConstant type = NotificationConstant.REQUEST_APPLY_SELLER;
+
+            adminIds.forEach(adminId ->
+                    self().createAndPushNotification(adminId, type, type.getContent(), type.getRedirectUrl())
+            );
+        } catch (Exception e) {
+            log.warn("Failed to process apply seller notifications for admins {}: {}", adminIds, e.getMessage());
+        }
+    }
+
     private void pushNotification(Notification notification) {
         NotificationResponse response = notificationMapper.mapToResponse(notification);
 

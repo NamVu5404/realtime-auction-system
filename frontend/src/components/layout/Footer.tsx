@@ -10,10 +10,24 @@ import {
 } from "@ant-design/icons";
 import { Col, Layout, Row, Space } from "antd";
 import logo from "../../assets/images/logo.png";
+import { ENV, buildPublicSiteUrl } from "../../config/env";
 
 const { Footer: AntFooter } = Layout;
 
 export const Footer = () => {
+  const repoUrl = ENV.REPO_URL;
+  const links = {
+    howToBid: buildPublicSiteUrl("/how-to-bid/"),
+    buyersPremium: buildPublicSiteUrl("/buyers-premium/"),
+    authentication: buildPublicSiteUrl("/authentication/"),
+    shipping: buildPublicSiteUrl("/shipping/"),
+    helpCenter: buildPublicSiteUrl("/help-center/"),
+    aboutUs: buildPublicSiteUrl("/about-us/"),
+    privacyPolicy: buildPublicSiteUrl("/privacy-policy/"),
+    termsOfService: buildPublicSiteUrl("/terms-of-service/"),
+    cookiePolicy: buildPublicSiteUrl("/cookie-policy/"),
+  };
+
   return (
     <AntFooter
       style={{
@@ -68,7 +82,7 @@ export const Footer = () => {
             </p>
             <Space size="middle">
               <a
-                href="https://github.com/NamVu5404/realtime-auction-system"
+                href={repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
@@ -76,7 +90,7 @@ export const Footer = () => {
                 <FacebookFilled />
               </a>
               <a
-                href="https://github.com/NamVu5404/realtime-auction-system"
+                href={repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
@@ -84,7 +98,7 @@ export const Footer = () => {
                 <TwitterOutlined />
               </a>
               <a
-                href="https://github.com/NamVu5404/realtime-auction-system"
+                href={repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
@@ -92,7 +106,7 @@ export const Footer = () => {
                 <InstagramOutlined />
               </a>
               <a
-                href="https://github.com/NamVu5404/realtime-auction-system"
+                href={repoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
@@ -148,7 +162,7 @@ export const Footer = () => {
             </h4>
             <div className="flex flex-col space-y-3">
               <a
-                href="https://auctionpro-psi.vercel.app/how-to-bid/"
+                href={links.howToBid}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
@@ -156,7 +170,7 @@ export const Footer = () => {
                 How to Bid
               </a>
               <a
-                href="https://auctionpro-psi.vercel.app/buyers-premium/"
+                href={links.buyersPremium}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
@@ -164,7 +178,7 @@ export const Footer = () => {
                 Buyer's Premium
               </a>
               <a
-                href="https://auctionpro-psi.vercel.app/authentication/"
+                href={links.authentication}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
@@ -172,7 +186,7 @@ export const Footer = () => {
                 Authentication Process
               </a>
               <a
-                href="https://auctionpro-psi.vercel.app/shipping/"
+                href={links.shipping}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
@@ -180,7 +194,7 @@ export const Footer = () => {
                 Shipping & Delivery
               </a>
               <a
-                href="https://auctionpro-psi.vercel.app/help-center/"
+                href={links.helpCenter}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
@@ -198,7 +212,7 @@ export const Footer = () => {
             <div className="flex items-center mb-4">
               <TeamOutlined className="text-[#FED469] text-[16px] mr-3" />
               <a
-                href="https://auctionpro-psi.vercel.app/about-us/"
+                href={links.aboutUs}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
@@ -215,7 +229,7 @@ export const Footer = () => {
             <div className="flex items-center mb-4">
               <PhoneOutlined className="text-[#FED469] text-[16px] mr-3" />
               <a
-                href="tel:+84988988888"
+                href={ENV.CONTACT_PHONE_URL}
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 +84 9889 88888
@@ -224,7 +238,7 @@ export const Footer = () => {
             <div className="flex items-center">
               <MailOutlined className="text-[#FED469] text-[16px] mr-3" />
               <a
-                href="mailto:contact@auctionpro.com"
+                href={ENV.CONTACT_EMAIL_URL}
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 contact@auctionpro.com
@@ -240,7 +254,7 @@ export const Footer = () => {
           </p>
           <div className="flex items-center space-x-4">
             <a
-              href="https://auctionpro-psi.vercel.app/privacy-policy/"
+              href={links.privacyPolicy}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/40 hover:text-[#FED469] transition-colors duration-300 text-[12px]"
@@ -249,7 +263,7 @@ export const Footer = () => {
             </a>
             <span className="text-white/10 text-[12px]">|</span>
             <a
-              href="https://auctionpro-psi.vercel.app/terms-of-service/"
+              href={links.termsOfService}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/40 hover:text-[#FED469] transition-colors duration-300 text-[12px]"
@@ -258,7 +272,7 @@ export const Footer = () => {
             </a>
             <span className="text-white/10 text-[12px]">|</span>
             <a
-              href="https://auctionpro-psi.vercel.app/cookie-policy/"
+              href={links.cookiePolicy}
               target="_blank"
               rel="noopener noreferrer"
               className="text-white/40 hover:text-[#FED469] transition-colors duration-300 text-[12px]"

@@ -76,6 +76,11 @@ public enum NotificationConstant {
 
     // ==================== ACCOUNT ====================
 
+    REQUEST_APPLY_SELLER(
+            "Yêu cầu đăng ký người bán",
+            "Bạn có một yêu cầu đăng ký người bán mới. Vui lòng xem xét và phê duyệt.",
+            ADMIN_SELLER_MANAGEMENT
+    ),
     SELLER_REGISTRATION_APPROVED(
             "Đăng ký tài khoản người bán đã được chấp thuận",
             "Chúc mừng! Bạn đã trở thành người bán. Hãy đăng nhập lại để có hiệu lực",
@@ -145,5 +150,6 @@ public enum NotificationConstant {
         public static final String SELLER_REGISTRATION_URL = "/account/seller-reg";
         public static final String ACCOUNT_SECURITY_URL = "/account/security-logs";
         public static final String ACCOUNT_VERIFY_URL = "/account/verify";
+        public static final String ADMIN_SELLER_MANAGEMENT = "/admin/sellers?tab=requests";
     }
 }

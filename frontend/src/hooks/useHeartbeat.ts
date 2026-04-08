@@ -3,6 +3,7 @@ import { Client } from "@stomp/stompjs";
 // @ts-ignore - sockjs-client doesn't have TypeScript definitions
 import SockJS from "sockjs-client";
 import { useUIStore } from "../store/useUIStore";
+import { ENV } from "../config/env";
 
 const HEARTBEAT_TOPIC = "/topic/heartbeat";
 const HEARTBEAT_TIMEOUT_MS = 12000; // 2 missed PINGs (5s each) + 2s buffer
@@ -25,8 +26,7 @@ export const useHeartbeat = () => {
   const lastPingTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
-    const wsUrl =
-      (import.meta as any).env?.VITE_WS_URL || "http://localhost:8080/api/ws";
+    const wsUrl = ENV.WS_URL;
 
     const client = new Client({
       webSocketFactory: () => new SockJS(wsUrl),

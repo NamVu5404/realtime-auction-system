@@ -12,6 +12,7 @@ import {
   PlaceBidResponseV2,
   AuctionAuditResponse,
 } from "./types";
+import { ENV } from "../config/env";
 
 /**
  * Auction API Service
@@ -118,7 +119,7 @@ export const auctionApi = {
     try {
       // NOTE: We manually override baseURL for V2 endpoint
       const response = await axiosClient.post<ApiResponse<PlaceBidResponseV2>>(
-        `http://localhost:8080/api/v2/auctions/${auctionId}/bids`,
+        `${ENV.API_V2_URL}/auctions/${auctionId}/bids`,
         {
           amount,
         },
@@ -204,9 +205,7 @@ export const auctionApi = {
    * @param auctionId - Auction ID
    * @returns Promise with AuctionStateSnapshot
    */
-  getAuctionState: async (
-    auctionId: number,
-  ): Promise<AuctionStateSnapshot> => {
+  getAuctionState: async (auctionId: number): Promise<AuctionStateSnapshot> => {
     try {
       const response = await axiosClient.get<ApiResponse<AuctionStateSnapshot>>(
         `/auctions/${auctionId}/state`,

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 // @ts-ignore - sockjs-client doesn't have TypeScript definitions
 import SockJS from "sockjs-client";
 import type { BidUpdateMessage } from "../api/types";
+import { ENV } from "../config/env";
 
 interface UseWebSocketOptions {
   onPriceUpdate?: (event: BidUpdateMessage) => void;
@@ -22,8 +23,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}) => {
    * Only depend on individual callbacks, not the options object
    */
   const client = useMemo(() => {
-    const wsUrl =
-      (import.meta as any).env.VITE_WS_URL || "http://localhost:8080/api/ws";
+    const wsUrl = ENV.WS_URL;
 
     return new Client({
       webSocketFactory: () => {

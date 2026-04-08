@@ -1,5 +1,6 @@
 import { Modal, Button, Space } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
+import { ENV } from "../config/env";
 
 interface LoginModalProps {
   visible: boolean;
@@ -14,9 +15,8 @@ interface LoginModalProps {
  * (e.g., placing a bid). Provides direct access to Google OAuth login flow.
  */
 export const LoginModal = ({ visible, onClose, onLoginClick }: LoginModalProps) => {
-  const GOOGLE_CLIENT_ID =
-    "409023234267-l0ug806esjusfroo43fmmm5bcq24rc65.apps.googleusercontent.com";
-  const REDIRECT_URI = `${window.location.origin}/auth/callback`;
+  const GOOGLE_CLIENT_ID = ENV.GOOGLE_CLIENT_ID;
+  const REDIRECT_URI = ENV.GOOGLE_REDIRECT_URI;
 
   const handleGoogleLogin = () => {
     // Save current URL to return after login
@@ -38,7 +38,7 @@ export const LoginModal = ({ visible, onClose, onLoginClick }: LoginModalProps) 
     });
 
     // Use v2 endpoint (recommended)
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    const googleAuthUrl = `${ENV.GOOGLE_AUTH_URL}?${params.toString()}`;
     
     // Call the callback if provided
     onLoginClick();
