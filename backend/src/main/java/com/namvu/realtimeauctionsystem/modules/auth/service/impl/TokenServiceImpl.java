@@ -4,7 +4,7 @@ import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.TokenTyp
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
-import com.namvu.realtimeauctionsystem.modules.auth.repository.InvalidatedTokenRepository;
+import com.namvu.realtimeauctionsystem.modules.auth.service.BlacklistTokenService;
 import com.namvu.realtimeauctionsystem.modules.auth.service.TokenService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TokenServiceImpl implements TokenService {
 
-    private final InvalidatedTokenRepository invalidatedTokenRepository;
+    private final BlacklistTokenService blacklistTokenService;
 
     @Value("${jwt.access-key}")
     private String accessKey;
@@ -100,7 +100,7 @@ public class TokenServiceImpl implements TokenService {
         if (!(verified && expirationDate.after(new Date())))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
-        if (invalidatedTokenRepository.existsById(jti))
+        if (blacklistTokenService.isBlacklisted(jti))
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         return signedJWT;

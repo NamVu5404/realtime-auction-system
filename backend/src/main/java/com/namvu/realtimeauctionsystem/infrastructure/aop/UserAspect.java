@@ -1,7 +1,7 @@
 package com.namvu.realtimeauctionsystem.infrastructure.aop;
 
-import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.constant.UserActionType;
+import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
@@ -37,7 +37,7 @@ public class UserAspect {
     private final AuthenticationService authenticationService;
 
     @AfterReturning(
-            value = "execution(* com.namvu.realtimeauctionsystem.modules.auth.controller.OutboundAuthenticationController.outboundAuthentication(..))",
+            value = "execution(* com.namvu.realtimeauctionsystem.modules.auth.controller.Oauth2AuthenticationController.oauth2Authentication(..))",
             returning = "response"
     )
     public void afterLoginReturning(ApiResponse<AuthenticationResponse> response) {
@@ -50,8 +50,8 @@ public class UserAspect {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         InfoOsDto info = authenticationService.getRequestInfo(request);
 
-        log.info("User Login from: IP: {}, Browser: {}, OS: {}, Device: {}",
-                info.getClientAddress(), info.getBrowser(), info.getOs(), info.getDevice());
+        log.info("User {} Login from: IP: {}, Browser: {}, OS: {}, Device: {}",
+                userId, info.getClientAddress(), info.getBrowser(), info.getOs(), info.getDevice());
 
         Map<String, Object> details = new HashMap<>();
         details.put("IP", info.getClientAddress());
@@ -75,13 +75,19 @@ public class UserAspect {
             return;
         }
 
-        Long userId = SecurityUtils.getCurrentUserId();
+        Long userId;
+
+        try {
+            userId = SecurityUtils.getCurrentUserId();
+        } catch (Exception e) {
+            return;
+        }
 
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         InfoOsDto info = authenticationService.getRequestInfo(request);
 
-        log.info("User Logout from: IP: {}, Browser: {}, OS: {}, Device: {}",
-                info.getClientAddress(), info.getBrowser(), info.getOs(), info.getDevice());
+        log.info("User {} Logout from: IP: {}, Browser: {}, OS: {}, Device: {}",
+                userId, info.getClientAddress(), info.getBrowser(), info.getOs(), info.getDevice());
 
         Map<String, Object> details = new HashMap<>();
         details.put("IP", info.getClientAddress());

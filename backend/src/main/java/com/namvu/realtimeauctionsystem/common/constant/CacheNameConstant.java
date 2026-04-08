@@ -5,6 +5,8 @@ public final class CacheNameConstant {
         /* This utility class should not be instantiated */
     }
 
+    public static final String BLACKLISTED_TOKEN_PREFIX = "blacklist:jti:";
+
     public static final String AUCTIONS = "auctions";
     public static final String NOTIFICATION_COUNT = "notificationCount";
     public static final String NOTIFICATION_BELL = "notificationBell";

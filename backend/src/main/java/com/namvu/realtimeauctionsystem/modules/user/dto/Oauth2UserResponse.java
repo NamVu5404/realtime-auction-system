@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class OutboundUserResponse {
+public class Oauth2UserResponse {
     private String email;
     private String name;
     private String phoneNumber;

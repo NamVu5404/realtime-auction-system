@@ -33,7 +33,7 @@ export const authApi = {
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
       const response = await axios.post<ApiResponse<AuthenticationResponse>>(
-        `${API_BASE_URL}/auth/outbound/authentication?code=${encodeURIComponent(request.code)}`,
+        `${API_BASE_URL}/auth/oauth2/authentication?code=${encodeURIComponent(request.code)}`,
         {},
         { signal: controller.signal },
       );
