@@ -53,6 +53,10 @@ public enum SuccessCode {
     ALL_NOTIFICATIONS_READ(1701, "All notifications marked as read", HttpStatus.OK),
     NOTIFICATION_DELETED(1702, "Notification deleted", HttpStatus.OK),
     ALL_NOTIFICATIONS_DELETED(1703, "All notifications deleted", HttpStatus.OK),
+
+    // Contact (18xx)
+    CONTACT_SUBMITTED(1800, "Contact inquiry submitted successfully", HttpStatus.CREATED),
+    CONTACT_PROCESSED(1801, "Contact inquiry marked as processed", HttpStatus.OK),
     ;
 
     private final int code;

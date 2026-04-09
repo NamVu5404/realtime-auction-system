@@ -7,6 +7,7 @@ import {
   LogoutOutlined,
   UserOutlined,
   ShopOutlined,
+  MailOutlined,
 } from "@ant-design/icons";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -65,6 +66,12 @@ const AdminLayout = () => {
       icon: <ShopOutlined />,
       label: "Seller Management",
       onClick: () => navigate("/admin/sellers"),
+    },
+    {
+      key: "contacts",
+      icon: <MailOutlined />,
+      label: "Contact",
+      onClick: () => navigate("/admin/contacts"),
     },
   ];
 

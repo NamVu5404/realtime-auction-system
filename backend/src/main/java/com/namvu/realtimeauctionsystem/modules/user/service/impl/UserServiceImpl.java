@@ -69,9 +69,7 @@ public class UserServiceImpl implements UserService {
         }
 
         Instant now = Instant.now();
-        user.setStatus(UserStatus.BLOCKED);
-        user.setUpdatedAt(now);
-        userRepository.save(user);
+        userRepository.updateStatus(userId, UserStatus.BLOCKED, now);
 
         String blockedBy = SecurityUtils.getCurrentUserEmail();
 

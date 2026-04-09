@@ -28,7 +28,7 @@ public class SecurityConfig {
     private List<String> allowedOriginPatterns;
 
     private static final String[] PUBLIC_POST_ENDPOINTS = {
-            "/v1/auth/**",
+            "/v1/auth/**", "/v1/contacts"
     };
 
     private static final String[] PUBLIC_GET_ENDPOINTS = {

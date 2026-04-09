@@ -44,8 +44,8 @@ const { TextArea } = Input;
 
 const SellerManagementPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const regPage = parseInt(searchParams.get("regPage") || "1", 10);
-  const sellerPage = parseInt(searchParams.get("sellerPage") || "1", 10);
+  const regPage = parseInt(searchParams.get("regPage") || "1", 20);
+  const sellerPage = parseInt(searchParams.get("sellerPage") || "1", 20);
 
   const setRegPage = (p: number) => {
     const newParams = new URLSearchParams(searchParams);
@@ -82,13 +82,13 @@ const SellerManagementPage: React.FC = () => {
   // Queries
   const { data: registrations, isLoading: isRegLoading } = useQuery({
     queryKey: ["seller-registrations", regPage],
-    queryFn: () => adminApi.getRegistrations(regPage, 10),
+    queryFn: () => adminApi.getRegistrations(regPage, 20),
   });
 
   const { data: sellers, isLoading: isSellersLoading } = useQuery({
     queryKey: ["sellers-list", sellerPage],
     queryFn: () =>
-      adminApi.getUsers(sellerPage, 10, undefined, UserRole.SELLER),
+      adminApi.getUsers(sellerPage, 20, undefined, UserRole.SELLER),
   });
 
   // Mutations
@@ -320,7 +320,7 @@ const SellerManagementPage: React.FC = () => {
           scroll={{ x: "max-content" }}
           pagination={{
             current: sellerPage,
-            pageSize: 10,
+            pageSize: 20,
             total: sellers?.totalElements || 0,
             onChange: (p) => setSellerPage(p),
             showSizeChanger: false,
@@ -360,7 +360,7 @@ const SellerManagementPage: React.FC = () => {
           scroll={{ x: "max-content" }}
           pagination={{
             current: regPage,
-            pageSize: 10,
+            pageSize: 20,
             total: registrations?.totalElements || 0,
             onChange: (p) => setRegPage(p),
             showSizeChanger: false,
