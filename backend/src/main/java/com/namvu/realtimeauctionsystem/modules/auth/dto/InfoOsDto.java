@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class InfoOsDto {
     private String clientAddress;
+    private String location;
     private String browser;
     private String os;
     private String device;

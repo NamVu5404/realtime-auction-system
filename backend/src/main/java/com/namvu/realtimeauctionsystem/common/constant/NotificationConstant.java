@@ -63,12 +63,12 @@ public enum NotificationConstant {
             "Phiên đấu giá '%s' đã kết thúc mà không có lượt đặt giá nào.",
             SELLER_AUCTION_DETAIL_URL
     ),
-    AUCTION_APPROVED( // Pending
+    AUCTION_APPROVED( // Pending + mail
             "Phiên đấu giá đã được phê duyệt",
             "Phiên đấu giá '%s' của bạn đã được kiểm duyệt và sẽ bắt đầu vào lúc %s.",
             SELLER_AUCTION_DETAIL_URL
     ),
-    AUCTION_REJECTED( // Pending
+    AUCTION_REJECTED( // Pending + mail
             "Phiên đấu giá bị từ chối",
             "Phiên đấu giá '%s' của bạn bị từ chối kiểm duyệt. Lý do: %s.",
             SELLER_AUCTION_DETAIL_URL
@@ -79,24 +79,24 @@ public enum NotificationConstant {
     REQUEST_APPLY_SELLER(
             "Yêu cầu đăng ký người bán",
             "Bạn có một yêu cầu đăng ký người bán mới. Vui lòng xem xét và phê duyệt.",
-            ADMIN_SELLER_MANAGEMENT
+            ADMIN_SELLER_MANAGEMENT_URL
     ),
-    SELLER_REGISTRATION_APPROVED(
+    SELLER_REGISTRATION_APPROVED( // mail
             "Đăng ký tài khoản người bán đã được chấp thuận",
             "Chúc mừng! Bạn đã trở thành người bán. Hãy đăng nhập lại để có hiệu lực",
             SELLER_DASHBOARD_URL
     ),
-    SELLER_REGISTRATION_REJECTED(
+    SELLER_REGISTRATION_REJECTED( // mail
             "Đăng ký tài khoản người bán bị từ chối",
             "Yêu cầu đăng ký người bán của bạn bị từ chối. Lý do: %s.",
             SELLER_REGISTRATION_URL
     ),
-    REVOKE_SELLER_ROLE(
+    REVOKE_SELLER_ROLE( // mail
             "Thu hồi quyền người bán",
             "Quyền người bán của bạn đã bị thu hồi. Lý do: %s. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.",
             SELLER_REGISTRATION_URL
     ),
-    ACCOUNT_SECURITY_ALERT( // Pending
+    ACCOUNT_SECURITY_ALERT( // Pending + mail
             "Cảnh báo bảo mật tài khoản",
             "Chúng tôi phát hiện đăng nhập bất thường vào tài khoản của bạn lúc %s từ thiết bị %s. Nếu không phải bạn, hãy đổi mật khẩu ngay.",
             ACCOUNT_SECURITY_URL
@@ -104,12 +104,12 @@ public enum NotificationConstant {
 
     // ==================== SYSTEM ====================
 
-    FRAUD_DETECTION_ALERT( // Pending
+    FRAUD_DETECTION_ALERT( // Pending + mail
             "Cảnh báo gian lận",
             "Hệ thống phát hiện hoạt động đáng ngờ liên quan đến tài khoản của bạn vào lúc %s.",
             ACCOUNT_VERIFY_URL
     ),
-    SYSTEM_ANNOUNCEMENT( // Pending
+    SYSTEM_ANNOUNCEMENT( // Pending + mail
             "Thông báo hệ thống",
             "%s",
             "%s"
@@ -150,6 +150,6 @@ public enum NotificationConstant {
         public static final String SELLER_REGISTRATION_URL = "/account/seller-reg";
         public static final String ACCOUNT_SECURITY_URL = "/account/security-logs";
         public static final String ACCOUNT_VERIFY_URL = "/account/verify";
-        public static final String ADMIN_SELLER_MANAGEMENT = "/admin/sellers?tab=requests";
+        public static final String ADMIN_SELLER_MANAGEMENT_URL = "/admin/sellers?tab=requests";
     }
 }

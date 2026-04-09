@@ -16,4 +16,5 @@ public class SellerRegResponse {
     private Instant approvedAt;
     private String rejectReason;
     private Instant createdAt;
+    private String updatedBy;
 }

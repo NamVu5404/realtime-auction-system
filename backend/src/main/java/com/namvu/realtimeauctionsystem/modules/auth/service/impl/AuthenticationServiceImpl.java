@@ -6,6 +6,7 @@ import com.namvu.realtimeauctionsystem.common.utils.RequestUtils;
 import com.namvu.realtimeauctionsystem.modules.auth.dto.*;
 import com.namvu.realtimeauctionsystem.modules.auth.service.AuthenticationService;
 import com.namvu.realtimeauctionsystem.modules.auth.service.BlacklistTokenService;
+import com.namvu.realtimeauctionsystem.modules.auth.service.IpLocationService;
 import com.namvu.realtimeauctionsystem.modules.auth.service.TokenService;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
@@ -28,6 +29,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final UserService userService;
     private final TokenService tokenService;
     private final BlacklistTokenService blacklistTokenService;
+    private final IpLocationService ipLocationService;
 
     private static final String UNKNOWN_VALUE = "Unknown";
 
@@ -89,11 +91,15 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 device = userAgent.device.family;
         }
 
+        String ip = RequestUtils.getIpAddress(request);
+        String location = ipLocationService.getLocationString(ip);
+
         return InfoOsDto.builder()
                 .browser(browser)
                 .os(os)
                 .device(device)
-                .clientAddress(RequestUtils.getIpAddress(request))
+                .clientAddress(ip)
+                .location(location)
                 .build();
     }
 

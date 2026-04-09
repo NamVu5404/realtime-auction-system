@@ -50,11 +50,12 @@ public class UserAspect {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         InfoOsDto info = authenticationService.getRequestInfo(request);
 
-        log.info("User {} Login from: IP: {}, Browser: {}, OS: {}, Device: {}",
-                userId, info.getClientAddress(), info.getBrowser(), info.getOs(), info.getDevice());
+        log.info("User {} Login from: IP: {}, Location: {}, Browser: {}, OS: {}, Device: {}",
+                userId, info.getClientAddress(), info.getLocation(), info.getBrowser(), info.getOs(), info.getDevice());
 
         Map<String, Object> details = new HashMap<>();
         details.put("IP", info.getClientAddress());
+        details.put("Location", info.getLocation());
         details.put("Browser", info.getBrowser());
         details.put("OS", info.getOs());
         details.put("Device", info.getDevice());
@@ -86,11 +87,12 @@ public class UserAspect {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         InfoOsDto info = authenticationService.getRequestInfo(request);
 
-        log.info("User {} Logout from: IP: {}, Browser: {}, OS: {}, Device: {}",
-                userId, info.getClientAddress(), info.getBrowser(), info.getOs(), info.getDevice());
+        log.info("User {} Logout from: IP: {}, Location: {}, Browser: {}, OS: {}, Device: {}",
+                userId, info.getClientAddress(), info.getLocation(), info.getBrowser(), info.getOs(), info.getDevice());
 
         Map<String, Object> details = new HashMap<>();
         details.put("IP", info.getClientAddress());
+        details.put("Location", info.getLocation());
         details.put("Browser", info.getBrowser());
         details.put("OS", info.getOs());
         details.put("Device", info.getDevice());

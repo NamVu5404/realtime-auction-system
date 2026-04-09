@@ -185,24 +185,6 @@ const SellerManagementPage: React.FC = () => {
       ),
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: RequestStatus) => {
-        let color = "blue";
-        if (status === RequestStatus.APPROVED) color = "green";
-        if (status === RequestStatus.REJECTED) color = "red";
-        return <Tag color={color}>{status}</Tag>;
-      },
-    },
-    {
-      title: "Applied At",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string) =>
-        date ? dayjs(date).format("YYYY-MM-DD HH:mm") : "-",
-    },
-    {
       title: "Details",
       key: "details",
       render: (record: SellerRegResponse) =>
@@ -224,6 +206,18 @@ const SellerManagementPage: React.FC = () => {
             Awaiting Review
           </Text>
         ),
+    },
+    {
+      title: "Processed At",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date: string) =>
+        date ? dayjs(date).format("YYYY-MM-DD HH:mm") : "-",
+    },
+    {
+      title: "Processed By",
+      dataIndex: "updatedBy",
+      key: "updatedBy",
     },
     {
       title: "Actions",
@@ -323,6 +317,7 @@ const SellerManagementPage: React.FC = () => {
           dataSource={sellers?.data || []}
           loading={isSellersLoading}
           rowKey="id"
+          scroll={{ x: "max-content" }}
           pagination={{
             current: sellerPage,
             pageSize: 10,
@@ -362,6 +357,7 @@ const SellerManagementPage: React.FC = () => {
           dataSource={registrations?.data || []}
           loading={isRegLoading}
           rowKey="id"
+          scroll={{ x: "max-content" }}
           pagination={{
             current: regPage,
             pageSize: 10,

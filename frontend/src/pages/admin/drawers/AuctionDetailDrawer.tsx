@@ -188,7 +188,9 @@ export const AuctionDetailDrawer = ({
     )
       return;
 
-    console.warn("[Fallback Drawer] Kafka down — starting state polling at 5s interval");
+    console.warn(
+      "[Fallback Drawer] Kafka down — starting state polling at 5s interval",
+    );
 
     const intervalId = setInterval(async () => {
       if (isFetchingRef.current) return;
@@ -678,7 +680,7 @@ export const AuctionDetailDrawer = ({
                   showSizeChanger: false,
                 }}
                 size="small"
-                scroll={{ x: true }}
+                scroll={{ x: "max-content" }}
               />
             ) : (
               <Empty
