@@ -69,8 +69,8 @@ export interface NotificationListProps {
 const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = 10;
+  const page = parseInt(searchParams.get("page") || "1", 20);
+  const pageSize = 20;
   const queryClient = useQueryClient();
   const { markAsRead: markAsReadStore, markAllAsRead: markAllAsReadStore } =
     useNotificationStore();

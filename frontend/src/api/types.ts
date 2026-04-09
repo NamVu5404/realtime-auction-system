@@ -337,3 +337,27 @@ export enum OwnerType {
   HOME_THUMBNAIL = "HOME_THUMBNAIL",
   USER_AVATAR = "USER_AVATAR",
 }
+/**
+ * Contact Request/Response - Derived from Contact module
+ */
+export interface ContactRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  subject: string;
+  description: string;
+}
+
+export interface ContactResponse {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  subject: string;
+  description: string;
+  processed: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+}

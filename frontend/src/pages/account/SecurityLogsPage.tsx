@@ -148,7 +148,7 @@ const createTimelineItem = (tracking: UserAuditResponse) => {
 
 const SecurityLogsPage = () => {
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 20;
 
   const { data, isLoading } = useQuery({
     queryKey: ["my-security-logs", page],

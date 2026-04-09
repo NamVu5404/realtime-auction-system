@@ -22,7 +22,7 @@ const SellerNotificationPage: React.FC = () => {
 
   const { data } = useQuery({
     queryKey: ["notifications", 1],
-    queryFn: () => notificationApi.getNotifications(1, 10),
+    queryFn: () => notificationApi.getNotifications(1, 20),
   });
 
   const markAllReadMutation = useMutation({

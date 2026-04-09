@@ -11,6 +11,7 @@ public enum ErrorCode {
 
     // System (9xxx)
     INTERNAL_ERROR(9999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
+    REDIS_DOWN(9998, "Redis service is unavailable", HttpStatus.SERVICE_UNAVAILABLE),
 
     // Common Validation (40xx)
     FIELD_INVALID(4001, "One or more fields are invalid", HttpStatus.BAD_REQUEST),
@@ -60,8 +61,8 @@ public enum ErrorCode {
     // Notification (47xx)
     NOTIFICATION_NOT_FOUND(4700, "Notification not found", HttpStatus.NOT_FOUND),
 
-    // Infrastructure (48xx)
-    REDIS_DOWN(4800, "Redis service is unavailable", HttpStatus.SERVICE_UNAVAILABLE),
+    // Contact (48xx)
+    CONTACT_NOT_FOUND(4800, "Contact inquiry not found", HttpStatus.NOT_FOUND),
     ;
 
     private final int code;
