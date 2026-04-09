@@ -334,7 +334,10 @@ const SellerAuctionPage = () => {
           key: "view-detail",
           icon: <EyeOutlined />,
           label: "View Detail",
-          onClick: () => navigate(`/seller/auctions/${record.id}?${searchParams.toString()}`),
+          onClick: () =>
+            navigate(
+              `/seller/auctions/${record.id}?${searchParams.toString()}`,
+            ),
         });
 
         // Show Audit Logs
@@ -514,6 +517,7 @@ const SellerAuctionPage = () => {
         dataSource={data?.data}
         rowKey="id"
         loading={isLoading}
+        scroll={{ x: "max-content" }}
         pagination={{
           current: data?.currentPage,
           pageSize: data?.pageSize,

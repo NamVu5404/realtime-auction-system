@@ -242,37 +242,39 @@ export const AuctionCard = memo(
           )}
 
           {/* Timing */}
-          <div
-            style={{
-              background: "rgba(255,255,255,0.03)",
-              border: "0.5px solid rgba(255,255,255,0.07)",
-              borderRadius: "10px",
-              padding: "8px 12px",
-            }}
-          >
+          {!shouldShowCountdown && (
             <div
               style={{
-                fontSize: "10px",
-                fontWeight: 600,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,0.35)",
-                marginBottom: "4px",
+                background: "rgba(255,255,255,0.03)",
+                border: "0.5px solid rgba(255,255,255,0.07)",
+                borderRadius: "10px",
+                padding: "8px 12px",
               }}
             >
-              Timing
+              <div
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.35)",
+                  marginBottom: "4px",
+                }}
+              >
+                Timing
+              </div>
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "rgba(255,255,255,0.5)",
+                  lineHeight: 1.7,
+                }}
+              >
+                <div>Start: {formatAuctionTime(auction.startTime)}</div>
+                <div>End: {formatAuctionTime(auction.endTime)}</div>
+              </div>
             </div>
-            <div
-              style={{
-                fontSize: "11px",
-                color: "rgba(255,255,255,0.5)",
-                lineHeight: 1.7,
-              }}
-            >
-              <div>Start: {formatAuctionTime(auction.startTime)}</div>
-              <div>End: {formatAuctionTime(auction.endTime)}</div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     );

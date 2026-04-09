@@ -3,33 +3,32 @@ import { App as AppAntd, ConfigProvider, theme } from 'antd';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
 import ProtectedRoute from './auth/ProtectedRoute';
+import { AntdStaticSetter } from './components/AntdStaticSetter';
+import { useHeartbeat } from './hooks/useHeartbeat';
 import AdminLayout from './layouts/AdminLayout';
 import MainLayout from './layouts/MainLayout';
+import SellerLayout from './layouts/SellerLayout';
 import AccountLayout from './pages/account/AccountLayout';
 import BidsPage from './pages/account/BidsPage';
 import BidStatisticsPage from './pages/account/BidStatisticsPage';
+import IdentityVerificationPage from './pages/account/IdentityVerificationPage';
 import NotificationsPage from './pages/account/NotificationsPage';
 import ProfilePage from './pages/account/ProfilePage';
-import SecurityPage from './pages/account/SecurityPage';
+import SecurityLogsPage from './pages/account/SecurityLogsPage';
 import SellerRegPage from './pages/account/SellerRegPage';
 import AdminAuctionPage from './pages/admin/AdminAuctionPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminNotificationPage from './pages/admin/AdminNotificationPage';
 import AdminUserPage from './pages/admin/AdminUserPage';
 import SellerManagementPage from './pages/admin/SellerManagementPage';
-import SellerLayout from './layouts/SellerLayout';
+import AuthCallbackPage from './pages/AuthCallbackPage';
+import AuctionDetailPage from './pages/home/AuctionDetailPage';
+import HomePage from './pages/home/HomePage';
+import NotFound from './pages/NotFound';
 import SellerAuctionPage from './pages/seller/SellerAuctionPage';
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerNotificationPage from './pages/seller/SellerNotificationPage';
-import AuctionDetailPage from './pages/home/AuctionDetailPage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
-import HomePage from './pages/home/HomePage';
-import NotFound from './pages/NotFound';
 import { useUIStore } from './store/useUIStore';
-import IdentityVerificationPage from './pages/account/IdentityVerificationPage';
-import SecurityLogsPage from './pages/account/SecurityLogsPage';
-import { AntdStaticSetter } from './components/AntdStaticSetter';
-import { useHeartbeat } from './hooks/useHeartbeat';
 
 // Create a client for React Query
 const queryClient = new QueryClient();
@@ -157,7 +156,6 @@ function App() {
                 <Route element={<AccountLayout />}>
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="notifications" element={<NotificationsPage />} />
-                  <Route path="2fa" element={<SecurityPage />} />
                   <Route path="bid-stats" element={<BidStatisticsPage />} />
                   <Route path="bids" element={<BidsPage />} />
                   <Route path="seller-reg" element={<SellerRegPage />} />

@@ -140,7 +140,7 @@ const BidsPage = () => {
           style={{
             background: "transparent",
           }}
-          scroll={{ x: 800 }}
+          scroll={{ x: "max-content" }}
           className="custom-table"
         />
       )}

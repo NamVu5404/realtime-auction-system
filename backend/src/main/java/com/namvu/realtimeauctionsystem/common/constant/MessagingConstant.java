@@ -32,4 +32,13 @@ public class MessagingConstant {
         public static final String NOTIFICATION_TOPIC_PREFIX = "/topic/notifications/";
         public static final String HEARTBEAT_TOPIC_PREFIX = "/topic/heartbeat";
     }
+
+    public static final class Executor {
+        private Executor() {
+            /* This utility class should not be instantiated */
+        }
+
+        public static final String NOTIFICATION_EXECUTOR = "notificationExecutor";
+        public static final String MAIL_EXECUTOR = "mailExecutor";
+    }
 }

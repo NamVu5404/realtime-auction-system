@@ -4,7 +4,6 @@ import {
   BellOutlined,
   HistoryOutlined,
   IdcardOutlined,
-  SafetyCertificateOutlined,
   SettingOutlined,
   ShopOutlined,
   UserOutlined,
@@ -12,6 +11,7 @@ import {
 import { Badge, Grid, Menu } from "antd";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/useAuthStore";
 import { useNotificationStore } from "../../store/useNotificationStore";
 
 const { useBreakpoint } = Grid;
@@ -22,6 +22,7 @@ const AccountSidebar = () => {
   const screens = useBreakpoint();
   const { unreadCount } = useNotificationStore();
   const [selectedKey, setSelectedKey] = useState(location.pathname);
+  const { user } = useAuthStore();
 
   // Determine if we are on mobile/small screen
   const isMobile = !screens.lg;
@@ -77,12 +78,14 @@ const AccountSidebar = () => {
           label: "My Bids",
           onClick: () => navigate("/account/bids"),
         },
-        {
-          key: "/account/seller-reg",
-          icon: <ShopOutlined />,
-          label: isMobile ? "Register" : "Seller Registration",
-          onClick: () => navigate("/account/seller-reg"),
-        },
+        !user?.roles.includes("SELLER")
+          ? {
+              key: "/account/seller-reg",
+              icon: <ShopOutlined />,
+              label: isMobile ? "Register" : "Seller Registration",
+              onClick: () => navigate("/account/seller-reg"),
+            }
+          : null,
       ],
     },
     {
@@ -90,12 +93,6 @@ const AccountSidebar = () => {
       label: isMobile ? null : "Security",
       type: "group" as const,
       children: [
-        {
-          key: "/account/2fa",
-          icon: <SafetyCertificateOutlined />,
-          label: isMobile ? "2FA" : "Two-factor Authentication",
-          onClick: () => navigate("/account/2fa"),
-        },
         {
           key: "/account/security-logs",
           icon: <AuditOutlined />,

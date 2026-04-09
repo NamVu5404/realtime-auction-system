@@ -8,12 +8,14 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.Executor.*;
+
 @Configuration
 @EnableAsync
 @Slf4j
 public class AsyncConfig {
 
-    @Bean("notificationExecutor")
+    @Bean(NOTIFICATION_EXECUTOR)
     public Executor notificationExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(4);
@@ -23,6 +25,21 @@ public class AsyncConfig {
         executor.setThreadNamePrefix("notif-async-");
         executor.setRejectedExecutionHandler((r, exec) ->
                 log.warn("[notificationExecutor] Queue full — notification task dropped")
+        );
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(MAIL_EXECUTOR)
+    public Executor mailExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(200);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("mail-async-");
+        executor.setRejectedExecutionHandler((r, exec) ->
+                log.warn("[mailExecutor] Queue full — mail task dropped")
         );
         executor.initialize();
         return executor;

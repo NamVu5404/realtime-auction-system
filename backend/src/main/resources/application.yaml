@@ -39,6 +39,21 @@ spring:
               - email
               - profile
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:admin.auctionpro@gmail.com}
+    password: ${MAIL_PASSWORD:vphtjquwbavbvaqg}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+
   data:
     redis:
       host: localhost

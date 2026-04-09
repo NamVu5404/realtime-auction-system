@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.Executor.NOTIFICATION_EXECUTOR;
 import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.NOTIFICATION_TOPIC_PREFIX;
 
 @Service
@@ -134,7 +135,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Async("notificationExecutor")
+    @Async(NOTIFICATION_EXECUTOR)
     public void processBidNotifications(BidEvent event, String title, BigDecimal currentPrice) {
         try {
             // Xử lý gửi Notification: OUTBID
@@ -165,7 +166,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Async("notificationExecutor")
+    @Async(NOTIFICATION_EXECUTOR)
     public void processAuctionEndingSoonNotifications(Long auctionId, String title, BigDecimal currentPrice, Set<Long> bidderIds) {
         try {
             NotificationConstant type = NotificationConstant.AUCTION_ENDING_SOON;
@@ -181,7 +182,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Async("notificationExecutor")
+    @Async(NOTIFICATION_EXECUTOR)
     public void processWinnerAuctionNotifications(Long auctionId, Long userId, String title, BigDecimal currentPrice) {
         try {
             NotificationConstant type = NotificationConstant.AUCTION_ENDED_WINNER;
@@ -195,7 +196,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Async("notificationExecutor")
+    @Async(NOTIFICATION_EXECUTOR)
     public void processNoBidderNotifications(Long auctionId, Long userId, String title) {
         try {
             NotificationConstant type = NotificationConstant.AUCTION_ENDED_NO_BIDS;
@@ -209,7 +210,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Async("notificationExecutor")
+    @Async(NOTIFICATION_EXECUTOR)
     public void processAuctionEndSellerNotifications(Long auctionId, Long sellerId, String title, BigDecimal currentPrice, String highestBidderName) {
         try {
             NotificationConstant type = NotificationConstant.AUCTION_ENDED_SELLER;
@@ -223,7 +224,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    @Async("notificationExecutor")
+    @Async(NOTIFICATION_EXECUTOR)
     public void processLoserBidderNotifications(Long auctionId, String title, Set<Long> bidderIds) {
         try {
             NotificationConstant type = NotificationConstant.AUCTION_ENDED_LOSER;

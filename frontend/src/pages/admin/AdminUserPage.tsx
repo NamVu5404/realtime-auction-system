@@ -212,6 +212,16 @@ const AdminUserPage = () => {
       key: "phone",
     },
     {
+      title: "Location",
+      dataIndex: "location",
+      key: "location",
+    },
+    {
+      title: "IP Address",
+      dataIndex: "registerIp",
+      key: "registerIp",
+    },
+    {
       title: "Roles",
       dataIndex: "roles",
       key: "roles",
@@ -499,6 +509,7 @@ const AdminUserPage = () => {
         dataSource={data?.data}
         rowKey="id"
         loading={isLoading}
+        scroll={{ x: "max-content" }}
         pagination={{
           current: data?.currentPage,
           pageSize: data?.pageSize,
@@ -541,6 +552,7 @@ const AdminUserPage = () => {
                 `${record.auctionId}-${record.createdAt}`
               }
               size="small"
+              scroll={{ x: "max-content" }}
               loading={bidHistoryLoading}
               pagination={{
                 current: bidHistoryData?.currentPage || 1,
@@ -556,6 +568,7 @@ const AdminUserPage = () => {
             columns={violationColumns}
             dataSource={mockViolations as any}
             rowKey="id"
+            scroll={{ x: "max-content" }}
             pagination={false}
           />
         )}

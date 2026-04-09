@@ -12,6 +12,7 @@ import com.namvu.realtimeauctionsystem.modules.seller_registration.dto.SellerReg
 import com.namvu.realtimeauctionsystem.modules.seller_registration.entity.SellerRegistration;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.repository.SellerRegRepository;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.service.SellerRegService;
+import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
 import com.namvu.realtimeauctionsystem.modules.user.dto.UserResponse;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.modules.user.mapper.UserMapper;
@@ -39,6 +40,7 @@ public class SellerRegServiceImpl implements SellerRegService {
     private final UserAuditService userAuditService;
     private final AuctionService auctionService;
     private final NotificationService notificationService;
+    private final MailService mailService;
 
     @Override
     @PreAuthorize("!hasAuthority('SELLER')")
@@ -87,6 +89,9 @@ public class SellerRegServiceImpl implements SellerRegService {
 
         // Push notification
         notificationService.processApproveSellerNotifications(user.getId());
+        
+        // Send email
+        mailService.sendSellerApprovalEmail(user.getEmail(), user.getName());
 
         return SellerRegResponse.builder()
                 .id(registration.getId())
@@ -113,6 +118,9 @@ public class SellerRegServiceImpl implements SellerRegService {
         // Push notification
         notificationService.processRejectSellerNotifications(registration.getUser().getId(), reason);
 
+        // Send email
+        mailService.sendSellerRejectionEmail(registration.getUser().getEmail(), registration.getUser().getName(), reason);
+
         return SellerRegResponse.builder()
                 .id(registration.getId())
                 .user(userMapper.mapToResponse(registration.getUser()))
@@ -135,6 +143,7 @@ public class SellerRegServiceImpl implements SellerRegService {
                         .approvedAt(reg.getApprovedAt())
                         .rejectReason(reg.getRejectReason())
                         .createdAt(reg.getCreatedAt())
+                        .updatedBy(reg.getUpdatedBy())
                         .build())
                 .toList();
 
@@ -185,6 +194,9 @@ public class SellerRegServiceImpl implements SellerRegService {
 
             // Push notification
             notificationService.processRevokeSellerNotifications(user.getId(), reason);
+
+            // Send email
+            mailService.sendSellerRevocationEmail(user.getEmail(), user.getName(), reason);
 
             log.info("Admin {} revoked SELLER role for user {}. Reason: {}. Future auctions cancelled.",
                     revokedBy, userId, reason);

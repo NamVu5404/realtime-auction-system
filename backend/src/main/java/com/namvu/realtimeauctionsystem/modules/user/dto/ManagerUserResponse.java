@@ -15,6 +15,8 @@ import java.time.Instant;
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 public class ManagerUserResponse extends UserResponse {
-    private Instant createdAt;
+    private String registerIp;
+    private String location;
     private UserStatus status;
+    private Instant createdAt;
 }

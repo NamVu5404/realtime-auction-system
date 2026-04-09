@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Application Approved</title>
+  <style>
+    /* Modern Premium Light Theme SaaS Email */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #F3F4F6;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .wrapper {
+      width: 100%;
+      background-color: #F3F4F6;
+      padding: 40px 20px;
+      box-sizing: border-box;
+    }
+
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      border: 1px solid #E5E7EB;
+    }
+
+    /* Dark Header to let the Gold logo pop out */
+    .content-header {
+      background-color: #191B24;
+      /* Brand Dark Background */
+      padding: 30px 40px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span {
+      color: #FED469;
+      /* Brand Gold */
+    }
+
+    .content-body {
+      padding: 40px;
+      background-color: #ffffff;
+      color: #374151;
+      /* gray-700 */
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111827;
+      /* gray-900 */
+      margin-top: 0;
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+
+    .message {
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 0 0 24px 0;
+      color: #4B5563;
+      /* gray-600 */
+    }
+
+    /* Feature Section */
+    .highlight-box {
+      background-color: #FAFAFA;
+      border: 1px solid #F3F4F6;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .feature-item {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .feature-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .feature-icon {
+      font-size: 20px;
+      margin-right: 16px;
+      color: #FED469;
+    }
+
+    .feature-content h4 {
+      margin: 0 0 4px 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1F2937;
+    }
+
+    .feature-content p {
+      margin: 0;
+      font-size: 14px;
+      color: #6B7280;
+      line-height: 1.5;
+    }
+
+    .cta-container {
+      text-align: center;
+      margin: 36px 0;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      background-color: #FED469;
+      /* Brand Gold */
+      color: #191B24 !important;
+      /* On Gold Text */
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      box-shadow: 0 4px 14px rgba(254, 212, 105, 0.4);
+      transition: transform 0.2s;
+    }
+
+    .footer {
+      background-color: #F9FAFB;
+      padding: 32px 40px;
+      text-align: center;
+      border-top: 1px solid #E5E7EB;
+    }
+
+    .footer p {
+      margin: 0 0 8px 0;
+      font-size: 13px;
+      color: #9CA3AF;
+      /* gray-400 */
+    }
+
+    .footer a {
+      color: #6B7280;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer a:hover {
+      color: #374151;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="email-container">
+
+      <!-- Header -->
+      <div class="content-header">
+        <h2 class="logo">Auction<span>Pro</span></h2>
+      </div>
+
+      <!-- Body -->
+      <div class="content-body">
+        <h1 class="title">You're Now an Official Seller! 🚀</h1>
+        <p class="message">
+          Great news <strong th:text="${fullName != null ? fullName : 'Partner'}">Partner</strong>! Your seller
+          registration has been reviewed and approved. Congratulations on becoming a part of the AuctionPro seller
+          community.
+        </p>
+        <p class="message">You can now start listing your products and reaching thousands of bidders. Here's what's
+          unlocked for you:</p>
+
+        <!-- Features -->
+        <div class="highlight-box">
+          <div class="feature-item">
+            <div class="feature-icon">📦</div>
+            <div class="feature-content">
+              <h4>Create Auctions</h4>
+              <p>Easily list your items for auction and manage your inventory from your dedicated panel.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📊</div>
+            <div class="feature-content">
+              <h4>Seller Dashboard</h4>
+              <p>Track your sales, monitor active bids, and get insights into your auction performance in real
+                time.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">💬</div>
+            <div class="feature-content">
+              <h4>Expert Support</h4>
+              <p>Our dedicated seller support team is here to help you succeed. Reach out anytime for
+                guidance.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="cta-container">
+          <a href="http://localhost:5173/seller" class="cta-btn">Go to Seller Dashboard</a>
+        </div>
+
+        <p class="message" style="margin-bottom: 0;">We're excited to see what you'll bring to the block!<br><strong>The
+            AuctionPro Team</strong></p>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p>&copy; 2026 AuctionPro. All rights reserved.</p>
+        <p>You received this email because your seller application was approved.</p>
+        <p><a href="https://auctionpro-psi.vercel.app/help-center/">Help Center</a> • <a
+            href="https://auctionpro-psi.vercel.app/privacy-policy/">Privacy Policy</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</body>
+
+</html>

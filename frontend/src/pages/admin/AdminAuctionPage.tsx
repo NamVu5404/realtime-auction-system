@@ -493,6 +493,7 @@ const AdminAuctionPage = () => {
           onChange: (p) => setPage(p),
           showSizeChanger: false,
         }}
+        scroll={{ x: "max-content" }}
       />
 
       {detailDrawer.visible && detailDrawer.auction && (
