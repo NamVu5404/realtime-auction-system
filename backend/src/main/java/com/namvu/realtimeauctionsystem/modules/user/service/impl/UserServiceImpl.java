@@ -9,6 +9,7 @@ import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.file.service.FileService;
+import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
 import com.namvu.realtimeauctionsystem.modules.user.dto.*;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.modules.user.mapper.UserMapper;
@@ -35,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final FileService fileService;
+    private final MailService mailService;
 
     @Override
     @Transactional(readOnly = true)
@@ -56,12 +58,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public BlockUserResponse blockUser(Long userId, BlockUserRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getRoles().contains(Role.ADMIN)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
+
         Instant now = Instant.now();
-        userRepository.updateStatus(userId, UserStatus.BLOCKED, now);
+        user.setStatus(UserStatus.BLOCKED);
+        user.setUpdatedAt(now);
+        userRepository.save(user);
 
         String blockedBy = SecurityUtils.getCurrentUserEmail();
+
+        // Send email
+        mailService.sendUserBlockEmail(user.getEmail(), user.getName(), request.getReason());
 
         return BlockUserResponse.builder()
                 .userId(userId)

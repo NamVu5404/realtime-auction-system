@@ -76,6 +76,17 @@ public class MailServiceImpl implements MailService {
                 .build());
     }
 
+    @Async(MAIL_EXECUTOR)
+    @Override
+    public void sendUserBlockEmail(String toEmail, String fullName, String reason) {
+        sendEmail(EmailContext.builder()
+                .to(toEmail)
+                .subject("Account Notification: Your Account has been Blocked")
+                .template("mail/user-block")
+                .variables(Map.of(FULL_NAME, fullName, REASON, reason))
+                .build());
+    }
+
     private void sendEmail(EmailContext emailContext) {
         log.info("Sending email to {} with template {}", emailContext.getTo(), emailContext.getTemplate());
         try {

@@ -8,4 +8,6 @@ public interface MailService {
     void sendSellerRejectionEmail(String toEmail, String fullName, String reason);
 
     void sendSellerRevocationEmail(String toEmail, String fullName, String reason);
+
+    void sendUserBlockEmail(String toEmail, String fullName, String reason);
 }
