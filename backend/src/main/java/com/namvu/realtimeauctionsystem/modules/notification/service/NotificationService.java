@@ -40,6 +40,8 @@ public interface NotificationService {
     void processLoserBidderNotifications(Long auctionId, String title, Set<Long> bidderIds);
 
     void processApproveSellerNotifications(Long userId);
+    
+    void processManualUpgradeToSellerNotifications(Long userId);
 
     void processRejectSellerNotifications(Long userId, String reason);
 

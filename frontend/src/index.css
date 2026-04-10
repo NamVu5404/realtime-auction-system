@@ -634,6 +634,12 @@ body {
   border-radius: 100px !important;
 }
 
+:where(.ant-pagination-total-text) {
+  color: var(--color-text-muted) !important;
+  font-size: 13px !important;
+  margin-right: 12px !important;
+}
+
 /* -------------------------------------------------------
    16. Sider
    ------------------------------------------------------- */

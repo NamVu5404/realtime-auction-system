@@ -13,6 +13,7 @@ import {
   UserAuditResponse,
   UserRole,
   SellerRegResponse,
+  SellerResponse,
 } from "./types";
 
 export const mockUserHistory = [
@@ -60,6 +61,22 @@ export const adminApi = {
           params: { page, size, keyword, role, status },
         },
       );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getSellers: async (
+    page: number = 1,
+    size: number = 20,
+  ): Promise<PageResponse<SellerResponse>> => {
+    try {
+      const response = await axiosClient.get<
+        ApiResponse<PageResponse<SellerResponse>>
+      >("/users/sellers", {
+        params: { page, size },
+      });
       return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
@@ -292,6 +309,28 @@ export const adminApi = {
         `/users/${userId}/upgrade-to-seller`,
       );
       return { message: response.data.message, result: response.data.result! };
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getPendingRegistrations: async (): Promise<number> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<number>>(
+        "/sellers/registrations/pending",
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getApprovedRegistrations: async (): Promise<number> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<number>>(
+        "/sellers/registrations/approved",
+      );
+      return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }

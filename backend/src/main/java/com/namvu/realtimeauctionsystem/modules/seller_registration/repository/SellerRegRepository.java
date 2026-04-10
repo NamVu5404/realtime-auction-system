@@ -18,4 +18,6 @@ public interface SellerRegRepository extends JpaRepository<SellerRegistration, L
     Page<SellerRegistration> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     boolean existsByUser_IdAndStatus(Long userId, RequestStatus status);
+
+    Long countByStatus(RequestStatus status);
 }

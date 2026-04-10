@@ -86,6 +86,11 @@ public enum NotificationConstant {
             "Chúc mừng! Bạn đã trở thành người bán. Hãy đăng nhập lại để có hiệu lực",
             SELLER_DASHBOARD_URL
     ),
+    MANUAL_UPGRADE_TO_SELLER( // mail
+            "Tài khoản đã được nâng cấp",
+            "Chúc mừng! Quản trị viên đã nâng cấp tài khoản của bạn lên quyền Người bán. Hãy đăng nhập lại để bắt đầu.",
+            SELLER_DASHBOARD_URL
+    ),
     SELLER_REGISTRATION_REJECTED( // mail
             "Đăng ký tài khoản người bán bị từ chối",
             "Yêu cầu đăng ký người bán của bạn bị từ chối. Lý do: %s.",

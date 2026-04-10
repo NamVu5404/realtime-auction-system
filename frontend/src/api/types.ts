@@ -76,6 +76,23 @@ export interface User {
 }
 
 /**
+ * Seller Response - Derived from SellerResponse.java interface
+ */
+export interface SellerResponse {
+  userId: number;
+  name: string;
+  email: string;
+  phone?: string;
+  avatarUrl?: string;
+  location?: string;
+  approvedAt?: string;
+  totalAuctions: number;
+  liveAuctions: number;
+  endedAuctions: number;
+  totalRevenue: number;
+}
+
+/**
  * File Response Interface
  */
 export interface FileResponse {

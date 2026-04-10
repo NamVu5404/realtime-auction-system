@@ -135,6 +135,7 @@ const BidsPage = () => {
             total: data?.totalElements || 0,
             onChange: handlePageChange,
             showSizeChanger: false,
+            showTotal: (total) => `Total ${total} items`,
           }}
           loading={isLoading}
           style={{

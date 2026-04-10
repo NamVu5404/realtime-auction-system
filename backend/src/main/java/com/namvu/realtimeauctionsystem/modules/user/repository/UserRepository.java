@@ -2,6 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.user.repository;
 
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
+import com.namvu.realtimeauctionsystem.modules.user.dto.SellerResponse;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -56,4 +57,27 @@ public interface UserRepository extends JpaRepository<User, Long> {
             WHERE 'ADMIN' MEMBER OF u.roles AND u.status = 'ACTIVE'
             """)
     Set<Long> findAllAdminIds();
+
+    @Query("""
+                SELECT
+                    u.id AS userId,
+                    u.name AS name,
+                    u.email AS email,
+                    u.phone AS phone,
+                    u.avatarUrl AS avatarUrl,
+                    u.location AS location,
+                    MAX(sr.approvedAt) AS approvedAt,
+                    COUNT(a.id) AS totalAuctions,
+                    SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END) AS liveAuctions,
+                    SUM(CASE WHEN a.status = 'ENDED' THEN 1 ELSE 0 END) AS endedAuctions,
+                    COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS totalRevenue
+                FROM User u
+                JOIN u.roles r
+                LEFT JOIN SellerRegistration sr ON sr.user.id = u.id AND sr.status = 'APPROVED'
+                LEFT JOIN Auction a ON a.seller.id = u.id
+                WHERE r = 'SELLER' AND u.status = 'ACTIVE'
+                GROUP BY u.id
+                ORDER BY approvedAt DESC
+            """)
+    Page<SellerResponse> getSellerStatistics(Pageable pageable);
 }

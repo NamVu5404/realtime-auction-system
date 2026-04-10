@@ -1,22 +1,26 @@
 package com.namvu.realtimeauctionsystem.modules.user.service.impl;
 
+import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.file.service.FileService;
 import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
+import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
 import com.namvu.realtimeauctionsystem.modules.user.dto.*;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.modules.user.mapper.UserMapper;
 import com.namvu.realtimeauctionsystem.modules.user.repository.UserRepository;
+import com.namvu.realtimeauctionsystem.modules.user.service.UserAuditService;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,6 +41,11 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final FileService fileService;
     private final MailService mailService;
+    private final UserAuditService userAuditService;
+
+    @Autowired
+    @Lazy
+    private NotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -161,6 +170,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public UserResponse upgradeToSeller(Long userId) {
         User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
@@ -173,6 +183,15 @@ public class UserServiceImpl implements UserService {
         user.getRoles().add(Role.SELLER);
         user = userRepository.save(user);
 
+        // Save audit log
+        userAuditService.sellerApprovedAudit(user, SecurityUtils.getCurrentUserEmail());
+
+        // Push notification
+        notificationService.processManualUpgradeToSellerNotifications(userId);
+
+        // Send email
+        mailService.sendSellerApprovalEmail(user.getEmail(), user.getName());
+
         return userMapper.mapToResponse(user);
     }
 
@@ -180,5 +199,18 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Set<Long> getAllAdminIds() {
         return userRepository.findAllAdminIds();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<SellerResponse> getSellers(Pageable pageable) {
+        Page<SellerResponse> sellerResponses = userRepository.getSellerStatistics(pageable);
+        return PageResponse.<SellerResponse>builder()
+                .data(sellerResponses.getContent())
+                .currentPage(pageable.getPageNumber() + 1)
+                .pageSize(pageable.getPageSize())
+                .totalPage(sellerResponses.getTotalPages())
+                .totalElements(sellerResponses.getTotalElements())
+                .build();
     }
 }

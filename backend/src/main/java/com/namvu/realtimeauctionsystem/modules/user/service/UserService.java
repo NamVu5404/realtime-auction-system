@@ -32,4 +32,6 @@ public interface UserService {
     User getUserReference(Long userId);
 
     Set<Long> getAllAdminIds();
+
+    PageResponse<SellerResponse> getSellers(Pageable pageable);
 }

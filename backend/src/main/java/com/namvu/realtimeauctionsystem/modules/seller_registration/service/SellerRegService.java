@@ -17,4 +17,8 @@ public interface SellerRegService {
     SellerRegResponse getMyRegistration();
 
     UserResponse revokeSellerRole(Long userId, String reason);
+
+    Long getPendingRegistrations();
+
+    Long getApprovedRegistrations();
 }
