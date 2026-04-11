@@ -395,3 +395,20 @@ export interface MyBidStatsResponse {
   activityChart: BidChartData[];
 }
 
+export interface SellerChartData {
+  periodLabel: string;
+  auctionsCompleted: number;
+  revenue: number;
+}
+
+export interface SellerStatsResponse {
+  totalRevenue: number;
+  totalAuctionsCreated: number;
+  totalAuctionsSold: number;
+  activeAuctions: number;
+  totalBidsReceived: number;
+  highestSoldPrice: number;
+  totalUniqueBidders: number;
+  revenueChart: SellerChartData[];
+}
+

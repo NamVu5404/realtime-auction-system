@@ -66,18 +66,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
                     u.phone AS phone,
                     u.avatarUrl AS avatarUrl,
                     u.location AS location,
-                    MAX(sr.approvedAt) AS approvedAt,
+                    (SELECT MAX(sr.approvedAt) FROM SellerRegistration sr WHERE sr.user.id = u.id AND sr.status = 'APPROVED') AS approvedAt,
                     COUNT(a.id) AS totalAuctions,
-                    SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END) AS liveAuctions,
-                    SUM(CASE WHEN a.status = 'ENDED' THEN 1 ELSE 0 END) AS endedAuctions,
+                    COALESCE(SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END), 0) AS liveAuctions,
+                    COALESCE(SUM(CASE WHEN a.status = 'ENDED' THEN 1 ELSE 0 END), 0) AS endedAuctions,
                     COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS totalRevenue
                 FROM User u
                 JOIN u.roles r
-                LEFT JOIN SellerRegistration sr ON sr.user.id = u.id AND sr.status = 'APPROVED'
                 LEFT JOIN Auction a ON a.seller.id = u.id
                 WHERE r = 'SELLER' AND u.status = 'ACTIVE'
                 GROUP BY u.id
-                ORDER BY approvedAt DESC
+                ORDER BY u.id DESC
             """)
     Page<SellerResponse> getSellerStatistics(Pageable pageable);
 }

@@ -1,7 +1,7 @@
 import {
+  BarChartOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
-  DotChartOutlined,
   EyeOutlined,
   FilterOutlined,
   HistoryOutlined,
@@ -38,9 +38,9 @@ import {
   UserRole,
 } from "../../api/types";
 import AccountTrackingDrawer from "../../components/admin/AccountTrackingDrawer";
+import BidStatisticsDashboard from "../../features/bid/BidStatisticsDashboard";
 import { useDebounce } from "../../hooks/useDebounce";
 import formatCurrency, { formatDateTime } from "../../utils/format";
-import BidStatisticsDashboard from "../../features/bid/BidStatisticsDashboard";
 
 const AdminUserPage = () => {
   const { modal } = App.useApp();
@@ -327,7 +327,7 @@ const AdminUserPage = () => {
               },
               {
                 key: "bid-stats",
-                icon: <DotChartOutlined />,
+                icon: <BarChartOutlined />,
                 label: "Bid Stats",
                 onClick: () => {
                   setSelectedUser(record);
@@ -436,7 +436,7 @@ const AdminUserPage = () => {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          marginBottom: "28px",
+          marginBottom: "24px",
         }}
       >
         <h1
@@ -789,7 +789,7 @@ const AdminUserPage = () => {
         placement="right"
         onClose={() => setStatisticsDrawer({ visible: false })}
         open={statisticsDrawer.visible}
-        destroyOnClose
+        destroyOnHidden
       >
         {statisticsDrawer.userId && (
           <BidStatisticsDashboard userId={statisticsDrawer.userId} />

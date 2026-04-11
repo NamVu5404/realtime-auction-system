@@ -1,5 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.user.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public interface SellerResponse {
@@ -13,7 +14,7 @@ public interface SellerResponse {
     Long getTotalAuctions();
     Long getLiveAuctions();
     Long getEndedAuctions();
-    Long getTotalRevenue();
+    BigDecimal getTotalRevenue();
 
     Instant getApprovedAt();
 }

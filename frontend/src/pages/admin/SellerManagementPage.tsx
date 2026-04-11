@@ -1,4 +1,5 @@
 import {
+  BarChartOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   CloseCircleOutlined,
@@ -14,6 +15,7 @@ import {
   Button,
   Card,
   Col,
+  Drawer,
   Input,
   message,
   Modal,
@@ -36,6 +38,8 @@ import {
   SellerResponse,
   User,
 } from "../../api/types";
+import SellerStatisticsDashboard from "../../features/auction/SellerStatisticsDashboard";
+import formatCurrency from "../../utils/format";
 import { getAvatarUrl } from "../../utils/imageUtils";
 
 const { Text } = Typography;
@@ -79,6 +83,10 @@ const SellerManagementPage: React.FC = () => {
   >(null);
   const [rejectReason, setRejectReason] = useState("");
   const [revokeReason, setRevokeReason] = useState("");
+
+  const [statDrawerVisible, setStatDrawerVisible] = useState(false);
+  const [statUserId, setStatUserId] = useState<number | undefined>();
+  const [statUserName, setStatUserName] = useState<string>("");
 
   // Queries
   const { data: registrations, isLoading: isRegLoading } = useQuery({
@@ -186,6 +194,12 @@ const SellerManagementPage: React.FC = () => {
       setRevokeModalVisible(false);
       setRevokeReason("");
     }
+  };
+
+  const handleOpenStats = (user: SellerResponse) => {
+    setStatUserId(user.userId);
+    setStatUserName(user.name);
+    setStatDrawerVisible(true);
   };
 
   // Table Columns
@@ -351,7 +365,7 @@ const SellerManagementPage: React.FC = () => {
           strong
           style={{ color: "var(--color-gold-start)", fontSize: "15px" }}
         >
-          ${record.totalRevenue?.toLocaleString()}
+          {formatCurrency(record.totalRevenue)}
         </Text>
       ),
     },
@@ -369,6 +383,14 @@ const SellerManagementPage: React.FC = () => {
       render: (record: SellerResponse) => (
         <Space>
           <Button
+            type="primary"
+            size="small"
+            icon={<BarChartOutlined />}
+            onClick={() => handleOpenStats(record)}
+          >
+            Statistics
+          </Button>
+          <Button
             danger
             size="small"
             icon={<CloseCircleOutlined />}
@@ -378,7 +400,7 @@ const SellerManagementPage: React.FC = () => {
               revokeMutation.variables?.userId === record.userId
             }
           >
-            Revoke Seller Role
+            Revoke Role
           </Button>
         </Space>
       ),
@@ -462,7 +484,7 @@ const SellerManagementPage: React.FC = () => {
           fontSize: "24px",
           fontWeight: 800,
           letterSpacing: "-0.02em",
-          marginBottom: "28px",
+          marginBottom: "24px",
         }}
       >
         Seller Management
@@ -746,6 +768,25 @@ const SellerManagementPage: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Seller Statistics Drawer */}
+      <Drawer
+        title={
+          <Space>
+            <span>
+              Statistics for{" "}
+              <span style={{ color: "#fff" }}>{statUserName}</span>
+            </span>
+          </Space>
+        }
+        placement="right"
+        size={1000}
+        onClose={() => setStatDrawerVisible(false)}
+        open={statDrawerVisible}
+        destroyOnHidden
+      >
+        {statUserId && <SellerStatisticsDashboard sellerId={statUserId} />}
+      </Drawer>
     </div>
   );
 };

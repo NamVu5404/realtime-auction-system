@@ -2,6 +2,8 @@ package com.namvu.realtimeauctionsystem.modules.auction.repository;
 
 import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionWinProjection;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.SellerAggregateProjection;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.SellerChartProjection;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -109,4 +111,32 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             WHERE a.highestBidder.id = :bidderId
         """)
     AuctionWinProjection getAuctionWinMetrics(@Param("bidderId") Long bidderId);
+
+    @Query("""
+            SELECT
+                COUNT(a) AS totalAuctionsCreated,
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN 1 ELSE 0 END), 0) AS totalAuctionsSold,
+                COALESCE(SUM(CASE WHEN a.status IN ('LIVE', 'SCHEDULED') THEN 1 ELSE 0 END), 0) AS activeAuctions,
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS totalRevenue,
+                COALESCE(MAX(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS highestSoldPrice
+            FROM Auction a
+            WHERE a.seller.id = :sellerId
+        """)
+    SellerAggregateProjection getSellerAggregateMetrics(@Param("sellerId") Long sellerId);
+
+    @Query("""
+             SELECT
+                 FUNCTION('DATE_FORMAT', a.endTime, :timeFormat) AS periodLabel,
+                 COUNT(a.id) AS auctionsCompleted,
+                 COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS revenue
+             FROM Auction a
+             WHERE a.seller.id = :sellerId AND a.status = 'ENDED' AND a.endTime >= :startDate
+             GROUP BY FUNCTION('DATE_FORMAT', a.endTime, :timeFormat)
+             ORDER BY FUNCTION('DATE_FORMAT', a.endTime, :timeFormat) ASC
+        """)
+    List<SellerChartProjection> getSellerRevenueChart(
+            @Param("sellerId") Long sellerId,
+            @Param("startDate") Instant startDate,
+            @Param("timeFormat") String timeFormat
+    );
 }

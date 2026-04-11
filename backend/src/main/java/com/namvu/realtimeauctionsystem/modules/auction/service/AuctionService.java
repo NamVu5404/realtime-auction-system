@@ -49,4 +49,6 @@ public interface AuctionService {
     AuctionStateSnapshot getAuctionState(Long auctionId);
 
     AuctionWinProjection getAuctionWinMetrics(Long bidderId);
+
+    SellerStatsResponse getSellerStats(Long sellerId, String period);
 }

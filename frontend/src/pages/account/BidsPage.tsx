@@ -29,7 +29,7 @@ const BidsPage = () => {
 
   const columns = [
     {
-      title: "Product",
+      title: "Item",
       dataIndex: "auctionTitle",
       key: "auctionTitle",
       render: (text: string, record: MyBidHistoryResponse) => (

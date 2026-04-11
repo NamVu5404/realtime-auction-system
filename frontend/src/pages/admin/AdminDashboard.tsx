@@ -21,7 +21,7 @@ export const AdminDashboard = () => {
           fontSize: "24px",
           fontWeight: 800,
           letterSpacing: "-0.02em",
-          marginBottom: "28px",
+          marginBottom: "24px",
         }}
       >
         Admin Dashboard

@@ -65,6 +65,12 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
             @Param("timeFormat") String timeFormat
     );
 
+    @Query("SELECT COUNT(b.id) FROM Bid b WHERE b.auction.seller.id = :sellerId")
+    Long countTotalBidsReceivedBySeller(@Param("sellerId") Long sellerId);
+
+    @Query("SELECT COUNT(DISTINCT b.bidder.id) FROM Bid b WHERE b.auction.seller.id = :sellerId")
+    Long countUniqueBiddersBySeller(@Param("sellerId") Long sellerId);
+
     // Helper method
     default List<Bid> findTop10ByBidderIdAndAuctionIdOrderByCreatedAtDesc(Long bidderId, Long auctionId) {
         return findTop10ByBidderIdAndAuctionIdOrderByCreatedAtDesc(

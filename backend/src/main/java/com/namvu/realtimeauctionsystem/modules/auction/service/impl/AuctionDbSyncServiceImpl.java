@@ -5,7 +5,7 @@ import com.namvu.realtimeauctionsystem.common.constant.BidStatus;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.FraudCheckResult;
+import com.namvu.realtimeauctionsystem.modules.fraud.dto.FraudCheckResult;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionDbSyncService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;

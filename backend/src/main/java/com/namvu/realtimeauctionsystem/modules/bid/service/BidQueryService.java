@@ -10,4 +10,8 @@ import org.springframework.data.domain.Pageable;
  */
 public interface BidQueryService {
     Page<Bid> getPagedBidsByAuction(Long auctionId, Pageable pageable);
+
+    Long countTotalBidsReceivedBySeller(Long sellerId);
+    
+    Long countUniqueBiddersBySeller(Long sellerId);
 }

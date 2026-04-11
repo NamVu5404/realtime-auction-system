@@ -1,4 +1,4 @@
-package com.namvu.realtimeauctionsystem.modules.auction.dto;
+package com.namvu.realtimeauctionsystem.modules.fraud.dto;
 
 import com.namvu.realtimeauctionsystem.common.constant.FraudType;
 import lombok.AllArgsConstructor;

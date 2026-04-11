@@ -17,7 +17,19 @@ public class BidQueryServiceImpl implements BidQueryService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<Bid> getPagedBidsByAuction(Long id, Pageable pageable) {
-        return bidRepository.findByAuctionIdOrderByCreatedAtDesc(id, pageable);
+    public Page<Bid> getPagedBidsByAuction(Long auctionId, Pageable pageable) {
+        return bidRepository.findByAuctionIdOrderByCreatedAtDesc(auctionId, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long countTotalBidsReceivedBySeller(Long sellerId) {
+        return bidRepository.countTotalBidsReceivedBySeller(sellerId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long countUniqueBiddersBySeller(Long sellerId) {
+        return bidRepository.countUniqueBiddersBySeller(sellerId);
     }
 }

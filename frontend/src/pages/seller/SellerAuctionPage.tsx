@@ -403,7 +403,7 @@ const SellerAuctionPage = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "28px",
+          marginBottom: "24px",
         }}
       >
         <h1
