@@ -1,6 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.auction.repository;
 
 import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionWinProjection;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -97,4 +98,15 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             "AND a.endTime <= :targetTime " +
             "AND a.notifiedEndingSoon = false")
     List<Auction> findByNotifiedEndingSoonFalse(@Param("now") Instant now, @Param("targetTime") Instant targetTime);
+
+    @Query("""
+            SELECT
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' THEN 1 ELSE 0 END), 0) AS totalWins,
+                COALESCE(MAX(CASE WHEN a.status = 'ENDED' THEN a.currentPrice ELSE 0 END), 0) AS highestWinningBid,
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' THEN a.currentPrice ELSE 0 END), 0) AS totalSpent,
+                COALESCE(SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END), 0) AS activeLeading
+            FROM Auction a
+            WHERE a.highestBidder.id = :bidderId
+        """)
+    AuctionWinProjection getAuctionWinMetrics(@Param("bidderId") Long bidderId);
 }

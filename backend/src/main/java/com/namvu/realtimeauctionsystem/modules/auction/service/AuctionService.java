@@ -47,4 +47,6 @@ public interface AuctionService {
     Auction getAuctionReference(Long auctionId);
 
     AuctionStateSnapshot getAuctionState(Long auctionId);
+
+    AuctionWinProjection getAuctionWinMetrics(Long bidderId);
 }

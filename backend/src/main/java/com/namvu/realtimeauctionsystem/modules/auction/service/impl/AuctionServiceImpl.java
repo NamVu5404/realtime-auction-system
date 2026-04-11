@@ -338,6 +338,12 @@ public class AuctionServiceImpl implements AuctionService {
         return redisAuctionService.getAuctionStateFromRedis(auctionId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public AuctionWinProjection getAuctionWinMetrics(Long bidderId) {
+        return auctionRepository.getAuctionWinMetrics(bidderId);
+    }
+
     private void populateImages(List<AuctionResponse> responses) {
         if (responses.isEmpty()) return;
 

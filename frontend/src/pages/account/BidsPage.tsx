@@ -101,7 +101,7 @@ const BidsPage = () => {
     <div className="account-table-wrapper">
       <Title
         level={2}
-        style={{ color: "#fff", marginBottom: "16px", fontSize: "24px" }}
+        style={{ color: "#fff", marginBottom: "24px", fontSize: "24px" }}
       >
         My Bids
       </Title>

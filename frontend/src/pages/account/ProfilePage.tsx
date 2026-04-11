@@ -84,7 +84,7 @@ const ProfilePage = () => {
     <div>
       <Title
         level={2}
-        style={{ color: "#fff", marginBottom: "16px", fontSize: "24px" }}
+        style={{ color: "#fff", marginBottom: "24px", fontSize: "24px" }}
       >
         Profile Settings
       </Title>

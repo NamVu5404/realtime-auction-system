@@ -1,5 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.bid.repository;
 
+import com.namvu.realtimeauctionsystem.modules.bid.dto.BidChartProjection;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +42,28 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
     @Query("SELECT DISTINCT b.bidder.id FROM Bid b " +
             "WHERE b.auction.id = :auctionId ")
     Set<Long> findAllBidderIdsByAuctionId(@Param("auctionId") Long auctionId);
+
+    @Query("SELECT COUNT(b.id) FROM Bid b WHERE b.bidder.id = :bidderId")
+    Long countTotalBids(@Param("bidderId") Long bidderId);
+
+    @Query("SELECT COUNT(DISTINCT b.auction.id) FROM Bid b WHERE b.bidder.id = :bidderId")
+    Long countTotalAuctionsParticipated(@Param("bidderId") Long bidderId);
+
+    @Query("""
+            SELECT
+                FUNCTION('DATE_FORMAT', b.createdAt, :timeFormat) AS periodLabel,
+                COUNT(b.id) AS bidCount,
+                COUNT(DISTINCT b.auction.id) AS auctionsParticipated
+            FROM Bid b
+            WHERE b.bidder.id = :bidderId AND b.createdAt >= :startDate
+            GROUP BY FUNCTION('DATE_FORMAT', b.createdAt, :timeFormat)
+            ORDER BY FUNCTION('DATE_FORMAT', b.createdAt, :timeFormat) ASC
+            """)
+    List<BidChartProjection> getBidActivityChart(
+            @Param("bidderId") Long bidderId,
+            @Param("startDate") Instant startDate,
+            @Param("timeFormat") String timeFormat
+    );
 
     // Helper method
     default List<Bid> findTop10ByBidderIdAndAuctionIdOrderByCreatedAtDesc(Long bidderId, Long auctionId) {

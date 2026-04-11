@@ -1,6 +1,7 @@
 import {
   CheckCircleOutlined,
   DeleteOutlined,
+  DotChartOutlined,
   EyeOutlined,
   FilterOutlined,
   HistoryOutlined,
@@ -39,6 +40,7 @@ import {
 import AccountTrackingDrawer from "../../components/admin/AccountTrackingDrawer";
 import { useDebounce } from "../../hooks/useDebounce";
 import formatCurrency, { formatDateTime } from "../../utils/format";
+import BidStatisticsDashboard from "../../features/bid/BidStatisticsDashboard";
 
 const AdminUserPage = () => {
   const { modal } = App.useApp();
@@ -79,6 +81,11 @@ const AdminUserPage = () => {
     type: "bid" | "violation" | "tracking";
     userId?: number;
   }>({ visible: false, type: "bid" });
+  const [statisticsDrawer, setStatisticsDrawer] = useState<{
+    visible: boolean;
+    userId?: number;
+    userName?: string;
+  }>({ visible: false });
   const [bidHistoryPage, setBidHistoryPage] = useState(1);
   const [trackingPage, setTrackingPage] = useState(1);
   const [blockModalVisible, setBlockModalVisible] = useState(false);
@@ -315,6 +322,19 @@ const AdminUserPage = () => {
                     visible: true,
                     type: "tracking",
                     userId: record.id,
+                  });
+                },
+              },
+              {
+                key: "bid-stats",
+                icon: <DotChartOutlined />,
+                label: "Bid Stats",
+                onClick: () => {
+                  setSelectedUser(record);
+                  setStatisticsDrawer({
+                    visible: true,
+                    userId: record.id,
+                    userName: record.name,
                   });
                 },
               },
@@ -759,6 +779,22 @@ const AdminUserPage = () => {
           </div>
         </div>
       </Modal>
+      <Drawer
+        title={
+          <Space>
+            <span>Bid Statistics: {statisticsDrawer.userName}</span>
+          </Space>
+        }
+        size={1000}
+        placement="right"
+        onClose={() => setStatisticsDrawer({ visible: false })}
+        open={statisticsDrawer.visible}
+        destroyOnClose
+      >
+        {statisticsDrawer.userId && (
+          <BidStatisticsDashboard userId={statisticsDrawer.userId} />
+        )}
+      </Drawer>
     </div>
   );
 };

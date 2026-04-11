@@ -5,6 +5,7 @@ import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidPlacedEvent;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidUpdateResult;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.MyBidHistoryResponse;
+import com.namvu.realtimeauctionsystem.modules.bid.dto.MyBidStatsResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import org.springframework.data.domain.Pageable;
 
@@ -19,6 +20,10 @@ public interface BidService {
     void createRejectedBidRecord(BidPlacedEvent event);
 
     PageResponse<MyBidHistoryResponse> getMyBidHistory(Pageable pageable);
+
+    MyBidStatsResponse getMyBidStats(String period);
+
+    MyBidStatsResponse getBidStatsAdmin(Long userId, String period);
 
     PageResponse<MyBidHistoryResponse> getBidHistoryForAdmin(Long userId, Pageable pageable);
 

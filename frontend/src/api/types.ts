@@ -378,3 +378,20 @@ export interface ContactResponse {
   createdBy?: string;
   updatedBy?: string;
 }
+
+export interface BidChartData {
+  periodLabel: string;
+  bidCount: number;
+  auctionsParticipated: number;
+}
+
+export interface MyBidStatsResponse {
+  totalAuctionsParticipated: number;
+  totalWins: number;
+  totalBids: number;
+  highestWinningBid: number;
+  totalSpent: number;
+  activeLeading: number;
+  activityChart: BidChartData[];
+}
+
