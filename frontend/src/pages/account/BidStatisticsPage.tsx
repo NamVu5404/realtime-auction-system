@@ -1,7 +1,8 @@
-import ComingSoon from "./ComingSoon";
+import React from "react";
+import BidStatisticsDashboard from "../../features/bid/BidStatisticsDashboard";
 
-const BidStatisticsPage = () => {
-  return <ComingSoon title="Bid Statistics" />;
+const BidStatisticsPage: React.FC = () => {
+  return <BidStatisticsDashboard />;
 };
 
 export default BidStatisticsPage;

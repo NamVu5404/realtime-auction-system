@@ -254,6 +254,16 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public void processManualUpgradeToSellerNotifications(Long userId) {
+        try {
+            NotificationConstant type = NotificationConstant.MANUAL_UPGRADE_TO_SELLER;
+            self().createAndPushNotification(userId, type, type.getContent(), type.getRedirectUrl());
+        } catch (Exception e) {
+            log.warn("Failed to process manual upgrade to seller notifications for user {}: {}", userId, e.getMessage());
+        }
+    }
+
+    @Override
     public void processRejectSellerNotifications(Long userId, String reason) {
         try {
             NotificationConstant type = NotificationConstant.SELLER_REGISTRATION_REJECTED;

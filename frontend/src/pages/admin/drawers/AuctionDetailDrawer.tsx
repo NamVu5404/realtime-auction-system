@@ -678,6 +678,7 @@ export const AuctionDetailDrawer = ({
                   total: bidLogsData?.totalElements || 0,
                   onChange: (page) => setBidLogsPage(page),
                   showSizeChanger: false,
+                  showTotal: (total) => `Total ${total} items`,
                 }}
                 size="small"
                 scroll={{ x: "max-content" }}

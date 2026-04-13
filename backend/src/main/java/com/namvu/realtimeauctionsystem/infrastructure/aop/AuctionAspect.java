@@ -2,14 +2,14 @@ package com.namvu.realtimeauctionsystem.infrastructure.aop;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.constant.AuctionActionType;
+import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionResponse;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.CancelAuctionResponse;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.CreateAuctionRequest;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.AuctionAudit;
-import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionAuditRepository;
-import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionAuditService;
+import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -24,8 +24,8 @@ import java.util.Map;
 @Slf4j
 public class AuctionAspect {
 
-    private final AuctionAuditRepository auctionAuditRepository;
-    private final AuctionRepository auctionRepository;
+    private final AuctionAuditService auctionAuditService;
+    private final AuctionService auctionService;
     private final ObjectMapper objectMapper;
 
     @AfterReturning(
@@ -78,8 +78,8 @@ public class AuctionAspect {
         Map<String, Object> details = objectMapper.convertValue(response.getResult(), new TypeReference<>() {
         });
 
-        auctionAuditRepository.save(AuctionAudit.builder()
-                .auction(auctionRepository.getReferenceById(response.getResult().getAuctionId()))
+        auctionAuditService.saveAuctionAudit(AuctionAudit.builder()
+                .auction(auctionService.getAuctionReference(response.getResult().getAuctionId()))
                 .actionType(AuctionActionType.CANCELLED)
                 .details(details)
                 .build());
@@ -89,8 +89,8 @@ public class AuctionAspect {
         Map<String, Object> details = objectMapper.convertValue(response.getResult(), new TypeReference<>() {
         });
 
-        auctionAuditRepository.save(AuctionAudit.builder()
-                .auction(auctionRepository.getReferenceById(response.getResult().getId()))
+        auctionAuditService.saveAuctionAudit(AuctionAudit.builder()
+                .auction(auctionService.getAuctionReference(response.getResult().getId()))
                 .actionType(type)
                 .details(details)
                 .build());

@@ -149,7 +149,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: "28px",
+            marginBottom: "24px",
           }}
         >
           <Title

@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ContactRepository extends JpaRepository<Contact, Long> {
     Page<Contact> findByProcessedOrderByCreatedAtDesc(boolean processed, Pageable pageable);
+
+    long countByProcessed(boolean processed);
 }

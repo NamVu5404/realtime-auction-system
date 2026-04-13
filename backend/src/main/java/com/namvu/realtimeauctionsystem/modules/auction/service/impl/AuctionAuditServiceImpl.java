@@ -68,4 +68,9 @@ public class AuctionAuditServiceImpl implements AuctionAuditService {
 
         return auctionAuditMapper.mapToResponse(audit);
     }
+
+    @Override
+    public void saveAuctionAudit(AuctionAudit audit) {
+        auctionAuditRepository.save(audit);
+    }
 }

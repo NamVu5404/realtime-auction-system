@@ -1,7 +1,9 @@
 import {
+  BarChartOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
   EyeOutlined,
+  FilterOutlined,
   HistoryOutlined,
   MoreOutlined,
   SearchOutlined,
@@ -11,6 +13,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   App,
+  Badge,
   Button,
   Drawer,
   Dropdown,
@@ -35,6 +38,7 @@ import {
   UserRole,
 } from "../../api/types";
 import AccountTrackingDrawer from "../../components/admin/AccountTrackingDrawer";
+import BidStatisticsDashboard from "../../features/bid/BidStatisticsDashboard";
 import { useDebounce } from "../../hooks/useDebounce";
 import formatCurrency, { formatDateTime } from "../../utils/format";
 
@@ -77,6 +81,11 @@ const AdminUserPage = () => {
     type: "bid" | "violation" | "tracking";
     userId?: number;
   }>({ visible: false, type: "bid" });
+  const [statisticsDrawer, setStatisticsDrawer] = useState<{
+    visible: boolean;
+    userId?: number;
+    userName?: string;
+  }>({ visible: false });
   const [bidHistoryPage, setBidHistoryPage] = useState(1);
   const [trackingPage, setTrackingPage] = useState(1);
   const [blockModalVisible, setBlockModalVisible] = useState(false);
@@ -85,6 +94,7 @@ const AdminUserPage = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [unblockReason, setUnblockReason] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const roleStyles = {
@@ -197,6 +207,11 @@ const AdminUserPage = () => {
 
   const columns = [
     {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
       title: "Full Name",
       dataIndex: "name",
       key: "name",
@@ -296,6 +311,19 @@ const AdminUserPage = () => {
                     },
                   }
                 : null,
+              {
+                key: "bid-stats",
+                icon: <BarChartOutlined />,
+                label: "Bid Stats",
+                onClick: () => {
+                  setSelectedUser(record);
+                  setStatisticsDrawer({
+                    visible: true,
+                    userId: record.id,
+                    userName: record.name,
+                  });
+                },
+              },
               {
                 key: "user-audit",
                 icon: <HistoryOutlined />,
@@ -402,104 +430,163 @@ const AdminUserPage = () => {
 
   return (
     <div>
-      <h1
+      {/* Title row + Filter toggle button */}
+      <div
         style={{
-          fontSize: "24px",
-          fontWeight: 800,
-          letterSpacing: "-0.02em",
-          marginBottom: "28px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "24px",
         }}
       >
-        User Management
-      </h1>
-
-      {/* Filter Form */}
-      <div
-        className="filter-container"
-        style={{ animation: "fadeIn 0.35s ease-out" }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Search
-            </div>
-            <Input
-              placeholder="Search by Name, Email"
-              prefix={
-                <SearchOutlined style={{ color: "rgba(255,255,255,0.3)" }} />
-              }
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Role
-            </div>
-            <Select
-              placeholder="Select Role"
-              value={role}
-              onChange={(value) => setRole(value)}
-              allowClear
-              style={{ width: "100%" }}
-              options={[
-                { label: "USER", value: "USER" },
-                { label: "SELLER", value: "SELLER" },
-                { label: "ADMIN", value: "ADMIN" },
-              ]}
-            />
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Status
-            </div>
-            <Select
-              placeholder="Select Status"
-              value={status}
-              onChange={(value) => setStatus(value)}
-              allowClear
-              style={{ width: "100%" }}
-              options={[
-                { label: "ACTIVE", value: "ACTIVE" },
-                { label: "BLOCKED", value: "BLOCKED" },
-              ]}
-            />
-          </div>
+        <h1
+          style={{
+            fontSize: "24px",
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}
+        >
+          User Management
+        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {(keyword || role || status) && (
+            <Button icon={<DeleteOutlined />} onClick={handleClearFilters}>
+              Clear All
+            </Button>
+          )}
+          <Button
+            icon={<FilterOutlined />}
+            onClick={() => setIsFilterOpen((v) => !v)}
+            type={isFilterOpen ? "primary" : "default"}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            Filters
+            {(keyword || role || status) && (
+              <Badge
+                count={[keyword, role, status].filter(Boolean).length}
+                style={{
+                  backgroundColor: "#FED469",
+                  color: "#191B24",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  marginLeft: 4,
+                }}
+              />
+            )}
+          </Button>
         </div>
-        <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
-          <Button type="primary" icon={<SearchOutlined />} loading={isLoading}>
-            Search
-          </Button>
-          <Button icon={<DeleteOutlined />} onClick={handleClearFilters}>
-            Clear
-          </Button>
+      </div>
+
+      {/* Collapsible Filter — CSS grid trick: smooth, jank-free, animates to true height */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: isFilterOpen ? "1fr" : "0fr",
+          transition: "grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+          marginBottom: isFilterOpen ? "24px" : 0,
+          transitionProperty: "grid-template-rows, margin-bottom",
+        }}
+      >
+        <div style={{ overflow: "hidden" }}>
+          <div
+            className="filter-container"
+            style={{
+              animation: "none",
+              opacity: isFilterOpen ? 1 : 0,
+              transition: "opacity 0.2s ease",
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Search
+                </div>
+                <Input
+                  placeholder="Search by Name, Email"
+                  prefix={
+                    <SearchOutlined
+                      style={{ color: "rgba(255,255,255,0.3)" }}
+                    />
+                  }
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Role
+                </div>
+                <Select
+                  placeholder="Select Role"
+                  value={role}
+                  onChange={(value) => setRole(value)}
+                  allowClear
+                  style={{ width: "100%" }}
+                  options={[
+                    { label: "USER", value: "USER" },
+                    { label: "SELLER", value: "SELLER" },
+                    { label: "ADMIN", value: "ADMIN" },
+                  ]}
+                />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Status
+                </div>
+                <Select
+                  placeholder="Select Status"
+                  value={status}
+                  onChange={(value) => setStatus(value)}
+                  allowClear
+                  style={{ width: "100%" }}
+                  options={[
+                    { label: "ACTIVE", value: "ACTIVE" },
+                    { label: "BLOCKED", value: "BLOCKED" },
+                  ]}
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                loading={isLoading}
+              >
+                Search
+              </Button>
+              <Button icon={<DeleteOutlined />} onClick={handleClearFilters}>
+                Clear
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -516,6 +603,7 @@ const AdminUserPage = () => {
           total: data?.totalElements,
           onChange: (p) => setPage(p),
           showSizeChanger: false,
+          showTotal: (total) => `Total ${total} items`,
         }}
         rowClassName={(record) =>
           record.status === "BLOCKED" ? "opacity-50" : ""
@@ -560,6 +648,7 @@ const AdminUserPage = () => {
                 total: bidHistoryData?.totalElements || 0,
                 onChange: (p) => setBidHistoryPage(p),
                 showSizeChanger: false,
+                showTotal: (total) => `Total ${total} items`,
               }}
             />
           </div>
@@ -690,6 +779,22 @@ const AdminUserPage = () => {
           </div>
         </div>
       </Modal>
+      <Drawer
+        title={
+          <Space>
+            <span>Bid Statistics: {statisticsDrawer.userName}</span>
+          </Space>
+        }
+        size={1000}
+        placement="right"
+        onClose={() => setStatisticsDrawer({ visible: false })}
+        open={statisticsDrawer.visible}
+        destroyOnHidden
+      >
+        {statisticsDrawer.userId && (
+          <BidStatisticsDashboard userId={statisticsDrawer.userId} />
+        )}
+      </Drawer>
     </div>
   );
 };

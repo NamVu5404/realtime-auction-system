@@ -1,16 +1,15 @@
 package com.namvu.realtimeauctionsystem.modules.bid.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.common.constant.BidStatus;
+import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionWinProjection;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
-import com.namvu.realtimeauctionsystem.modules.bid.dto.BidPlacedEvent;
-import com.namvu.realtimeauctionsystem.modules.bid.dto.BidUpdateResult;
-import com.namvu.realtimeauctionsystem.modules.bid.dto.MyBidHistoryResponse;
+import com.namvu.realtimeauctionsystem.modules.bid.dto.*;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import com.namvu.realtimeauctionsystem.modules.bid.repository.BidRepository;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
@@ -27,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 
@@ -143,6 +143,20 @@ public class BidServiceImpl implements BidService {
 
     @Override
     @Transactional(readOnly = true)
+    public MyBidStatsResponse getMyBidStats(String period) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return getBidStats(userId, period);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public MyBidStatsResponse getBidStatsAdmin(Long userId, String period) {
+        return getBidStats(userId, period);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<MyBidHistoryResponse> getBidHistoryForAdmin(Long userId, Pageable pageable) {
         return getBidHistory(userId, pageable);
@@ -197,6 +211,29 @@ public class BidServiceImpl implements BidService {
                 .amount(bid.getAmount())
                 .status(bid.getStatus())
                 .createdAt(bid.getCreatedAt())
+                .build();
+    }
+
+    private MyBidStatsResponse getBidStats(Long userId, String period) {
+        String timeFormat = "WEEK".equalsIgnoreCase(period) ? "%x-W%v" : "%Y-%m";
+        Instant startDate = "WEEK".equalsIgnoreCase(period)
+                ? Instant.now().minus(30 * 3L, ChronoUnit.DAYS) // 3 months
+                : Instant.now().minus(365, ChronoUnit.DAYS);   // 1 year
+
+        Long totalBids = bidRepository.countTotalBids(userId);
+        Long totalAuctionsParticipated = bidRepository.countTotalAuctionsParticipated(userId);
+        List<BidChartProjection> chartData = bidRepository.getBidActivityChart(userId, startDate, timeFormat);
+
+        AuctionWinProjection winStats = auctionService.getAuctionWinMetrics(userId);
+
+        return MyBidStatsResponse.builder()
+                .totalAuctionsParticipated(totalAuctionsParticipated)
+                .totalWins(winStats.getTotalWins())
+                .totalBids(totalBids)
+                .highestWinningBid(winStats.getHighestWinningBid())
+                .totalSpent(winStats.getTotalSpent())
+                .activeLeading(winStats.getActiveLeading())
+                .activityChart(chartData)
                 .build();
     }
 }

@@ -3,11 +3,13 @@ package com.namvu.realtimeauctionsystem.modules.user.service;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
+import com.namvu.realtimeauctionsystem.modules.analytics.dto.UserAnalyticsResponse;
 import com.namvu.realtimeauctionsystem.modules.user.dto.*;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Set;
 
 public interface UserService {
@@ -29,7 +31,19 @@ public interface UserService {
 
     User saveUser(User user);
 
+    User getUserById(Long userId);
+
     User getUserReference(Long userId);
 
     Set<Long> getAllAdminIds();
+
+    PageResponse<SellerResponse> getSellers(Pageable pageable);
+
+    long countAllUsers();
+
+    long countSellers();
+
+    UserAnalyticsResponse getUserAnalytics();
+
+    List<TopSellerData> getTopSellers(int limit);
 }

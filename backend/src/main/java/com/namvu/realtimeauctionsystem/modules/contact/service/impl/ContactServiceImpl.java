@@ -68,4 +68,11 @@ public class ContactServiceImpl implements ContactService {
         contact.setProcessed(true);
         return contactMapper.mapToResponse(contactRepository.save(contact));
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public long countPending() {
+        return contactRepository.countByProcessed(false);
+    }
 }

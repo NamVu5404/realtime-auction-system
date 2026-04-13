@@ -81,17 +81,22 @@ public enum NotificationConstant {
             "Bạn có một yêu cầu đăng ký người bán mới. Vui lòng xem xét và phê duyệt.",
             ADMIN_SELLER_MANAGEMENT_URL
     ),
-    SELLER_REGISTRATION_APPROVED( // mail
+    SELLER_REGISTRATION_APPROVED(
             "Đăng ký tài khoản người bán đã được chấp thuận",
             "Chúc mừng! Bạn đã trở thành người bán. Hãy đăng nhập lại để có hiệu lực",
             SELLER_DASHBOARD_URL
     ),
-    SELLER_REGISTRATION_REJECTED( // mail
+    MANUAL_UPGRADE_TO_SELLER(
+            "Tài khoản đã được nâng cấp",
+            "Chúc mừng! Quản trị viên đã nâng cấp tài khoản của bạn lên quyền Người bán. Hãy đăng nhập lại để bắt đầu.",
+            SELLER_DASHBOARD_URL
+    ),
+    SELLER_REGISTRATION_REJECTED(
             "Đăng ký tài khoản người bán bị từ chối",
             "Yêu cầu đăng ký người bán của bạn bị từ chối. Lý do: %s.",
             SELLER_REGISTRATION_URL
     ),
-    REVOKE_SELLER_ROLE( // mail
+    REVOKE_SELLER_ROLE(
             "Thu hồi quyền người bán",
             "Quyền người bán của bạn đã bị thu hồi. Lý do: %s. Vui lòng liên hệ hỗ trợ để biết thêm chi tiết.",
             SELLER_REGISTRATION_URL

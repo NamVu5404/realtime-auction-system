@@ -143,6 +143,8 @@ public class SellerRegServiceImpl implements SellerRegService {
                         .approvedAt(reg.getApprovedAt())
                         .rejectReason(reg.getRejectReason())
                         .createdAt(reg.getCreatedAt())
+                        .updatedAt(reg.getUpdatedAt())
+                        .createdBy(reg.getCreatedBy())
                         .updatedBy(reg.getUpdatedBy())
                         .build())
                 .toList();
@@ -203,5 +205,17 @@ public class SellerRegServiceImpl implements SellerRegService {
         }
 
         return userMapper.mapToResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long getPendingRegistrations() {
+        return sellerRegRepository.countByStatus(RequestStatus.PENDING);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long getApprovedRegistrations() {
+        return sellerRegRepository.countByStatus(RequestStatus.APPROVED);
     }
 }

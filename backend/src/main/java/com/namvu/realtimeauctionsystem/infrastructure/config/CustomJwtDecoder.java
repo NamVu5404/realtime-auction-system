@@ -7,15 +7,15 @@ import com.nimbusds.jose.JOSEException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.text.ParseException;
+import java.util.List;
 import java.util.Objects;
 
 @Component
@@ -40,7 +40,12 @@ public class CustomJwtDecoder implements JwtDecoder {
                     IntrospectRequest.builder().accessToken(accessToken).build());
 
             if (!response.isValid()) {
-                log.warn("JWT validation failed: reason=INTROSPECT_INVALID, message=Token is invalid or expired");
+                OAuth2Error error = new OAuth2Error(
+                        OAuth2ErrorCodes.INVALID_TOKEN,
+                        "Token has expired",
+                        null
+                );
+                throw new JwtValidationException("Token has expired", List.of(error));
             }
         } catch (JOSEException | ParseException e) {
             log.warn("JWT validation failed: reason=INTROSPECT_ERROR, errorType={}, message={}",

@@ -2,6 +2,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
+  FilterOutlined,
   HistoryOutlined,
   MoreOutlined,
   PlusOutlined,
@@ -10,6 +11,7 @@ import {
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Badge,
   Button,
   DatePicker,
   Dropdown,
@@ -96,6 +98,7 @@ const AdminAuctionPage = () => {
   const [liveAuctions, setLiveAuctions] = useState<Set<number>>(new Set());
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Debounce the keyword input (300ms delay)
@@ -236,6 +239,11 @@ const AdminAuctionPage = () => {
 
   const columns = [
     {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
       title: "Image",
       dataIndex: "image",
       key: "image",
@@ -364,7 +372,7 @@ const AdminAuctionPage = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "28px",
+          marginBottom: "24px",
         }}
       >
         <h1
@@ -377,88 +385,123 @@ const AdminAuctionPage = () => {
         >
           Auction Management
         </h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setCreateModal(true)}
-          style={{
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            border: "none",
-            fontWeight: 700,
-            height: "38px",
-            borderRadius: "100px",
-            padding: "0 20px",
-            boxShadow:
-              "0 0 16px rgba(16,185,129,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
-          }}
-        >
-          Create Auction
-        </Button>
-      </div>
-
-      {/* Search Form */}
-      <div
-        className="filter-container"
-        style={{ animation: "fadeIn 0.35s ease-out" }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Search
-            </div>
-            <Input
-              placeholder="Search by Title, Description, Seller"
-              prefix={
-                <SearchOutlined style={{ color: "rgba(255,255,255,0.3)" }} />
-              }
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              onPressEnter={handleSearch}
-            />
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Date Range
-            </div>
-            <RangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              showTime
-              format="YYYY-MM-DD HH:mm"
-              className="w-full"
-            />
-          </div>
-        </div>
-        <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {(keyword || dateRange) && (
+            <Button icon={<DeleteOutlined />} onClick={handleClear}>
+              Clear All
+            </Button>
+          )}
+          <Button
+            icon={<FilterOutlined />}
+            onClick={() => setIsFilterOpen((v) => !v)}
+            type={isFilterOpen ? "primary" : "default"}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            Filters
+            {(keyword || dateRange) && (
+              <Badge
+                count={[keyword, dateRange].filter(Boolean).length}
+                style={{
+                  backgroundColor: "#FED469",
+                  color: "#191B24",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  marginLeft: 4,
+                }}
+              />
+            )}
+          </Button>
           <Button
             type="primary"
-            icon={<SearchOutlined />}
-            onClick={handleSearch}
-            loading={isLoading}
+            icon={<PlusOutlined />}
+            onClick={() => setCreateModal(true)}
           >
-            Search
+            Create Auction
           </Button>
-          <Button icon={<DeleteOutlined />} onClick={handleClear}>
-            Clear
-          </Button>
+        </div>
+      </div>
+
+      {/* Collapsible Filter */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: isFilterOpen ? "1fr" : "0fr",
+          transition: "grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+          marginBottom: isFilterOpen ? "24px" : 0,
+          transitionProperty: "grid-template-rows, margin-bottom",
+        }}
+      >
+        <div style={{ overflow: "hidden" }}>
+          <div
+            className="filter-container"
+            style={{
+              animation: "none",
+              opacity: isFilterOpen ? 1 : 0,
+              transition: "opacity 0.2s ease",
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Search
+                </div>
+                <Input
+                  placeholder="Search by Title, Description, Seller"
+                  prefix={
+                    <SearchOutlined
+                      style={{ color: "rgba(255,255,255,0.3)" }}
+                    />
+                  }
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  onPressEnter={handleSearch}
+                />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Date Range
+                </div>
+                <RangePicker
+                  value={dateRange}
+                  onChange={setDateRange}
+                  showTime
+                  format="YYYY-MM-DD HH:mm"
+                  className="w-full"
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                onClick={handleSearch}
+                loading={isLoading}
+              >
+                Search
+              </Button>
+              <Button icon={<DeleteOutlined />} onClick={handleClear}>
+                Clear
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -492,6 +535,7 @@ const AdminAuctionPage = () => {
           total: data?.totalElements,
           onChange: (p) => setPage(p),
           showSizeChanger: false,
+          showTotal: (total) => `Total ${total} items`,
         }}
         scroll={{ x: "max-content" }}
       />

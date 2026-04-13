@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 public interface AuctionService {
     PageResponse<AuctionResponse> getAuctionsByStatus(AuctionStatus status, Pageable pageable);
@@ -47,4 +48,14 @@ public interface AuctionService {
     Auction getAuctionReference(Long auctionId);
 
     AuctionStateSnapshot getAuctionState(Long auctionId);
+
+    AuctionWinProjection getAuctionWinMetrics(Long bidderId);
+
+    SellerStatsResponse getSellerStats(Long sellerId, String period);
+
+    KpiAuctionProjection getAdminKpiAuctionData();
+
+    AuctionOverviewProjection getAdminAuctionOverviewData();
+
+    List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat);
 }

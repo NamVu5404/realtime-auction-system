@@ -338,6 +338,12 @@ public class AuctionServiceImpl implements AuctionService {
         return redisAuctionService.getAuctionStateFromRedis(auctionId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public AuctionWinProjection getAuctionWinMetrics(Long bidderId) {
+        return auctionRepository.getAuctionWinMetrics(bidderId);
+    }
+
     private void populateImages(List<AuctionResponse> responses) {
         if (responses.isEmpty()) return;
 
@@ -415,5 +421,49 @@ public class AuctionServiceImpl implements AuctionService {
         if (!isSeller && !isAdmin) {
             throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SellerStatsResponse getSellerStats(Long sellerId, String period) {
+        String timeFormat = "WEEK".equalsIgnoreCase(period) ? "%x-W%v" : "%Y-%m";
+        Instant startDate = "WEEK".equalsIgnoreCase(period)
+                ? Instant.now().minus(30 * 3L, ChronoUnit.DAYS)
+                : Instant.now().minus(365, ChronoUnit.DAYS);
+
+        SellerAggregateProjection aggregate = auctionRepository.getSellerAggregateMetrics(sellerId);
+        List<SellerChartProjection> chartData = auctionRepository.getSellerRevenueChart(sellerId, startDate, timeFormat);
+
+        Long totalBidsReceived = bidQueryService.countTotalBidsReceivedBySeller(sellerId);
+        Long totalUniqueBidders = bidQueryService.countUniqueBiddersBySeller(sellerId);
+
+        return SellerStatsResponse.builder()
+                .totalRevenue(aggregate.getTotalRevenue())
+                .totalAuctionsCreated(aggregate.getTotalAuctionsCreated())
+                .totalAuctionsSold(aggregate.getTotalAuctionsSold())
+                .activeAuctions(aggregate.getActiveAuctions())
+                .totalBidsReceived(totalBidsReceived)
+                .highestSoldPrice(aggregate.getHighestSoldPrice())
+                .totalUniqueBidders(totalUniqueBidders)
+                .revenueChart(chartData)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public KpiAuctionProjection getAdminKpiAuctionData() {
+        return auctionRepository.getAdminKpiAuctionData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuctionOverviewProjection getAdminAuctionOverviewData() {
+        return auctionRepository.getAdminAuctionOverviewData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat) {
+        return auctionRepository.getAdminRevenueChartData(startDate, timeFormat);
     }
 }

@@ -40,6 +40,16 @@ const AdminLayout = () => {
       onClick: () => navigate("/admin"),
     },
     {
+      key: "notifications",
+      icon: (
+        <Badge dot={unreadCount > 0} offset={[2, 0]}>
+          <BellOutlined />
+        </Badge>
+      ),
+      label: "Notifications",
+      onClick: () => navigate("/admin/notifications"),
+    },
+    {
       key: "users",
       icon: <UserOutlined />,
       label: "User Management",
@@ -50,16 +60,6 @@ const AdminLayout = () => {
       icon: <AuditOutlined />,
       label: "Auction Management",
       onClick: () => navigate("/admin/auctions"),
-    },
-    {
-      key: "notifications",
-      icon: (
-        <Badge dot={unreadCount > 0} offset={[2, 0]}>
-          <BellOutlined />
-        </Badge>
-      ),
-      label: "Notifications",
-      onClick: () => navigate("/admin/notifications"),
     },
     {
       key: "sellers",

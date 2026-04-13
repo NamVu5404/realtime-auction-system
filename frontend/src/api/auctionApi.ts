@@ -11,6 +11,7 @@ import {
   AuctionHistoryResponse,
   PlaceBidResponseV2,
   AuctionAuditResponse,
+  SellerStatsResponse,
 } from "./types";
 import { ENV } from "../config/env";
 
@@ -213,6 +214,41 @@ export const auctionApi = {
       return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auction state:", error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  /**
+   * Fetch seller statistics for the authenticated seller
+   */
+  getMySellerStats: async (
+    period: "WEEK" | "MONTH" = "MONTH",
+  ): Promise<SellerStatsResponse> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<SellerStatsResponse>>(
+        "/auctions/seller/stats",
+        { params: { period } },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  /**
+   * Fetch seller statistics for an admin to view a specific seller
+   */
+  getSellerStatsAdmin: async (
+    sellerId: number,
+    period: "WEEK" | "MONTH" = "MONTH",
+  ): Promise<SellerStatsResponse> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<SellerStatsResponse>>(
+        `/auctions/sellers/${sellerId}/stats`,
+        { params: { period } },
+      );
+      return response.data.result!;
+    } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },

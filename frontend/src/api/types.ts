@@ -76,6 +76,24 @@ export interface User {
 }
 
 /**
+ * Seller Response - Derived from SellerResponse.java interface
+ */
+export interface SellerResponse {
+  userId: number;
+  name: string;
+  email: string;
+  phone?: string;
+  avatarUrl?: string;
+  location?: string;
+  isAdmin?: boolean;
+  approvedAt?: string;
+  totalAuctions: number;
+  liveAuctions: number;
+  endedAuctions: number;
+  totalRevenue: number;
+}
+
+/**
  * File Response Interface
  */
 export interface FileResponse {
@@ -360,4 +378,112 @@ export interface ContactResponse {
   updatedAt: string;
   createdBy?: string;
   updatedBy?: string;
+}
+
+export interface BidChartData {
+  periodLabel: string;
+  bidCount: number;
+  auctionsParticipated: number;
+}
+
+export interface MyBidStatsResponse {
+  totalAuctionsParticipated: number;
+  totalWins: number;
+  totalBids: number;
+  highestWinningBid: number;
+  totalSpent: number;
+  activeLeading: number;
+  activityChart: BidChartData[];
+}
+
+export interface SellerChartData {
+  periodLabel: string;
+  auctionsCompleted: number;
+  revenue: number;
+}
+
+export interface SellerStatsResponse {
+  totalRevenue: number;
+  totalAuctionsCreated: number;
+  totalAuctionsSold: number;
+  activeAuctions: number;
+  totalBidsReceived: number;
+  highestSoldPrice: number;
+  totalUniqueBidders: number;
+  revenueChart: SellerChartData[];
+}
+
+/**
+ * Admin Analytics Types
+ */
+
+export interface AdminKpiResponse {
+  totalPlatformRevenue: number;
+  liveAuctions: number;
+  totalUsers: number;
+  totalSellers: number;
+  pendingSellerRequests: number;
+  pendingContacts: number;
+}
+
+export interface AdminAuctionOverviewResponse {
+  totalAuctions: number;
+  liveCount: number;
+  scheduledCount: number;
+  endedCount: number;
+  cancelledCount: number;
+  draftCount: number;
+  successRate: number;
+  totalBidsAllTime: number;
+  avgBidsPerAuction: number;
+}
+
+export interface CountryStatData {
+  country: string;
+  userCount: number;
+}
+
+export interface AdminUserAnalyticsResponse {
+  totalUsers: number;
+  newUsersThisMonth: number;
+  blockedUsers: number;
+  usersByCountry: CountryStatData[];
+}
+
+export interface AdminChartPoint {
+  periodLabel: string;
+  revenue: number;
+  bidCount: number;
+}
+
+export interface AdminRevenueChartResponse {
+  totalRevenue: number;
+  totalBids: number;
+  chartData: AdminChartPoint[];
+}
+
+/**
+ * Top Performers Types
+ */
+
+export interface TopSellerData {
+  sellerId: number;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  totalRevenue: number;
+  auctionCount: number;
+}
+
+export interface MostActiveAuctionData {
+  auctionId: number;
+  title: string;
+  bidCount: number;
+  currentPrice: number;
+  status: string;
+}
+
+export interface TopPerformingResponse {
+  topSellers: TopSellerData[];
+  mostActiveAuctions: MostActiveAuctionData[];
 }

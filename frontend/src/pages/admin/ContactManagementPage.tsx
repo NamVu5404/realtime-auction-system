@@ -238,6 +238,7 @@ const ContactManagementPage: React.FC = () => {
             total: pendingData?.totalElements || 0,
             onChange: (p) => setPendingPage(p),
             showSizeChanger: false,
+            showTotal: (total) => `Total ${total} items`,
           }}
           className="admin-table"
         />
@@ -263,6 +264,7 @@ const ContactManagementPage: React.FC = () => {
             total: processedData?.totalElements || 0,
             onChange: (p) => setProcessedPage(p),
             showSizeChanger: false,
+            showTotal: (total) => `Total ${total} items`,
           }}
           className="admin-table"
         />
@@ -277,7 +279,7 @@ const ContactManagementPage: React.FC = () => {
           fontSize: "24px",
           fontWeight: 800,
           letterSpacing: "-0.02em",
-          marginBottom: "28px",
+          marginBottom: "24px",
         }}
       >
         Contact Management

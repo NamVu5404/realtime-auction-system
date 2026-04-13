@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.fraud.service.impl;
 
-import com.namvu.realtimeauctionsystem.modules.auction.dto.FraudCheckResult;
+import com.namvu.realtimeauctionsystem.modules.fraud.dto.FraudCheckResult;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;

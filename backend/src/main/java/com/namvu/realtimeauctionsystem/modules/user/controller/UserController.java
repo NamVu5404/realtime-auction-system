@@ -2,12 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.user.controller;
 
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
-import com.namvu.realtimeauctionsystem.modules.user.dto.BlockUserRequest;
-import com.namvu.realtimeauctionsystem.modules.user.dto.BlockUserResponse;
-import com.namvu.realtimeauctionsystem.modules.user.dto.ManagerUserResponse;
-import com.namvu.realtimeauctionsystem.modules.user.dto.UpdateUserRequest;
-import com.namvu.realtimeauctionsystem.modules.user.dto.UserAuditResponse;
-import com.namvu.realtimeauctionsystem.modules.user.dto.UserResponse;
+import com.namvu.realtimeauctionsystem.modules.user.dto.*;
 
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
@@ -85,5 +80,14 @@ public class UserController {
     @PatchMapping("/{userId}/upgrade-to-seller")
     public ApiResponse<UserResponse> upgradeToSeller(@PathVariable Long userId) {
         return ApiResponse.of(USER_UPGRADED_TO_SELLER, userService.upgradeToSeller(userId));
+    }
+
+    @GetMapping("/sellers")
+    public ApiResponse<PageResponse<SellerResponse>> getSellers(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        return ApiResponse.ok(userService.getSellers(pageable));
     }
 }

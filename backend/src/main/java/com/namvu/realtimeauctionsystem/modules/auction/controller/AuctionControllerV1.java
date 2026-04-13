@@ -3,6 +3,7 @@ package com.namvu.realtimeauctionsystem.modules.auction.controller;
 import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
+import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.*;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionAuditService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
@@ -13,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -150,5 +152,23 @@ public class AuctionControllerV1 {
     @GetMapping("/{auctionId}/state")
     public ApiResponse<AuctionStateSnapshot> getAuctionState(@PathVariable Long auctionId) {
         return ApiResponse.ok(auctionService.getAuctionState(auctionId));
+    }
+
+    @GetMapping("/seller/stats")
+    @PreAuthorize("hasAuthority('SELLER')")
+    public ApiResponse<SellerStatsResponse> getMySellerStats(
+            @RequestParam(value = "period", defaultValue = "MONTH") String period
+    ) {
+        Long sellerId = SecurityUtils.getCurrentUserId();
+        return ApiResponse.ok(auctionService.getSellerStats(sellerId, period));
+    }
+
+    @GetMapping("/sellers/{sellerId}/stats")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<SellerStatsResponse> getSellerStatsAdmin(
+            @PathVariable Long sellerId,
+            @RequestParam(value = "period", defaultValue = "MONTH") String period
+    ) {
+        return ApiResponse.ok(auctionService.getSellerStats(sellerId, period));
     }
 }

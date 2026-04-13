@@ -1,16 +1,14 @@
 package com.namvu.realtimeauctionsystem.modules.seller_registration.controller;
 
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
+import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.dto.SellerRegResponse;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.service.SellerRegService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
-
 import com.namvu.realtimeauctionsystem.modules.user.dto.UserResponse;
-
-import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.*;
 
 import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.*;
 
@@ -28,6 +26,16 @@ public class SellerRegController {
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
         return ApiResponse.ok(sellerRegService.getRegistrations(pageable));
+    }
+
+    @GetMapping("/registrations/pending")
+    public ApiResponse<Long> getPendingRegistrations() {
+        return ApiResponse.ok(sellerRegService.getPendingRegistrations());
+    }
+
+    @GetMapping("/registrations/approved")
+    public ApiResponse<Long> getApprovedRegistrations() {
+        return ApiResponse.ok(sellerRegService.getApprovedRegistrations());
     }
 
     @PostMapping("/registration")
