@@ -312,6 +312,19 @@ const AdminUserPage = () => {
                   }
                 : null,
               {
+                key: "bid-stats",
+                icon: <BarChartOutlined />,
+                label: "Bid Stats",
+                onClick: () => {
+                  setSelectedUser(record);
+                  setStatisticsDrawer({
+                    visible: true,
+                    userId: record.id,
+                    userName: record.name,
+                  });
+                },
+              },
+              {
                 key: "user-audit",
                 icon: <HistoryOutlined />,
                 label: "Audit Logs",
@@ -322,19 +335,6 @@ const AdminUserPage = () => {
                     visible: true,
                     type: "tracking",
                     userId: record.id,
-                  });
-                },
-              },
-              {
-                key: "bid-stats",
-                icon: <BarChartOutlined />,
-                label: "Bid Stats",
-                onClick: () => {
-                  setSelectedUser(record);
-                  setStatisticsDrawer({
-                    visible: true,
-                    userId: record.id,
-                    userName: record.name,
                   });
                 },
               },

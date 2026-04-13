@@ -13,4 +13,6 @@ public interface ContactService {
     PageResponse<ContactResponse> getProcessedContacts(Pageable pageable);
 
     ContactResponse markAsProcessed(Long id);
+
+    long countPending();
 }

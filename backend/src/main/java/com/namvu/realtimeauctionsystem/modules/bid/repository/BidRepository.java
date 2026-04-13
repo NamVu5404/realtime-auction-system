@@ -1,6 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.bid.repository;
 
+import com.namvu.realtimeauctionsystem.modules.bid.dto.BidProjection;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidChartProjection;
+import com.namvu.realtimeauctionsystem.modules.bid.dto.MostActiveAuctionProjection;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -77,4 +79,31 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
                 bidderId, auctionId, PageRequest.of(0, 10)
         );
     }
+
+    @Query("""
+            SELECT
+                FUNCTION('DATE_FORMAT', b.createdAt, :timeFormat) AS periodLabel,
+                COUNT(b.id) AS bidCount
+            FROM Bid b
+            WHERE b.createdAt >= :startDate
+            GROUP BY FUNCTION('DATE_FORMAT', b.createdAt, :timeFormat)
+            ORDER BY FUNCTION('DATE_FORMAT', b.createdAt, :timeFormat) ASC
+            """)
+    List<BidProjection> getAdminBidChartData(
+            @Param("startDate") Instant startDate,
+            @Param("timeFormat") String timeFormat
+    );
+
+    @Query("""
+            SELECT
+                b.auction.id AS auctionId,
+                b.auction.title AS title,
+                COUNT(b.id) AS bidCount,
+                b.auction.currentPrice AS currentPrice,
+                b.auction.status AS status
+            FROM Bid b
+            GROUP BY b.auction.id, b.auction.title, b.auction.currentPrice, b.auction.status
+            ORDER BY bidCount DESC
+            """)
+    List<MostActiveAuctionProjection> getMostActiveAuctions(Pageable pageable);
 }

@@ -198,9 +198,9 @@ const BidStatisticsDashboard: React.FC<BidStatisticsDashboardProps> = ({
       <Title level={4} style={{ marginBottom: "16px" }}>
         Quick Stats
       </Title>
-      <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-        <Col xs={12} sm={6}>
-          <Card size="small">
+      <Row gutter={[16, 16]} style={{ marginBottom: "24px" }} align="stretch">
+        <Col xs={12} sm={6} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Total Bids"
               value={stats.totalBids}
@@ -208,8 +208,8 @@ const BidStatisticsDashboard: React.FC<BidStatisticsDashboardProps> = ({
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
+        <Col xs={12} sm={6} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Participated"
               value={stats.totalAuctionsParticipated}
@@ -217,17 +217,19 @@ const BidStatisticsDashboard: React.FC<BidStatisticsDashboardProps> = ({
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
+        <Col xs={12} sm={6} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
             <Statistic title="Avg Bids/Auction" value={avgBids} />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
+        <Col xs={12} sm={6} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Highest Won"
               value={formatCurrency(stats.highestWinningBid)}
-              styles={{ content: { color: "var(--color-gold-start)" } }}
+              styles={{
+                content: { color: "var(--color-gold-start)", fontSize: "24px" },
+              }}
             />
           </Card>
         </Col>

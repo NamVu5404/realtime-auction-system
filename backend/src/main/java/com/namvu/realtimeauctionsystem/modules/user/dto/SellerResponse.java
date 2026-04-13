@@ -10,6 +10,7 @@ public interface SellerResponse {
     String getPhone();
     String getAvatarUrl();
     String getLocation();
+    Boolean getIsAdmin();
 
     Long getTotalAuctions();
     Long getLiveAuctions();

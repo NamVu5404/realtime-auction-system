@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { Card, Empty } from "antd";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/useAuthStore";
+import AdminDashboardContent from "../../features/admin/AdminDashboardContent";
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -24,15 +24,10 @@ export const AdminDashboard = () => {
           marginBottom: "24px",
         }}
       >
-        Admin Dashboard
+        Dashboard
       </h1>
 
-      <Card>
-        <Empty
-          description="Admin dashboard features coming soon"
-          style={{ padding: "50px 0" }}
-        />
-      </Card>
+      <AdminDashboardContent />
     </div>
   );
 };

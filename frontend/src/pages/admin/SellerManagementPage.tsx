@@ -390,18 +390,20 @@ const SellerManagementPage: React.FC = () => {
           >
             Statistics
           </Button>
-          <Button
-            danger
-            size="small"
-            icon={<CloseCircleOutlined />}
-            onClick={() => handleRevoke(record)}
-            loading={
-              revokeMutation.isPending &&
-              revokeMutation.variables?.userId === record.userId
-            }
-          >
-            Revoke Role
-          </Button>
+          {!record.isAdmin && (
+            <Button
+              danger
+              size="small"
+              icon={<CloseCircleOutlined />}
+              onClick={() => handleRevoke(record)}
+              loading={
+                revokeMutation.isPending &&
+                revokeMutation.variables?.userId === record.userId
+              }
+            >
+              Revoke Role
+            </Button>
+          )}
         </Space>
       ),
     },

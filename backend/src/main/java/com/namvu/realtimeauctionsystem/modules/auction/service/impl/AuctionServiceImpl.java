@@ -448,4 +448,22 @@ public class AuctionServiceImpl implements AuctionService {
                 .revenueChart(chartData)
                 .build();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public KpiAuctionProjection getAdminKpiAuctionData() {
+        return auctionRepository.getAdminKpiAuctionData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuctionOverviewProjection getAdminAuctionOverviewData() {
+        return auctionRepository.getAdminAuctionOverviewData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat) {
+        return auctionRepository.getAdminRevenueChartData(startDate, timeFormat);
+    }
 }

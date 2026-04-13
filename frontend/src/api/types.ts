@@ -85,6 +85,7 @@ export interface SellerResponse {
   phone?: string;
   avatarUrl?: string;
   location?: string;
+  isAdmin?: boolean;
   approvedAt?: string;
   totalAuctions: number;
   liveAuctions: number;
@@ -412,3 +413,77 @@ export interface SellerStatsResponse {
   revenueChart: SellerChartData[];
 }
 
+/**
+ * Admin Analytics Types
+ */
+
+export interface AdminKpiResponse {
+  totalPlatformRevenue: number;
+  liveAuctions: number;
+  totalUsers: number;
+  totalSellers: number;
+  pendingSellerRequests: number;
+  pendingContacts: number;
+}
+
+export interface AdminAuctionOverviewResponse {
+  totalAuctions: number;
+  liveCount: number;
+  scheduledCount: number;
+  endedCount: number;
+  cancelledCount: number;
+  draftCount: number;
+  successRate: number;
+  totalBidsAllTime: number;
+  avgBidsPerAuction: number;
+}
+
+export interface CountryStatData {
+  country: string;
+  userCount: number;
+}
+
+export interface AdminUserAnalyticsResponse {
+  totalUsers: number;
+  newUsersThisMonth: number;
+  blockedUsers: number;
+  usersByCountry: CountryStatData[];
+}
+
+export interface AdminChartPoint {
+  periodLabel: string;
+  revenue: number;
+  bidCount: number;
+}
+
+export interface AdminRevenueChartResponse {
+  totalRevenue: number;
+  totalBids: number;
+  chartData: AdminChartPoint[];
+}
+
+/**
+ * Top Performers Types
+ */
+
+export interface TopSellerData {
+  sellerId: number;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  totalRevenue: number;
+  auctionCount: number;
+}
+
+export interface MostActiveAuctionData {
+  auctionId: number;
+  title: string;
+  bidCount: number;
+  currentPrice: number;
+  status: string;
+}
+
+export interface TopPerformingResponse {
+  topSellers: TopSellerData[];
+  mostActiveAuctions: MostActiveAuctionData[];
+}

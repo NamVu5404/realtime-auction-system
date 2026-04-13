@@ -1,7 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.bid.dto;
 
-public interface BidChartProjection {
+public interface BidProjection {
     String getPeriodLabel();
     Long getBidCount();
-    Long getAuctionsParticipated();
 }

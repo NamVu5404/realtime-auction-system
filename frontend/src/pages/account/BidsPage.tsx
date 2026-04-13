@@ -111,7 +111,7 @@ const BidsPage = () => {
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
             <span style={{ color: "rgba(255,255,255,0.45)" }}>
-              Bạn chưa tham gia phiên đấu giá nào
+              No active bids found
             </span>
           }
         >
@@ -121,7 +121,7 @@ const BidsPage = () => {
             style={{ padding: "0 24px" }}
             size="large"
           >
-            Xem các phiên đấu giá
+            Browse Auctions
           </Button>
         </Empty>
       ) : (
@@ -141,7 +141,6 @@ const BidsPage = () => {
           style={{
             background: "transparent",
           }}
-          scroll={{ x: "max-content" }}
           className="custom-table"
         />
       )}

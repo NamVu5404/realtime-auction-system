@@ -7,6 +7,7 @@ import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
+import com.namvu.realtimeauctionsystem.modules.analytics.dto.UserAnalyticsResponse;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.file.service.FileService;
 import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 
@@ -151,6 +155,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    @Override
     public User getUserReference(Long userId) {
         return userRepository.getReferenceById(userId);
     }
@@ -212,5 +222,62 @@ public class UserServiceImpl implements UserService {
                 .totalPage(sellerResponses.getTotalPages())
                 .totalElements(sellerResponses.getTotalElements())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countAllUsers() {
+        return userRepository.count();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countSellers() {
+        return userRepository.countByRole(Role.SELLER);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public UserAnalyticsResponse getUserAnalytics() {
+        // Lấy ngày đầu của tháng
+        Instant startOfMonth = YearMonth.now()
+                .atDay(1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .toInstant();
+
+        long totalUsers = userRepository.count();
+        long newUsers = userRepository.countByCreatedAtAfter(startOfMonth);
+        long blockedUsers = userRepository.countByStatus(UserStatus.BLOCKED);
+
+        List<CountryStatsData> countryStats = userRepository.getUsersByCountry().stream()
+                .map(projection -> CountryStatsData.builder()
+                        .country(projection.getCountry())
+                        .userCount(projection.getUserCount())
+                        .build())
+                .toList();
+
+        return UserAnalyticsResponse.builder()
+                .totalUsers(totalUsers)
+                .newUsersThisMonth(newUsers)
+                .blockedUsers(blockedUsers)
+                .usersByCountry(countryStats)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public List<TopSellerData> getTopSellers(int limit) {
+        return userRepository.getTopSellers(PageRequest.of(0, limit)).stream()
+                .map(projection -> TopSellerData.builder()
+                        .sellerId(projection.getSellerId())
+                        .name(projection.getSellerName())
+                        .email(projection.getSellerEmail())
+                        .avatarUrl(projection.getAvatarUrl())
+                        .totalRevenue(projection.getTotalRevenue())
+                        .auctionCount(projection.getAuctionCount())
+                        .build())
+                .toList();
     }
 }

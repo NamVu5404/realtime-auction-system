@@ -97,6 +97,11 @@ public class UserAuditServiceImpl implements UserAuditService {
     }
 
     @Override
+    public void saveUserAudit(UserAudit audit) {
+        userAuditRepository.save(audit);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<UserAuditResponse> getUserAudit(Long userId, Pageable pageable) {

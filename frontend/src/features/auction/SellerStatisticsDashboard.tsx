@@ -79,6 +79,16 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
       ? Math.round((stats.totalAuctionsSold / stats.totalAuctionsCreated) * 100)
       : 0;
 
+  const avgSellingPrice =
+    stats.totalAuctionsSold > 0
+      ? stats.totalRevenue / stats.totalAuctionsSold
+      : 0;
+
+  const avgBidsPerAuction =
+    stats.totalAuctionsSold > 0
+      ? (stats.totalBidsReceived / stats.totalAuctionsSold).toFixed(1)
+      : "0";
+
   return (
     <div>
       {!sellerId && (
@@ -193,9 +203,9 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
       <Title level={4} style={{ marginBottom: "16px" }}>
         Quick Stats
       </Title>
-      <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
-        <Col xs={12} sm={6}>
-          <Card size="small">
+      <Row gutter={[16, 16]} style={{ marginBottom: "24px" }} align="stretch">
+        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Total Bids Received"
               value={stats.totalBidsReceived}
@@ -203,8 +213,8 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
+        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Unique Bidders"
               value={stats.totalUniqueBidders}
@@ -212,8 +222,22 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
+        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
+            <Statistic
+              title="Avg Selling Price"
+              value={formatCurrency(avgSellingPrice)}
+              styles={{ content: { fontSize: "24px" } }}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
+            <Statistic title="Avg Bids/Auction" value={avgBidsPerAuction} />
+          </Card>
+        </Col>
+        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Total Created"
               value={stats.totalAuctionsCreated}
@@ -221,12 +245,14 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
             />
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
-          <Card size="small">
+        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Highest Sold Item"
               value={formatCurrency(stats.highestSoldPrice)}
-              styles={{ content: { color: "var(--color-gold-start)" } }}
+              styles={{
+                content: { color: "var(--color-gold-start)", fontSize: "24px" },
+              }}
             />
           </Card>
         </Col>
