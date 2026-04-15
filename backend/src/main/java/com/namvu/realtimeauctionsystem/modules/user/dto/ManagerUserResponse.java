@@ -18,5 +18,6 @@ public class ManagerUserResponse extends UserResponse {
     private String registerIp;
     private String location;
     private UserStatus status;
+    private Instant bannedUntil;
     private Instant createdAt;
 }

@@ -63,6 +63,12 @@ public enum ErrorCode {
 
     // Contact (48xx)
     CONTACT_NOT_FOUND(4800, "Contact inquiry not found", HttpStatus.NOT_FOUND),
+
+    // Live Chat (49xx)
+    BANNED_CHAT(4900, "You are banned from chatting", HttpStatus.FORBIDDEN),
+    MESSAGE_NOT_FOUND(4901, "Message not found", HttpStatus.NOT_FOUND),
+    RATE_LIMIT_EXCEEDED(4902, "Too many requests, please try again later", HttpStatus.TOO_MANY_REQUESTS),
+    USER_BANNED(4903, "User has been banned.", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

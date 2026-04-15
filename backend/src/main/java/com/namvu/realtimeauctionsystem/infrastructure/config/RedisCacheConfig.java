@@ -45,6 +45,9 @@ public class RedisCacheConfig {
         // Images - 24 hours TTL
         cacheConfigs.put(CacheNameConstant.AUCTION_IMAGES, defaultConfig.entryTtl(Duration.ofHours(24)));
 
+        // LiveChat - 5 minutes TTL
+        cacheConfigs.put(CacheNameConstant.LIVECHAT, defaultConfig.entryTtl(Duration.ofMinutes(5)));
+
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(cacheConfigs)

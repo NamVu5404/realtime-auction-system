@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.Executor.MAIL_EXECUTOR;
@@ -28,6 +29,9 @@ public class MailServiceImpl implements MailService {
 
     private static final String FULL_NAME = "fullName";
     private static final String REASON = "reason";
+    private static final String AUCTION_TITLE = "auctionTitle";
+    private static final String WINNING_BID = "winningBid";
+    private static final String AUCTION_ID = "auctionId";
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -84,6 +88,22 @@ public class MailServiceImpl implements MailService {
                 .subject("Account Notification: Your Account has been Blocked")
                 .template("mail/user-block")
                 .variables(Map.of(FULL_NAME, fullName, REASON, reason))
+                .build());
+    }
+
+    @Async(MAIL_EXECUTOR)
+    @Override
+    public void sendAuctionWinnerEmail(String toEmail, String fullName, String auctionTitle, BigDecimal winningBid, Long auctionId) {
+        sendEmail(EmailContext.builder()
+                .to(toEmail)
+                .subject("Congratulations! You've Won the Auction: " + auctionTitle)
+                .template("mail/auction-winner")
+                .variables(Map.of(
+                        FULL_NAME, fullName,
+                        AUCTION_TITLE, auctionTitle,
+                        WINNING_BID, winningBid,
+                        AUCTION_ID, auctionId
+                ))
                 .build());
     }
 

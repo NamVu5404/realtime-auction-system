@@ -44,4 +44,19 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    @Bean(CHAT_EXECUTOR)
+    public Executor chatExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(4);
+        executor.setMaxPoolSize(20);
+        executor.setQueueCapacity(500);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("chat-async-");
+        executor.setRejectedExecutionHandler((r, exec) ->
+                log.warn("[chatExecutor] Queue full — chat task dropped")
+        );
+        executor.initialize();
+        return executor;
+    }
 }

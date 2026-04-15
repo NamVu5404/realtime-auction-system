@@ -2,7 +2,7 @@ spring:
   application:
     name: RealtimeAuctionSystem
   datasource:
-    url: ${DB_URL}?rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true
+    url: ${DB_URL}?rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true&characterEncoding=UTF-8&useUnicode=true
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
@@ -11,6 +11,7 @@ spring:
       connection-timeout: 10000
       idle-timeout: 300000
       max-lifetime: 1800000
+      connection-init-sql: "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
   jpa:
     hibernate:
       ddl-auto: update

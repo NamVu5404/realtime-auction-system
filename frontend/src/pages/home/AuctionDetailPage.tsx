@@ -40,6 +40,7 @@ import { message, notification } from "../../utils/antdStatic";
 import { formatAuctionTime, getTimeRemaining } from "../../utils/dateUtils";
 import { formatCurrency } from "../../utils/format";
 import { getAvatarUrl } from "../../utils/imageUtils";
+import FloatingChat from "../../features/auction/chat/FloatingChat";
 
 // Tách phần bidding form ra component riêng với state nội bộ
 const BiddingSection = memo(
@@ -283,57 +284,63 @@ export const AuctionDetailPage = () => {
   const hasCelebratedRef = useRef(false);
 
   // ✅ Premium Celebration Effect (Confetti + Notification) with Persistence
-  const triggerCelebration = useCallback((title: string, price: number) => {
-    if (hasCelebratedRef.current) return;
-    hasCelebratedRef.current = true;
+  const triggerCelebration = useCallback(
+    (title: string, price: number) => {
+      if (hasCelebratedRef.current) return;
+      hasCelebratedRef.current = true;
 
-    // Persist to localStorage to prevent re-triggering across sessions
-    if (user?.id && auction?.id) {
-      localStorage.setItem(`celebrated_auction_${user.id}_${auction.id}`, "true");
-    }
-
-    console.log("🏆 YOU WON! Triggering premium celebration...");
-    // ... animation logic stays the same ...
-    const duration = 10 * 1000;
-    const animationEnd = Date.now() + duration;
-    const defaults = {
-      startVelocity: 30,
-      spread: 360,
-      ticks: 60,
-      zIndex: 9999,
-    };
-
-    const randomInRange = (min: number, max: number) =>
-      Math.random() * (max - min) + min;
-
-    const interval: any = setInterval(function () {
-      const timeLeft = animationEnd - Date.now();
-
-      if (timeLeft <= 0) {
-        return clearInterval(interval);
+      // Persist to localStorage to prevent re-triggering across sessions
+      if (user?.id && auction?.id) {
+        localStorage.setItem(
+          `celebrated_auction_${user.id}_${auction.id}`,
+          "true",
+        );
       }
 
-      const particleCount = 50 * (timeLeft / duration);
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-      });
-      confetti({
-        ...defaults,
-        particleCount,
-        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-      });
-    }, 250);
+      console.log("🏆 YOU WON! Triggering premium celebration...");
+      // ... animation logic stays the same ...
+      const duration = 10 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = {
+        startVelocity: 30,
+        spread: 360,
+        ticks: 60,
+        zIndex: 9999,
+      };
 
-    notification.success({
-      message: "Congratulations! 🏆",
-      description: `You won the auction for "${title}" with a bid of ${formatCurrency(price)}!`,
-      duration: 10,
-      placement: "top",
-      className: "celebration-notification",
-    });
-  }, [user?.id, auction?.id]);
+      const randomInRange = (min: number, max: number) =>
+        Math.random() * (max - min) + min;
+
+      const interval: any = setInterval(function () {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        });
+        confetti({
+          ...defaults,
+          particleCount,
+          origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        });
+      }, 250);
+
+      notification.success({
+        message: "Congratulations! 🏆",
+        description: `You won the auction for "${title}" with a bid of ${formatCurrency(price)}!`,
+        duration: 10,
+        placement: "top",
+        className: "celebration-notification",
+      });
+    },
+    [user?.id, auction?.id],
+  );
 
   // ✅ Persistent Celebration Switch:
   // Fires whenever an auction moves to ENDED status and the current user is the winner.
@@ -343,7 +350,9 @@ export const AuctionDetailPage = () => {
       if (!auction || !user?.id) return;
 
       // Check localStorage first for absolute persistence
-      const isAlreadyCelebrated = localStorage.getItem(`celebrated_auction_${user.id}_${auction.id}`);
+      const isAlreadyCelebrated = localStorage.getItem(
+        `celebrated_auction_${user.id}_${auction.id}`,
+      );
       if (isAlreadyCelebrated) {
         hasCelebratedRef.current = true;
         return;
@@ -1010,7 +1019,7 @@ export const AuctionDetailPage = () => {
 
                   {/* Ghost gold action button */}
                   <button
-                    onClick={() => navigate(`/seller/auctions`)}
+                    onClick={() => navigate(`/seller/auctions/${auction.id}`)}
                     style={{
                       width: "100%",
                       height: "42px",
@@ -1404,6 +1413,17 @@ export const AuctionDetailPage = () => {
           </Col>
         </Row>
       </div>
+
+      {/* Floating Live Chat Icon/Panel */}
+      {auctionId && auction.status === AuctionStatus.LIVE && (
+        <FloatingChat
+          auctionId={auctionId}
+          isLive={isLive}
+          currentUserId={user?.id ? Number(user.id) : undefined}
+          sellerId={auction.seller.id}
+          isAdmin={user?.roles?.includes(UserRole.ADMIN)}
+        />
+      )}
 
       {/* Login Modal */}
       <LoginModal

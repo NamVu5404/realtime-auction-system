@@ -31,6 +31,8 @@ public class MessagingConstant {
         public static final String AUCTION_TOPIC_PREFIX = "/topic/auction/";
         public static final String NOTIFICATION_TOPIC_PREFIX = "/topic/notifications/";
         public static final String HEARTBEAT_TOPIC_PREFIX = "/topic/heartbeat";
+        public static final String CHAT_TOPIC_PREFIX = "/topic/chat/";
+        public static final String ERRORS_TOPIC_PREFIX = "/topic/errors";
     }
 
     public static final class Executor {
@@ -40,5 +42,6 @@ public class MessagingConstant {
 
         public static final String NOTIFICATION_EXECUTOR = "notificationExecutor";
         public static final String MAIL_EXECUTOR = "mailExecutor";
+        public static final String CHAT_EXECUTOR = "chatExecutor";
     }
 }

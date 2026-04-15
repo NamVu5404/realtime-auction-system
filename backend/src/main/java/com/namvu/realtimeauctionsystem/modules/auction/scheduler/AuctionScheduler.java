@@ -10,6 +10,7 @@ import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionAuditRe
 import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
+import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
 import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ public class AuctionScheduler {
     private final AuctionAuditRepository auctionAuditRepository;
     private final BidService bidService;
     private final NotificationService notificationService;
+    private final MailService mailService;
 
     /**
      * Chạy mỗi 1 giây, tìm auctions cần start
@@ -136,6 +138,15 @@ public class AuctionScheduler {
                 if (auction.getHighestBidder() != null) {
                     details.put("winner", auction.getHighestBidder().getEmail());
                     details.put("highest price", auction.getCurrentPrice());
+
+                    // Send email Winner
+                    mailService.sendAuctionWinnerEmail(
+                            auction.getHighestBidder().getEmail(),
+                            auction.getHighestBidder().getName(),
+                            auction.getTitle(),
+                            auction.getCurrentPrice(),
+                            auction.getId()
+                    );
 
                     // AUCTION_ENDED_WINNER
                     notificationService.processWinnerAuctionNotifications(

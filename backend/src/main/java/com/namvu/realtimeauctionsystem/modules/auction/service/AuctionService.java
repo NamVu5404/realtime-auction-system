@@ -45,6 +45,8 @@ public interface AuctionService {
 
     Auction saveAuction(Auction auction);
 
+    void isLiveAuction(Long auctionId);
+
     Auction getAuctionReference(Long auctionId);
 
     AuctionStateSnapshot getAuctionState(Long auctionId);

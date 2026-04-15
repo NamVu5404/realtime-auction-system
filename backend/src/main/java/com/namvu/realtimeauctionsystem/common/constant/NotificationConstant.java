@@ -55,7 +55,7 @@ public enum NotificationConstant {
     ),
     AUCTION_ENDED_SELLER(
             "Phiên đấu giá của bạn đã kết thúc",
-            "Phiên đấu giá '%s' đã kết thúc. Giá thắng cuộc: %s — người thắng: %s.",
+            "Phiên đấu giá '%s' đã kết thúc. Giá thắng cuộc: %s - người thắng: %s.",
             SELLER_AUCTION_DETAIL_URL
     ),
     AUCTION_ENDED_NO_BIDS(

@@ -333,6 +333,14 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    public void isLiveAuction(Long auctionId) {
+        Auction auction = getAuctionDetailById(auctionId);
+        if (auction.getStatus() != AuctionStatus.LIVE) {
+            throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+        }
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public AuctionStateSnapshot getAuctionState(Long auctionId) {
         return redisAuctionService.getAuctionStateFromRedis(auctionId);
@@ -342,6 +350,50 @@ public class AuctionServiceImpl implements AuctionService {
     @Transactional(readOnly = true)
     public AuctionWinProjection getAuctionWinMetrics(Long bidderId) {
         return auctionRepository.getAuctionWinMetrics(bidderId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SellerStatsResponse getSellerStats(Long sellerId, String period) {
+        String timeFormat = "WEEK".equalsIgnoreCase(period) ? "%x-W%v" : "%Y-%m";
+        Instant startDate = "WEEK".equalsIgnoreCase(period)
+                ? Instant.now().minus(30 * 3L, ChronoUnit.DAYS)
+                : Instant.now().minus(365, ChronoUnit.DAYS);
+
+        SellerAggregateProjection aggregate = auctionRepository.getSellerAggregateMetrics(sellerId);
+        List<SellerChartProjection> chartData = auctionRepository.getSellerRevenueChart(sellerId, startDate, timeFormat);
+
+        Long totalBidsReceived = bidQueryService.countTotalBidsReceivedBySeller(sellerId);
+        Long totalUniqueBidders = bidQueryService.countUniqueBiddersBySeller(sellerId);
+
+        return SellerStatsResponse.builder()
+                .totalRevenue(aggregate.getTotalRevenue())
+                .totalAuctionsCreated(aggregate.getTotalAuctionsCreated())
+                .totalAuctionsSold(aggregate.getTotalAuctionsSold())
+                .activeAuctions(aggregate.getActiveAuctions())
+                .totalBidsReceived(totalBidsReceived)
+                .highestSoldPrice(aggregate.getHighestSoldPrice())
+                .totalUniqueBidders(totalUniqueBidders)
+                .revenueChart(chartData)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public KpiAuctionProjection getAdminKpiAuctionData() {
+        return auctionRepository.getAdminKpiAuctionData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuctionOverviewProjection getAdminAuctionOverviewData() {
+        return auctionRepository.getAdminAuctionOverviewData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat) {
+        return auctionRepository.getAdminRevenueChartData(startDate, timeFormat);
     }
 
     private void populateImages(List<AuctionResponse> responses) {
@@ -421,49 +473,5 @@ public class AuctionServiceImpl implements AuctionService {
         if (!isSeller && !isAdmin) {
             throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
         }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public SellerStatsResponse getSellerStats(Long sellerId, String period) {
-        String timeFormat = "WEEK".equalsIgnoreCase(period) ? "%x-W%v" : "%Y-%m";
-        Instant startDate = "WEEK".equalsIgnoreCase(period)
-                ? Instant.now().minus(30 * 3L, ChronoUnit.DAYS)
-                : Instant.now().minus(365, ChronoUnit.DAYS);
-
-        SellerAggregateProjection aggregate = auctionRepository.getSellerAggregateMetrics(sellerId);
-        List<SellerChartProjection> chartData = auctionRepository.getSellerRevenueChart(sellerId, startDate, timeFormat);
-
-        Long totalBidsReceived = bidQueryService.countTotalBidsReceivedBySeller(sellerId);
-        Long totalUniqueBidders = bidQueryService.countUniqueBiddersBySeller(sellerId);
-
-        return SellerStatsResponse.builder()
-                .totalRevenue(aggregate.getTotalRevenue())
-                .totalAuctionsCreated(aggregate.getTotalAuctionsCreated())
-                .totalAuctionsSold(aggregate.getTotalAuctionsSold())
-                .activeAuctions(aggregate.getActiveAuctions())
-                .totalBidsReceived(totalBidsReceived)
-                .highestSoldPrice(aggregate.getHighestSoldPrice())
-                .totalUniqueBidders(totalUniqueBidders)
-                .revenueChart(chartData)
-                .build();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public KpiAuctionProjection getAdminKpiAuctionData() {
-        return auctionRepository.getAdminKpiAuctionData();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public AuctionOverviewProjection getAdminAuctionOverviewData() {
-        return auctionRepository.getAdminAuctionOverviewData();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat) {
-        return auctionRepository.getAdminRevenueChartData(startDate, timeFormat);
     }
 }

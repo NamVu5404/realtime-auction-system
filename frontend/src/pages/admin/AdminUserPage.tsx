@@ -9,6 +9,7 @@ import {
   SearchOutlined,
   ShopOutlined,
   StopOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -29,6 +30,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import adminApi, { mockViolations } from "../../api/adminApi";
 import bidApi from "../../api/bidApi";
+import { chatApi } from "../../api/chatApi";
 import {
   AuctionStatus,
   BidStatus,
@@ -164,6 +166,15 @@ const AdminUserPage = () => {
     onError: (error: any) => message.error(error.message),
   });
 
+  const unbanChatMutation = useMutation({
+    mutationFn: (userId: number) => chatApi.unbanUserFromChat(userId),
+    onSuccess: (data) => {
+      message.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (error: any) => message.error(error.message),
+  });
+
   const handleBlock = (userId: number) => {
     setSelectedUserId(userId);
     setBlockReason("");
@@ -262,6 +273,19 @@ const AdminUserPage = () => {
       ),
     },
     {
+      title: "Chat Banned Until",
+      dataIndex: "bannedUntil",
+      key: "bannedUntil",
+      render: (date: string) =>
+        date ? (
+          <span>
+            {new Date(date) > new Date(8640000000000000)
+              ? "Permanent"
+              : formatDateTime(date)}
+          </span>
+        ) : null,
+    },
+    {
       title: "Created At",
       dataIndex: "createdAt",
       key: "createdAt",
@@ -338,6 +362,24 @@ const AdminUserPage = () => {
                   });
                 },
               },
+              record.bannedUntil
+                ? {
+                    key: "unban-chat",
+                    icon: <UnlockOutlined />,
+                    label: "Unban Chat",
+                    onClick: () => {
+                      modal.confirm({
+                        title: "Confirm Unban Chat",
+                        content: `Are you sure you want to restore chat access for ${record.name}?`,
+                        onOk: () => unbanChatMutation.mutate(record.id),
+                        okText: "Unban",
+                        cancelText: "Cancel",
+                        centered: true,
+                        okButtonProps: { danger: false },
+                      });
+                    },
+                  }
+                : null,
               record.roles?.includes(UserRole.ADMIN)
                 ? null
                 : record.status === "ACTIVE"

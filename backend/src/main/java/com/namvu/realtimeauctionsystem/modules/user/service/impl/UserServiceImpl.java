@@ -168,6 +168,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public User getActiveUserById(Long userId) {
+        if (userId == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
         return userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
@@ -175,8 +179,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public User getActiveUserByEmail(String email) {
+        if (email == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
         return userRepository.findByEmailAndStatus(email, UserStatus.ACTIVE)
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 
     @Override
@@ -209,6 +217,29 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Set<Long> getAllAdminIds() {
         return userRepository.findAllAdminIds();
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void banUserFromChat(Long userId, int minutes) {
+        User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.isBanned()) {
+            throw new AppException(ErrorCode.USER_BANNED);
+        }
+
+        user.banUser(minutes);
+        userRepository.save(user);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public void unbanUserFromChat(Long userId) {
+        User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        user.setBannedUntil(null);
+        userRepository.save(user);
     }
 
     @Override
