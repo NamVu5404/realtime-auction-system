@@ -32,8 +32,7 @@ public class SecurityConfig {
     };
 
     private static final String[] PUBLIC_GET_ENDPOINTS = {
-            "/v1/auctions/**",
-            "/uploads/**",
+            "/v1/auctions/**", "/uploads/**", "/v1/live-chat/auctions/**"
     };
 
     @Bean

@@ -73,6 +73,7 @@ export interface User {
   avatarUrl?: string;
   status?: "ACTIVE" | "BLOCKED";
   phone?: string;
+  bannedUntil?: string; // ISO date string if user is banned from chat
 }
 
 /**
@@ -486,4 +487,27 @@ export interface MostActiveAuctionData {
 export interface TopPerformingResponse {
   topSellers: TopSellerData[];
   mostActiveAuctions: MostActiveAuctionData[];
+}
+
+/**
+ * Live Chat Types — Derived from LiveChatResponse.java & LiveChatRequest.java
+ */
+export interface LiveChatMessage {
+  id?: number;          // Present for history messages (from REST), absent for real-time WS broadcasts
+  auctionId: number;
+  senderId: number;
+  senderName: string;
+  senderAvatar?: string;
+  senderRole?: UserRole; // Prioritized role of the sender
+  content: string;
+  hidden?: boolean;    // True if the message was hidden by an admin
+  createdAt?: string;   // ISO string — present in history, absent in WS broadcast
+}
+
+export interface LiveChatRequest {
+  content: string;
+}
+
+export interface ListLiveChatResponse {
+  data: LiveChatMessage[];
 }

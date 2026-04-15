@@ -57,6 +57,11 @@ public enum SuccessCode {
     // Contact (18xx)
     CONTACT_SUBMITTED(1800, "Contact inquiry submitted successfully", HttpStatus.CREATED),
     CONTACT_PROCESSED(1801, "Contact inquiry marked as processed", HttpStatus.OK),
+
+    // LiveChat (19xx)
+    HIDDEN_MESSAGE(1900, "Hidden this message successfully", HttpStatus.OK),
+    BANNED_USER(1901, "User has been banned from chat successfully", HttpStatus.OK),
+    UNBANNED_USER(1902, "User has been unbanned from chat successfully", HttpStatus.OK),
     ;
 
     private final int code;

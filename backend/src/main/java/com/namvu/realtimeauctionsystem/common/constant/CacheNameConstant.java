@@ -6,11 +6,13 @@ public final class CacheNameConstant {
     }
 
     public static final String BLACKLISTED_TOKEN_PREFIX = "blacklist:jti:";
+    public static final String CHAT_RATE_LIMIT_PREFIX = "chat:rateLimit:";
 
     public static final String AUCTIONS = "auctions";
     public static final String NOTIFICATION_COUNT = "notificationCount";
     public static final String NOTIFICATION_BELL = "notificationBell";
     public static final String AUCTION_IMAGES = "auctionImages";
+    public static final String LIVECHAT = "liveChat";
 
     public static final class AuctionCacheKeyConstant {
         private AuctionCacheKeyConstant() {

@@ -37,6 +37,10 @@ public interface UserService {
 
     Set<Long> getAllAdminIds();
 
+    void banUserFromChat(Long userId, int minutes);
+
+    void unbanUserFromChat(Long userId);
+
     PageResponse<SellerResponse> getSellers(Pageable pageable);
 
     long countAllUsers();
