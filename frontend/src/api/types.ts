@@ -73,6 +73,25 @@ export interface User {
   avatarUrl?: string;
   status?: "ACTIVE" | "BLOCKED";
   phone?: string;
+  bannedUntil?: string; // ISO date string if user is banned from chat
+}
+
+/**
+ * Seller Response - Derived from SellerResponse.java interface
+ */
+export interface SellerResponse {
+  userId: number;
+  name: string;
+  email: string;
+  phone?: string;
+  avatarUrl?: string;
+  location?: string;
+  isAdmin?: boolean;
+  approvedAt?: string;
+  totalAuctions: number;
+  liveAuctions: number;
+  endedAuctions: number;
+  totalRevenue: number;
 }
 
 /**
@@ -110,6 +129,19 @@ export interface Auction {
 }
 
 /**
+ * Auction State Snapshot - Derived from AuctionStateSnapshot.java
+ * Returned by GET /v1/auctions/{id}/state
+ * Used as lightweight polling fallback when Kafka pipeline is down
+ */
+export interface AuctionStateSnapshot {
+  currentPrice: number;
+  highestBidderId: number | null;
+  highestBidderName: string | null;
+  highestBidderEmail: string | null;
+  endTime: string; // ISO string - reflects actual endTime including anti-snipe extensions
+}
+
+/**
  * Pagination Response - Derived from PageResponse<T>.java
  */
 export interface PageResponse<T> {
@@ -123,9 +155,27 @@ export interface PageResponse<T> {
 /**
  * API Response Wrapper - Derived from ApiResponse<T>.java
  */
+/**
+ * API Response Wrapper — mirrors backend ApiResponse<T> + ValidationErrorResponse.
+ * - `code`: SuccessCode (1xxx–3xxx) or ErrorCode (4xxx+, 9999)
+ * - `message`: always present from backend SuccessCode/ErrorCode
+ * - `result`: present on success, omitted (undefined) on error (@JsonInclude NON_NULL)
+ * - `errors`: only present for validation failures (ValidationErrorResponse extends ApiResponse)
+ */
 export interface ApiResponse<T> {
   code: number;
-  message?: string;
+  message: string;
+  result?: T;
+  errors?: Record<string, string>;
+}
+
+/**
+ * ApiResult<T> — returned by API layer functions used in mutations
+ * so that `onSuccess(data)` can call `message.success(data.message)`
+ * using the exact backend message instead of hardcoded strings.
+ */
+export interface ApiResult<T> {
+  message: string;
   result: T;
 }
 
@@ -305,4 +355,159 @@ export enum OwnerType {
   NEWS = "NEWS",
   HOME_THUMBNAIL = "HOME_THUMBNAIL",
   USER_AVATAR = "USER_AVATAR",
+}
+/**
+ * Contact Request/Response - Derived from Contact module
+ */
+export interface ContactRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  subject: string;
+  description: string;
+}
+
+export interface ContactResponse {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  subject: string;
+  description: string;
+  processed: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export interface BidChartData {
+  periodLabel: string;
+  bidCount: number;
+  auctionsParticipated: number;
+}
+
+export interface MyBidStatsResponse {
+  totalAuctionsParticipated: number;
+  totalWins: number;
+  totalBids: number;
+  highestWinningBid: number;
+  totalSpent: number;
+  activeLeading: number;
+  activityChart: BidChartData[];
+}
+
+export interface SellerChartData {
+  periodLabel: string;
+  auctionsCompleted: number;
+  revenue: number;
+}
+
+export interface SellerStatsResponse {
+  totalRevenue: number;
+  totalAuctionsCreated: number;
+  totalAuctionsSold: number;
+  activeAuctions: number;
+  totalBidsReceived: number;
+  highestSoldPrice: number;
+  totalUniqueBidders: number;
+  revenueChart: SellerChartData[];
+}
+
+/**
+ * Admin Analytics Types
+ */
+
+export interface AdminKpiResponse {
+  totalPlatformRevenue: number;
+  liveAuctions: number;
+  totalUsers: number;
+  totalSellers: number;
+  pendingSellerRequests: number;
+  pendingContacts: number;
+}
+
+export interface AdminAuctionOverviewResponse {
+  totalAuctions: number;
+  liveCount: number;
+  scheduledCount: number;
+  endedCount: number;
+  cancelledCount: number;
+  draftCount: number;
+  successRate: number;
+  totalBidsAllTime: number;
+  avgBidsPerAuction: number;
+}
+
+export interface CountryStatData {
+  country: string;
+  userCount: number;
+}
+
+export interface AdminUserAnalyticsResponse {
+  totalUsers: number;
+  newUsersThisMonth: number;
+  blockedUsers: number;
+  usersByCountry: CountryStatData[];
+}
+
+export interface AdminChartPoint {
+  periodLabel: string;
+  revenue: number;
+  bidCount: number;
+}
+
+export interface AdminRevenueChartResponse {
+  totalRevenue: number;
+  totalBids: number;
+  chartData: AdminChartPoint[];
+}
+
+/**
+ * Top Performers Types
+ */
+
+export interface TopSellerData {
+  sellerId: number;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  totalRevenue: number;
+  auctionCount: number;
+}
+
+export interface MostActiveAuctionData {
+  auctionId: number;
+  title: string;
+  bidCount: number;
+  currentPrice: number;
+  status: string;
+}
+
+export interface TopPerformingResponse {
+  topSellers: TopSellerData[];
+  mostActiveAuctions: MostActiveAuctionData[];
+}
+
+/**
+ * Live Chat Types — Derived from LiveChatResponse.java & LiveChatRequest.java
+ */
+export interface LiveChatMessage {
+  id?: number;          // Present for history messages (from REST), absent for real-time WS broadcasts
+  auctionId: number;
+  senderId: number;
+  senderName: string;
+  senderAvatar?: string;
+  senderRole?: UserRole; // Prioritized role of the sender
+  content: string;
+  hidden?: boolean;    // True if the message was hidden by an admin
+  createdAt?: string;   // ISO string — present in history, absent in WS broadcast
+}
+
+export interface LiveChatRequest {
+  content: string;
+}
+
+export interface ListLiveChatResponse {
+  data: LiveChatMessage[];
 }

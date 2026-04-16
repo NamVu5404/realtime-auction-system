@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.common.utils;
 
-import com.namvu.realtimeauctionsystem.common.enums.Role;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 

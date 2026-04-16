@@ -1,11 +1,11 @@
 package com.namvu.realtimeauctionsystem.modules.fraud.service.impl;
 
-import com.namvu.realtimeauctionsystem.modules.auction.dto.FraudCheckResult;
+import com.namvu.realtimeauctionsystem.modules.fraud.dto.FraudCheckResult;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
 import com.namvu.realtimeauctionsystem.modules.fraud.entity.FraudLog;
-import com.namvu.realtimeauctionsystem.common.enums.FraudType;
+import com.namvu.realtimeauctionsystem.common.constant.FraudType;
 import com.namvu.realtimeauctionsystem.modules.fraud.repository.FraudLogRepository;
 import com.namvu.realtimeauctionsystem.modules.fraud.service.FraudDetectionService;
 import lombok.RequiredArgsConstructor;

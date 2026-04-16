@@ -49,16 +49,16 @@ export const CancelAuctionModal = ({
         }
 
         // Call cancel API with reason
-        await adminApi.cancelAuction(auctionId, { reason });
+        const response = await adminApi.cancelAuction(auctionId, { reason });
 
-        message.success("Auction cancelled successfully");
+        message.success(response.message);
         form.resetFields();
         setReasonLength(0);
         onSuccess();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to cancel auction:", error);
-      message.error("Failed to cancel auction");
+      message.error(error.message);
     } finally {
       setIsLoading(false);
     }

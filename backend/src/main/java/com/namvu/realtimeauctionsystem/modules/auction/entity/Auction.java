@@ -4,7 +4,7 @@ import com.namvu.realtimeauctionsystem.common.entity.Auditable;
 import com.namvu.realtimeauctionsystem.modules.file.entity.File;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 
-import com.namvu.realtimeauctionsystem.common.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -74,6 +74,9 @@ public class Auction extends Auditable {
     @Column(name = "extension_count")
     @Builder.Default
     private Integer extensionCount = 0;
+
+    @Column(name = "notified_ending_soon", nullable = false)
+    private boolean notifiedEndingSoon = false;
 
     @Version
     @Column(name = "version")

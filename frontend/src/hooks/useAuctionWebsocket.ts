@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { notification } from "../utils/antdStatic";
 import { BidUpdateMessage } from "../api/types";
 import formatCurrency from "../utils/format";
+import { ENV } from "../config/env";
 
 interface UseAuctionWebsocketOptions {
   auctionId: number;
@@ -60,6 +61,9 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
     (message: Message) => {
       try {
         const rawBody = JSON.parse(message.body);
+
+        // Ignore PING messages — handled globally by useHeartbeat
+        if (rawBody.type === "PING") return;
 
         // Normalize fields (V1 uses currentPrice, V2 uses amount)
         const bidUpdate: BidUpdateMessage = {
@@ -121,15 +125,13 @@ export const useAuctionWebsocket = (options: UseAuctionWebsocketOptions) => {
     [auctionId, onBidUpdate, onTimeExtended],
   );
 
+
   /**
    * Create STOMP client with native reconnection mechanism
    * Uses useMemo to prevent recreating client instance on every render
    */
   const client = useMemo(() => {
-    // WebSocket URL. Prefer environment variable, fallback to backend path
-    // Backend uses context-path '/api/v1' so endpoint is /api/ws
-    const wsUrl =
-      (import.meta as any).env?.VITE_WS_URL || "http://localhost:8080/api/ws";
+    const wsUrl = ENV.WS_URL;
 
     return new Client({
       // Use SockJS factory for better browser compatibility

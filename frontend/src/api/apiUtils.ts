@@ -9,6 +9,15 @@ export const extractErrorMessage = (error: unknown): string => {
     // Try to get message from ApiResponse format (backend standard)
     if (error.response?.data && typeof error.response.data === "object") {
       const data = error.response.data as any;
+
+      // Handle Validation Errors: Pick the first field error
+      if (data.errors && typeof data.errors === "object") {
+        const errorValues = Object.values(data.errors);
+        if (errorValues.length > 0) {
+          return String(errorValues[0]);
+        }
+      }
+
       if (data.message) {
         return data.message;
       }

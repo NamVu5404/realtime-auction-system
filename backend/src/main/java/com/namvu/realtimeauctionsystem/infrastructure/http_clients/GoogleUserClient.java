@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.infrastructure.http_clients;
 
-import com.namvu.realtimeauctionsystem.modules.user.dto.OutboundUserResponse;
+import com.namvu.realtimeauctionsystem.modules.user.dto.Oauth2UserResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -8,5 +8,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "google-user-client", url = "https://www.googleapis.com")
 public interface GoogleUserClient {
     @GetMapping("//oauth2/v1/userinfo")
-    OutboundUserResponse getUserInfo(@RequestParam("access_token") String accessToken);
+    Oauth2UserResponse getUserInfo(@RequestParam("access_token") String accessToken);
 }

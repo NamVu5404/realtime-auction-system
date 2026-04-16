@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RefreshRequest {
 
-    @NotBlank
+    @NotBlank(message = "Access token is required")
     private String accessToken;
 
-    @NotBlank
+    @NotBlank(message = "Refresh token is required")
     private String refreshToken;
 }

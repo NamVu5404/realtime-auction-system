@@ -5,7 +5,7 @@ import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 
-import com.namvu.realtimeauctionsystem.common.enums.FraudType;
+import com.namvu.realtimeauctionsystem.common.constant.FraudType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,16 +1,18 @@
 package com.namvu.realtimeauctionsystem.modules.seller_registration.service.impl;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.enums.RequestStatus;
-import com.namvu.realtimeauctionsystem.common.enums.Role;
+import com.namvu.realtimeauctionsystem.common.constant.RequestStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
+import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.dto.SellerRegResponse;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.entity.SellerRegistration;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.repository.SellerRegRepository;
 import com.namvu.realtimeauctionsystem.modules.seller_registration.service.SellerRegService;
+import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
 import com.namvu.realtimeauctionsystem.modules.user.dto.UserResponse;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.modules.user.mapper.UserMapper;
@@ -37,6 +39,8 @@ public class SellerRegServiceImpl implements SellerRegService {
     private final UserMapper userMapper;
     private final UserAuditService userAuditService;
     private final AuctionService auctionService;
+    private final NotificationService notificationService;
+    private final MailService mailService;
 
     @Override
     @PreAuthorize("!hasAuthority('SELLER')")
@@ -54,6 +58,9 @@ public class SellerRegServiceImpl implements SellerRegService {
                         .user(user)
                         .build()
         );
+
+        // Push notification cho Admin
+        notificationService.processApplySellerNotifications(userService.getAllAdminIds());
 
         return SellerRegResponse.builder()
                 .id(res.getId())
@@ -80,6 +87,12 @@ public class SellerRegServiceImpl implements SellerRegService {
         // Save audit log
         userAuditService.sellerApprovedAudit(user, SecurityUtils.getCurrentUserEmail());
 
+        // Push notification
+        notificationService.processApproveSellerNotifications(user.getId());
+        
+        // Send email
+        mailService.sendSellerApprovalEmail(user.getEmail(), user.getName());
+
         return SellerRegResponse.builder()
                 .id(registration.getId())
                 .user(userMapper.mapToResponse(user))
@@ -102,6 +115,12 @@ public class SellerRegServiceImpl implements SellerRegService {
         // Save audit log
         userAuditService.sellerRejectedAudit(registration.getUser(), SecurityUtils.getCurrentUserEmail(), reason);
 
+        // Push notification
+        notificationService.processRejectSellerNotifications(registration.getUser().getId(), reason);
+
+        // Send email
+        mailService.sendSellerRejectionEmail(registration.getUser().getEmail(), registration.getUser().getName(), reason);
+
         return SellerRegResponse.builder()
                 .id(registration.getId())
                 .user(userMapper.mapToResponse(registration.getUser()))
@@ -111,6 +130,7 @@ public class SellerRegServiceImpl implements SellerRegService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<SellerRegResponse> getRegistrations(Pageable pageable) {
         Page<SellerRegistration> page = sellerRegRepository.findAllByOrderByCreatedAtDesc(pageable);
@@ -123,6 +143,9 @@ public class SellerRegServiceImpl implements SellerRegService {
                         .approvedAt(reg.getApprovedAt())
                         .rejectReason(reg.getRejectReason())
                         .createdAt(reg.getCreatedAt())
+                        .updatedAt(reg.getUpdatedAt())
+                        .createdBy(reg.getCreatedBy())
+                        .updatedBy(reg.getUpdatedBy())
                         .build())
                 .toList();
 
@@ -136,6 +159,7 @@ public class SellerRegServiceImpl implements SellerRegService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public SellerRegResponse getMyRegistration() {
         Long userId = SecurityUtils.getCurrentUserId();
         return sellerRegRepository.findFirstByUserIdOrderByCreatedAtDesc(userId)
@@ -170,10 +194,28 @@ public class SellerRegServiceImpl implements SellerRegService {
             String revokedBy = SecurityUtils.getCurrentUserEmail();
             userAuditService.sellerRoleRevokedAudit(user, reason, revokedBy);
 
+            // Push notification
+            notificationService.processRevokeSellerNotifications(user.getId(), reason);
+
+            // Send email
+            mailService.sendSellerRevocationEmail(user.getEmail(), user.getName(), reason);
+
             log.info("Admin {} revoked SELLER role for user {}. Reason: {}. Future auctions cancelled.",
                     revokedBy, userId, reason);
         }
 
         return userMapper.mapToResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long getPendingRegistrations() {
+        return sellerRegRepository.countByStatus(RequestStatus.PENDING);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long getApprovedRegistrations() {
+        return sellerRegRepository.countByStatus(RequestStatus.APPROVED);
     }
 }

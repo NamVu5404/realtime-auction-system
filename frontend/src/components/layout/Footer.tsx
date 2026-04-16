@@ -1,17 +1,33 @@
-import { Layout, Row, Col, Space } from "antd";
 import {
+  EnvironmentOutlined,
   FacebookFilled,
-  TwitterOutlined,
   InstagramOutlined,
-  YoutubeFilled,
   MailOutlined,
   PhoneOutlined,
-  EnvironmentOutlined,
+  TeamOutlined,
+  TwitterOutlined,
+  YoutubeFilled,
 } from "@ant-design/icons";
+import { Col, Layout, Row, Space } from "antd";
+import logo from "../../assets/images/logo.png";
+import { ENV, buildPublicSiteUrl } from "../../config/env";
 
 const { Footer: AntFooter } = Layout;
 
 export const Footer = () => {
+  const repoUrl = ENV.REPO_URL;
+  const links = {
+    howToBid: buildPublicSiteUrl("/how-to-bid/"),
+    buyersPremium: buildPublicSiteUrl("/buyers-premium/"),
+    authentication: buildPublicSiteUrl("/authentication/"),
+    shipping: buildPublicSiteUrl("/shipping/"),
+    helpCenter: buildPublicSiteUrl("/help-center/"),
+    aboutUs: buildPublicSiteUrl("/about-us/"),
+    privacyPolicy: buildPublicSiteUrl("/privacy-policy/"),
+    termsOfService: buildPublicSiteUrl("/terms-of-service/"),
+    cookiePolicy: buildPublicSiteUrl("/cookie-policy/"),
+  };
+
   return (
     <AntFooter
       style={{
@@ -34,7 +50,16 @@ export const Footer = () => {
                 marginBottom: "20px",
               }}
             >
-              <span style={{ fontSize: "30px" }}>⚡</span>
+              <img
+                src={logo}
+                alt="AuctionPro Logo"
+                style={{
+                  height: "40px",
+                  width: "auto",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
               <span
                 style={{
                   fontSize: "30px",
@@ -57,25 +82,33 @@ export const Footer = () => {
             </p>
             <Space size="middle">
               <a
-                href="#"
+                href={repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
               >
                 <FacebookFilled />
               </a>
               <a
-                href="#"
+                href={repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
               >
                 <TwitterOutlined />
               </a>
               <a
-                href="#"
+                href={repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
               >
                 <InstagramOutlined />
               </a>
               <a
-                href="#"
+                href={repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] text-[18px] transition-colors duration-300"
               >
                 <YoutubeFilled />
@@ -129,31 +162,41 @@ export const Footer = () => {
             </h4>
             <div className="flex flex-col space-y-3">
               <a
-                href="#"
+                href={links.howToBid}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 How to Bid
               </a>
               <a
-                href="#"
+                href={links.buyersPremium}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 Buyer's Premium
               </a>
               <a
-                href="#"
+                href={links.authentication}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 Authentication Process
               </a>
               <a
-                href="#"
+                href={links.shipping}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 Shipping & Delivery
               </a>
               <a
-                href="#"
+                href={links.helpCenter}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 Help Center & FAQ
@@ -166,18 +209,27 @@ export const Footer = () => {
             <h4 className="text-white text-[15px] font-bold mb-6 tracking-wider uppercase">
               Contact Us
             </h4>
+            <div className="flex items-center mb-4">
+              <TeamOutlined className="text-[#FED469] text-[16px] mr-3" />
+              <a
+                href={links.aboutUs}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
+              >
+                About Us
+              </a>
+            </div>
             <div className="flex items-start mb-4">
               <EnvironmentOutlined className="text-[#FED469] text-[16px] mr-3 mt-1" />
               <span className="text-white/55 text-[13px] leading-relaxed">
-                123 Luxury Avenue, Suite 400
-                <br />
-                Ho Chi Minh City, Vietnam
+                Ha Noi, Vietnam
               </span>
             </div>
             <div className="flex items-center mb-4">
               <PhoneOutlined className="text-[#FED469] text-[16px] mr-3" />
               <a
-                href="#"
+                href={ENV.CONTACT_PHONE_URL}
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 +84 9889 88888
@@ -186,7 +238,7 @@ export const Footer = () => {
             <div className="flex items-center">
               <MailOutlined className="text-[#FED469] text-[16px] mr-3" />
               <a
-                href="#"
+                href={ENV.CONTACT_EMAIL_URL}
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 contact@auctionpro.com
@@ -202,21 +254,27 @@ export const Footer = () => {
           </p>
           <div className="flex items-center space-x-4">
             <a
-              href="#"
+              href={links.privacyPolicy}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-white/40 hover:text-[#FED469] transition-colors duration-300 text-[12px]"
             >
               Privacy Policy
             </a>
             <span className="text-white/10 text-[12px]">|</span>
             <a
-              href="#"
+              href={links.termsOfService}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-white/40 hover:text-[#FED469] transition-colors duration-300 text-[12px]"
             >
               Terms of Service
             </a>
             <span className="text-white/10 text-[12px]">|</span>
             <a
-              href="#"
+              href={links.cookiePolicy}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-white/40 hover:text-[#FED469] transition-colors duration-300 text-[12px]"
             >
               Cookie Policy

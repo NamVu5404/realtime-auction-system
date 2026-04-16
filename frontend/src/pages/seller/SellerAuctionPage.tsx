@@ -2,6 +2,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
+  FilterOutlined,
   HistoryOutlined,
   MoreOutlined,
   PlusOutlined,
@@ -10,6 +11,7 @@ import {
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Badge,
   Button,
   DatePicker,
   Dropdown,
@@ -24,8 +26,9 @@ import {
   message,
 } from "antd";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams, useParams, useNavigate } from "react-router-dom";
+import { auctionApi } from "../../api/auctionApi";
 import adminApi from "../../api/adminApi";
 import {
   Auction,
@@ -40,8 +43,8 @@ import { convertUTCToLocal } from "../../utils/dateUtils";
 import formatCurrency, { formatDateTime } from "../../utils/format";
 import { getStatusColor } from "../../utils/statusUtils";
 import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
-import AuctionAuditDrawer from "../admin/drawers/AuctionAuditDrawer";
 import AuctionDetailDrawer from "../admin/drawers/AuctionDetailDrawer";
+import AuctionAuditDrawer from "../admin/drawers/AuctionAuditDrawer";
 
 const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 
@@ -81,6 +84,7 @@ const SellerAuctionPage = () => {
     auctionId?: number;
     auctionTitle?: string;
   }>({ visible: false });
+  const [auditPage, setAuditPage] = useState(1);
   const [createModal, setCreateModal] = useState(false);
   const [editModal, setEditModal] = useState<{
     visible: boolean;
@@ -94,10 +98,38 @@ const SellerAuctionPage = () => {
   const [liveAuctions, setLiveAuctions] = useState<Set<number>>(new Set());
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Debounce the keyword input (300ms delay)
   const debouncedKeyword = useDebounce(keyword, 300);
+
+  const { id: urlId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  // Fetch auction detail if id is in the URL (Deep Linking support)
+  const { data: detailAuction } = useQuery<Auction>({
+    queryKey: ["auction-detail", urlId],
+    queryFn: () => auctionApi.getAuctionDetail(Number(urlId)),
+    enabled: !!urlId && !isNaN(Number(urlId)),
+    retry: false,
+  });
+
+  // Automatically open drawer if we have a detail fetched from URL
+  useEffect(() => {
+    if (urlId && detailAuction) {
+      setDetailDrawer({ visible: true, auction: detailAuction });
+    }
+  }, [urlId, detailAuction]);
+
+  // Handle Close Drawer and clean URL
+  const handleCloseDetail = () => {
+    setDetailDrawer({ visible: false });
+    // Navigate back to the list page without the ID parameter
+    // Preserve current list search params (page, status, etc)
+    const currentParams = searchParams.toString();
+    navigate(`/seller/auctions${currentParams ? `?${currentParams}` : ""}`);
+  };
 
   // Manual trigger for search - initial query with LIVE status
   const { data, isLoading, refetch } = useQuery<PageResponse<Auction>>({
@@ -140,14 +172,14 @@ const SellerAuctionPage = () => {
 
   const createMutation = useMutation({
     mutationFn: adminApi.scheduleAuction,
-    onSuccess: () => {
-      message.success("Auction created successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
       setCreateModal(false);
       form.resetFields();
       refetch();
     },
-    onError: () => message.error("Failed to create auction"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const updateMutation = useMutation({
@@ -159,14 +191,14 @@ const SellerAuctionPage = () => {
       }
       throw new Error("Unknown auction status");
     },
-    onSuccess: () => {
-      message.success("Auction updated successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
       setEditModal({ visible: false });
       editForm.resetFields();
       refetch();
     },
-    onError: () => message.error("Failed to update auction"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const cancelMutation = useMutation({
@@ -177,13 +209,13 @@ const SellerAuctionPage = () => {
       id: number;
       request: CancelAuctionRequest;
     }) => adminApi.cancelAuction(id, request),
-    onSuccess: () => {
-      message.success("Auction cancelled successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
       setCancelModal({ visible: false });
       refetch();
     },
-    onError: () => message.error("Failed to cancel auction"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const handleSearch = () => {
@@ -233,6 +265,11 @@ const SellerAuctionPage = () => {
   };
 
   const columns = [
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+    },
     {
       title: "Image",
       dataIndex: "image",
@@ -305,7 +342,10 @@ const SellerAuctionPage = () => {
           key: "view-detail",
           icon: <EyeOutlined />,
           label: "View Detail",
-          onClick: () => setDetailDrawer({ visible: true, auction: record }),
+          onClick: () =>
+            navigate(
+              `/seller/auctions/${record.id}?${searchParams.toString()}`,
+            ),
         });
 
         // Show Audit Logs
@@ -313,12 +353,14 @@ const SellerAuctionPage = () => {
           key: "audit-logs",
           icon: <HistoryOutlined />,
           label: "Audit Logs",
-          onClick: () =>
+          onClick: () => {
+            setAuditPage(1);
             setAuditDrawer({
               visible: true,
               auctionId: record.id,
               auctionTitle: record.title,
-            }),
+            });
+          },
         });
 
         // Show Edit only for editable statuses
@@ -361,7 +403,7 @@ const SellerAuctionPage = () => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "28px",
+          marginBottom: "24px",
         }}
       >
         <h1
@@ -374,88 +416,123 @@ const SellerAuctionPage = () => {
         >
           Auction Management
         </h1>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setCreateModal(true)}
-          style={{
-            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-            border: "none",
-            fontWeight: 700,
-            height: "38px",
-            borderRadius: "100px",
-            padding: "0 20px",
-            boxShadow:
-              "0 0 16px rgba(16,185,129,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
-          }}
-        >
-          Create Auction
-        </Button>
-      </div>
-
-      {/* Search Form */}
-      <div
-        className="filter-container"
-        style={{ animation: "fadeIn 0.35s ease-out" }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Search
-            </div>
-            <Input
-              placeholder="Search by Title, Description"
-              prefix={
-                <SearchOutlined style={{ color: "rgba(255,255,255,0.3)" }} />
-              }
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              onPressEnter={handleSearch}
-            />
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Date Range
-            </div>
-            <RangePicker
-              value={dateRange}
-              onChange={setDateRange}
-              showTime
-              format="YYYY-MM-DD HH:mm"
-              className="w-full"
-            />
-          </div>
-        </div>
-        <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {(keyword || dateRange) && (
+            <Button icon={<DeleteOutlined />} onClick={handleClear}>
+              Clear All
+            </Button>
+          )}
+          <Button
+            icon={<FilterOutlined />}
+            onClick={() => setIsFilterOpen((v) => !v)}
+            type={isFilterOpen ? "primary" : "default"}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            Filters
+            {(keyword || dateRange) && (
+              <Badge
+                count={[keyword, dateRange].filter(Boolean).length}
+                style={{
+                  backgroundColor: "#FED469",
+                  color: "#191B24",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  marginLeft: 4,
+                }}
+              />
+            )}
+          </Button>
           <Button
             type="primary"
-            icon={<SearchOutlined />}
-            onClick={handleSearch}
-            loading={isLoading}
+            icon={<PlusOutlined />}
+            onClick={() => setCreateModal(true)}
           >
-            Search
+            Create Auction
           </Button>
-          <Button icon={<DeleteOutlined />} onClick={handleClear}>
-            Clear
-          </Button>
+        </div>
+      </div>
+
+      {/* Collapsible Filter */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: isFilterOpen ? "1fr" : "0fr",
+          transition: "grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+          marginBottom: isFilterOpen ? "24px" : 0,
+          transitionProperty: "grid-template-rows, margin-bottom",
+        }}
+      >
+        <div style={{ overflow: "hidden" }}>
+          <div
+            className="filter-container"
+            style={{
+              animation: "none",
+              opacity: isFilterOpen ? 1 : 0,
+              transition: "opacity 0.2s ease",
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Search
+                </div>
+                <Input
+                  placeholder="Search by Title, Description"
+                  prefix={
+                    <SearchOutlined
+                      style={{ color: "rgba(255,255,255,0.3)" }}
+                    />
+                  }
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  onPressEnter={handleSearch}
+                />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Date Range
+                </div>
+                <RangePicker
+                  value={dateRange}
+                  onChange={setDateRange}
+                  showTime
+                  format="YYYY-MM-DD HH:mm"
+                  className="w-full"
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                onClick={handleSearch}
+                loading={isLoading}
+              >
+                Search
+              </Button>
+              <Button icon={<DeleteOutlined />} onClick={handleClear}>
+                Clear
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -483,12 +560,14 @@ const SellerAuctionPage = () => {
         dataSource={data?.data}
         rowKey="id"
         loading={isLoading}
+        scroll={{ x: "max-content" }}
         pagination={{
           current: data?.currentPage,
           pageSize: data?.pageSize,
           total: data?.totalElements,
           onChange: (p) => setPage(p),
           showSizeChanger: false,
+          showTotal: (total) => `Total ${total} items`,
         }}
       />
 
@@ -497,7 +576,7 @@ const SellerAuctionPage = () => {
           key={detailDrawer.auction.id}
           auction={detailDrawer.auction}
           visible={detailDrawer.visible}
-          onClose={() => setDetailDrawer({ visible: false })}
+          onClose={handleCloseDetail}
         />
       )}
 
@@ -506,6 +585,8 @@ const SellerAuctionPage = () => {
         auctionId={auditDrawer.auctionId || null}
         auctionTitle={auditDrawer.auctionTitle}
         onClose={() => setAuditDrawer({ visible: false })}
+        page={auditPage}
+        onPageChange={setAuditPage}
       />
 
       <CancelAuctionModal

@@ -2,7 +2,7 @@ spring:
   application:
     name: RealtimeAuctionSystem
   datasource:
-    url: ${DB_URL}?rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true
+    url: ${DB_URL}?rewriteBatchedStatements=true&cachePrepStmts=true&useServerPrepStmts=true&characterEncoding=UTF-8&useUnicode=true
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
@@ -11,6 +11,7 @@ spring:
       connection-timeout: 10000
       idle-timeout: 300000
       max-lifetime: 1800000
+      connection-init-sql: "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
   jpa:
     hibernate:
       ddl-auto: update
@@ -25,6 +26,34 @@ spring:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
+  cache:
+    type: redis
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            redirect-uri: http://localhost:5173/auth/callback
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:vungocnam2000nd@gmail.com}
+    password: ${MAIL_PASSWORD:orzwqxxvqomvifvm}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
 
   data:
     redis:
@@ -43,7 +72,7 @@ spring:
     producer:
       acks: 1
       retries: 1
-      batch-size: 16384
+      batch-size: 65536
       compression-type: snappy
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -53,7 +82,6 @@ spring:
         retry.backoff.ms: 200
         linger.ms: 10
     consumer:
-      group-id: auction-db-sync-group
       auto-offset-reset: earliest
       enable-auto-commit: false
       max-poll-records: 100
@@ -75,19 +103,15 @@ server:
     accept-count: 500
     connection-timeout: 20000
 
-outbound:
-  redirect-uri: http://localhost:5173/auth/callback
-  google:
-    client-id: ${GOOGLE_CLIENT_ID}
-    client-secret: ${GOOGLE_CLIENT_SECRET}
-
 jwt:
   access-key: ${JWT_ACCESS_KEY}
   refresh-key: ${JWT_REFRESH_KEY}
-  valid-duration: 2 # in hours
-  refreshable-duration: 48 # in hours
+  valid-duration: 300           # 5 minutes
+  refreshable-duration: 604800  # 7 days
 
 app:
+  cors:
+    allowed-origin-patterns: http://localhost:5173,https://auctionpro-psi.vercel.app/
   file:
     upload-dir: F:/bidding-platform/upload
     max-size: 5242880 # 5MB

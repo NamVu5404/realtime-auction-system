@@ -1,8 +1,9 @@
 package com.namvu.realtimeauctionsystem.modules.auction.controller;
 
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.*;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionAuditService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
@@ -13,11 +14,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+
+import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.*;
 
 @RestController
 @RequestMapping("/v1/auctions")
@@ -37,57 +41,42 @@ public class AuctionControllerV1 {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<AuctionResponse>>builder()
-                .result(auctionService.getAuctionsByStatus(status, pageable))
-                .build();
+        return ApiResponse.ok(auctionService.getAuctionsByStatus(status, pageable));
     }
 
     @GetMapping("/{id}")
     public ApiResponse<AuctionResponse> getAuctionDetail(@PathVariable Long id) {
-        return ApiResponse.<AuctionResponse>builder()
-                .result(auctionService.getAuctionDetail(id))
-                .build();
+        return ApiResponse.ok(auctionService.getAuctionDetail(id));
     }
 
     @PostMapping("/draft")
     public ApiResponse<AuctionResponse> saveDraft(@Validated(CreateAuctionRequest.Draft.class)
                                                   @RequestBody CreateAuctionRequest request) {
-        return ApiResponse.<AuctionResponse>builder()
-                .result(auctionService.saveDraft(request))
-                .build();
+        return ApiResponse.of(CREATED, auctionService.saveDraft(request));
     }
 
     @PostMapping("/scheduler")
     public ApiResponse<AuctionResponse> scheduleAuction(@Validated(CreateAuctionRequest.Scheduler.class)
                                                         @RequestBody CreateAuctionRequest request) {
-        return ApiResponse.<AuctionResponse>builder()
-                .result(auctionService.scheduleAuction(request))
-                .build();
+        return ApiResponse.of(CREATED, auctionService.scheduleAuction(request));
     }
 
     @PutMapping("/{id}/draft")
     public ApiResponse<AuctionResponse> updateDraftAuction(@PathVariable Long id,
                                                            @Valid @RequestBody UpdateDraftAuctionRequest request) {
-        return ApiResponse.<AuctionResponse>builder()
-                .result(auctionService.updateDraftAuction(id, request))
-                .build();
+        return ApiResponse.of(DRAFT_AUCTION_UPDATED, auctionService.updateDraftAuction(id, request));
     }
 
     @PutMapping("/{id}/scheduler")
     public ApiResponse<AuctionResponse> updateScheduledAuction(@PathVariable Long id,
                                                                @Valid @RequestBody UpdateScheduledAuctionRequest request) {
-        return ApiResponse.<AuctionResponse>builder()
-                .result(auctionService.updateScheduledAuction(id, request))
-                .build();
+        return ApiResponse.of(SCHEDULED_AUCTION_UPDATED, auctionService.updateScheduledAuction(id, request));
     }
 
     @PatchMapping("/{id}/cancel")
     public ApiResponse<CancelAuctionResponse> cancelAuction(@PathVariable Long id,
                                                             @RequestBody @Valid CancelAuctionRequest request) {
-        return ApiResponse.<CancelAuctionResponse>builder()
-                .result(auctionService.cancelAuction(id, request))
-                .build();
+        return ApiResponse.of(AUCTION_CANCELLED, auctionService.cancelAuction(id, request));
     }
 
     /**
@@ -97,9 +86,7 @@ public class AuctionControllerV1 {
     @PostMapping("/{auctionId}/bids")
     public ApiResponse<PlaceBidResponse> placeBidV1(@PathVariable Long auctionId,
                                                    @RequestBody @Valid PlaceBidRequestV1 request) {
-        return ApiResponse.<PlaceBidResponse>builder()
-                .result(auctionService.placeBidV1(request))
-                .build();
+        return ApiResponse.of(BID_PLACED, auctionService.placeBidV1(request));
     }
 
     @GetMapping("/filter-seller")
@@ -112,10 +99,7 @@ public class AuctionControllerV1 {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<AuctionResponse>>builder()
-                .result(auctionService.filterSellerAuction(keyword, startTime, endTime, status, pageable))
-                .build();
+        return ApiResponse.ok(auctionService.filterSellerAuction(keyword, startTime, endTime, status, pageable));
     }
 
     @GetMapping("/filter-admin")
@@ -128,10 +112,7 @@ public class AuctionControllerV1 {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<AuctionResponse>>builder()
-                .result(auctionService.filterAdminAuction(keyword, startTime, endTime, status, pageable))
-                .build();
+        return ApiResponse.ok(auctionService.filterAdminAuction(keyword, startTime, endTime, status, pageable));
     }
 
     @GetMapping("/{id}/history")
@@ -141,17 +122,12 @@ public class AuctionControllerV1 {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<AuctionHistoryResponse>>builder()
-                .result(auctionService.getAuctionHistory(id, pageable))
-                .build();
+        return ApiResponse.ok(auctionService.getAuctionHistory(id, pageable));
     }
 
     @GetMapping("/{id}/current-price")
     public ApiResponse<BigDecimal> getCurrentPrice(@PathVariable Long id) {
-        return ApiResponse.<BigDecimal>builder()
-                .result(redisAuctionService.getCurrentPrice(id))
-                .build();
+        return ApiResponse.ok(redisAuctionService.getCurrentPrice(id));
     }
 
     @GetMapping("/{auctionId}/audit")
@@ -161,16 +137,38 @@ public class AuctionControllerV1 {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<AuctionAuditResponse>>builder()
-                .result(auctionAuditService.getAuctionAudit(auctionId, pageable))
-                .build();
+        return ApiResponse.ok(auctionAuditService.getAuctionAudit(auctionId, pageable));
     }
 
     @GetMapping("/{auctionId}/result")
     public ApiResponse<AuctionAuditResponse> getAuctionResult(@PathVariable Long auctionId) {
-        return ApiResponse.<AuctionAuditResponse>builder()
-                .result(auctionAuditService.getAuctionResult(auctionId))
-                .build();
+        return ApiResponse.ok(auctionAuditService.getAuctionResult(auctionId));
+    }
+
+    /**
+     *  Dùng khi Kafka down
+     *  Trade off: mất notifications
+     */
+    @GetMapping("/{auctionId}/state")
+    public ApiResponse<AuctionStateSnapshot> getAuctionState(@PathVariable Long auctionId) {
+        return ApiResponse.ok(auctionService.getAuctionState(auctionId));
+    }
+
+    @GetMapping("/seller/stats")
+    @PreAuthorize("hasAuthority('SELLER')")
+    public ApiResponse<SellerStatsResponse> getMySellerStats(
+            @RequestParam(value = "period", defaultValue = "MONTH") String period
+    ) {
+        Long sellerId = SecurityUtils.getCurrentUserId();
+        return ApiResponse.ok(auctionService.getSellerStats(sellerId, period));
+    }
+
+    @GetMapping("/sellers/{sellerId}/stats")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<SellerStatsResponse> getSellerStatsAdmin(
+            @PathVariable Long sellerId,
+            @RequestParam(value = "period", defaultValue = "MONTH") String period
+    ) {
+        return ApiResponse.ok(auctionService.getSellerStats(sellerId, period));
     }
 }

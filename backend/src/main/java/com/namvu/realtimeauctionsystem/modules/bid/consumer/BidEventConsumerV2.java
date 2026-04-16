@@ -1,8 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.bid.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.namvu.realtimeauctionsystem.common.enums.NotificationType;
-import com.namvu.realtimeauctionsystem.common.utils.MoneyUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidEvent;
 import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
@@ -16,7 +14,9 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
-import static com.namvu.realtimeauctionsystem.common.enums.KafkaTopicConstant.BID_EVENTS_TOPIC;
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.KafkaGroup.BID_PROCESSOR_GROUP;
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.KafkaTopic.BID_EVENTS_TOPIC;
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.AUCTION_TOPIC_PREFIX;
 
 @Component
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ public class BidEventConsumerV2 {
     private final NotificationService notificationService;
     private final RedisAuctionService redisAuctionService;
 
-    @KafkaListener(topics = BID_EVENTS_TOPIC, groupId = "auction-db-sync-group")
+    @KafkaListener(topics = BID_EVENTS_TOPIC, groupId = BID_PROCESSOR_GROUP)
     public void consumeBidEvent(
             ConsumerRecord<String, String> consumerRecord,
             Acknowledgment ack
@@ -38,46 +38,20 @@ public class BidEventConsumerV2 {
 
             // Broadcast thông tin giá mới qua WebSocket (chung phòng đấu giá)
             messagingTemplate.convertAndSend(
-                    "/topic/auction/" + event.getAuctionId(),
+                    AUCTION_TOPIC_PREFIX + event.getAuctionId(),
                     event
             );
-
-            handlePushNotification(event);
 
             // Manual commit sau khi xử lý thành công
             ack.acknowledge();
 
+            String title = redisAuctionService.getAuctionTitle(event.getAuctionId());
+            BigDecimal currentPrice = redisAuctionService.getCurrentPrice(event.getAuctionId());
+            notificationService.processBidNotifications(event, title, currentPrice);
+
         } catch (Exception e) {
             log.error("Failed to process bid event at offset {}: {}", consumerRecord.offset(), e.getMessage());
             // Không ack → Kafka retry
-        }
-    }
-
-    private void handlePushNotification(BidEvent event) {
-        String title = redisAuctionService.getAuctionTitle(event.getAuctionId());
-        BigDecimal currentPrice = redisAuctionService.getCurrentPrice(event.getAuctionId());
-
-        // Xử lý gửi Notification: OUTBID
-        // Chỉ gửi khi có người từng dẫn đầu trước đó và không phải tự outbid chính mình
-        if (event.getPreviousBidderId() != null && event.getPreviousBidderId() > 0
-                && !event.getPreviousBidderId().equals(event.getBidderId())) {
-
-            NotificationType type = NotificationType.OUTBID;
-            String content = type.buildContent(title, MoneyUtils.format(currentPrice));
-            String redirectUrl = type.buildRedirectUrl(event.getAuctionId());
-
-            notificationService.createAndPushNotification(event.getPreviousBidderId(), type, content, redirectUrl);
-        }
-
-        // Xử lý gửi Notification: BID_PLACED (Chỉ gửi cho người bán - Seller)
-        if (event.getSellerId() != null && event.getSellerId() > 0
-                && !event.getSellerId().equals(event.getBidderId())) {
-
-            NotificationType type = NotificationType.BID_PLACED;
-            String content = type.buildContent(title, MoneyUtils.format(currentPrice));
-            String redirectUrl = type.buildRedirectUrl(event.getAuctionId());
-
-            notificationService.createAndPushNotification(event.getSellerId(), type, content, redirectUrl);
         }
     }
 }

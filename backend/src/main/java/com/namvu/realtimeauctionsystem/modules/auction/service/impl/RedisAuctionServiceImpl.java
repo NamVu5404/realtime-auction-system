@@ -1,15 +1,17 @@
 package com.namvu.realtimeauctionsystem.modules.auction.service.impl;
 
-import com.namvu.realtimeauctionsystem.common.enums.AuctionCacheKey;
-import com.namvu.realtimeauctionsystem.common.enums.AuctionStatus;
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionInitRequest;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionRedisData;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionStateSnapshot;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidPlacedEvent;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidUpdateResult;
+import com.namvu.realtimeauctionsystem.modules.user.entity.User;
+import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -26,6 +28,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static com.namvu.realtimeauctionsystem.common.constant.CacheNameConstant.AuctionCacheKeyConstant.*;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -38,6 +42,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final UserService userService;
 
     /**
      * Khởi tạo dữ liệu auction trong Redis khi auction chuyển sang LIVE
@@ -47,19 +52,19 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         String key = AUCTION_KEY_PREFIX + request.getAuctionId();
 
         Map<String, String> data = new HashMap<>();
-        data.put(AuctionCacheKey.TITLE.getValue(), request.getTitle());
-        data.put(AuctionCacheKey.CURRENT_PRICE.getValue(), request.getStartPrice().toString());
-        data.put(AuctionCacheKey.MIN_STEP.getValue(), request.getMinStep().toString());
-        data.put(AuctionCacheKey.HIGHEST_BIDDER_ID.getValue(), "");
-        data.put(AuctionCacheKey.SELLER_ID.getValue(), request.getSellerId().toString());
-        data.put(AuctionCacheKey.BID_COUNT.getValue(), "0");
-        data.put(AuctionCacheKey.LAST_BID_TIME.getValue(), "");
-        data.put(AuctionCacheKey.END_TIME.getValue(), String.valueOf(request.getEndTime().getEpochSecond()));
-        data.put(AuctionCacheKey.STATUS.getValue(), AuctionStatus.LIVE.name());
-        data.put(AuctionCacheKey.ANTI_SNIPE_SECONDS.getValue(), request.getAntiSnipeSeconds().toString());
-        data.put(AuctionCacheKey.EXTENSION_SECONDS.getValue(), request.getExtensionSeconds().toString());
-        data.put(AuctionCacheKey.EXTENSION_COUNT.getValue(), request.getExtensionCount().toString());
-        data.put(AuctionCacheKey.VERSION.getValue(), "0");
+        data.put(TITLE, request.getTitle());
+        data.put(CURRENT_PRICE, request.getStartPrice().toString());
+        data.put(MIN_STEP, request.getMinStep().toString());
+        data.put(HIGHEST_BIDDER_ID, "");
+        data.put(SELLER_ID, request.getSellerId().toString());
+        data.put(BID_COUNT, "0");
+        data.put(LAST_BID_TIME, "");
+        data.put(END_TIME, String.valueOf(request.getEndTime().getEpochSecond()));
+        data.put(STATUS, AuctionStatus.LIVE.name());
+        data.put(ANTI_SNIPE_SECONDS, request.getAntiSnipeSeconds().toString());
+        data.put(EXTENSION_SECONDS, request.getExtensionSeconds().toString());
+        data.put(EXTENSION_COUNT, request.getExtensionCount().toString());
+        data.put(VERSION, "0");
 
         stringRedisTemplate.opsForHash().putAll(key, data);
 
@@ -101,13 +106,13 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
             }
 
             // Status check
-            String status = (String) auctionData.get(AuctionCacheKey.STATUS.getValue());
+            String status = (String) auctionData.get(STATUS);
             if (!"LIVE".equals(status)) {
                 return BidUpdateResult.failure("Auction closed", now);
             }
 
-            BigDecimal currentPrice = new BigDecimal((String) auctionData.get(AuctionCacheKey.CURRENT_PRICE.getValue()));
-            BigDecimal minStep = new BigDecimal((String) auctionData.get(AuctionCacheKey.MIN_STEP.getValue()));
+            BigDecimal currentPrice = new BigDecimal((String) auctionData.get(CURRENT_PRICE));
+            BigDecimal minStep = new BigDecimal((String) auctionData.get(MIN_STEP));
             BigDecimal minValidPrice = currentPrice.add(minStep);
 
             // Kiểm tra giá mới phải lớn hơn giá hiện tại + min step
@@ -124,19 +129,19 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
             extended = antiSniping(auctionId, now, auctionData);
 
             // Atomic update
-            stringRedisTemplate.opsForHash().put(key, AuctionCacheKey.CURRENT_PRICE.getValue(), newPrice.toString());
-            stringRedisTemplate.opsForHash().put(key, AuctionCacheKey.HIGHEST_BIDDER_ID.getValue(), bidderId.toString());
-            stringRedisTemplate.opsForHash().increment(key, AuctionCacheKey.BID_COUNT.getValue(), 1);
-            stringRedisTemplate.opsForHash().put(key, AuctionCacheKey.LAST_BID_TIME.getValue(), now.toString());
-            stringRedisTemplate.opsForHash().increment(key, AuctionCacheKey.VERSION.getValue(), 1);
+            stringRedisTemplate.opsForHash().put(key, CURRENT_PRICE, newPrice.toString());
+            stringRedisTemplate.opsForHash().put(key, HIGHEST_BIDDER_ID, bidderId.toString());
+            stringRedisTemplate.opsForHash().increment(key, BID_COUNT, 1);
+            stringRedisTemplate.opsForHash().put(key, LAST_BID_TIME, now.toString());
+            stringRedisTemplate.opsForHash().increment(key, VERSION, 1);
 
             // Gia hạn thời gian
             if (extended) {
-                stringRedisTemplate.opsForHash().put(key, AuctionCacheKey.END_TIME.getValue(), auctionData.get(AuctionCacheKey.END_TIME.getValue()));
-                stringRedisTemplate.opsForHash().put(key, AuctionCacheKey.EXTENSION_COUNT.getValue(), auctionData.get(AuctionCacheKey.EXTENSION_COUNT.getValue()));
+                stringRedisTemplate.opsForHash().put(key, END_TIME, auctionData.get(END_TIME));
+                stringRedisTemplate.opsForHash().put(key, EXTENSION_COUNT, auctionData.get(EXTENSION_COUNT));
             }
 
-            Instant finalEndTime = (Instant) auctionData.get(AuctionCacheKey.END_TIME.getValue());
+            Instant finalEndTime = (Instant) auctionData.get(END_TIME);
 
             result = BidUpdateResult.success(newPrice, bidderId, now, extended, finalEndTime);
             log.info("Successfully updated bid for auction {}: price={}, bidder={}", auctionId, newPrice, bidderId);
@@ -167,7 +172,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     public String getAuctionTitle(Long auctionId) {
         try {
             String key = AUCTION_KEY_PREFIX + auctionId;
-            Object priceObj = stringRedisTemplate.opsForHash().get(key, AuctionCacheKey.TITLE.getValue());
+            Object priceObj = stringRedisTemplate.opsForHash().get(key, TITLE);
 
             if (priceObj == null) {
                 log.warn("Title not found for auction {}", auctionId);
@@ -187,7 +192,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     public BigDecimal getCurrentPrice(Long auctionId) {
         try {
             String key = AUCTION_KEY_PREFIX + auctionId;
-            Object priceObj = stringRedisTemplate.opsForHash().get(key, AuctionCacheKey.CURRENT_PRICE.getValue());
+            Object priceObj = stringRedisTemplate.opsForHash().get(key, CURRENT_PRICE);
 
             if (priceObj == null) {
                 log.warn("Current price not found for auction {}", auctionId);
@@ -198,21 +203,6 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         } catch (Exception e) {
             throw new AppException(ErrorCode.REDIS_DOWN);
         }
-    }
-
-    /**
-     * Lấy ID của người bid cao nhất
-     */
-    @Override
-    public Long getHighestBidderId(Long auctionId) {
-        String key = AUCTION_KEY_PREFIX + auctionId;
-        Object bidderIdObj = stringRedisTemplate.opsForHash().get(key, AuctionCacheKey.HIGHEST_BIDDER_ID.getValue());
-
-        if (bidderIdObj == null) {
-            return null;
-        }
-
-        return Long.parseLong(String.valueOf(bidderIdObj));
     }
 
     /**
@@ -229,26 +219,16 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
 
         return AuctionRedisData.builder()
                 .auctionId(auctionId)
-                .currentPrice(new BigDecimal((String) data.get(AuctionCacheKey.CURRENT_PRICE.getValue())))
-                .highestBidderId(data.get(AuctionCacheKey.HIGHEST_BIDDER_ID.getValue()) != null ?
-                        Long.parseLong((String) data.get(AuctionCacheKey.HIGHEST_BIDDER_ID.getValue())) : null)
-                .sellerId(Long.parseLong((String) data.get(AuctionCacheKey.SELLER_ID.getValue())))
-                .bidCount((Integer) data.get(AuctionCacheKey.BID_COUNT.getValue()))
-                .lastBidTime(data.get(AuctionCacheKey.LAST_BID_TIME.getValue()) != null ?
-                        Instant.parse((String) data.get(AuctionCacheKey.LAST_BID_TIME.getValue())) : null)
-                .endTime(Instant.parse((String) data.get(AuctionCacheKey.END_TIME.getValue())))
-                .status((String) data.get(AuctionCacheKey.STATUS.getValue()))
+                .currentPrice(new BigDecimal((String) data.get(CURRENT_PRICE)))
+                .highestBidderId(data.get(HIGHEST_BIDDER_ID) != null ?
+                        Long.parseLong((String) data.get(HIGHEST_BIDDER_ID)) : null)
+                .sellerId(Long.parseLong((String) data.get(SELLER_ID)))
+                .bidCount((Integer) data.get(BID_COUNT))
+                .lastBidTime(data.get(LAST_BID_TIME) != null ?
+                        Instant.parse((String) data.get(LAST_BID_TIME)) : null)
+                .endTime(Instant.parse((String) data.get(END_TIME)))
+                .status((String) data.get(STATUS))
                 .build();
-    }
-
-    /**
-     * Cập nhật thời gian kết thúc (cho anti-sniping)
-     */
-    @Override
-    public void updateEndTime(Long auctionId, Instant newEndTime) {
-        String key = AUCTION_KEY_PREFIX + auctionId;
-        stringRedisTemplate.opsForHash().put(key, AuctionCacheKey.END_TIME.getValue(), newEndTime.toString());
-        log.info("Updated end time for auction {} to {}", auctionId, newEndTime);
     }
 
     /**
@@ -257,7 +237,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     @Override
     public void updateStatus(Long auctionId, String status) {
         String key = AUCTION_KEY_PREFIX + auctionId;
-        stringRedisTemplate.opsForHash().put(key, AuctionCacheKey.STATUS.getValue(), status);
+        stringRedisTemplate.opsForHash().put(key, STATUS, status);
         log.info("Updated status for auction {} to {}", auctionId, status);
     }
 
@@ -272,15 +252,6 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
     }
 
     /**
-     * Kiểm tra auction có tồn tại trong Redis không
-     */
-    @Override
-    public boolean exists(Long auctionId) {
-        String key = AUCTION_KEY_PREFIX + auctionId;
-        return Boolean.TRUE.equals(stringRedisTemplate.hasKey(key));
-    }
-
-    /**
      * Đồng bộ dữ liệu từ DB lên Redis
      */
     @Override
@@ -288,20 +259,20 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         String key = AUCTION_KEY_PREFIX + auction.getId();
 
         Map<String, String> data = new HashMap<>();
-        data.put(AuctionCacheKey.TITLE.getValue(), auction.getTitle());
-        data.put(AuctionCacheKey.CURRENT_PRICE.getValue(), auction.getCurrentPrice().toString());
-        data.put(AuctionCacheKey.MIN_STEP.getValue(), auction.getMinStep().toString());
-        data.put(AuctionCacheKey.SELLER_ID.getValue(), auction.getSeller().getId().toString());
-        data.put(AuctionCacheKey.END_TIME.getValue(), String.valueOf(auction.getEndTime().getEpochSecond()));
-        data.put(AuctionCacheKey.STATUS.getValue(), auction.getStatus().name());
-        data.put(AuctionCacheKey.ANTI_SNIPE_SECONDS.getValue(), auction.getAntiSnipeSeconds().toString());
-        data.put(AuctionCacheKey.EXTENSION_SECONDS.getValue(), auction.getExtensionSeconds().toString());
-        data.put(AuctionCacheKey.EXTENSION_COUNT.getValue(), auction.getExtensionCount().toString());
+        data.put(TITLE, auction.getTitle());
+        data.put(CURRENT_PRICE, auction.getCurrentPrice().toString());
+        data.put(MIN_STEP, auction.getMinStep().toString());
+        data.put(SELLER_ID, auction.getSeller().getId().toString());
+        data.put(END_TIME, String.valueOf(auction.getEndTime().getEpochSecond()));
+        data.put(STATUS, auction.getStatus().name());
+        data.put(ANTI_SNIPE_SECONDS, auction.getAntiSnipeSeconds().toString());
+        data.put(EXTENSION_SECONDS, auction.getExtensionSeconds().toString());
+        data.put(EXTENSION_COUNT, auction.getExtensionCount().toString());
 
         if (auction.getHighestBidder() != null) {
-            data.put(AuctionCacheKey.HIGHEST_BIDDER_ID.getValue(), auction.getHighestBidder().getId().toString());
+            data.put(HIGHEST_BIDDER_ID, auction.getHighestBidder().getId().toString());
         } else {
-            data.put(AuctionCacheKey.HIGHEST_BIDDER_ID.getValue(), "");
+            data.put(HIGHEST_BIDDER_ID, "");
         }
 
         stringRedisTemplate.opsForHash().putAll(key, data);
@@ -314,11 +285,32 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         log.info("Synced auction {} from DB to Redis with currentPrice {}", auction.getId(), auction.getCurrentPrice());
     }
 
+    @Override
+    public AuctionStateSnapshot getAuctionStateFromRedis(Long auctionId) {
+        String key = AUCTION_KEY_PREFIX + auctionId;
+        Map<Object, Object> data = stringRedisTemplate.opsForHash().entries(key);
+
+        if (data.isEmpty()) {
+            return null;
+        }
+
+        Long highestBidderId = parseLong(data.get(HIGHEST_BIDDER_ID));
+        User user = userService.getActiveUserById(highestBidderId);
+
+        return AuctionStateSnapshot.builder()
+                .currentPrice(parseBigDecimal(data.get(CURRENT_PRICE)))
+                .highestBidderId(highestBidderId)
+                .highestBidderName(user.getName())
+                .highestBidderEmail(user.getEmail())
+                .endTime(parseInstant(data.get(END_TIME)))
+                .build();
+    }
+
     private boolean antiSniping(Long auctionId, Instant now, Map<Object, Object> auctionData) {
-        String endTimeStr = (String) auctionData.get(AuctionCacheKey.END_TIME.getValue());
-        String antiSnipeSecondsStr = (String) auctionData.get(AuctionCacheKey.ANTI_SNIPE_SECONDS.getValue());
-        String extensionSecondsStr = (String) auctionData.get(AuctionCacheKey.EXTENSION_SECONDS.getValue());
-        String extensionCountStr = (String) auctionData.get(AuctionCacheKey.EXTENSION_COUNT.getValue());
+        String endTimeStr = (String) auctionData.get(END_TIME);
+        String antiSnipeSecondsStr = (String) auctionData.get(ANTI_SNIPE_SECONDS);
+        String extensionSecondsStr = (String) auctionData.get(EXTENSION_SECONDS);
+        String extensionCountStr = (String) auctionData.get(EXTENSION_COUNT);
 
         if (endTimeStr == null || antiSnipeSecondsStr == null || extensionSecondsStr == null) {
             log.error("Auction {} configuration missing in Redis", auctionId);
@@ -335,8 +327,8 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         if (secondsLeft <= antiSnipeSeconds && extensionCount < MAX_EXTENSION) {
             Instant newEndTime = endTime.plusSeconds(extensionSeconds);
 
-            auctionData.put(AuctionCacheKey.END_TIME.getValue(), newEndTime.toString());
-            auctionData.put(AuctionCacheKey.EXTENSION_COUNT.getValue(), String.valueOf(extensionCount + 1));
+            auctionData.put(END_TIME, newEndTime.toString());
+            auctionData.put(EXTENSION_COUNT, String.valueOf(extensionCount + 1));
 
             log.info("Auction {} extended ({} / {})", auctionId, extensionCount + 1, MAX_EXTENSION);
             return true;
@@ -365,5 +357,45 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
                         log.debug("Published bid event for auction {}", auctionId);
                     }
                 });
+    }
+
+    private String clean(Object value) {
+        if (value == null) return null;
+        String raw = String.valueOf(value).trim();
+        return raw.isEmpty() ? null : raw;
+    }
+
+    private BigDecimal parseBigDecimal(Object value) {
+        String raw = clean(value);
+        if (raw == null) return BigDecimal.ZERO;
+        try {
+            return new BigDecimal(raw);
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private Long parseLong(Object value) {
+        String raw = clean(value);
+        if (raw == null) return 0L;
+        try {
+            return Long.parseLong(raw);
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    private Instant parseInstant(Object value) {
+        String raw = clean(value);
+        if (raw == null) return null;
+        try {
+            return Instant.parse(raw);
+        } catch (Exception e) {
+            try {
+                return Instant.ofEpochSecond(Long.parseLong(raw));
+            } catch (Exception ex) {
+                return null;
+            }
+        }
     }
 }

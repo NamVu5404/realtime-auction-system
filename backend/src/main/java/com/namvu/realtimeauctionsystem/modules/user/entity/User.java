@@ -1,13 +1,14 @@
 package com.namvu.realtimeauctionsystem.modules.user.entity;
 
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.entity.Auditable;
-
-import com.namvu.realtimeauctionsystem.common.enums.Role;
-import com.namvu.realtimeauctionsystem.common.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,6 +32,10 @@ public class User extends Auditable {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    private String registerIp;
+
+    private String location;
+
     @Builder.Default
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
@@ -41,6 +46,16 @@ public class User extends Auditable {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserStatus status;
+
+    private Instant bannedUntil; // Ban chat
+
+    public void banUser(int minutes) {
+        this.bannedUntil = Instant.now().plus(minutes, ChronoUnit.MINUTES);
+    }
+
+    public boolean isBanned() {
+        return bannedUntil != null && bannedUntil.isAfter(Instant.now());
+    }
 
     @PrePersist
     protected void onCreate() {

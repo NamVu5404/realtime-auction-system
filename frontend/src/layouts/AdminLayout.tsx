@@ -7,6 +7,7 @@ import {
   LogoutOutlined,
   UserOutlined,
   ShopOutlined,
+  MailOutlined,
 } from "@ant-design/icons";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -16,6 +17,7 @@ import { useNotificationStore } from "../store/useNotificationStore";
 import NotificationBell from "../components/common/NotificationBell";
 import { useNotificationWebSocket } from "../hooks/useNotificationWebSocket";
 import { getAvatarUrl } from "../utils/imageUtils";
+import logo from "../assets/images/logo.png";
 
 const { Sider, Header, Content } = Layout;
 
@@ -38,6 +40,16 @@ const AdminLayout = () => {
       onClick: () => navigate("/admin"),
     },
     {
+      key: "notifications",
+      icon: (
+        <Badge dot={unreadCount > 0} offset={[2, 0]}>
+          <BellOutlined />
+        </Badge>
+      ),
+      label: "Notifications",
+      onClick: () => navigate("/admin/notifications"),
+    },
+    {
       key: "users",
       icon: <UserOutlined />,
       label: "User Management",
@@ -50,20 +62,16 @@ const AdminLayout = () => {
       onClick: () => navigate("/admin/auctions"),
     },
     {
-      key: "notifications",
-      icon: (
-        <Badge dot={unreadCount > 0} offset={[2, 0]}>
-          <BellOutlined />
-        </Badge>
-      ),
-      label: "Notifications",
-      onClick: () => navigate("/admin/notifications"),
-    },
-    {
       key: "sellers",
       icon: <ShopOutlined />,
       label: "Seller Management",
       onClick: () => navigate("/admin/sellers"),
+    },
+    {
+      key: "contacts",
+      icon: <MailOutlined />,
+      label: "Contact",
+      onClick: () => navigate("/admin/contacts"),
     },
   ];
 
@@ -121,12 +129,18 @@ const AdminLayout = () => {
           }}
         >
           {collapsed ? (
-            <span
-              style={{ fontSize: "18px", cursor: "pointer" }}
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                height: "22px",
+                width: "auto",
+                objectFit: "contain",
+                display: "inline-block",
+                cursor: "pointer",
+              }}
               onClick={() => navigate("/admin")}
-            >
-              ⚡
-            </span>
+            />
           ) : (
             <div
               style={{
@@ -137,7 +151,16 @@ const AdminLayout = () => {
               }}
               onClick={() => navigate("/admin")}
             >
-              <span style={{ fontSize: "18px" }}>⚡</span>
+              <img
+                src={logo}
+                alt="Logo"
+                style={{
+                  height: "24px",
+                  width: "auto",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
               <span
                 style={{
                   fontSize: "18px",

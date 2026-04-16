@@ -1,7 +1,13 @@
 package com.namvu.realtimeauctionsystem.modules.auction.repository;
 
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionOverviewProjection;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.KpiAuctionProjection;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.RevenueProjection;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionWinProjection;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.SellerAggregateProjection;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.SellerChartProjection;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
-import com.namvu.realtimeauctionsystem.common.enums.AuctionStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -91,4 +97,84 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             "WHERE a.seller.id = :sellerId " +
             "AND a.status IN ('DRAFT', 'SCHEDULED')")
     void cancelFutureAuctions(@Param("sellerId") Long sellerId);
+
+    @Query("SELECT a FROM Auction a WHERE a.status = 'LIVE' " +
+            "AND a.endTime > :now " +
+            "AND a.endTime <= :targetTime " +
+            "AND a.notifiedEndingSoon = false")
+    List<Auction> findByNotifiedEndingSoonFalse(@Param("now") Instant now, @Param("targetTime") Instant targetTime);
+
+    @Query("""
+            SELECT
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' THEN 1 ELSE 0 END), 0) AS totalWins,
+                COALESCE(MAX(CASE WHEN a.status = 'ENDED' THEN a.currentPrice ELSE 0 END), 0) AS highestWinningBid,
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' THEN a.currentPrice ELSE 0 END), 0) AS totalSpent,
+                COALESCE(SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END), 0) AS activeLeading
+            FROM Auction a
+            WHERE a.highestBidder.id = :bidderId
+        """)
+    AuctionWinProjection getAuctionWinMetrics(@Param("bidderId") Long bidderId);
+
+    @Query("""
+            SELECT
+                COUNT(a) AS totalAuctionsCreated,
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN 1 ELSE 0 END), 0) AS totalAuctionsSold,
+                COALESCE(SUM(CASE WHEN a.status IN ('LIVE', 'SCHEDULED') THEN 1 ELSE 0 END), 0) AS activeAuctions,
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS totalRevenue,
+                COALESCE(MAX(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS highestSoldPrice
+            FROM Auction a
+            WHERE a.seller.id = :sellerId
+        """)
+    SellerAggregateProjection getSellerAggregateMetrics(@Param("sellerId") Long sellerId);
+
+    @Query("""
+             SELECT
+                 FUNCTION('DATE_FORMAT', a.endTime, :timeFormat) AS periodLabel,
+                 COUNT(a.id) AS auctionsCompleted,
+                 COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS revenue
+             FROM Auction a
+             WHERE a.seller.id = :sellerId AND a.status = 'ENDED' AND a.endTime >= :startDate
+             GROUP BY FUNCTION('DATE_FORMAT', a.endTime, :timeFormat)
+             ORDER BY FUNCTION('DATE_FORMAT', a.endTime, :timeFormat) ASC
+        """)
+    List<SellerChartProjection> getSellerRevenueChart(
+            @Param("sellerId") Long sellerId,
+            @Param("startDate") Instant startDate,
+            @Param("timeFormat") String timeFormat
+    );
+
+    @Query("""
+            SELECT
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS totalPlatformRevenue,
+                COALESCE(SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END), 0) AS liveAuctions
+            FROM Auction a
+        """)
+    KpiAuctionProjection getAdminKpiAuctionData();
+
+    @Query("""
+            SELECT
+                COUNT(a) AS totalAuctions,
+                COALESCE(SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END), 0) AS liveCount,
+                COALESCE(SUM(CASE WHEN a.status = 'SCHEDULED' THEN 1 ELSE 0 END), 0) AS scheduledCount,
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' THEN 1 ELSE 0 END), 0) AS endedCount,
+                COALESCE(SUM(CASE WHEN a.status = 'CANCELLED' THEN 1 ELSE 0 END), 0) AS cancelledCount,
+                COALESCE(SUM(CASE WHEN a.status = 'DRAFT' THEN 1 ELSE 0 END), 0) AS draftCount,
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN 1 ELSE 0 END), 0) AS endedWithHighestBidder
+            FROM Auction a
+        """)
+    AuctionOverviewProjection getAdminAuctionOverviewData();
+
+    @Query("""
+            SELECT
+                FUNCTION('DATE_FORMAT', a.endTime, :timeFormat) AS periodLabel,
+                COALESCE(SUM(a.currentPrice), 0) AS revenue
+            FROM Auction a
+            WHERE a.status = 'ENDED' AND a.highestBidder IS NOT NULL AND a.endTime >= :startDate
+            GROUP BY FUNCTION('DATE_FORMAT', a.endTime, :timeFormat)
+            ORDER BY FUNCTION('DATE_FORMAT', a.endTime, :timeFormat) ASC
+        """)
+    List<RevenueProjection> getAdminRevenueChartData(
+            @Param("startDate") Instant startDate,
+            @Param("timeFormat") String timeFormat
+    );
 }

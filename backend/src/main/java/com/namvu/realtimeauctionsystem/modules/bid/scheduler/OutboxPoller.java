@@ -1,6 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.bid.scheduler;
 
-import com.namvu.realtimeauctionsystem.common.enums.OutboxStatus;
+import com.namvu.realtimeauctionsystem.common.constant.OutboxStatus;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Outbox;
 import com.namvu.realtimeauctionsystem.modules.bid.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static com.namvu.realtimeauctionsystem.common.enums.KafkaTopicConstant.BID_EVENTS_TOPIC;
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.KafkaTopic.BID_EVENTS_TOPIC;
 
 @Component
 @RequiredArgsConstructor

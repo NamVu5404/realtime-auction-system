@@ -1,5 +1,6 @@
 import { Button, Grid } from "antd";
 import { GoogleOutlined } from "@ant-design/icons";
+import { ENV } from "../config/env";
 
 const { useBreakpoint } = Grid;
 
@@ -15,20 +16,15 @@ const { useBreakpoint } = Grid;
  * 6. Backend exchanges code for tokens securely using client_secret
  *
  * Google Cloud Configuration Required:
- * - Authorized JavaScript origins:
- *   * http://localhost:5173 (dev)
- *   * https://yourdomain.com (production)
- * - Authorized redirect URIs:
- *   * http://localhost:5173/auth/callback (dev)
- *   * https://yourdomain.com/auth/callback (production)
+ * - Authorized JavaScript origins and redirect URIs must match
+ *   the environment values configured in frontend/.env.
  */
 export const GoogleLoginButton = () => {
   const screens = useBreakpoint();
   const isMobile = !screens.md;
 
-  const GOOGLE_CLIENT_ID =
-    "409023234267-l0ug806esjusfroo43fmmm5bcq24rc65.apps.googleusercontent.com";
-  const REDIRECT_URI = `${window.location.origin}/auth/callback`;
+  const GOOGLE_CLIENT_ID = ENV.GOOGLE_CLIENT_ID;
+  const REDIRECT_URI = ENV.GOOGLE_REDIRECT_URI;
 
   const handleGoogleLogin = () => {
     // Save current URL to return after login
@@ -53,7 +49,7 @@ export const GoogleLoginButton = () => {
     });
 
     // Use v2 endpoint (recommended)
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    const googleAuthUrl = `${ENV.GOOGLE_AUTH_URL}?${params.toString()}`;
     window.location.href = googleAuthUrl;
   };
 

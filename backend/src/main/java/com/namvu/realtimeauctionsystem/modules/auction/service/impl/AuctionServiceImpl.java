@@ -1,7 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.auction.service.impl;
 
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
+import com.namvu.realtimeauctionsystem.common.constant.CacheNameConstant;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.enums.AuctionStatus;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
@@ -9,6 +10,7 @@ import com.namvu.realtimeauctionsystem.modules.auction.dto.*;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.mapper.AuctionMapper;
 import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionImageService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidUpdateMessage;
@@ -18,11 +20,12 @@ import com.namvu.realtimeauctionsystem.modules.bid.dto.PlaceBidResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidQueryService;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
-import com.namvu.realtimeauctionsystem.modules.file.service.FileService;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -37,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.AUCTION_TOPIC_PREFIX;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -47,10 +52,12 @@ public class AuctionServiceImpl implements AuctionService {
     private final UserService userService;
     private final RedisAuctionService redisAuctionService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final FileService fileService;
+    private final AuctionImageService auctionImageService;
     private final BidQueryService bidQueryService;
 
     @Override
+    @Transactional(readOnly = true)
+    @Cacheable(value = CacheNameConstant.AUCTIONS, key = "#status.name() + '-' + #pageable.pageNumber")
     public PageResponse<AuctionResponse> getAuctionsByStatus(AuctionStatus status, Pageable pageable) {
         Instant oneHourFromNow = Instant.now().plus(1, ChronoUnit.HOURS);
 
@@ -60,6 +67,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AuctionResponse getAuctionDetail(Long id) {
         Auction auction = auctionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
@@ -67,7 +75,7 @@ public class AuctionServiceImpl implements AuctionService {
         canViewAuction(auction);
 
         AuctionResponse response = auctionMapper.mapToResponse(auction);
-        response.setImages(fileService.getAuctionImages(List.of(id)));
+        response.setImages(auctionImageService.getAuctionImages(List.of(id)));
         populateImages(response);
 
         return response;
@@ -92,6 +100,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     @Transactional
+    @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public AuctionResponse scheduleAuction(CreateAuctionRequest request) {
         Instant now = Instant.now();
         Instant startTime = request.getStartTime();
@@ -156,6 +165,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     @Transactional
+    @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public AuctionResponse updateScheduledAuction(Long id, UpdateScheduledAuctionRequest request) {
         Instant now = Instant.now();
         Instant startTime = request.getStartTime();
@@ -185,6 +195,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     @Transactional
+    @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public CancelAuctionResponse cancelAuction(Long id, CancelAuctionRequest request) {
         Auction auction = auctionRepository.findByIdWithLock(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
@@ -229,7 +240,7 @@ public class AuctionServiceImpl implements AuctionService {
                     .build();
 
             messagingTemplate.convertAndSend(
-                    "/topic/auction/" + request.getAuctionId(),
+                    AUCTION_TOPIC_PREFIX + request.getAuctionId(),
                     message
             );
         }
@@ -246,6 +257,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('SELLER')")
     public PageResponse<AuctionResponse> filterSellerAuction(String keyword, Instant startTime, Instant endTime,
                                                              AuctionStatus status, Pageable pageable) {
@@ -254,6 +266,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<AuctionResponse> filterAdminAuction(String keyword, Instant startTime, Instant endTime,
                                                             AuctionStatus status, Pageable pageable) {
@@ -261,6 +274,7 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
     public PageResponse<AuctionHistoryResponse> getAuctionHistory(Long id, Pageable pageable) {
         if (!SecurityUtils.isAdmin()) {
@@ -318,11 +332,75 @@ public class AuctionServiceImpl implements AuctionService {
         return auctionRepository.save(auction);
     }
 
+    @Override
+    public void isLiveAuction(Long auctionId) {
+        Auction auction = getAuctionDetailById(auctionId);
+        if (auction.getStatus() != AuctionStatus.LIVE) {
+            throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuctionStateSnapshot getAuctionState(Long auctionId) {
+        return redisAuctionService.getAuctionStateFromRedis(auctionId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuctionWinProjection getAuctionWinMetrics(Long bidderId) {
+        return auctionRepository.getAuctionWinMetrics(bidderId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SellerStatsResponse getSellerStats(Long sellerId, String period) {
+        String timeFormat = "WEEK".equalsIgnoreCase(period) ? "%x-W%v" : "%Y-%m";
+        Instant startDate = "WEEK".equalsIgnoreCase(period)
+                ? Instant.now().minus(30 * 3L, ChronoUnit.DAYS)
+                : Instant.now().minus(365, ChronoUnit.DAYS);
+
+        SellerAggregateProjection aggregate = auctionRepository.getSellerAggregateMetrics(sellerId);
+        List<SellerChartProjection> chartData = auctionRepository.getSellerRevenueChart(sellerId, startDate, timeFormat);
+
+        Long totalBidsReceived = bidQueryService.countTotalBidsReceivedBySeller(sellerId);
+        Long totalUniqueBidders = bidQueryService.countUniqueBiddersBySeller(sellerId);
+
+        return SellerStatsResponse.builder()
+                .totalRevenue(aggregate.getTotalRevenue())
+                .totalAuctionsCreated(aggregate.getTotalAuctionsCreated())
+                .totalAuctionsSold(aggregate.getTotalAuctionsSold())
+                .activeAuctions(aggregate.getActiveAuctions())
+                .totalBidsReceived(totalBidsReceived)
+                .highestSoldPrice(aggregate.getHighestSoldPrice())
+                .totalUniqueBidders(totalUniqueBidders)
+                .revenueChart(chartData)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public KpiAuctionProjection getAdminKpiAuctionData() {
+        return auctionRepository.getAdminKpiAuctionData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AuctionOverviewProjection getAdminAuctionOverviewData() {
+        return auctionRepository.getAdminAuctionOverviewData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat) {
+        return auctionRepository.getAdminRevenueChartData(startDate, timeFormat);
+    }
+
     private void populateImages(List<AuctionResponse> responses) {
         if (responses.isEmpty()) return;
 
         List<Long> auctionIds = responses.stream().map(AuctionResponse::getId).toList();
-        List<FileResponse> allImages = fileService.getAuctionImages(auctionIds);
+        List<FileResponse> allImages = auctionImageService.getAuctionImages(auctionIds);
 
         Map<Long, List<FileResponse>> imageMap = allImages.stream()
                 .collect(Collectors.groupingBy(FileResponse::ownerId));
@@ -336,7 +414,7 @@ public class AuctionServiceImpl implements AuctionService {
 
     private void populateImages(AuctionResponse response) {
         if (response.getImages() == null || response.getImages().isEmpty()) {
-            List<FileResponse> images = fileService.getAuctionImages(List.of(response.getId()));
+            List<FileResponse> images = auctionImageService.getAuctionImages(List.of(response.getId()));
             response.setImages(images);
         }
         setPrimaryImage(response, response.getImages());

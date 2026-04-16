@@ -1,16 +1,11 @@
 package com.namvu.realtimeauctionsystem.modules.user.controller;
 
-import com.namvu.realtimeauctionsystem.modules.user.dto.BlockUserRequest;
-import com.namvu.realtimeauctionsystem.modules.user.dto.BlockUserResponse;
-import com.namvu.realtimeauctionsystem.modules.user.dto.ManagerUserResponse;
-import com.namvu.realtimeauctionsystem.modules.user.dto.UpdateUserRequest;
-import com.namvu.realtimeauctionsystem.modules.user.dto.UserAuditResponse;
-import com.namvu.realtimeauctionsystem.modules.user.dto.UserResponse;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
+import com.namvu.realtimeauctionsystem.modules.user.dto.*;
 
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
-import com.namvu.realtimeauctionsystem.common.enums.Role;
-import com.namvu.realtimeauctionsystem.common.enums.UserStatus;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserAuditService;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import jakarta.validation.Valid;
@@ -20,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.*;
 
 @RestController
 @RequestMapping("/v1/users")
@@ -38,24 +35,17 @@ public class UserController {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<ManagerUserResponse>>builder()
-                .result(userService.getUsers(keyword, role, status, pageable))
-                .build();
+        return ApiResponse.ok(userService.getUsers(keyword, role, status, pageable));
     }
 
     @PatchMapping("/{userId}/block")
     public ApiResponse<BlockUserResponse> blockUser(@PathVariable Long userId, @RequestBody @Valid BlockUserRequest request) {
-        return ApiResponse.<BlockUserResponse>builder()
-                .result(userService.blockUser(userId, request))
-                .build();
+        return ApiResponse.of(USER_BLOCKED, userService.blockUser(userId, request));
     }
 
     @PatchMapping("/{userId}/unblock")
     public ApiResponse<BlockUserResponse> unblockUser(@PathVariable Long userId, @RequestBody @Valid BlockUserRequest request) {
-        return ApiResponse.<BlockUserResponse>builder()
-                .result(userService.unblockUser(userId, request))
-                .build();
+        return ApiResponse.of(USER_UNBLOCKED, userService.unblockUser(userId, request));
     }
 
     @GetMapping("/{userId}/audit")
@@ -65,10 +55,7 @@ public class UserController {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<UserAuditResponse>>builder()
-                .result(auditService.getUserAudit(userId, pageable))
-                .build();
+        return ApiResponse.ok(auditService.getUserAudit(userId, pageable));
     }
 
     @GetMapping("/audit")
@@ -77,30 +64,30 @@ public class UserController {
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-
-        return ApiResponse.<PageResponse<UserAuditResponse>>builder()
-                .result(auditService.getMyAccountAudit(pageable))
-                .build();
+        return ApiResponse.ok(auditService.getMyAccountAudit(pageable));
     }
 
     @PutMapping("/profile")
     public ApiResponse<UserResponse> updateProfile(@RequestBody @Valid UpdateUserRequest request) {
-        return ApiResponse.<UserResponse>builder()
-                .result(userService.updateProfile(request))
-                .build();
+        return ApiResponse.of(PROFILE_UPDATED, userService.updateProfile(request));
     }
 
     @PostMapping(value = "/profile/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<UserResponse> uploadAvatar(@RequestParam("file") MultipartFile file) {
-        return ApiResponse.<UserResponse>builder()
-                .result(userService.updateAvatar(file))
-                .build();
+        return ApiResponse.of(AVATAR_UPLOADED, userService.updateAvatar(file));
     }
 
     @PatchMapping("/{userId}/upgrade-to-seller")
     public ApiResponse<UserResponse> upgradeToSeller(@PathVariable Long userId) {
-        return ApiResponse.<UserResponse>builder()
-                .result(userService.upgradeToSeller(userId))
-                .build();
+        return ApiResponse.of(USER_UPGRADED_TO_SELLER, userService.upgradeToSeller(userId));
+    }
+
+    @GetMapping("/sellers")
+    public ApiResponse<PageResponse<SellerResponse>> getSellers(
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        return ApiResponse.ok(userService.getSellers(pageable));
     }
 }

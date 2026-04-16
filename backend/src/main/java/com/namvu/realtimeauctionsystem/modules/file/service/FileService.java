@@ -2,7 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.file.service;
 
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileMetadataRequest;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
-import com.namvu.realtimeauctionsystem.common.enums.OwnerType;
+import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -14,7 +14,7 @@ public interface FileService {
 
     void deleteFile(Long id);
 
-    List<FileResponse> getAuctionImages(List<Long> ids);
+    List<FileResponse> getAuctionImages(List<Long> auctionIds);
 
     void deleteUserAvatarIfExists(Long userId);
 }

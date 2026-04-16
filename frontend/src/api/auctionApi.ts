@@ -5,12 +5,15 @@ import {
   ApiResponse,
   PaginatedAuctions,
   AuctionStatus,
+  AuctionStateSnapshot,
   PlaceBidResponse,
   PageResponse,
   AuctionHistoryResponse,
   PlaceBidResponseV2,
   AuctionAuditResponse,
+  SellerStatsResponse,
 } from "./types";
+import { ENV } from "../config/env";
 
 /**
  * Auction API Service
@@ -45,7 +48,7 @@ export const auctionApi = {
           },
         },
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auctions by status:", error);
       throw new Error(extractErrorMessage(error));
@@ -63,7 +66,7 @@ export const auctionApi = {
       const response = await axiosClient.get<ApiResponse<Auction>>(
         `/auctions/${auctionId}`,
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auction detail:", error);
       throw new Error(extractErrorMessage(error));
@@ -94,7 +97,7 @@ export const auctionApi = {
           amount,
         },
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to place bid:", error);
       throw new Error(extractErrorMessage(error));
@@ -117,7 +120,7 @@ export const auctionApi = {
     try {
       // NOTE: We manually override baseURL for V2 endpoint
       const response = await axiosClient.post<ApiResponse<PlaceBidResponseV2>>(
-        `http://localhost:8080/api/v2/auctions/${auctionId}/bids`,
+        `${ENV.API_V2_URL}/auctions/${auctionId}/bids`,
         {
           amount,
         },
@@ -151,7 +154,7 @@ export const auctionApi = {
           size,
         },
       });
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auction history:", error);
       throw new Error(extractErrorMessage(error));
@@ -169,7 +172,7 @@ export const auctionApi = {
       const response = await axiosClient.get<ApiResponse<number>>(
         `/auctions/${auctionId}/current-price`,
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch current price:", error);
       throw new Error(extractErrorMessage(error));
@@ -188,9 +191,64 @@ export const auctionApi = {
       const response = await axiosClient.get<ApiResponse<AuctionAuditResponse>>(
         `/auctions/${auctionId}/result`,
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auction result:", error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  /**
+   * Fetch lightweight auction state snapshot from Redis
+   * Used as polling fallback when Kafka pipeline is down
+   * Returns currentPrice, highestBidder info, and actual endTime (with anti-snipe extensions)
+   *
+   * @param auctionId - Auction ID
+   * @returns Promise with AuctionStateSnapshot
+   */
+  getAuctionState: async (auctionId: number): Promise<AuctionStateSnapshot> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<AuctionStateSnapshot>>(
+        `/auctions/${auctionId}/state`,
+      );
+      return response.data.result!;
+    } catch (error) {
+      console.error("Failed to fetch auction state:", error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  /**
+   * Fetch seller statistics for the authenticated seller
+   */
+  getMySellerStats: async (
+    period: "WEEK" | "MONTH" = "MONTH",
+  ): Promise<SellerStatsResponse> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<SellerStatsResponse>>(
+        "/auctions/seller/stats",
+        { params: { period } },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  /**
+   * Fetch seller statistics for an admin to view a specific seller
+   */
+  getSellerStatsAdmin: async (
+    sellerId: number,
+    period: "WEEK" | "MONTH" = "MONTH",
+  ): Promise<SellerStatsResponse> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<SellerStatsResponse>>(
+        `/auctions/sellers/${sellerId}/stats`,
+        { params: { period } },
+      );
+      return response.data.result!;
+    } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },

@@ -32,7 +32,12 @@ const { Title, Text, Paragraph } = Typography;
 
 const getNotifMeta = (title: string) => {
   const t = title.toLowerCase();
-  if (t.includes("hủy") || t.includes("từ chối") || t.includes("khóa")) {
+  if (
+    t.includes("hủy") ||
+    t.includes("từ chối") ||
+    t.includes("khóa") ||
+    t.includes("thu hồi")
+  ) {
     return { color: "#ff4d4f", icon: <CloseCircleOutlined /> };
   }
   if (
@@ -64,8 +69,8 @@ export interface NotificationListProps {
 const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const pageSize = 10;
+  const page = parseInt(searchParams.get("page") || "1", 20);
+  const pageSize = 20;
   const queryClient = useQueryClient();
   const { markAsRead: markAsReadStore, markAllAsRead: markAllAsReadStore } =
     useNotificationStore();
@@ -81,7 +86,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
 
   const markReadMutation = useMutation({
     mutationFn: notificationApi.markAsRead,
-    onSuccess: (_, id) => {
+    onSuccess: (data, id) => {
       markAsReadStore(id);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
@@ -92,9 +97,9 @@ const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
 
   const markAllReadMutation = useMutation({
     mutationFn: notificationApi.markAllAsRead,
-    onSuccess: () => {
+    onSuccess: (data) => {
       markAllAsReadStore();
-      message.success("Tất cả thông báo đã được đánh dấu là đã đọc");
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
@@ -104,10 +109,10 @@ const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
 
   const deleteAllMutation = useMutation({
     mutationFn: notificationApi.deleteAll,
-    onSuccess: () => {
+    onSuccess: (data) => {
       const { clearNotifications } = useNotificationStore.getState();
       clearNotifications();
-      message.success("Đã xóa tất cả thông báo");
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
@@ -117,8 +122,8 @@ const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
 
   const deleteMutation = useMutation({
     mutationFn: notificationApi.deleteNotification,
-    onSuccess: () => {
-      message.success("Đã xóa thông báo");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
@@ -144,7 +149,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: "28px",
+            marginBottom: "24px",
           }}
         >
           <Title
@@ -161,16 +166,16 @@ const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
               disabled={!data?.data || !data.data.some((n) => !n.isRead)}
               type="primary"
             >
-              Đọc tất cả
+              Read all
             </Button>
-            <Tooltip title="Xóa tất cả thông báo đã đọc">
+            <Tooltip title="Delete all read notifications">
               <Button
                 danger
                 onClick={() => deleteAllMutation.mutate()}
                 loading={deleteAllMutation.isPending}
                 disabled={!data?.data || data.data.length === 0}
               >
-                Xóa tất cả
+                Delete all
               </Button>
             </Tooltip>
           </Space>
@@ -184,7 +189,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ title }) => {
           emptyText: (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="Bạn chưa có thông báo nào"
+              description="No notifications yet"
               style={{ padding: "60px 0" }}
             />
           ),

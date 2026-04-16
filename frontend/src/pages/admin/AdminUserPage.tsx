@@ -1,16 +1,20 @@
 import {
+  BarChartOutlined,
   CheckCircleOutlined,
   DeleteOutlined,
   EyeOutlined,
+  FilterOutlined,
   HistoryOutlined,
   MoreOutlined,
   SearchOutlined,
   ShopOutlined,
   StopOutlined,
+  UnlockOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   App,
+  Badge,
   Button,
   Drawer,
   Dropdown,
@@ -26,6 +30,7 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import adminApi, { mockViolations } from "../../api/adminApi";
 import bidApi from "../../api/bidApi";
+import { chatApi } from "../../api/chatApi";
 import {
   AuctionStatus,
   BidStatus,
@@ -35,6 +40,7 @@ import {
   UserRole,
 } from "../../api/types";
 import AccountTrackingDrawer from "../../components/admin/AccountTrackingDrawer";
+import BidStatisticsDashboard from "../../features/bid/BidStatisticsDashboard";
 import { useDebounce } from "../../hooks/useDebounce";
 import formatCurrency, { formatDateTime } from "../../utils/format";
 
@@ -77,6 +83,11 @@ const AdminUserPage = () => {
     type: "bid" | "violation" | "tracking";
     userId?: number;
   }>({ visible: false, type: "bid" });
+  const [statisticsDrawer, setStatisticsDrawer] = useState<{
+    visible: boolean;
+    userId?: number;
+    userName?: string;
+  }>({ visible: false });
   const [bidHistoryPage, setBidHistoryPage] = useState(1);
   const [trackingPage, setTrackingPage] = useState(1);
   const [blockModalVisible, setBlockModalVisible] = useState(false);
@@ -85,6 +96,7 @@ const AdminUserPage = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [blockReason, setBlockReason] = useState("");
   const [unblockReason, setUnblockReason] = useState("");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const roleStyles = {
@@ -128,31 +140,39 @@ const AdminUserPage = () => {
   const blockMutation = useMutation({
     mutationFn: ([userId, reason]: [number, string]) =>
       adminApi.blockUser(userId, reason),
-    onSuccess: () => {
-      message.success("User blocked successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: () => message.error("Failed to block user"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const unblockMutation = useMutation({
     mutationFn: ([userId, reason]: [number, string]) =>
       adminApi.unblockUser(userId, reason),
-    onSuccess: () => {
-      message.success("User unblocked successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: () => message.error("Failed to unblock user"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const becomeSellerMutation = useMutation({
     mutationFn: (userId: number) => adminApi.upgradeToSeller(userId),
-    onSuccess: () => {
-      message.success("Role updated to SELLER successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: (error: any) =>
-      message.error(error.message || "Failed to update role"),
+    onError: (error: any) => message.error(error.message),
+  });
+
+  const unbanChatMutation = useMutation({
+    mutationFn: (userId: number) => chatApi.unbanUserFromChat(userId),
+    onSuccess: (data) => {
+      message.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+    onError: (error: any) => message.error(error.message),
   });
 
   const handleBlock = (userId: number) => {
@@ -198,6 +218,11 @@ const AdminUserPage = () => {
 
   const columns = [
     {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
       title: "Full Name",
       dataIndex: "name",
       key: "name",
@@ -211,6 +236,16 @@ const AdminUserPage = () => {
       title: "Phone Number",
       dataIndex: "phone",
       key: "phone",
+    },
+    {
+      title: "Location",
+      dataIndex: "location",
+      key: "location",
+    },
+    {
+      title: "IP Address",
+      dataIndex: "registerIp",
+      key: "registerIp",
     },
     {
       title: "Roles",
@@ -236,6 +271,19 @@ const AdminUserPage = () => {
       render: (status: string, record: User) => (
         <Tag color={status === "ACTIVE" ? "green" : "red"}>{status}</Tag>
       ),
+    },
+    {
+      title: "Chat Banned Until",
+      dataIndex: "bannedUntil",
+      key: "bannedUntil",
+      render: (date: string) =>
+        date ? (
+          <span>
+            {new Date(date) > new Date(8640000000000000)
+              ? "Permanent"
+              : formatDateTime(date)}
+          </span>
+        ) : null,
     },
     {
       title: "Created At",
@@ -288,6 +336,19 @@ const AdminUserPage = () => {
                   }
                 : null,
               {
+                key: "bid-stats",
+                icon: <BarChartOutlined />,
+                label: "Bid Stats",
+                onClick: () => {
+                  setSelectedUser(record);
+                  setStatisticsDrawer({
+                    visible: true,
+                    userId: record.id,
+                    userName: record.name,
+                  });
+                },
+              },
+              {
                 key: "user-audit",
                 icon: <HistoryOutlined />,
                 label: "Audit Logs",
@@ -301,6 +362,24 @@ const AdminUserPage = () => {
                   });
                 },
               },
+              record.bannedUntil
+                ? {
+                    key: "unban-chat",
+                    icon: <UnlockOutlined />,
+                    label: "Unban Chat",
+                    onClick: () => {
+                      modal.confirm({
+                        title: "Confirm Unban Chat",
+                        content: `Are you sure you want to restore chat access for ${record.name}?`,
+                        onOk: () => unbanChatMutation.mutate(record.id),
+                        okText: "Unban",
+                        cancelText: "Cancel",
+                        centered: true,
+                        okButtonProps: { danger: false },
+                      });
+                    },
+                  }
+                : null,
               record.roles?.includes(UserRole.ADMIN)
                 ? null
                 : record.status === "ACTIVE"
@@ -393,104 +472,163 @@ const AdminUserPage = () => {
 
   return (
     <div>
-      <h1
+      {/* Title row + Filter toggle button */}
+      <div
         style={{
-          fontSize: "24px",
-          fontWeight: 800,
-          letterSpacing: "-0.02em",
-          marginBottom: "28px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "24px",
         }}
       >
-        User Management
-      </h1>
-
-      {/* Filter Form */}
-      <div
-        className="filter-container"
-        style={{ animation: "fadeIn 0.35s ease-out" }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Search
-            </div>
-            <Input
-              placeholder="Search by Name, Email"
-              prefix={
-                <SearchOutlined style={{ color: "rgba(255,255,255,0.3)" }} />
-              }
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Role
-            </div>
-            <Select
-              placeholder="Select Role"
-              value={role}
-              onChange={(value) => setRole(value)}
-              allowClear
-              style={{ width: "100%" }}
-              options={[
-                { label: "USER", value: "USER" },
-                { label: "SELLER", value: "SELLER" },
-                { label: "ADMIN", value: "ADMIN" },
-              ]}
-            />
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.45)",
-                marginBottom: "6px",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              Status
-            </div>
-            <Select
-              placeholder="Select Status"
-              value={status}
-              onChange={(value) => setStatus(value)}
-              allowClear
-              style={{ width: "100%" }}
-              options={[
-                { label: "ACTIVE", value: "ACTIVE" },
-                { label: "BLOCKED", value: "BLOCKED" },
-              ]}
-            />
-          </div>
+        <h1
+          style={{
+            fontSize: "24px",
+            fontWeight: 800,
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}
+        >
+          User Management
+        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {(keyword || role || status) && (
+            <Button icon={<DeleteOutlined />} onClick={handleClearFilters}>
+              Clear All
+            </Button>
+          )}
+          <Button
+            icon={<FilterOutlined />}
+            onClick={() => setIsFilterOpen((v) => !v)}
+            type={isFilterOpen ? "primary" : "default"}
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            Filters
+            {(keyword || role || status) && (
+              <Badge
+                count={[keyword, role, status].filter(Boolean).length}
+                style={{
+                  backgroundColor: "#FED469",
+                  color: "#191B24",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  marginLeft: 4,
+                }}
+              />
+            )}
+          </Button>
         </div>
-        <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
-          <Button type="primary" icon={<SearchOutlined />} loading={isLoading}>
-            Search
-          </Button>
-          <Button icon={<DeleteOutlined />} onClick={handleClearFilters}>
-            Clear
-          </Button>
+      </div>
+
+      {/* Collapsible Filter — CSS grid trick: smooth, jank-free, animates to true height */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: isFilterOpen ? "1fr" : "0fr",
+          transition: "grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+          marginBottom: isFilterOpen ? "24px" : 0,
+          transitionProperty: "grid-template-rows, margin-bottom",
+        }}
+      >
+        <div style={{ overflow: "hidden" }}>
+          <div
+            className="filter-container"
+            style={{
+              animation: "none",
+              opacity: isFilterOpen ? 1 : 0,
+              transition: "opacity 0.2s ease",
+            }}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Search
+                </div>
+                <Input
+                  placeholder="Search by Name, Email"
+                  prefix={
+                    <SearchOutlined
+                      style={{ color: "rgba(255,255,255,0.3)" }}
+                    />
+                  }
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Role
+                </div>
+                <Select
+                  placeholder="Select Role"
+                  value={role}
+                  onChange={(value) => setRole(value)}
+                  allowClear
+                  style={{ width: "100%" }}
+                  options={[
+                    { label: "USER", value: "USER" },
+                    { label: "SELLER", value: "SELLER" },
+                    { label: "ADMIN", value: "ADMIN" },
+                  ]}
+                />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Status
+                </div>
+                <Select
+                  placeholder="Select Status"
+                  value={status}
+                  onChange={(value) => setStatus(value)}
+                  allowClear
+                  style={{ width: "100%" }}
+                  options={[
+                    { label: "ACTIVE", value: "ACTIVE" },
+                    { label: "BLOCKED", value: "BLOCKED" },
+                  ]}
+                />
+              </div>
+            </div>
+            <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                loading={isLoading}
+              >
+                Search
+              </Button>
+              <Button icon={<DeleteOutlined />} onClick={handleClearFilters}>
+                Clear
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -500,12 +638,14 @@ const AdminUserPage = () => {
         dataSource={data?.data}
         rowKey="id"
         loading={isLoading}
+        scroll={{ x: "max-content" }}
         pagination={{
           current: data?.currentPage,
           pageSize: data?.pageSize,
           total: data?.totalElements,
           onChange: (p) => setPage(p),
           showSizeChanger: false,
+          showTotal: (total) => `Total ${total} items`,
         }}
         rowClassName={(record) =>
           record.status === "BLOCKED" ? "opacity-50" : ""
@@ -542,6 +682,7 @@ const AdminUserPage = () => {
                 `${record.auctionId}-${record.createdAt}`
               }
               size="small"
+              scroll={{ x: "max-content" }}
               loading={bidHistoryLoading}
               pagination={{
                 current: bidHistoryData?.currentPage || 1,
@@ -549,6 +690,7 @@ const AdminUserPage = () => {
                 total: bidHistoryData?.totalElements || 0,
                 onChange: (p) => setBidHistoryPage(p),
                 showSizeChanger: false,
+                showTotal: (total) => `Total ${total} items`,
               }}
             />
           </div>
@@ -557,6 +699,7 @@ const AdminUserPage = () => {
             columns={violationColumns}
             dataSource={mockViolations as any}
             rowKey="id"
+            scroll={{ x: "max-content" }}
             pagination={false}
           />
         )}
@@ -678,6 +821,22 @@ const AdminUserPage = () => {
           </div>
         </div>
       </Modal>
+      <Drawer
+        title={
+          <Space>
+            <span>Bid Statistics: {statisticsDrawer.userName}</span>
+          </Space>
+        }
+        size={1000}
+        placement="right"
+        onClose={() => setStatisticsDrawer({ visible: false })}
+        open={statisticsDrawer.visible}
+        destroyOnHidden
+      >
+        {statisticsDrawer.userId && (
+          <BidStatisticsDashboard userId={statisticsDrawer.userId} />
+        )}
+      </Drawer>
     </div>
   );
 };

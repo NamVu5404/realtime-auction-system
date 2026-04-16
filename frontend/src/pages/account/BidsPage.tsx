@@ -29,7 +29,7 @@ const BidsPage = () => {
 
   const columns = [
     {
-      title: "Product",
+      title: "Item",
       dataIndex: "auctionTitle",
       key: "auctionTitle",
       render: (text: string, record: MyBidHistoryResponse) => (
@@ -101,7 +101,7 @@ const BidsPage = () => {
     <div className="account-table-wrapper">
       <Title
         level={2}
-        style={{ color: "#fff", marginBottom: "16px", fontSize: "24px" }}
+        style={{ color: "#fff", marginBottom: "24px", fontSize: "24px" }}
       >
         My Bids
       </Title>
@@ -111,7 +111,7 @@ const BidsPage = () => {
           image={Empty.PRESENTED_IMAGE_SIMPLE}
           description={
             <span style={{ color: "rgba(255,255,255,0.45)" }}>
-              Bạn chưa tham gia phiên đấu giá nào
+              No active bids found
             </span>
           }
         >
@@ -121,7 +121,7 @@ const BidsPage = () => {
             style={{ padding: "0 24px" }}
             size="large"
           >
-            Xem các phiên đấu giá
+            Browse Auctions
           </Button>
         </Empty>
       ) : (
@@ -135,12 +135,12 @@ const BidsPage = () => {
             total: data?.totalElements || 0,
             onChange: handlePageChange,
             showSizeChanger: false,
+            showTotal: (total) => `Total ${total} items`,
           }}
           loading={isLoading}
           style={{
             background: "transparent",
           }}
-          scroll={{ x: 800 }}
           className="custom-table"
         />
       )}

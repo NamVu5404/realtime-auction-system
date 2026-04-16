@@ -1,51 +1,54 @@
-import React, { useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import {
-  Table,
-  Tag,
-  Button,
-  Space,
-  Typography,
-  Card,
-  message,
-  Modal,
-  Input,
-  Tooltip,
-  Tabs,
-  Row,
-  Col,
-  Statistic,
-  Avatar,
-} from "antd";
-import {
+  BarChartOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined,
-  UserOutlined,
   ClockCircleOutlined,
-  SearchOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
+  InfoCircleOutlined,
   ShopOutlined,
   TeamOutlined,
-  InfoCircleOutlined,
-  ExclamationCircleOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Drawer,
+  Input,
+  message,
+  Modal,
+  Row,
+  Space,
+  Statistic,
+  Table,
+  Tabs,
+  Tag,
+  Tooltip,
+  Typography,
+} from "antd";
+import dayjs from "dayjs";
+import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import adminApi from "../../api/adminApi";
 import {
   RequestStatus,
   SellerRegResponse,
+  SellerResponse,
   User,
-  UserRole,
 } from "../../api/types";
-import dayjs from "dayjs";
+import SellerStatisticsDashboard from "../../features/auction/SellerStatisticsDashboard";
+import formatCurrency from "../../utils/format";
 import { getAvatarUrl } from "../../utils/imageUtils";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 const { TextArea } = Input;
 
 const SellerManagementPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const regPage = parseInt(searchParams.get("regPage") || "1", 10);
-  const sellerPage = parseInt(searchParams.get("sellerPage") || "1", 10);
+  const regPage = parseInt(searchParams.get("regPage") || "1", 20);
+  const sellerPage = parseInt(searchParams.get("sellerPage") || "1", 20);
 
   const setRegPage = (p: number) => {
     const newParams = new URLSearchParams(searchParams);
@@ -75,55 +78,80 @@ const SellerManagementPage: React.FC = () => {
   const [selectedReg, setSelectedReg] = useState<SellerRegResponse | null>(
     null,
   );
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<
+    User | SellerResponse | null
+  >(null);
   const [rejectReason, setRejectReason] = useState("");
   const [revokeReason, setRevokeReason] = useState("");
+
+  const [statDrawerVisible, setStatDrawerVisible] = useState(false);
+  const [statUserId, setStatUserId] = useState<number | undefined>();
+  const [statUserName, setStatUserName] = useState<string>("");
 
   // Queries
   const { data: registrations, isLoading: isRegLoading } = useQuery({
     queryKey: ["seller-registrations", regPage],
-    queryFn: () => adminApi.getRegistrations(regPage, 10),
+    queryFn: () => adminApi.getRegistrations(regPage, 20),
   });
 
   const { data: sellers, isLoading: isSellersLoading } = useQuery({
     queryKey: ["sellers-list", sellerPage],
-    queryFn: () =>
-      adminApi.getUsers(sellerPage, 10, undefined, UserRole.SELLER),
+    queryFn: () => adminApi.getSellers(sellerPage, 20),
+  });
+
+  const { data: pendingCount = 0 } = useQuery({
+    queryKey: ["seller-registrations-pending"],
+    queryFn: () => adminApi.getPendingRegistrations(),
+  });
+
+  const { data: approvedCount = 0 } = useQuery({
+    queryKey: ["seller-registrations-approved"],
+    queryFn: () => adminApi.getApprovedRegistrations(),
   });
 
   // Mutations
   const approveMutation = useMutation({
     mutationFn: (id: number) => adminApi.approveSeller(id),
-    onSuccess: () => {
-      message.success("Seller registration approved successfully");
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["seller-registrations"] });
       queryClient.invalidateQueries({ queryKey: ["sellers-list"] });
+      queryClient.invalidateQueries({
+        queryKey: ["seller-registrations-pending"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["seller-registrations-approved"],
+      });
     },
-    onError: () => message.error("Failed to approve registration"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const rejectMutation = useMutation({
     mutationFn: ({ id, reason }: { id: number; reason: string }) =>
       adminApi.rejectSeller(id, reason),
-    onSuccess: () => {
-      message.success("Seller registration rejected");
+    onSuccess: (data) => {
+      message.success(data.message);
       setRejectModalVisible(false);
       setRejectReason("");
       queryClient.invalidateQueries({ queryKey: ["seller-registrations"] });
+      queryClient.invalidateQueries({
+        queryKey: ["seller-registrations-pending"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["seller-registrations-approved"],
+      });
     },
-    onError: () => message.error("Failed to reject registration"),
+    onError: (error: any) => message.error(error.message),
   });
 
   const revokeMutation = useMutation({
     mutationFn: ({ userId, reason }: { userId: number; reason: string }) =>
       adminApi.revokeSellerRole(userId, reason),
-    onSuccess: () => {
-      message.success(
-        "Seller role revoked successfully. All scheduled auctions by this user have been cancelled.",
-      );
+    onSuccess: (data) => {
+      message.success(data.message);
       queryClient.invalidateQueries({ queryKey: ["sellers-list"] });
     },
-    onError: () => message.error("Failed to revoke seller role"),
+    onError: (error: any) => message.error(error.message),
   });
 
   // Handlers
@@ -153,17 +181,25 @@ const SellerManagementPage: React.FC = () => {
     rejectMutation.mutate({ id: selectedReg.id, reason: rejectReason });
   };
 
-  const handleRevoke = (user: User) => {
+  const handleRevoke = (user: User | SellerResponse) => {
     setSelectedUser(user);
     setRevokeModalVisible(true);
   };
 
   const handleRevokeConfirm = () => {
     if (selectedUser) {
-      revokeMutation.mutate({ userId: selectedUser.id, reason: revokeReason });
+      const userId =
+        "userId" in selectedUser ? selectedUser.userId : selectedUser.id;
+      revokeMutation.mutate({ userId, reason: revokeReason });
       setRevokeModalVisible(false);
       setRevokeReason("");
     }
+  };
+
+  const handleOpenStats = (user: SellerResponse) => {
+    setStatUserId(user.userId);
+    setStatUserName(user.name);
+    setStatDrawerVisible(true);
   };
 
   // Table Columns
@@ -187,45 +223,51 @@ const SellerManagementPage: React.FC = () => {
       ),
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: RequestStatus) => {
-        let color = "blue";
-        if (status === RequestStatus.APPROVED) color = "green";
-        if (status === RequestStatus.REJECTED) color = "red";
-        return <Tag color={color}>{status}</Tag>;
-      },
-    },
-    {
-      title: "Applied At",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string) =>
-        date ? dayjs(date).format("YYYY-MM-DD HH:mm") : "-",
-    },
-    {
       title: "Details",
       key: "details",
       render: (record: SellerRegResponse) =>
         record.status === RequestStatus.REJECTED ? (
           <Tooltip title={record.rejectReason}>
-            <Text type="danger" style={{ fontSize: "12px", cursor: "help" }}>
+            <Text type="danger" style={{ cursor: "pointer" }}>
               Rejection:{" "}
               {(record.rejectReason ?? "").length > 20
                 ? record.rejectReason!.substring(0, 20) + "..."
                 : record.rejectReason}
             </Text>
           </Tooltip>
-        ) : record.approvedAt ? (
-          <Text type="success" style={{ fontSize: "12px" }}>
-            Approved: {dayjs(record.approvedAt).format("YYYY-MM-DD HH:mm")}
-          </Text>
+        ) : record.status === RequestStatus.APPROVED ? (
+          <Text type="success">Approved</Text>
         ) : (
-          <Text type="secondary" style={{ fontSize: "12px" }}>
-            Awaiting Review
-          </Text>
+          <Text type="secondary">Awaiting Review</Text>
         ),
+    },
+    {
+      title: "Apply Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date: string) =>
+        date ? dayjs(date).format("YYYY-MM-DD HH:mm") : "-",
+    },
+    {
+      title: "Processed By",
+      dataIndex: "updatedBy",
+      key: "updatedBy",
+      render: (updatedBy: any, record: any) => {
+        const isProcessed = updatedBy && updatedBy !== record.createdBy;
+
+        return isProcessed ? updatedBy : "-";
+      },
+    },
+    {
+      title: "Processed Date",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      render: (updatedAt: string, record: any) => {
+        const isModified =
+          updatedAt && record.createdAt && updatedAt !== record.createdAt;
+
+        return isModified ? dayjs(updatedAt).format("YYYY-MM-DD HH:mm") : "-";
+      },
     },
     {
       title: "Actions",
@@ -262,7 +304,7 @@ const SellerManagementPage: React.FC = () => {
     {
       title: "Seller",
       key: "user",
-      render: (record: User) => (
+      render: (record: SellerResponse) => (
         <Space>
           <Avatar
             icon={<UserOutlined />}
@@ -278,21 +320,77 @@ const SellerManagementPage: React.FC = () => {
       ),
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status?: string) => (
-        <Tag color={status === "ACTIVE" ? "green" : "red"}>
-          {status || "ACTIVE"}
-        </Tag>
+      title: "Contact Info",
+      key: "contact",
+      render: (record: SellerResponse) => (
+        <Space direction="vertical" size={0}>
+          {record.phone && (
+            <Text type="secondary" style={{ fontSize: "12px" }}>
+              📱 {record.phone}
+            </Text>
+          )}
+          {record.location && (
+            <Text type="secondary" style={{ fontSize: "12px" }}>
+              📍 {record.location}
+            </Text>
+          )}
+          {!record.phone && !record.location && (
+            <Text type="secondary" style={{ fontSize: "12px" }}>
+              -
+            </Text>
+          )}
+        </Space>
       ),
+    },
+    {
+      title: "Auctions",
+      key: "auctions",
+      render: (record: SellerResponse) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{record.totalAuctions} Total</Text>
+          <Text style={{ fontSize: "12px", color: "#10b981" }}>
+            ● {record.liveAuctions} Live
+          </Text>
+          <Text type="secondary" style={{ fontSize: "12px" }}>
+            ○ {record.endedAuctions} Ended
+          </Text>
+        </Space>
+      ),
+    },
+    {
+      title: "Total Revenue",
+      key: "revenue",
+      render: (record: SellerResponse) => (
+        <Text
+          strong
+          style={{ color: "var(--color-gold-start)", fontSize: "15px" }}
+        >
+          {formatCurrency(record.totalRevenue)}
+        </Text>
+      ),
+    },
+    {
+      title: "Approved Date",
+      key: "approvedAt",
+      render: (record: SellerResponse) =>
+        record.approvedAt
+          ? dayjs(record.approvedAt).format("YYYY-MM-DD HH:mm")
+          : "-",
     },
     {
       title: "Actions",
       key: "actions",
-      render: (record: User) => (
+      render: (record: SellerResponse) => (
         <Space>
-          {!record.roles.includes(UserRole.ADMIN) && (
+          <Button
+            type="primary"
+            size="small"
+            icon={<BarChartOutlined />}
+            onClick={() => handleOpenStats(record)}
+          >
+            Statistics
+          </Button>
+          {!record.isAdmin && (
             <Button
               danger
               size="small"
@@ -300,10 +398,10 @@ const SellerManagementPage: React.FC = () => {
               onClick={() => handleRevoke(record)}
               loading={
                 revokeMutation.isPending &&
-                revokeMutation.variables?.userId === record.id
+                revokeMutation.variables?.userId === record.userId
               }
             >
-              Revoke Seller Role
+              Revoke Role
             </Button>
           )}
         </Space>
@@ -324,13 +422,15 @@ const SellerManagementPage: React.FC = () => {
           columns={sellerColumns}
           dataSource={sellers?.data || []}
           loading={isSellersLoading}
-          rowKey="id"
+          rowKey="userId"
+          scroll={{ x: "max-content" }}
           pagination={{
             current: sellerPage,
-            pageSize: 10,
+            pageSize: 20,
             total: sellers?.totalElements || 0,
             onChange: (p) => setSellerPage(p),
             showSizeChanger: false,
+            showTotal: (total) => `Total ${total} items`,
           }}
           className="admin-table"
         />
@@ -364,12 +464,14 @@ const SellerManagementPage: React.FC = () => {
           dataSource={registrations?.data || []}
           loading={isRegLoading}
           rowKey="id"
+          scroll={{ x: "max-content" }}
           pagination={{
             current: regPage,
-            pageSize: 10,
+            pageSize: 20,
             total: registrations?.totalElements || 0,
             onChange: (p) => setRegPage(p),
             showSizeChanger: false,
+            showTotal: (total) => `Total ${total} items`,
           }}
           className="admin-table"
         />
@@ -384,7 +486,7 @@ const SellerManagementPage: React.FC = () => {
           fontSize: "24px",
           fontWeight: 800,
           letterSpacing: "-0.02em",
-          marginBottom: "28px",
+          marginBottom: "24px",
         }}
       >
         Seller Management
@@ -392,7 +494,7 @@ const SellerManagementPage: React.FC = () => {
 
       {/* Stats Summary */}
       <Row gutter={24} style={{ marginBottom: "32px" }}>
-        <Col span={8}>
+        <Col span={6}>
           <Card className="stats-card">
             <Statistic
               title="Total Sellers"
@@ -402,26 +504,38 @@ const SellerManagementPage: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col span={6}>
           <Card className="stats-card">
             <Statistic
               title="Pending Requests"
-              value={
-                registrations?.data.filter(
-                  (r) => r.status === RequestStatus.PENDING,
-                ).length || 0
-              }
+              value={pendingCount}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: "#FED469" }}
             />
           </Card>
         </Col>
-        <Col span={8}>
+        <Col span={6}>
           <Card className="stats-card">
             <Statistic
               title="Total Requests"
               value={registrations?.totalElements || 0}
               prefix={<TeamOutlined />}
+              valueStyle={{ color: "#FED469" }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card className="stats-card">
+            <Statistic
+              title="Approval Rate"
+              value={
+                registrations?.totalElements
+                  ? (approvedCount / registrations.totalElements) * 100
+                  : 0
+              }
+              precision={1}
+              prefix={<CheckCircleOutlined />}
+              suffix="%"
               valueStyle={{ color: "#FED469" }}
             />
           </Card>
@@ -656,6 +770,25 @@ const SellerManagementPage: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Seller Statistics Drawer */}
+      <Drawer
+        title={
+          <Space>
+            <span>
+              Statistics for{" "}
+              <span style={{ color: "#fff" }}>{statUserName}</span>
+            </span>
+          </Space>
+        }
+        placement="right"
+        size={1000}
+        onClose={() => setStatDrawerVisible(false)}
+        open={statDrawerVisible}
+        destroyOnHidden
+      >
+        {statUserId && <SellerStatisticsDashboard sellerId={statUserId} />}
+      </Drawer>
     </div>
   );
 };

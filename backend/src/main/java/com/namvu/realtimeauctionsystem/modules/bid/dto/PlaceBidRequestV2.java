@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlaceBidRequestV2 {
-    @NotNull(message = "AMOUNT_NOT_BLANK")
-    @DecimalMin(value = "0.01", message = "INVALID_AMOUNT")
+    @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private BigDecimal amount;
 }

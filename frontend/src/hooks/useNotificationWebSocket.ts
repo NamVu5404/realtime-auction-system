@@ -9,6 +9,7 @@ import notificationSound from "../assets/audio/notification-sound.mp3";
 import { notification as antdNotification } from "antd";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
+import { ENV } from "../config/env";
 
 /**
  * Hook to manage real-time notifications via WebSocket
@@ -37,7 +38,7 @@ export const useNotificationWebSocket = () => {
   useEffect(() => {
     if (!isAuthenticated || !user) return;
 
-    const socketUrl = import.meta.env.VITE_WS_URL || "http://localhost:8080/ws";
+    const socketUrl = ENV.WS_URL;
 
     // Set up STOMP client
     const client = new Client({

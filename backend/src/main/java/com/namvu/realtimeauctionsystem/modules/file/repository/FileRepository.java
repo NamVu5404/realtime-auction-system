@@ -2,7 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.file.repository;
 
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.file.entity.File;
-import com.namvu.realtimeauctionsystem.common.enums.OwnerType;
+import com.namvu.realtimeauctionsystem.common.constant.OwnerType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,7 +22,7 @@ public interface FileRepository extends JpaRepository<File, Long> {
             "FROM File f " +
             "WHERE f.ownerType = :type AND f.ownerId IN :ids " +
             "ORDER BY f.sortOrder ASC")
-    List<FileResponse> findAllByOwnerTypeAndIds(OwnerType type, List<Long> ids);
+    List<FileResponse> findAllByOwnerTypeAndIds(OwnerType type, List<Long> ids); // OwnerType and AuctionIds
 
     Optional<File> findByOwnerTypeAndOwnerId(OwnerType ownerType, Long ownerId);
 }

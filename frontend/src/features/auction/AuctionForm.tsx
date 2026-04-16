@@ -192,23 +192,18 @@ export const AuctionForm = ({
             endTime: values.endTime?.toISOString(),
           };
 
-          const result =
-            submitMode === "draft"
-              ? await adminApi.saveDraft(requestData)
-              : await adminApi.scheduleAuction(requestData);
-
-          setLocalAuction(result);
-          setIsFormChanged(false);
-          message.success(
-            submitMode === "draft"
-              ? "Auction saved as draft and initialized"
-              : "Auction scheduled successfully",
-          );
-
-          // If it was a draft save, we STAY in the modal to allow image/further edits
           if (submitMode === "draft") {
+            const draftResult = await adminApi.saveDraft(requestData);
+            setLocalAuction(draftResult);
+            setIsFormChanged(false);
+            message.success("Auction saved as draft");
             setIsLoading(false);
-            return; // Don't call onSuccess yet
+            return; // Stay in modal to allow image/further edits
+          } else {
+            const scheduleResult = await adminApi.scheduleAuction(requestData);
+            setLocalAuction(scheduleResult.result);
+            setIsFormChanged(false);
+            message.success(scheduleResult.message);
           }
         } else {
           // We have a localAuction, so treat it as an update
@@ -222,21 +217,22 @@ export const AuctionForm = ({
           };
 
           if (submitMode === "schedule") {
-            await adminApi.scheduleAuction({
+            const res = await adminApi.scheduleAuction({
               ...updateData,
               id: localAuction.id,
             });
-            message.success("Auction scheduled successfully");
+            message.success(res.message);
           } else {
             if (localAuction.status === AuctionStatus.DRAFT) {
-              await adminApi.updateDraftAuction(localAuction.id, updateData);
+              const res = await adminApi.updateDraftAuction(localAuction.id, updateData);
+              message.success(res.message);
             } else {
-              await adminApi.updateScheduledAuction(
+              const res = await adminApi.updateScheduledAuction(
                 localAuction.id,
                 updateData,
               );
+              message.success(res.message);
             }
-            message.success("Draft updated successfully");
           }
         }
       } else if (mode === "edit" && auction) {
@@ -265,13 +261,13 @@ export const AuctionForm = ({
             scheduleData.append("startTime", updateData.startTime!);
             scheduleData.append("endTime", updateData.endTime!);
 
-            await adminApi.scheduleAuction(scheduleData);
-            message.success("Auction scheduled successfully");
+            const res = await adminApi.scheduleAuction(scheduleData);
+            message.success(res.message);
           } else {
             // Update Draft
             if (hasDataChanged(values)) {
-              await adminApi.updateDraftAuction(auction.id, updateData as any);
-              message.success("Draft updated successfully");
+              const res = await adminApi.updateDraftAuction(auction.id, updateData as any);
+              message.success(res.message);
             } else {
               message.info("No changes to save");
             }
@@ -286,11 +282,11 @@ export const AuctionForm = ({
           };
 
           if (hasDataChanged(values)) {
-            await adminApi.updateScheduledAuction(
+            const res = await adminApi.updateScheduledAuction(
               auction.id,
               updateData as any,
             );
-            message.success("Auction updated successfully");
+            message.success(res.message);
           } else {
             message.info("No changes to save");
           }
@@ -298,9 +294,9 @@ export const AuctionForm = ({
       }
 
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to submit auction:", error);
-      message.error("Failed to submit auction");
+      message.error(error.message);
     } finally {
       setIsLoading(false);
     }

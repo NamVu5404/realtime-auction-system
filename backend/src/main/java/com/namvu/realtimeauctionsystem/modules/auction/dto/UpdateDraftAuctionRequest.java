@@ -15,20 +15,20 @@ import java.time.Instant;
 @AllArgsConstructor
 public class UpdateDraftAuctionRequest {
 
-    @NotBlank(message = "INVALID_INPUT")
+    @NotBlank(message = "Title is required")
     private String title;
 
     private String description;
 
-    @DecimalMin(value = "0.01", message = "INVALID_INPUT")
+    @DecimalMin(value = "0.01", message = "Start price must be at least 0.01")
     private BigDecimal startPrice;
 
-    @DecimalMin(value = "0.01", message = "INVALID_INPUT")
+    @DecimalMin(value = "0.01", message = "Minimum step must be at least 0.01")
     private BigDecimal minStep;
 
-    @Future(message = "INVALID_INPUT")
+    @Future(message = "Start time must be in the future")
     private Instant startTime;
 
-    @Future(message = "INVALID_INPUT")
+    @Future(message = "End time must be in the future")
     private Instant endTime;
 }

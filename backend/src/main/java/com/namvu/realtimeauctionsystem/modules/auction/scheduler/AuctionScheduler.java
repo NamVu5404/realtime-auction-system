@@ -1,24 +1,31 @@
 package com.namvu.realtimeauctionsystem.modules.auction.scheduler;
 
+import com.namvu.realtimeauctionsystem.common.constant.AuctionActionType;
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
+import com.namvu.realtimeauctionsystem.common.constant.CacheNameConstant;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionInitRequest;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.AuctionAudit;
-import com.namvu.realtimeauctionsystem.common.enums.AuctionActionType;
-import com.namvu.realtimeauctionsystem.common.enums.AuctionStatus;
 import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionAuditRepository;
 import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
+import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
+import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
+import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -29,12 +36,16 @@ public class AuctionScheduler {
     private final AuctionRepository auctionRepository;
     private final RedisAuctionService redisAuctionService;
     private final AuctionAuditRepository auctionAuditRepository;
+    private final BidService bidService;
+    private final NotificationService notificationService;
+    private final MailService mailService;
 
     /**
      * Chạy mỗi 1 giây, tìm auctions cần start
      */
     @Scheduled(fixedDelay = 1000) // 1 seconds
     @Transactional
+    @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public void startScheduledAuctions() {
         Instant now = Instant.now();
 
@@ -89,6 +100,7 @@ public class AuctionScheduler {
      */
     @Scheduled(fixedDelay = 1000)
     @Transactional
+    @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public void endLiveAuctions() {
         Instant now = Instant.now();
 
@@ -122,13 +134,56 @@ public class AuctionScheduler {
 
                 Map<String, Object> details = new HashMap<>();
                 details.put("title", auction.getTitle());
-                details.put("highest price", auction.getCurrentPrice());
-                details.put("seller", auction.getSeller().getEmail());
 
                 if (auction.getHighestBidder() != null) {
                     details.put("winner", auction.getHighestBidder().getEmail());
+                    details.put("highest price", auction.getCurrentPrice());
+
+                    // Send email Winner
+                    mailService.sendAuctionWinnerEmail(
+                            auction.getHighestBidder().getEmail(),
+                            auction.getHighestBidder().getName(),
+                            auction.getTitle(),
+                            auction.getCurrentPrice(),
+                            auction.getId()
+                    );
+
+                    // AUCTION_ENDED_WINNER
+                    notificationService.processWinnerAuctionNotifications(
+                            auction.getId(),
+                            auction.getHighestBidder().getId(),
+                            auction.getTitle(),
+                            auction.getCurrentPrice()
+                    );
+
+                    // AUCTION_ENDED_SELLER
+                    notificationService.processAuctionEndSellerNotifications(
+                            auction.getId(),
+                            auction.getSeller().getId(),
+                            auction.getTitle(),
+                            auction.getCurrentPrice(),
+                            auction.getHighestBidder().getName()
+                    );
+
+                    // AUCTION_ENDED_LOSER
+                    Set<Long> bidderIds = bidService.getParticipantIds(auction.getId());
+                    bidderIds.remove(auction.getHighestBidder().getId()); // Xóa winner
+
+                    notificationService.processLoserBidderNotifications(
+                            auction.getId(),
+                            auction.getTitle(),
+                            bidderIds
+                    );
+
                 } else {
                     details.put("winner", "NO BIDDER");
+
+                    // AUCTION_ENDED_NO_BIDS
+                    notificationService.processNoBidderNotifications(
+                            auction.getId(),
+                            auction.getSeller().getId(),
+                            auction.getTitle()
+                    );
                 }
 
                 auctionAuditRepository.save(AuctionAudit.builder()
@@ -140,6 +195,34 @@ public class AuctionScheduler {
             } catch (Exception e) {
                 log.error("Failed to end auction {}", auction.getId(), e);
             }
+        }
+    }
+
+    @Scheduled(fixedDelay = 60000)
+    @Transactional
+    public void notifyAuctionsEndingSoon() {
+        Instant now = Instant.now();
+        Instant fiveMinutesFromNow = now.plus(5, ChronoUnit.MINUTES);
+
+        List<Auction> auctions = auctionRepository.findByNotifiedEndingSoonFalse(now, fiveMinutesFromNow);
+
+        if (auctions.isEmpty()) return;
+
+        log.info("Processing {} ending soon auctions.", auctions.size());
+
+        for (Auction auction : auctions) {
+            // Đánh dấu đã gửi thông báo
+            auction.setNotifiedEndingSoon(true);
+
+            Set<Long> bidderIds = bidService.getParticipantIds(auction.getId());
+            if (bidderIds.isEmpty()) continue;
+
+            notificationService.processAuctionEndingSoonNotifications(
+                    auction.getId(),
+                    auction.getTitle(),
+                    auction.getCurrentPrice(),
+                    bidderIds
+            );
         }
     }
 }

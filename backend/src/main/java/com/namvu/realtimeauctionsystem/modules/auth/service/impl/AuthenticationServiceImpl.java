@@ -1,13 +1,12 @@
 package com.namvu.realtimeauctionsystem.modules.auth.service.impl;
 
-import com.namvu.realtimeauctionsystem.common.enums.TokenType;
-import com.namvu.realtimeauctionsystem.common.enums.UserStatus;
+import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.TokenType;
 import com.namvu.realtimeauctionsystem.common.exception.AppException;
 import com.namvu.realtimeauctionsystem.common.utils.RequestUtils;
 import com.namvu.realtimeauctionsystem.modules.auth.dto.*;
-import com.namvu.realtimeauctionsystem.modules.auth.entity.InvalidatedToken;
-import com.namvu.realtimeauctionsystem.modules.auth.repository.InvalidatedTokenRepository;
 import com.namvu.realtimeauctionsystem.modules.auth.service.AuthenticationService;
+import com.namvu.realtimeauctionsystem.modules.auth.service.BlacklistTokenService;
+import com.namvu.realtimeauctionsystem.modules.auth.service.IpLocationService;
 import com.namvu.realtimeauctionsystem.modules.auth.service.TokenService;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Service;
 import ua_parser.Client;
 
 import java.text.ParseException;
+import java.time.Instant;
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +28,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserService userService;
     private final TokenService tokenService;
-    private final InvalidatedTokenRepository invalidatedTokenRepository;
+    private final BlacklistTokenService blacklistTokenService;
+    private final IpLocationService ipLocationService;
 
     private static final String UNKNOWN_VALUE = "Unknown";
 
@@ -90,22 +91,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 device = userAgent.device.family;
         }
 
+        String ip = RequestUtils.getIpAddress(request);
+        String location = ipLocationService.getLocationString(ip);
+
         return InfoOsDto.builder()
                 .browser(browser)
                 .os(os)
                 .device(device)
-                .clientAddress(RequestUtils.getIpAddress(request))
+                .clientAddress(ip)
+                .location(location)
                 .build();
     }
 
     private void disableJwt(String token) throws ParseException {
         SignedJWT signedJWT = SignedJWT.parse(token);
 
-        InvalidatedToken invalidatedToken = InvalidatedToken.builder()
-                .id(signedJWT.getJWTClaimsSet().getJWTID())
-                .expiryTime(signedJWT.getJWTClaimsSet().getExpirationTime().toInstant())
-                .build();
+        String jti = signedJWT.getJWTClaimsSet().getJWTID();
+        Instant expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime().toInstant();
 
-        invalidatedTokenRepository.save(invalidatedToken);
+        blacklistTokenService.blacklist(jti, expiryTime);
     }
 }

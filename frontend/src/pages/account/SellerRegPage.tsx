@@ -23,6 +23,7 @@ import sellerApi from "../../api/sellerApi";
 import { RequestStatus, UserRole } from "../../api/types";
 import sellerBg from "../../assets/images/seller-reg-bg.png";
 import { useAuthStore } from "../../store/useAuthStore";
+import { ENV } from "../../config/env";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -47,15 +48,10 @@ const SellerRegPage = () => {
       // Also invalidate to sync with server
       queryClient.invalidateQueries({ queryKey: ["my-seller-registration"] });
 
-      message.success(
-        "Registration submitted successfully! Please wait for admin approval.",
-      );
+      message.success(data.message);
     },
     onError: (error: any) => {
-      message.error(
-        error.message ||
-          "Failed to submit registration. You might already have a pending request.",
-      );
+      message.error(error.message);
     },
   });
 
@@ -75,7 +71,7 @@ const SellerRegPage = () => {
       };
     }
     return {
-      text: "Enroll as Seller",
+      text: "Apply as Seller",
       disabled: false,
       icon: <ShopOutlined />,
     };
@@ -339,9 +335,11 @@ const SellerRegPage = () => {
                     !buttonState.disabled && setAgreedToTerms((prev) => !prev)
                   }
                 >
-                  By enrolling, you agree to our{" "}
+                  By applying, you agree to our{" "}
                   <a
-                    href="#"
+                      href={ENV.SELLER_TERMS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     className="text-white/40 hover:text-[#FED469] underline transition-colors duration-300 text-[12px]"
                   >

@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import {
   ApiResponse,
   AuthenticationResponse,
@@ -12,8 +12,9 @@ import {
 } from "../types";
 import axiosClient from "./axiosClient";
 import { extractErrorMessage } from "./apiUtils";
+import { ENV } from "../config/env";
 
-const API_BASE_URL = "http://localhost:8080/api/v1";
+const API_BASE_URL = ENV.API_V1_URL;
 
 export const authApi = {
   // Step 1: Exchange authorization code for tokens
@@ -22,7 +23,7 @@ export const authApi = {
   // using client_secret (never exposed to frontend)
   exchangeToken: async (
     request: ExchangeTokenRequest,
-  ): Promise<ExchangeTokenResponse> => {
+  ): Promise<ExchangeTokenResponse & { message: string }> => {
     try {
       // Call backend endpoint with authorization code
       // Backend will:
@@ -33,18 +34,23 @@ export const authApi = {
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
       const response = await axios.post<ApiResponse<AuthenticationResponse>>(
-        `${API_BASE_URL}/auth/outbound/authentication?code=${encodeURIComponent(request.code)}`,
+        `${API_BASE_URL}/auth/oauth2/authentication?code=${encodeURIComponent(request.code)}`,
         {},
-        { signal: controller.signal },
+        {
+          signal: controller.signal,
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+          },
+        },
       );
 
       clearTimeout(timeoutId);
 
-      if (response.data.code !== 1000) {
-        throw new Error(response.data.message || "Authentication failed");
+      if (response.data.code && response.data.code >= 4000) {
+        throw new Error(response.data.message);
       }
 
-      const { accessToken, refreshToken, user } = response.data.result;
+      const { accessToken, refreshToken, user } = response.data.result!;
       if (!accessToken || !refreshToken) {
         throw new Error("Invalid tokens received from server");
       }
@@ -63,12 +69,13 @@ export const authApi = {
         refreshToken,
         expiresIn: 3600,
         user: userInfo,
+        message: response.data.message,
       };
     } catch (error) {
       const errorMessage = extractErrorMessage(error);
 
       if (error instanceof Error && error.name === "AbortError") {
-        throw new Error("Request timeout - server took too long to respond");
+        throw new Error(extractErrorMessage(error));
       }
 
       throw new Error(errorMessage);
@@ -86,11 +93,11 @@ export const authApi = {
         refreshToken: request.refreshToken,
       })
       .then((response) => {
-        if (response.data.code !== 1000) {
-          throw new Error(response.data.message || "Token refresh failed");
+        if (response.data.code && response.data.code >= 4000) {
+          throw new Error(response.data.message);
         }
 
-        const { accessToken } = response.data.result;
+        const { accessToken } = response.data.result!;
 
         // We get back only new accessToken. Existing refreshToken and user
         // will be preserved in the store by the caller
@@ -114,7 +121,7 @@ export const authApi = {
         "/auth/introspect",
         { accessToken },
       );
-      return response.data.result.valid;
+      return response.data.result?.valid ?? false;
     } catch (error) {
       console.error("Introspect error:", error);
       return false;

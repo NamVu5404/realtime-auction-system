@@ -27,23 +27,23 @@ const ProfilePage = () => {
 
   const { mutate: updateProfile, isPending } = useMutation({
     mutationFn: userApi.updateProfile,
-    onSuccess: (updatedUser) => {
-      setUser({ ...user, ...updatedUser } as any);
-      message.success("Profile updated successfully!");
+    onSuccess: (data) => {
+      setUser({ ...user, ...data.result } as any);
+      message.success(data.message);
     },
     onError: (error: any) => {
-      message.error(error.message || "Failed to update profile");
+      message.error(error.message);
     },
   });
 
   const { mutate: uploadAvatar, isPending: isUploading } = useMutation({
     mutationFn: userApi.uploadAvatar,
-    onSuccess: (updatedUser) => {
-      setUser({ ...user, ...updatedUser } as any);
-      message.success("Avatar updated successfully!");
+    onSuccess: (data) => {
+      setUser({ ...user, ...data.result } as any);
+      message.success(data.message);
     },
     onError: (error: any) => {
-      message.error(error.message || "Failed to upload avatar");
+      message.error(error.message);
     },
   });
 
@@ -84,7 +84,7 @@ const ProfilePage = () => {
     <div>
       <Title
         level={2}
-        style={{ color: "#fff", marginBottom: "16px", fontSize: "24px" }}
+        style={{ color: "#fff", marginBottom: "24px", fontSize: "24px" }}
       >
         Profile Settings
       </Title>

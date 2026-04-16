@@ -1,6 +1,6 @@
 import { Notification } from "../store/useNotificationStore";
 import axiosClient from "./axiosClient";
-import { ApiResponse, PageResponse } from "./types";
+import { ApiResponse, ApiResult, PageResponse } from "./types";
 import { extractErrorMessage } from "./apiUtils";
 
 export const notificationApi = {
@@ -12,7 +12,7 @@ export const notificationApi = {
       const response = await axiosClient.get<ApiResponse<number>>(
         "/notifications/unread-count",
       );
-      return response.data.result;
+      return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch unread count:", error);
       throw new Error(extractErrorMessage(error));
@@ -28,7 +28,7 @@ export const notificationApi = {
         "/notifications/bell",
       );
 
-      return response.data.result.map((item: any) => ({
+      return response.data.result!.map((item: any) => ({
         id: String(item.id),
         title: item.title,
         content: item.content,
@@ -64,7 +64,7 @@ export const notificationApi = {
         },
       );
 
-      const result = response.data.result;
+      const result = response.data.result!;
       const mappedData: Notification[] = result.data.map((item: any) => ({
         id: String(item.id),
         title: item.title,
@@ -85,10 +85,10 @@ export const notificationApi = {
     }
   },
 
-  markAsRead: async (id: string): Promise<boolean> => {
+  markAsRead: async (id: string): Promise<ApiResult<boolean>> => {
     try {
-      await axiosClient.patch(`/notifications/${id}/read`);
-      return true;
+      const res = await axiosClient.patch<ApiResponse<boolean>>(`/notifications/${id}/read`);
+      return { message: res.data.message, result: true };
     } catch (error) {
       console.error(`Failed to mark notification ${id} as read:`, error);
       throw new Error(extractErrorMessage(error));
@@ -98,10 +98,10 @@ export const notificationApi = {
   /**
    * Mark all notifications as read
    */
-  markAllAsRead: async (): Promise<boolean> => {
+  markAllAsRead: async (): Promise<ApiResult<boolean>> => {
     try {
-      await axiosClient.patch("/notifications/mark-all-as-read");
-      return true;
+      const res = await axiosClient.patch<ApiResponse<boolean>>("/notifications/mark-all-as-read");
+      return { message: res.data.message, result: true };
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
       throw new Error(extractErrorMessage(error));
@@ -111,10 +111,10 @@ export const notificationApi = {
   /**
    * Delete a notification
    */
-  deleteNotification: async (id: string): Promise<boolean> => {
+  deleteNotification: async (id: string): Promise<ApiResult<boolean>> => {
     try {
-      await axiosClient.delete(`/notifications/${id}`);
-      return true;
+      const res = await axiosClient.delete<ApiResponse<boolean>>(`/notifications/${id}`);
+      return { message: res.data.message, result: true };
     } catch (error) {
       console.error(`Failed to delete notification ${id}:`, error);
       throw new Error(extractErrorMessage(error));
@@ -124,10 +124,10 @@ export const notificationApi = {
   /**
    * Delete all notifications
    */
-  deleteAll: async (): Promise<boolean> => {
+  deleteAll: async (): Promise<ApiResult<boolean>> => {
     try {
-      await axiosClient.delete("/notifications/all");
-      return true;
+      const res = await axiosClient.delete<ApiResponse<boolean>>("/notifications/all");
+      return { message: res.data.message, result: true };
     } catch (error) {
       console.error("Failed to delete all notifications:", error);
       throw new Error(extractErrorMessage(error));
