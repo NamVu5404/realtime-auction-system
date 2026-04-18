@@ -44,6 +44,8 @@ export enum UserActionType {
   SELLER_ROLE_REVOKED = "SELLER_ROLE_REVOKED",
   SELLER_APPROVED = "SELLER_APPROVED",
   SELLER_REJECTED = "SELLER_REJECTED",
+  BAN_CHAT = "BAN_CHAT",
+  UNBAN_CHAT = "UNBAN_CHAT",
 }
 
 export enum AuctionActionType {

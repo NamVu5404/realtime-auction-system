@@ -10,4 +10,6 @@ public enum UserActionType {
     SELLER_ROLE_REVOKED,
     SELLER_APPROVED,
     SELLER_REJECTED,
+    BAN_CHAT,
+    UNBAN_CHAT,
 }
