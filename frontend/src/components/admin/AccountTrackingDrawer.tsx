@@ -57,21 +57,35 @@ const createTimelineItem = (tracking: UserAuditResponse) => {
       return {
         icon: <UserDeleteOutlined />,
         color: "red",
-        label: "SELLER_ROLE_REVOKED",
+        label: "SELLER ROLE REVOKED",
       };
     }
     if (actionType === "SELLER_REJECTED") {
       return {
         icon: <CloseCircleOutlined />,
         color: "red",
-        label: "SELLER_REJECTED",
+        label: "SELLER REJECTED",
       };
     }
     if (actionType === "SELLER_APPROVED") {
       return {
         icon: <CheckCircleOutlined />,
         color: "green",
-        label: "SELLER_APPROVED",
+        label: "SELLER APPROVED",
+      };
+    }
+    if (actionType === "BAN_CHAT") {
+      return {
+        icon: <LockOutlined />,
+        color: "red",
+        label: "BAN CHAT",
+      };
+    }
+    if (actionType === "UNBAN_CHAT") {
+      return {
+        icon: <UnlockOutlined />,
+        color: "green",
+        label: "UNBAN CHAT",
       };
     }
     return {

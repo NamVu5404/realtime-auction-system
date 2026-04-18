@@ -1,8 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.user.service.impl;
 
-import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.common.constant.FraudType;
 import com.namvu.realtimeauctionsystem.common.constant.UserActionType;
+import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
@@ -20,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +114,23 @@ public class UserAuditServiceImpl implements UserAuditService {
     public PageResponse<UserAuditResponse> getMyAccountAudit(Pageable pageable) {
         Long userId = SecurityUtils.getCurrentUserId();
         return getAccountAudit(userId, pageable);
+    }
+
+    @Override
+    public void banChatAudit(User user, Instant bannedUntil) {
+        userAuditRepository.save(UserAudit.builder()
+                .user(user)
+                .actionType(UserActionType.BAN_CHAT)
+                .details(Map.of("Until", bannedUntil.toString()))
+                .build());
+    }
+
+    @Override
+    public void unbanChatAudit(User user) {
+        userAuditRepository.save(UserAudit.builder()
+                .user(user)
+                .actionType(UserActionType.UNBAN_CHAT)
+                .build());
     }
 
     private PageResponse<UserAuditResponse> getAccountAudit(Long userId, Pageable pageable) {
