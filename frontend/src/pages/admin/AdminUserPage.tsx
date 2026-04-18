@@ -10,6 +10,9 @@ import {
   ShopOutlined,
   StopOutlined,
   UnlockOutlined,
+  SolutionOutlined,
+  CheckCircleFilled,
+  CloseCircleFilled,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -25,6 +28,7 @@ import {
   Space,
   Table,
   Tag,
+  Tooltip,
 } from "antd";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -42,6 +46,7 @@ import {
 import AccountTrackingDrawer from "../../components/admin/AccountTrackingDrawer";
 import BidStatisticsDashboard from "../../features/bid/BidStatisticsDashboard";
 import { useDebounce } from "../../hooks/useDebounce";
+import KycInfoModal from "../../features/ekyc/KycInfoModal";
 import formatCurrency, { formatDateTime } from "../../utils/format";
 
 const AdminUserPage = () => {
@@ -97,6 +102,10 @@ const AdminUserPage = () => {
   const [blockReason, setBlockReason] = useState("");
   const [unblockReason, setUnblockReason] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [kycModal, setKycModal] = useState<{
+    visible: boolean;
+    userId?: number;
+  }>({ visible: false });
   const queryClient = useQueryClient();
 
   const roleStyles = {
@@ -244,8 +253,46 @@ const AdminUserPage = () => {
     },
     {
       title: "IP Address",
-      dataIndex: "registerIp",
-      key: "registerIp",
+      dataIndex: "publicIp",
+      key: "publicIp",
+    },
+    {
+      title: "CCCD",
+      dataIndex: "isVerifiedIdentity",
+      key: "isVerifiedIdentity",
+      align: "center" as const,
+      render: (verified: boolean) => (
+        <Tooltip title={verified ? "Verified" : "Unverified"}>
+          {verified ? (
+            <CheckCircleFilled
+              style={{ color: "var(--color-accent-green)", fontSize: "16px" }}
+            />
+          ) : (
+            <CloseCircleFilled
+              style={{ color: "var(--color-text-muted)", fontSize: "16px" }}
+            />
+          )}
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Face",
+      dataIndex: "isFaceMatch",
+      key: "isFaceMatch",
+      align: "center" as const,
+      render: (matched: boolean) => (
+        <Tooltip title={matched ? "Face Matched" : "Unmatched"}>
+          {matched ? (
+            <CheckCircleFilled
+              style={{ color: "var(--color-accent-green)", fontSize: "16px" }}
+            />
+          ) : (
+            <CloseCircleFilled
+              style={{ color: "var(--color-text-muted)", fontSize: "16px" }}
+            />
+          )}
+        </Tooltip>
+      ),
     },
     {
       title: "Roles",
@@ -309,6 +356,18 @@ const AdminUserPage = () => {
                     userId: record.id,
                   }),
               },
+              record.isVerifiedIdentity
+                ? {
+                    key: "view-kyc",
+                    icon: <SolutionOutlined />,
+                    label: "Identity Info",
+                    onClick: () =>
+                      setKycModal({
+                        visible: true,
+                        userId: record.id,
+                      }),
+                  }
+                : null,
               !record.roles?.includes(UserRole.SELLER) &&
               !record.roles?.includes(UserRole.ADMIN)
                 ? {
@@ -721,6 +780,12 @@ const AdminUserPage = () => {
         }}
         page={trackingPage}
         onPageChange={setTrackingPage}
+      />
+
+      <KycInfoModal
+        visible={kycModal.visible}
+        userId={kycModal.userId}
+        onCancel={() => setKycModal({ visible: false })}
       />
 
       {/* Block User Modal */}

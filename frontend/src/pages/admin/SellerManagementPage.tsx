@@ -6,6 +6,7 @@ import {
   ExclamationCircleOutlined,
   InfoCircleOutlined,
   ShopOutlined,
+  SolutionOutlined,
   TeamOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -42,6 +43,7 @@ import SellerStatisticsDashboard from "../../features/auction/SellerStatisticsDa
 import formatCurrency from "../../utils/format";
 import { getAvatarUrl } from "../../utils/imageUtils";
 
+import KycInfoModal from "../../features/ekyc/KycInfoModal";
 const { Text } = Typography;
 const { TextArea } = Input;
 
@@ -87,6 +89,11 @@ const SellerManagementPage: React.FC = () => {
   const [statDrawerVisible, setStatDrawerVisible] = useState(false);
   const [statUserId, setStatUserId] = useState<number | undefined>();
   const [statUserName, setStatUserName] = useState<string>("");
+
+  const [kycModal, setKycModal] = useState<{
+    visible: boolean;
+    userId?: number;
+  }>({ visible: false });
 
   // Queries
   const { data: registrations, isLoading: isRegLoading } = useQuery({
@@ -275,10 +282,21 @@ const SellerManagementPage: React.FC = () => {
       render: (record: SellerRegResponse) =>
         record.status === RequestStatus.PENDING && (
           <Space>
+            <Tooltip title="View Identity Info">
+              <Button
+                icon={<SolutionOutlined />}
+                size="small"
+                onClick={() =>
+                  setKycModal({
+                    visible: true,
+                    userId: record.user?.id,
+                  })
+                }
+              />
+            </Tooltip>
             <Button
               type="primary"
               size="small"
-              icon={<CheckCircleOutlined />}
               onClick={() => handleApprove(record)}
               loading={
                 approveMutation.isPending &&
@@ -290,7 +308,6 @@ const SellerManagementPage: React.FC = () => {
             <Button
               danger
               size="small"
-              icon={<CloseCircleOutlined />}
               onClick={() => handleOpenReject(record)}
             >
               Reject
@@ -789,6 +806,12 @@ const SellerManagementPage: React.FC = () => {
       >
         {statUserId && <SellerStatisticsDashboard sellerId={statUserId} />}
       </Drawer>
+
+      <KycInfoModal
+        visible={kycModal.visible}
+        userId={kycModal.userId}
+        onCancel={() => setKycModal({ visible: false })}
+      />
     </div>
   );
 };

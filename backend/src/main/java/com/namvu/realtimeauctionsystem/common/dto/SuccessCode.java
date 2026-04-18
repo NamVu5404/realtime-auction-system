@@ -62,6 +62,10 @@ public enum SuccessCode {
     HIDDEN_MESSAGE(1900, "Hidden this message successfully", HttpStatus.OK),
     BANNED_USER(1901, "User has been banned from chat successfully", HttpStatus.OK),
     UNBANNED_USER(1902, "User has been unbanned from chat successfully", HttpStatus.OK),
+
+    // Kyc (20xx)
+    IDENTITY_VERIFIED(2000, "Identity verified successfully", HttpStatus.OK),
+    FACE_MATCH_SUCCESS(2001, "Face match successfully", HttpStatus.OK),
     ;
 
     private final int code;

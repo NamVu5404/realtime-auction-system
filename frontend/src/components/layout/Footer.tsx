@@ -11,11 +11,13 @@ import {
 import { Col, Layout, Row, Space } from "antd";
 import logo from "../../assets/images/logo.png";
 import { ENV, buildPublicSiteUrl } from "../../config/env";
+import { useNavigate } from "react-router-dom";
 
 const { Footer: AntFooter } = Layout;
 
 export const Footer = () => {
   const repoUrl = ENV.REPO_URL;
+  const navigate = useNavigate();
   const links = {
     howToBid: buildPublicSiteUrl("/how-to-bid/"),
     buyersPremium: buildPublicSiteUrl("/buyers-premium/"),
@@ -49,6 +51,7 @@ export const Footer = () => {
                 gap: "10px",
                 marginBottom: "20px",
               }}
+              onClick={() => navigate("/")}
             >
               <img
                 src={logo}

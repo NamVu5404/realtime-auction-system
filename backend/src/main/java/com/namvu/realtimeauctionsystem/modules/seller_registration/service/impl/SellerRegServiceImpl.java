@@ -53,6 +53,10 @@ public class SellerRegServiceImpl implements SellerRegService {
 
         User user = userService.getActiveUserById(userId);
 
+        if (!user.isVerifiedIdentity() || !user.isFaceMatch()) {
+            throw new AppException(ErrorCode.IDENTITY_VERIFICATION_INCOMPLETE);
+        }
+
         SellerRegistration res = sellerRegRepository.save(
                 SellerRegistration.builder()
                         .user(user)

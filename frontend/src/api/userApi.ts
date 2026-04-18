@@ -56,6 +56,15 @@ const userApi = {
       throw new Error(extractErrorMessage(error));
     }
   },
+
+  getMe: async (): Promise<User> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<User>>("/users/me");
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
 };
 
 export default userApi;

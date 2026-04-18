@@ -43,8 +43,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:vungocnam2000nd@gmail.com}
-    password: ${MAIL_PASSWORD:orzwqxxvqomvifvm}
+    username: ${MAIL_USERNAME:admin.auctionpro@gmail.com}
+    password: ${MAIL_PASSWORD:vphtjquwbavbvaqg}
     properties:
       mail:
         smtp:
@@ -116,3 +116,7 @@ app:
     upload-dir: F:/bidding-platform/upload
     max-size: 5242880 # 5MB
     allowed-types: image/jpeg,image/png,image/webp,image/gif
+  fpt:
+    api-key: ${FPT_API_KEY}
+    id-recognition-url: https://api.fpt.ai/vision/idr/vnm/
+    face-match-url: https://api.fpt.ai/dmp/checkface/v1/
