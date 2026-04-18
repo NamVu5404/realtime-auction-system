@@ -15,6 +15,8 @@ import java.util.Set;
 public interface UserService {
     PageResponse<ManagerUserResponse> getUsers(String keyword, Role role, UserStatus status, Pageable pageable);
 
+    UserResponse getMe();
+
     BlockUserResponse blockUser(Long userId, BlockUserRequest request);
 
     BlockUserResponse unblockUser(Long userId, BlockUserRequest request);

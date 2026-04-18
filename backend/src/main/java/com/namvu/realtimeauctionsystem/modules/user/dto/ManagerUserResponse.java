@@ -15,7 +15,7 @@ import java.time.Instant;
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 public class ManagerUserResponse extends UserResponse {
-    private String registerIp;
+    private String publicIp;
     private String location;
     private UserStatus status;
     private Instant bannedUntil;

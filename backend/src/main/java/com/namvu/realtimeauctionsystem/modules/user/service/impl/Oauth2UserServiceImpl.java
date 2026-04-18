@@ -48,9 +48,9 @@ public class Oauth2UserServiceImpl implements Oauth2UserService {
         if (userOptional.isPresent()) {
             User existingUser = userOptional.get();
 
-            if (existingUser.getRegisterIp() == null || UNKNOWN_VALUE.equals(existingUser.getRegisterIp())
+            if (existingUser.getPublicIp() == null || UNKNOWN_VALUE.equals(existingUser.getPublicIp())
                     || existingUser.getLocation() == null || UNKNOWN_VALUE.equals(existingUser.getLocation())) {
-                existingUser.setRegisterIp(ip);
+                existingUser.setPublicIp(ip);
                 existingUser.setLocation(location);
                 return userRepository.save(existingUser);
             }
@@ -63,7 +63,7 @@ public class Oauth2UserServiceImpl implements Oauth2UserService {
                         .email(userInfo.getEmail())
                         .name(userInfo.getName())
                         .avatarUrl(userInfo.getPicture())
-                        .registerIp(ip)
+                        .publicIp(ip)
                         .location(location)
                         .build()
         );

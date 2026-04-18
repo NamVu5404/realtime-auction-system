@@ -71,6 +71,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public UserResponse getMe() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return userMapper.mapToResponse(userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
+    }
+
+    @Override
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public BlockUserResponse blockUser(Long userId, BlockUserRequest request) {

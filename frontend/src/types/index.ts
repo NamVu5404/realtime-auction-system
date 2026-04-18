@@ -44,6 +44,8 @@ export interface UserInfo {
   avatarUrl?: string;
   roles: string[];
   phone?: string;
+  isVerifiedIdentity?: boolean;
+  isFaceMatch?: boolean;
 }
 
 export interface ExchangeTokenResponse {

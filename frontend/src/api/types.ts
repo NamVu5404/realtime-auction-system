@@ -74,6 +74,8 @@ export interface User {
   status?: "ACTIVE" | "BLOCKED";
   phone?: string;
   bannedUntil?: string; // ISO date string if user is banned from chat
+  isVerifiedIdentity?: boolean;
+  isFaceMatch?: boolean;
 }
 
 /**
@@ -92,6 +94,24 @@ export interface SellerResponse {
   liveAuctions: number;
   endedAuctions: number;
   totalRevenue: number;
+}
+
+/**
+ * Kyc Response - Derived from KycResponse.java
+ */
+export interface KycResponse {
+  userId: number;
+  cccdNumber: string;
+  name: string;
+  dob: string;
+  sex: string;
+  address: string;
+  doe: string;
+  frontImageUrl: string;
+  backImageUrl: string;
+  faceMatchUrl: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -493,15 +513,15 @@ export interface TopPerformingResponse {
  * Live Chat Types — Derived from LiveChatResponse.java & LiveChatRequest.java
  */
 export interface LiveChatMessage {
-  id?: number;          // Present for history messages (from REST), absent for real-time WS broadcasts
+  id?: number; // Present for history messages (from REST), absent for real-time WS broadcasts
   auctionId: number;
   senderId: number;
   senderName: string;
   senderAvatar?: string;
   senderRole?: UserRole; // Prioritized role of the sender
   content: string;
-  hidden?: boolean;    // True if the message was hidden by an admin
-  createdAt?: string;   // ISO string — present in history, absent in WS broadcast
+  hidden?: boolean; // True if the message was hidden by an admin
+  createdAt?: string; // ISO string — present in history, absent in WS broadcast
 }
 
 export interface LiveChatRequest {

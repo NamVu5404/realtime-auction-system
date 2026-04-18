@@ -62,6 +62,8 @@ export const authApi = {
         avatarUrl: user.avatarUrl,
         roles: (user as any).roles || [],
         phone: user.phone,
+        isVerifiedIdentity: user.isVerifiedIdentity,
+        isFaceMatch: user.isFaceMatch,
       };
 
       return {

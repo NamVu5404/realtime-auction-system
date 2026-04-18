@@ -1,5 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,4 +20,10 @@ public class UserResponse {
     private String phone;
     private Set<Role> roles;
     private String avatarUrl;
+
+    @JsonProperty("isVerifiedIdentity")
+    private boolean isVerifiedIdentity;
+
+    @JsonProperty("isFaceMatch")
+    private boolean isFaceMatch;
 }
