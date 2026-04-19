@@ -73,6 +73,11 @@ public class AuctionControllerV1 {
         return ApiResponse.of(SCHEDULED_AUCTION_UPDATED, auctionService.updateScheduledAuction(id, request));
     }
 
+    @PostMapping("/{auctionId}/relist")
+    public ApiResponse<AuctionResponse> relistAuction(@PathVariable Long auctionId) {
+        return ApiResponse.of(CREATED, auctionService.relistAuction(auctionId));
+    }
+
     @PatchMapping("/{id}/cancel")
     public ApiResponse<CancelAuctionResponse> cancelAuction(@PathVariable Long id,
                                                             @RequestBody @Valid CancelAuctionRequest request) {

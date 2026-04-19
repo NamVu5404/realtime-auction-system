@@ -106,8 +106,12 @@ public class AuctionServiceImpl implements AuctionService {
         Instant startTime = request.getStartTime();
         Instant endTime = request.getEndTime();
 
-        if (startTime.isBefore(now.plusSeconds(30)) || endTime.isBefore(startTime)) {
+        if (startTime.isBefore(now.plusMillis(1)) || endTime.isBefore(startTime)) {
             throw new AppException(ErrorCode.START_END_TIME_INVALID);
+        }
+
+        if (request.getReservePrice() != null && request.getReservePrice().compareTo(request.getStartPrice()) < 0) {
+            throw new AppException(ErrorCode.RESERVE_PRICE_INVALID);
         }
 
         Auction auction;
@@ -182,6 +186,10 @@ public class AuctionServiceImpl implements AuctionService {
             throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
         }
 
+        if (request.getReservePrice() != null && request.getReservePrice().compareTo(auction.getStartPrice()) < 0) {
+            throw new AppException(ErrorCode.RESERVE_PRICE_INVALID);
+        }
+
         checkAuctionOwnership(auction);
 
         auctionMapper.updateEntity(request, auction);
@@ -190,6 +198,24 @@ public class AuctionServiceImpl implements AuctionService {
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         populateImages(response);
         return response;
+    }
+
+    @Override
+    public AuctionResponse relistAuction(Long auctionId) {
+        Auction auction = getAuctionDetailById(auctionId);
+        checkAuctionOwnership(auction);
+
+        if (auction.getStatus() != AuctionStatus.ENDED_NO_SALE) {
+            throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+        }
+
+        Auction newAuction = auctionMapper.cloneToNewDraft(auction);
+        newAuction.setStatus(AuctionStatus.DRAFT);
+        newAuction.setExtensionCount(0);
+        newAuction.setNotifiedEndingSoon(false);
+        newAuction = auctionRepository.save(newAuction);
+
+        return auctionMapper.mapToResponse(newAuction);
     }
 
     @Override

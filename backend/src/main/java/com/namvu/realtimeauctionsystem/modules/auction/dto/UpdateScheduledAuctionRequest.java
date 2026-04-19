@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Data
@@ -26,4 +27,6 @@ public class UpdateScheduledAuctionRequest {
     @NotNull(message = "End time is required")
     @Future(message = "End time must be in the future")
     private Instant endTime;
+
+    private BigDecimal reservePrice;
 }

@@ -39,6 +39,8 @@ public class CreateAuctionRequest {
     @Future(groups = Scheduler.class, message = "Auction end time must be in the future")
     private Instant endTime;
 
+    private BigDecimal reservePrice;
+
     public interface Draft {}
     public interface Scheduler {}
 }

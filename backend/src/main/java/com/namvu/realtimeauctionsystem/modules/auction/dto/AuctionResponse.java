@@ -27,6 +27,7 @@ public class AuctionResponse {
     private AuctionStatus status;
     private Instant startTime;
     private Instant endTime;
+    private BigDecimal reservePrice;
     private Integer antiSnipeSeconds;
     private Integer extensionSeconds;
 

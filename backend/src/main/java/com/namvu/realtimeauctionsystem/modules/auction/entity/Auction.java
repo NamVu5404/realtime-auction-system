@@ -63,6 +63,9 @@ public class Auction extends Auditable {
     @Column(name = "end_time")
     private Instant endTime;
 
+    @Column(precision = 15, scale = 2)
+    private BigDecimal reservePrice;
+
     @Column(name = "anti_snipe_seconds")
     @Builder.Default
     private Integer antiSnipeSeconds = 10; // X giây

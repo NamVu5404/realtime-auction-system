@@ -298,6 +298,35 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    @Override
+    @Async(NOTIFICATION_EXECUTOR)
+    public void processEndedNoSaleBidderNotifications(Long auctionId, String title, Set<Long> bidderIds) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_ENDED_NO_SALE_BIDDER;
+            String content = type.buildContent(title);
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+
+            bidderIds.forEach(userId ->
+                    self().createAndPushNotification(userId, type, content, redirectUrl)
+            );
+        } catch (Exception e) {
+            log.warn("Failed to process ended no sale bidder notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    @Async(NOTIFICATION_EXECUTOR)
+    public void processEndedNoSaleSellerNotifications(Long auctionId, String title, Long sellerId) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_ENDED_NO_SALE_SELLER;
+            String content = type.buildContent(title);
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+            self().createAndPushNotification(sellerId, type, content, redirectUrl);
+        } catch (Exception e) {
+            log.warn("Failed to process ended no sale seller notifications for user {}: {}", sellerId, e.getMessage());
+        }
+    }
+
     private void pushNotification(Notification notification) {
         NotificationResponse response = notificationMapper.mapToResponse(notification);
 

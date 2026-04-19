@@ -40,6 +40,7 @@ public enum ErrorCode {
     AUCTION_STATUS_INVALID(4304, "Invalid auction status", HttpStatus.BAD_REQUEST),
     AUCTION_CONFIG_MISSING(4305, "Auction configuration is missing", HttpStatus.INTERNAL_SERVER_ERROR),
     START_END_TIME_INVALID(4306, "Start time or end time is invalid", HttpStatus.BAD_REQUEST),
+    RESERVE_PRICE_INVALID(4307, "Reserve price is invalid", HttpStatus.BAD_REQUEST),
 
     // Bid (44xx)
     BID_REJECTED(4400, "Bid must be greater than or equal to current price plus minimum step", HttpStatus.BAD_REQUEST),

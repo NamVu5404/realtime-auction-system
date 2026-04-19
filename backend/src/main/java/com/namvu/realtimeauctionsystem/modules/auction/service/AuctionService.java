@@ -25,6 +25,8 @@ public interface AuctionService {
 
     AuctionResponse updateScheduledAuction(Long id, UpdateScheduledAuctionRequest request);
 
+    AuctionResponse relistAuction(Long auctionId);
+
     CancelAuctionResponse cancelAuction(Long id, CancelAuctionRequest request);
 
     PlaceBidResponse placeBidV1(PlaceBidRequestV1 request);

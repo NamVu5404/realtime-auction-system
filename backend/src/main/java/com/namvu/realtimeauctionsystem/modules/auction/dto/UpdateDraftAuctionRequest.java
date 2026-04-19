@@ -31,4 +31,6 @@ public class UpdateDraftAuctionRequest {
 
     @Future(message = "End time must be in the future")
     private Instant endTime;
+
+    private BigDecimal reservePrice;
 }

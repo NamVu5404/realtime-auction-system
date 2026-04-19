@@ -6,6 +6,7 @@ public enum AuctionActionType {
     CANCELLED,
     START,
     END,
+    ENDED_NO_SALE,
     RESULT,
     FRAUD,
 }
