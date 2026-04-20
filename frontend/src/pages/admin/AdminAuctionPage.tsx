@@ -27,6 +27,7 @@ import {
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { auctionApi } from "../../api/auctionApi";
 import adminApi from "../../api/adminApi";
 import {
   Auction,
@@ -518,6 +519,7 @@ const AdminAuctionPage = () => {
             { label: "DRAFT", key: AuctionStatus.DRAFT },
             { label: "SCHEDULED", key: AuctionStatus.SCHEDULED },
             { label: "ENDED", key: AuctionStatus.ENDED },
+            { label: "ENDED NO SALE", key: AuctionStatus.ENDED_NO_SALE },
             { label: "CANCELLED", key: AuctionStatus.CANCELLED },
           ]}
         />

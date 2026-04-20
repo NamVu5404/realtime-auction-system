@@ -33,6 +33,7 @@ public enum SuccessCode {
     AUCTION_CANCELLED(1302, "Auction cancelled successfully", HttpStatus.OK),
     DRAFT_AUCTION_UPDATED(1303, "Draft auction updated", HttpStatus.OK),
     SCHEDULED_AUCTION_UPDATED(1304, "Scheduled auction updated", HttpStatus.OK),
+    AUCTION_RELIST(1304, "Auction relisted successfully", HttpStatus.OK),
 
     // Bid (14xx)
     BID_PLACED(1400, "Bid placed successfully", HttpStatus.CREATED),

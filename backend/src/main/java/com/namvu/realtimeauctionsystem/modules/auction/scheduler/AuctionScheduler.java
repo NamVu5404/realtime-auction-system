@@ -116,7 +116,7 @@ public class AuctionScheduler {
 
         for (Auction auction : auctionsToEnd) {
             try {
-                if (auction.getCurrentPrice().compareTo(auction.getReservePrice()) < 0) {
+                if (auction.getReservePrice() != null && auction.getCurrentPrice().compareTo(auction.getReservePrice()) < 0) {
                     redisAuctionService.deleteAuction(auction.getId());
 
                     auction.setStatus(AuctionStatus.ENDED_NO_SALE);

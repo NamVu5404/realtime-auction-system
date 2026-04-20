@@ -12,6 +12,7 @@ import {
   PlaceBidResponseV2,
   AuctionAuditResponse,
   SellerStatsResponse,
+  ApiResult,
 } from "./types";
 import { ENV } from "../config/env";
 
@@ -249,6 +250,21 @@ export const auctionApi = {
       );
       return response.data.result!;
     } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+  /**
+   * Relist an auction that ended without a sale
+   * Backend Endpoint: POST /v1/auctions/{auctionId}/relist
+   */
+  relistAuction: async (auctionId: number): Promise<ApiResult<Auction>> => {
+    try {
+      const response = await axiosClient.post<ApiResponse<Auction>>(
+        `/auctions/${auctionId}/relist`,
+      );
+      return { message: response.data.message, result: response.data.result! };
+    } catch (error) {
+      console.error("Failed to relist auction:", error);
       throw new Error(extractErrorMessage(error));
     }
   },

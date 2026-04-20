@@ -78,6 +78,7 @@ export const AuctionForm = ({
     // Compare price fields
     if (values.startPrice !== auction.startPrice) return true;
     if (values.minStep !== auction.minStep) return true;
+    if (values.reservePrice !== auction.reservePrice) return true;
 
     // Compare times using Unix timestamps (milliseconds) to avoid ISO string precision issues
     // Form values are dayjs objects (in local timezone from convertUTCToLocal)
@@ -120,6 +121,7 @@ export const AuctionForm = ({
         image: auction.image ? [{ url: auction.image }] : undefined,
         startPrice: auction.startPrice,
         minStep: auction.minStep,
+        reservePrice: auction.reservePrice,
         startTime: startTimeLocal,
         endTime: endTimeLocal,
       });
@@ -188,6 +190,7 @@ export const AuctionForm = ({
             description: values.description || "",
             startPrice: values.startPrice,
             minStep: values.minStep,
+            reservePrice: values.reservePrice,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -212,6 +215,7 @@ export const AuctionForm = ({
             description: values.description || "",
             startPrice: values.startPrice,
             minStep: values.minStep,
+            reservePrice: values.reservePrice,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -224,7 +228,10 @@ export const AuctionForm = ({
             message.success(res.message);
           } else {
             if (localAuction.status === AuctionStatus.DRAFT) {
-              const res = await adminApi.updateDraftAuction(localAuction.id, updateData);
+              const res = await adminApi.updateDraftAuction(
+                localAuction.id,
+                updateData,
+              );
               message.success(res.message);
             } else {
               const res = await adminApi.updateScheduledAuction(
@@ -245,6 +252,7 @@ export const AuctionForm = ({
             // image is managed separately via AuctionImageManager
             startPrice: values.startPrice,
             minStep: values.minStep,
+            reservePrice: values.reservePrice,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -258,6 +266,15 @@ export const AuctionForm = ({
             // scheduleData.append("image", ...) is NOT needed as images are auto-uploaded
             scheduleData.append("startPrice", updateData.startPrice.toString());
             scheduleData.append("minStep", updateData.minStep.toString());
+            if (
+              updateData.reservePrice !== undefined &&
+              updateData.reservePrice !== null
+            ) {
+              scheduleData.append(
+                "reservePrice",
+                updateData.reservePrice.toString(),
+              );
+            }
             scheduleData.append("startTime", updateData.startTime!);
             scheduleData.append("endTime", updateData.endTime!);
 
@@ -266,7 +283,10 @@ export const AuctionForm = ({
           } else {
             // Update Draft
             if (hasDataChanged(values)) {
-              const res = await adminApi.updateDraftAuction(auction.id, updateData as any);
+              const res = await adminApi.updateDraftAuction(
+                auction.id,
+                updateData as any,
+              );
               message.success(res.message);
             } else {
               message.info("No changes to save");
@@ -277,6 +297,7 @@ export const AuctionForm = ({
           const updateData = {
             title: values.title,
             description: values.description || "",
+            reservePrice: values.reservePrice,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -360,7 +381,7 @@ export const AuctionForm = ({
         )}
       </Form.Item>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
         {/* Start Price */}
         <Form.Item
           name="startPrice"
@@ -407,6 +428,27 @@ export const AuctionForm = ({
             step={0.01}
             precision={2}
             disabled={isScheduledStatus}
+            className="w-full"
+          />
+        </Form.Item>
+
+        {/* Reserve Price */}
+        <Form.Item
+          name="reservePrice"
+          label="Reserve Price (Optional)"
+          tooltip="When the auction ends and the highest bid is less than the reserve price, it will be moved to the ENDED NO SALE status, no one wins and you can relist."
+          rules={[
+            {
+              pattern: /^\d+(\.\d{1,2})?$/,
+              message: "Enter a valid price",
+            },
+          ]}
+        >
+          <InputNumber
+            placeholder="Optional reserve price"
+            min={0}
+            step={0.01}
+            precision={2}
             className="w-full"
           />
         </Form.Item>

@@ -14,6 +14,7 @@ public class AuctionOverviewResponse {
     private Long liveCount;
     private Long scheduledCount;
     private Long endedCount;
+    private Long endedNoSaleCount;
     private Long cancelledCount;
     private Long draftCount;
     private Double successRate;

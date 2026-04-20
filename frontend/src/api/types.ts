@@ -12,6 +12,7 @@ export enum AuctionStatus {
   SCHEDULED = "SCHEDULED",
   LIVE = "LIVE",
   ENDED = "ENDED",
+  ENDED_NO_SALE = "ENDED_NO_SALE",
   CANCELLED = "CANCELLED",
 }
 
@@ -145,6 +146,7 @@ export interface Auction {
   endTime: string;
   antiSnipeSeconds: number;
   extensionSeconds: number;
+  reservePrice?: number;
   seller: User;
   highestBidder?: User | null;
   createdAt: string;
@@ -214,6 +216,27 @@ export interface CreateAuctionRequest {
   endTime: string;
   antiSnipeSeconds?: number;
   extensionSeconds?: number;
+  reservePrice?: number;
+}
+
+export interface UpdateDraftAuctionRequest {
+  title?: string;
+  description?: string;
+  image?: string;
+  startPrice?: number;
+  minStep?: number;
+  startTime?: string;
+  endTime?: string;
+  reservePrice?: number;
+}
+
+export interface UpdateScheduledAuctionRequest {
+  title?: string;
+  description?: string;
+  image?: string;
+  startTime?: string;
+  endTime?: string;
+  reservePrice?: number;
 }
 
 export interface AuthenticationResponse {
@@ -433,6 +456,7 @@ export interface SellerStatsResponse {
   totalBidsReceived: number;
   highestSoldPrice: number;
   totalUniqueBidders: number;
+  totalAuctionsEnded: number;
   revenueChart: SellerChartData[];
 }
 
@@ -454,6 +478,7 @@ export interface AdminAuctionOverviewResponse {
   liveCount: number;
   scheduledCount: number;
   endedCount: number;
+  endedNoSaleCount: number;
   cancelledCount: number;
   draftCount: number;
   successRate: number;

@@ -68,7 +68,8 @@ export const AuctionDetailDrawer = ({
     !!auctionId &&
     activeTab === "bid-logs" &&
     (localAuction?.status === AuctionStatus.LIVE ||
-      localAuction?.status === AuctionStatus.ENDED);
+      localAuction?.status === AuctionStatus.ENDED ||
+      localAuction?.status === AuctionStatus.ENDED_NO_SALE);
 
   // Use TanStack Query hook
   const {
@@ -235,7 +236,10 @@ export const AuctionDetailDrawer = ({
   const isScheduled = auction.status === AuctionStatus.SCHEDULED;
 
   // Determine if Bid Logs tab should be shown
-  const showBidLogsTab = isLive || auction.status === AuctionStatus.ENDED;
+  const showBidLogsTab =
+    isLive ||
+    auction.status === AuctionStatus.ENDED ||
+    auction.status === AuctionStatus.ENDED_NO_SALE;
 
   // Find the highest bid (winner) for ENDED auctions
 

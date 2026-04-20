@@ -396,6 +396,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .totalRevenue(aggregate.getTotalRevenue())
                 .totalAuctionsCreated(aggregate.getTotalAuctionsCreated())
                 .totalAuctionsSold(aggregate.getTotalAuctionsSold())
+                .totalAuctionsEnded(aggregate.getEndedAuctions())
                 .activeAuctions(aggregate.getActiveAuctions())
                 .totalBidsReceived(totalBidsReceived)
                 .highestSoldPrice(aggregate.getHighestSoldPrice())

@@ -75,7 +75,7 @@ public class AuctionControllerV1 {
 
     @PostMapping("/{auctionId}/relist")
     public ApiResponse<AuctionResponse> relistAuction(@PathVariable Long auctionId) {
-        return ApiResponse.of(CREATED, auctionService.relistAuction(auctionId));
+        return ApiResponse.of(AUCTION_RELIST, auctionService.relistAuction(auctionId));
     }
 
     @PatchMapping("/{id}/cancel")

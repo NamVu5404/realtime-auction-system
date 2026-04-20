@@ -20,6 +20,8 @@ export const getStatusColor = (status: AuctionStatus): string => {
       return 'blue';
     case AuctionStatus.ENDED:
       return 'red';
+    case AuctionStatus.ENDED_NO_SALE:
+      return 'orange'; // or 'volcano'
     case AuctionStatus.CANCELLED:
       return 'red';
     default:

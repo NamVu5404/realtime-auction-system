@@ -1328,53 +1328,57 @@ export const AuctionDetailPage = () => {
                         <div className="price-label">
                           {auction.status === AuctionStatus.ENDED
                             ? "Winner 🏆"
-                            : "Highest Bidder"}
+                            : auction.status !== AuctionStatus.ENDED_NO_SALE
+                              ? "Highest Bidder"
+                              : "No Sale"}
                         </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                          }}
-                        >
-                          {auction.highestBidder?.avatarUrl && (
-                            <Image
-                              src={getAvatarUrl(
-                                auction.highestBidder.avatarUrl,
-                              )}
-                              alt={auction.highestBidder.name}
-                              style={{
-                                width: "36px",
-                                height: "36px",
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                              }}
-                              preview={false}
-                            />
-                          )}
-                          <div>
-                            <div
-                              style={{
-                                fontWeight: 600,
-                                color:
-                                  auction.status === AuctionStatus.LIVE
-                                    ? "#FED469"
-                                    : "#fff",
-                                fontSize: "14px",
-                              }}
-                            >
-                              {auction.highestBidder?.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "rgba(255,255,255,0.4)",
-                              }}
-                            >
-                              {auction.highestBidder?.email}
+                        {auction.status !== AuctionStatus.ENDED_NO_SALE && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                            }}
+                          >
+                            {auction.highestBidder?.avatarUrl && (
+                              <Image
+                                src={getAvatarUrl(
+                                  auction.highestBidder.avatarUrl,
+                                )}
+                                alt={auction.highestBidder.name}
+                                style={{
+                                  width: "36px",
+                                  height: "36px",
+                                  borderRadius: "50%",
+                                  objectFit: "cover",
+                                }}
+                                preview={false}
+                              />
+                            )}
+                            <div>
+                              <div
+                                style={{
+                                  fontWeight: 600,
+                                  color:
+                                    auction.status === AuctionStatus.LIVE
+                                      ? "#FED469"
+                                      : "#fff",
+                                  fontSize: "14px",
+                                }}
+                              >
+                                {auction.highestBidder?.name}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "rgba(255,255,255,0.4)",
+                                }}
+                              >
+                                {auction.highestBidder?.email}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </Col>
                   )}
