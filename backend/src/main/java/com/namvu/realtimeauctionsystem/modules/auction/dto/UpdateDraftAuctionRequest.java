@@ -33,4 +33,5 @@ public class UpdateDraftAuctionRequest {
     private Instant endTime;
 
     private BigDecimal reservePrice;
+    private boolean privateMode;
 }

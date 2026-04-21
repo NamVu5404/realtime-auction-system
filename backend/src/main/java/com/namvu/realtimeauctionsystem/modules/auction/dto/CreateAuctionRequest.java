@@ -40,6 +40,7 @@ public class CreateAuctionRequest {
     private Instant endTime;
 
     private BigDecimal reservePrice;
+    private boolean privateMode;
 
     public interface Draft {}
     public interface Scheduler {}

@@ -43,8 +43,10 @@ import { convertUTCToLocal } from "../../utils/dateUtils";
 import formatCurrency, { formatDateTime } from "../../utils/format";
 import { DEFAULT_AUCTION_IMAGE, getImageUrl } from "../../utils/imageUtils";
 import { getStatusColor } from "../../utils/statusUtils";
-import AuctionAuditDrawer from "../admin/drawers/AuctionAuditDrawer";
 import AuctionDetailDrawer from "../admin/drawers/AuctionDetailDrawer";
+import ShareAuctionModal from "../../features/auction/ShareAuctionModal";
+import { ShareAltOutlined } from "@ant-design/icons";
+import AuctionAuditDrawer from "../admin/drawers/AuctionAuditDrawer";
 
 const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 
@@ -99,6 +101,10 @@ const SellerAuctionPage = () => {
     visible: boolean;
     auctionId?: number;
   }>({ visible: false });
+  const [shareModal, setShareModal] = useState<{
+    visible: boolean;
+    auction: Auction | null;
+  }>({ visible: false, auction: null });
   const [liveAuctions, setLiveAuctions] = useState<Set<number>>(new Set());
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
@@ -390,6 +396,19 @@ const SellerAuctionPage = () => {
           });
         }
 
+        // Show Share for SCHEDULED or LIVE status
+        if (
+          record.status === AuctionStatus.SCHEDULED ||
+          record.status === AuctionStatus.LIVE
+        ) {
+          menuItems.push({
+            key: "share",
+            icon: <ShareAltOutlined />,
+            label: "Share",
+            onClick: () => setShareModal({ visible: true, auction: record }),
+          });
+        }
+
         // Show Audit Logs
         menuItems.push({
           key: "audit-logs",
@@ -649,6 +668,12 @@ const SellerAuctionPage = () => {
           DRAFT status where you can manage it again.
         </div>
       </Modal>
+      {/* Share Auction Modal */}
+      <ShareAuctionModal
+        visible={shareModal.visible}
+        auction={shareModal.auction}
+        onCancel={() => setShareModal({ visible: false, auction: null })}
+      />
     </div>
   );
 };

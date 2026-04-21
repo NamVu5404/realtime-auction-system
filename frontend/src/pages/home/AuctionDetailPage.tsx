@@ -20,7 +20,7 @@ import {
 } from "antd";
 import confetti from "canvas-confetti";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { extractErrorMessage } from "../../api/apiUtils";
 import { auctionApi } from "../../api/auctionApi";
 import {
@@ -268,6 +268,7 @@ BiddingSection.displayName = "BiddingSection";
  */
 export const AuctionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
@@ -341,6 +342,17 @@ export const AuctionDetailPage = () => {
     },
     [user?.id, auction?.id],
   );
+
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token && auctionId) {
+      const storageKey = `auction_token_${auctionId}`;
+      sessionStorage.setItem(storageKey, token);
+      searchParams.delete("token");
+      setSearchParams(searchParams, { replace: true });
+      console.log(`[PrivateMode] Token saved and removed from URL`);
+    }
+  }, [auctionId, searchParams, setSearchParams]);
 
   // ✅ Persistent Celebration Switch:
   // Fires whenever an auction moves to ENDED status and the current user is the winner.

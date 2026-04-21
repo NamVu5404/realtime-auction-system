@@ -7,6 +7,7 @@ import {
   MoreOutlined,
   PlusOutlined,
   SearchOutlined,
+  ShareAltOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -27,7 +28,6 @@ import {
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { auctionApi } from "../../api/auctionApi";
 import adminApi from "../../api/adminApi";
 import {
   Auction,
@@ -37,6 +37,7 @@ import {
 } from "../../api/types";
 import CancelAuctionModal from "../../components/admin/CancelAuctionModal";
 import AuctionForm from "../../features/auction/AuctionForm";
+import ShareAuctionModal from "../../features/auction/ShareAuctionModal";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";
 import { convertUTCToLocal } from "../../utils/dateUtils";
@@ -96,6 +97,10 @@ const AdminAuctionPage = () => {
     auctionId?: number;
     auctionTitle?: string;
   }>({ visible: false });
+  const [shareModal, setShareModal] = useState<{
+    visible: boolean;
+    auction: Auction | null;
+  }>({ visible: false, auction: null });
   const [liveAuctions, setLiveAuctions] = useState<Set<number>>(new Set());
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
@@ -317,6 +322,19 @@ const AdminAuctionPage = () => {
           label: "View Detail",
           onClick: () => setDetailDrawer({ visible: true, auction: record }),
         });
+
+        // Show Share for SCHEDULED or LIVE status
+        if (
+          record.status === AuctionStatus.SCHEDULED ||
+          record.status === AuctionStatus.LIVE
+        ) {
+          menuItems.push({
+            key: "share",
+            icon: <ShareAltOutlined />,
+            label: "Share",
+            onClick: () => setShareModal({ visible: true, auction: record }),
+          });
+        }
 
         // Show Audit Logs
         menuItems.push({
@@ -607,6 +625,13 @@ const AdminAuctionPage = () => {
           />
         </Modal>
       )}
+
+      {/* Share Auction Modal */}
+      <ShareAuctionModal
+        visible={shareModal.visible}
+        auction={shareModal.auction}
+        onCancel={() => setShareModal({ visible: false, auction: null })}
+      />
     </div>
   );
 };

@@ -9,4 +9,5 @@ public enum AuctionActionType {
     ENDED_NO_SALE,
     RESULT,
     FRAUD,
+    RELIST,
 }

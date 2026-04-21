@@ -1,12 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.auction.repository;
 
 import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionOverviewProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.KpiAuctionProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.RevenueProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionWinProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.SellerAggregateProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.SellerChartProjection;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.*;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -22,10 +17,12 @@ import java.util.Optional;
 
 @Repository
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
-    @Query("SELECT a FROM Auction a WHERE " +
+    @Query("SELECT a FROM Auction a WHERE (" +
             "(:status = 'LIVE' AND (a.status = 'LIVE' OR (a.status = 'SCHEDULED' AND a.startTime <= :oneHourFromNow))) OR " +
             "(:status = 'SCHEDULED' AND a.status = 'SCHEDULED' AND a.startTime > :oneHourFromNow) OR " +
             "(:status = 'ENDED' AND (a.status = :status OR a.status = 'ENDED_NO_SALE')) " +
+            ") " +
+            "AND a.privateMode = false " +
             "ORDER BY " +
             "CASE WHEN :status = 'LIVE' AND a.status = 'LIVE' THEN 0 " +
             "     WHEN :status = 'LIVE' AND a.status = 'SCHEDULED' THEN 1 " +

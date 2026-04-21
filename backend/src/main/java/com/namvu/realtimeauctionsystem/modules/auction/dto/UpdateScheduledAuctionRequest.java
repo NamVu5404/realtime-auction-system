@@ -29,4 +29,5 @@ public class UpdateScheduledAuctionRequest {
     private Instant endTime;
 
     private BigDecimal reservePrice;
+    private boolean privateMode;
 }

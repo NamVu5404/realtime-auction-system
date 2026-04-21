@@ -147,6 +147,7 @@ export interface Auction {
   antiSnipeSeconds: number;
   extensionSeconds: number;
   reservePrice?: number;
+  privateMode?: boolean;
   seller: User;
   highestBidder?: User | null;
   createdAt: string;
@@ -217,6 +218,7 @@ export interface CreateAuctionRequest {
   antiSnipeSeconds?: number;
   extensionSeconds?: number;
   reservePrice?: number;
+  privateMode?: boolean;
 }
 
 export interface UpdateDraftAuctionRequest {
@@ -228,6 +230,7 @@ export interface UpdateDraftAuctionRequest {
   startTime?: string;
   endTime?: string;
   reservePrice?: number;
+  privateMode?: boolean;
 }
 
 export interface UpdateScheduledAuctionRequest {
@@ -237,6 +240,7 @@ export interface UpdateScheduledAuctionRequest {
   startTime?: string;
   endTime?: string;
   reservePrice?: number;
+  privateMode?: boolean;
 }
 
 export interface AuthenticationResponse {

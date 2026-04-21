@@ -1,6 +1,8 @@
 package com.namvu.realtimeauctionsystem.common.utils;
 
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
+import com.namvu.realtimeauctionsystem.common.exception.AppException;
+import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 
@@ -11,21 +13,28 @@ public class SecurityUtils {
     }
 
     public static Long getCurrentUserId() {
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
-
-        return jwt.getClaim("uid");
+        try {
+            Jwt jwt = (Jwt) SecurityContextHolder
+                    .getContext()
+                    .getAuthentication()
+                    .getPrincipal();
+            return jwt.getClaim("uid");
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
     }
 
     public static String getCurrentUserEmail() {
-        Jwt jwt = (Jwt) SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getPrincipal();
+        try {
+            Jwt jwt = (Jwt) SecurityContextHolder
+                    .getContext()
+                    .getAuthentication()
+                    .getPrincipal();
+            return jwt.getSubject();
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
 
-        return jwt.getSubject();
     }
 
     public static boolean isAdmin() {

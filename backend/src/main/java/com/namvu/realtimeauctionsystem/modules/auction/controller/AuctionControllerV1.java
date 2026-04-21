@@ -45,8 +45,11 @@ public class AuctionControllerV1 {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<AuctionResponse> getAuctionDetail(@PathVariable Long id) {
-        return ApiResponse.ok(auctionService.getAuctionDetail(id));
+    public ApiResponse<AuctionResponse> getAuctionDetail(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-Auction-Token", required = false) String token
+    ) {
+        return ApiResponse.ok(auctionService.getAuctionDetail(id, token));
     }
 
     @PostMapping("/draft")
@@ -175,5 +178,10 @@ public class AuctionControllerV1 {
             @RequestParam(value = "period", defaultValue = "MONTH") String period
     ) {
         return ApiResponse.ok(auctionService.getSellerStats(sellerId, period));
+    }
+
+    @GetMapping("/{id}/token")
+    public ApiResponse<String> getAuctionToken(@PathVariable Long id) {
+        return ApiResponse.ok(auctionService.getAuctionToken(id));
     }
 }

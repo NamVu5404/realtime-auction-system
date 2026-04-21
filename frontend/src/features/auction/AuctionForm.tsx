@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   DatePicker,
@@ -5,20 +6,17 @@ import {
   FormInstance,
   Input,
   InputNumber,
-  Modal,
   Space,
-  Upload,
+  Switch,
   message,
 } from "antd";
-import { TiptapEditor } from "../../components/common/TiptapEditor";
-import { UploadOutlined } from "@ant-design/icons";
-import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useState, useEffect } from "react";
-import { Auction, AuctionStatus } from "../../api/types";
+import { useEffect, useState } from "react";
 import adminApi from "../../api/adminApi";
-import { convertUTCToLocal } from "../../utils/dateUtils";
+import { Auction, AuctionStatus } from "../../api/types";
 import { AuctionImageManager } from "../../components/admin/AuctionImageManager";
+import { TiptapEditor } from "../../components/common/TiptapEditor";
+import { convertUTCToLocal } from "../../utils/dateUtils";
 
 interface AuctionFormProps {
   form: FormInstance;
@@ -79,6 +77,7 @@ export const AuctionForm = ({
     if (values.startPrice !== auction.startPrice) return true;
     if (values.minStep !== auction.minStep) return true;
     if (values.reservePrice !== auction.reservePrice) return true;
+    if (!!values.privateMode !== !!auction.privateMode) return true;
 
     // Compare times using Unix timestamps (milliseconds) to avoid ISO string precision issues
     // Form values are dayjs objects (in local timezone from convertUTCToLocal)
@@ -124,6 +123,7 @@ export const AuctionForm = ({
         reservePrice: auction.reservePrice,
         startTime: startTimeLocal,
         endTime: endTimeLocal,
+        privateMode: auction.privateMode ?? false,
       });
 
       // Reset form changed state after initialization
@@ -191,6 +191,7 @@ export const AuctionForm = ({
             startPrice: values.startPrice,
             minStep: values.minStep,
             reservePrice: values.reservePrice,
+            privateMode: !!values.privateMode,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -216,6 +217,7 @@ export const AuctionForm = ({
             startPrice: values.startPrice,
             minStep: values.minStep,
             reservePrice: values.reservePrice,
+            privateMode: !!values.privateMode,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -253,6 +255,7 @@ export const AuctionForm = ({
             startPrice: values.startPrice,
             minStep: values.minStep,
             reservePrice: values.reservePrice,
+            privateMode: !!values.privateMode,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -275,6 +278,10 @@ export const AuctionForm = ({
                 updateData.reservePrice.toString(),
               );
             }
+            scheduleData.append(
+              "privateMode",
+              updateData.privateMode.toString(),
+            );
             scheduleData.append("startTime", updateData.startTime!);
             scheduleData.append("endTime", updateData.endTime!);
 
@@ -298,6 +305,7 @@ export const AuctionForm = ({
             title: values.title,
             description: values.description || "",
             reservePrice: values.reservePrice,
+            privateMode: !!values.privateMode,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -451,6 +459,16 @@ export const AuctionForm = ({
             precision={2}
             className="w-full"
           />
+        </Form.Item>
+
+        {/* Private Auction */}
+        <Form.Item
+          name="privateMode"
+          label="Private Auction"
+          valuePropName="checked"
+          tooltip="If enabled, this auction will not be listed publicly and only accessible via a direct link."
+        >
+          <Switch />
         </Form.Item>
       </div>
 

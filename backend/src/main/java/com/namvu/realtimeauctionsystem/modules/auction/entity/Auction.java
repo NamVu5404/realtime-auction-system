@@ -81,6 +81,11 @@ public class Auction extends Auditable {
     @Column(name = "notified_ending_soon", nullable = false)
     private boolean notifiedEndingSoon = false;
 
+    private boolean privateMode = false;
+
+    @Column(unique = true)
+    private String token;
+
     @Version
     @Column(name = "version")
     private Long version;
