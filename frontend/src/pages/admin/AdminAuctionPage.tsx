@@ -7,6 +7,7 @@ import {
   MoreOutlined,
   PlusOutlined,
   SearchOutlined,
+  ShareAltOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,6 +37,7 @@ import {
 } from "../../api/types";
 import CancelAuctionModal from "../../components/admin/CancelAuctionModal";
 import AuctionForm from "../../features/auction/AuctionForm";
+import ShareAuctionModal from "../../features/auction/ShareAuctionModal";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";
 import { convertUTCToLocal } from "../../utils/dateUtils";
@@ -95,6 +97,10 @@ const AdminAuctionPage = () => {
     auctionId?: number;
     auctionTitle?: string;
   }>({ visible: false });
+  const [shareModal, setShareModal] = useState<{
+    visible: boolean;
+    auction: Auction | null;
+  }>({ visible: false, auction: null });
   const [liveAuctions, setLiveAuctions] = useState<Set<number>>(new Set());
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
@@ -317,6 +323,31 @@ const AdminAuctionPage = () => {
           onClick: () => setDetailDrawer({ visible: true, auction: record }),
         });
 
+        // Show Edit only for editable statuses
+        if (canEdit) {
+          menuItems.push({
+            key: "edit",
+            icon: <EditOutlined />,
+            label: "Edit",
+            onClick: () => {
+              setEditModal({ visible: true, auction: record });
+            },
+          });
+        }
+
+        // Show Share for SCHEDULED or LIVE status
+        if (
+          record.status === AuctionStatus.SCHEDULED ||
+          record.status === AuctionStatus.LIVE
+        ) {
+          menuItems.push({
+            key: "share",
+            icon: <ShareAltOutlined />,
+            label: "Share",
+            onClick: () => setShareModal({ visible: true, auction: record }),
+          });
+        }
+
         // Show Audit Logs
         menuItems.push({
           key: "audit-logs",
@@ -331,18 +362,6 @@ const AdminAuctionPage = () => {
             });
           },
         });
-
-        // Show Edit only for editable statuses
-        if (canEdit) {
-          menuItems.push({
-            key: "edit",
-            icon: <EditOutlined />,
-            label: "Edit",
-            onClick: () => {
-              setEditModal({ visible: true, auction: record });
-            },
-          });
-        }
 
         // Show Cancel only for cancellable statuses
         if (canCancel) {
@@ -518,6 +537,7 @@ const AdminAuctionPage = () => {
             { label: "DRAFT", key: AuctionStatus.DRAFT },
             { label: "SCHEDULED", key: AuctionStatus.SCHEDULED },
             { label: "ENDED", key: AuctionStatus.ENDED },
+            { label: "ENDED NO SALE", key: AuctionStatus.ENDED_NO_SALE },
             { label: "CANCELLED", key: AuctionStatus.CANCELLED },
           ]}
         />
@@ -605,6 +625,13 @@ const AdminAuctionPage = () => {
           />
         </Modal>
       )}
+
+      {/* Share Auction Modal */}
+      <ShareAuctionModal
+        visible={shareModal.visible}
+        auction={shareModal.auction}
+        onCancel={() => setShareModal({ visible: false, auction: null })}
+      />
     </div>
   );
 };

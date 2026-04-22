@@ -38,6 +38,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.AUCTION_TOPIC_PREFIX;
@@ -68,11 +69,11 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     @Transactional(readOnly = true)
-    public AuctionResponse getAuctionDetail(Long id) {
+    public AuctionResponse getAuctionDetail(Long id, String token) {
         Auction auction = auctionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
 
-        canViewAuction(auction);
+        canViewAuction(auction, token);
 
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         response.setImages(auctionImageService.getAuctionImages(List.of(id)));
@@ -91,6 +92,7 @@ public class AuctionServiceImpl implements AuctionService {
         Long sellerId = SecurityUtils.getCurrentUserId();
         auction.setSeller(userService.getUserReference(sellerId));
 
+        handlePrivateAuction(auction);
         auction = auctionRepository.save(auction);
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         populateImages(response);
@@ -106,8 +108,12 @@ public class AuctionServiceImpl implements AuctionService {
         Instant startTime = request.getStartTime();
         Instant endTime = request.getEndTime();
 
-        if (startTime.isBefore(now.plusSeconds(30)) || endTime.isBefore(startTime)) {
+        if (startTime.isBefore(now.plusMillis(1)) || endTime.isBefore(startTime)) {
             throw new AppException(ErrorCode.START_END_TIME_INVALID);
+        }
+
+        if (request.getReservePrice() != null && request.getReservePrice().compareTo(request.getStartPrice()) < 0) {
+            throw new AppException(ErrorCode.RESERVE_PRICE_INVALID);
         }
 
         Auction auction;
@@ -135,6 +141,7 @@ public class AuctionServiceImpl implements AuctionService {
             auction.setSeller(userService.getUserReference(sellerId));
         }
 
+        handlePrivateAuction(auction);
         auction = auctionRepository.save(auction);
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         populateImages(response);
@@ -155,6 +162,7 @@ public class AuctionServiceImpl implements AuctionService {
         checkAuctionOwnership(auction);
 
         auctionMapper.updateEntity(request, auction);
+        handlePrivateAuction(auction);
         auction = auctionRepository.save(auction);
 
         AuctionResponse response = auctionMapper.mapToResponse(auction);
@@ -182,14 +190,38 @@ public class AuctionServiceImpl implements AuctionService {
             throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
         }
 
+        if (request.getReservePrice() != null && request.getReservePrice().compareTo(auction.getStartPrice()) < 0) {
+            throw new AppException(ErrorCode.RESERVE_PRICE_INVALID);
+        }
+
         checkAuctionOwnership(auction);
 
         auctionMapper.updateEntity(request, auction);
+        handlePrivateAuction(auction);
         auction = auctionRepository.save(auction);
 
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         populateImages(response);
         return response;
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('SELLER')")
+    public AuctionResponse relistAuction(Long auctionId) {
+        Auction auction = getAuctionDetailById(auctionId);
+        checkAuctionOwnership(auction);
+
+        if (auction.getStatus() != AuctionStatus.ENDED_NO_SALE) {
+            throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+        }
+
+        Auction newAuction = auctionMapper.cloneToNewDraft(auction);
+        newAuction.setStatus(AuctionStatus.DRAFT);
+        newAuction.setExtensionCount(0);
+        newAuction.setNotifiedEndingSoon(false);
+        newAuction = auctionRepository.save(newAuction);
+
+        return auctionMapper.mapToResponse(newAuction);
     }
 
     @Override
@@ -370,6 +402,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .totalRevenue(aggregate.getTotalRevenue())
                 .totalAuctionsCreated(aggregate.getTotalAuctionsCreated())
                 .totalAuctionsSold(aggregate.getTotalAuctionsSold())
+                .totalAuctionsEnded(aggregate.getEndedAuctions())
                 .activeAuctions(aggregate.getActiveAuctions())
                 .totalBidsReceived(totalBidsReceived)
                 .highestSoldPrice(aggregate.getHighestSoldPrice())
@@ -394,6 +427,17 @@ public class AuctionServiceImpl implements AuctionService {
     @Transactional(readOnly = true)
     public List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat) {
         return auctionRepository.getAdminRevenueChartData(startDate, timeFormat);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
+    public String getAuctionToken(Long id) {
+        Auction auction = getAuctionDetailById(id);
+        if (!SecurityUtils.isAdmin()) {
+            checkAuctionOwnership(auction);
+        }
+        return auction.getToken();
     }
 
     private void populateImages(List<AuctionResponse> responses) {
@@ -461,8 +505,9 @@ public class AuctionServiceImpl implements AuctionService {
                 .build();
     }
 
-    private void canViewAuction(Auction auction) {
-        if (auction.getStatus() != AuctionStatus.DRAFT && auction.getStatus() != AuctionStatus.CANCELLED) {
+    private void canViewAuction(Auction auction, String token) {
+        if (auction.getStatus() != AuctionStatus.DRAFT && auction.getStatus() != AuctionStatus.CANCELLED
+                && (!auction.isPrivateMode() || auction.getToken().equals(token))) {
             return;
         }
 
@@ -472,6 +517,14 @@ public class AuctionServiceImpl implements AuctionService {
 
         if (!isSeller && !isAdmin) {
             throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
+    }
+
+    private void handlePrivateAuction(Auction auction) {
+        if (auction.isPrivateMode()) {
+            auction.setToken(UUID.randomUUID().toString());
+        } else {
+            auction.setToken(null);
         }
     }
 }

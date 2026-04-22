@@ -20,7 +20,7 @@ import {
 } from "antd";
 import confetti from "canvas-confetti";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { extractErrorMessage } from "../../api/apiUtils";
 import { auctionApi } from "../../api/auctionApi";
 import {
@@ -268,6 +268,7 @@ BiddingSection.displayName = "BiddingSection";
  */
 export const AuctionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
@@ -341,6 +342,17 @@ export const AuctionDetailPage = () => {
     },
     [user?.id, auction?.id],
   );
+
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token && auctionId) {
+      const storageKey = `auction_token_${auctionId}`;
+      sessionStorage.setItem(storageKey, token);
+      searchParams.delete("token");
+      setSearchParams(searchParams, { replace: true });
+      console.log(`[PrivateMode] Token saved and removed from URL`);
+    }
+  }, [auctionId, searchParams, setSearchParams]);
 
   // ✅ Persistent Celebration Switch:
   // Fires whenever an auction moves to ENDED status and the current user is the winner.
@@ -514,7 +526,7 @@ export const AuctionDetailPage = () => {
         setAuction(data);
       } catch (error: any) {
         message.error(extractErrorMessage(error));
-        navigate(-1);
+        navigate("/");
       } finally {
         setLoading(false);
       }
@@ -1328,53 +1340,57 @@ export const AuctionDetailPage = () => {
                         <div className="price-label">
                           {auction.status === AuctionStatus.ENDED
                             ? "Winner 🏆"
-                            : "Highest Bidder"}
+                            : auction.status !== AuctionStatus.ENDED_NO_SALE
+                              ? "Highest Bidder"
+                              : "No Sale"}
                         </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                          }}
-                        >
-                          {auction.highestBidder?.avatarUrl && (
-                            <Image
-                              src={getAvatarUrl(
-                                auction.highestBidder.avatarUrl,
-                              )}
-                              alt={auction.highestBidder.name}
-                              style={{
-                                width: "36px",
-                                height: "36px",
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                              }}
-                              preview={false}
-                            />
-                          )}
-                          <div>
-                            <div
-                              style={{
-                                fontWeight: 600,
-                                color:
-                                  auction.status === AuctionStatus.LIVE
-                                    ? "#FED469"
-                                    : "#fff",
-                                fontSize: "14px",
-                              }}
-                            >
-                              {auction.highestBidder?.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "rgba(255,255,255,0.4)",
-                              }}
-                            >
-                              {auction.highestBidder?.email}
+                        {auction.status !== AuctionStatus.ENDED_NO_SALE && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                            }}
+                          >
+                            {auction.highestBidder?.avatarUrl && (
+                              <Image
+                                src={getAvatarUrl(
+                                  auction.highestBidder.avatarUrl,
+                                )}
+                                alt={auction.highestBidder.name}
+                                style={{
+                                  width: "36px",
+                                  height: "36px",
+                                  borderRadius: "50%",
+                                  objectFit: "cover",
+                                }}
+                                preview={false}
+                              />
+                            )}
+                            <div>
+                              <div
+                                style={{
+                                  fontWeight: 600,
+                                  color:
+                                    auction.status === AuctionStatus.LIVE
+                                      ? "#FED469"
+                                      : "#fff",
+                                  fontSize: "14px",
+                                }}
+                              >
+                                {auction.highestBidder?.name}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "rgba(255,255,255,0.4)",
+                                }}
+                              >
+                                {auction.highestBidder?.email}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </Col>
                   )}

@@ -6,6 +6,7 @@ public interface SellerAggregateProjection {
     Long getTotalAuctionsCreated();
     Long getTotalAuctionsSold();
     Long getActiveAuctions();
+    Long getEndedAuctions();
     BigDecimal getTotalRevenue();
     BigDecimal getHighestSoldPrice();
 }

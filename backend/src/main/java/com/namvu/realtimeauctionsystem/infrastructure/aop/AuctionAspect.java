@@ -85,6 +85,18 @@ public class AuctionAspect {
                 .build());
     }
 
+    @AfterReturning(
+            value = "execution(* com.namvu.realtimeauctionsystem.modules.auction.controller.AuctionControllerV1.relistAuction(..))",
+            returning = "response"
+    )
+    public void afterRelistAuctionReturning(ApiResponse<AuctionResponse> response) {
+        if (response.getCode() >= 4000) {
+            return;
+        }
+
+        saveAuctionAudit(response, AuctionActionType.RELIST);
+    }
+
     private void saveAuctionAudit(ApiResponse<AuctionResponse> response, AuctionActionType type) {
         Map<String, Object> details = objectMapper.convertValue(response.getResult(), new TypeReference<>() {
         });

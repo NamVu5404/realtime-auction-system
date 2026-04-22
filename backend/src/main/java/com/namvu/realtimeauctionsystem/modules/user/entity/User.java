@@ -25,9 +25,10 @@ public class User extends Auditable {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 35)
     private String name;
 
+    @Column(length = 16)
     private String phone;
 
     @Column(name = "avatar_url")

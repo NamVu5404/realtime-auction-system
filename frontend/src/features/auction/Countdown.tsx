@@ -147,7 +147,7 @@ export const Countdown = ({
 
       <div
         style={{
-          fontFamily: "'Be Vietnam Pro', 'Inter', sans-serif",
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           fontSize: "20px",
           fontWeight: 800,
           color: getColor(),

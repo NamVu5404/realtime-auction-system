@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   DatePicker,
@@ -5,20 +6,17 @@ import {
   FormInstance,
   Input,
   InputNumber,
-  Modal,
   Space,
-  Upload,
+  Switch,
   message,
 } from "antd";
-import { TiptapEditor } from "../../components/common/TiptapEditor";
-import { UploadOutlined } from "@ant-design/icons";
-import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useState, useEffect } from "react";
-import { Auction, AuctionStatus } from "../../api/types";
+import { useEffect, useState } from "react";
 import adminApi from "../../api/adminApi";
-import { convertUTCToLocal } from "../../utils/dateUtils";
+import { Auction, AuctionStatus } from "../../api/types";
 import { AuctionImageManager } from "../../components/admin/AuctionImageManager";
+import { TiptapEditor } from "../../components/common/TiptapEditor";
+import { convertUTCToLocal } from "../../utils/dateUtils";
 
 interface AuctionFormProps {
   form: FormInstance;
@@ -78,6 +76,10 @@ export const AuctionForm = ({
     // Compare price fields
     if (values.startPrice !== auction.startPrice) return true;
     if (values.minStep !== auction.minStep) return true;
+    if (values.reservePrice !== auction.reservePrice) return true;
+    if (!!values.privateMode !== !!auction.privateMode) return true;
+    if (values.antiSnipeSeconds !== auction.antiSnipeSeconds) return true;
+    if (values.extensionSeconds !== auction.extensionSeconds) return true;
 
     // Compare times using Unix timestamps (milliseconds) to avoid ISO string precision issues
     // Form values are dayjs objects (in local timezone from convertUTCToLocal)
@@ -120,8 +122,12 @@ export const AuctionForm = ({
         image: auction.image ? [{ url: auction.image }] : undefined,
         startPrice: auction.startPrice,
         minStep: auction.minStep,
+        reservePrice: auction.reservePrice,
         startTime: startTimeLocal,
         endTime: endTimeLocal,
+        privateMode: auction.privateMode ?? false,
+        antiSnipeSeconds: auction.antiSnipeSeconds ?? 0,
+        extensionSeconds: auction.extensionSeconds ?? 0,
       });
 
       // Reset form changed state after initialization
@@ -188,6 +194,10 @@ export const AuctionForm = ({
             description: values.description || "",
             startPrice: values.startPrice,
             minStep: values.minStep,
+            reservePrice: values.reservePrice,
+            privateMode: !!values.privateMode,
+            antiSnipeSeconds: values.antiSnipeSeconds,
+            extensionSeconds: values.extensionSeconds,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -212,6 +222,10 @@ export const AuctionForm = ({
             description: values.description || "",
             startPrice: values.startPrice,
             minStep: values.minStep,
+            reservePrice: values.reservePrice,
+            privateMode: !!values.privateMode,
+            antiSnipeSeconds: values.antiSnipeSeconds ?? 0,
+            extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -224,7 +238,10 @@ export const AuctionForm = ({
             message.success(res.message);
           } else {
             if (localAuction.status === AuctionStatus.DRAFT) {
-              const res = await adminApi.updateDraftAuction(localAuction.id, updateData);
+              const res = await adminApi.updateDraftAuction(
+                localAuction.id,
+                updateData,
+              );
               message.success(res.message);
             } else {
               const res = await adminApi.updateScheduledAuction(
@@ -245,6 +262,10 @@ export const AuctionForm = ({
             // image is managed separately via AuctionImageManager
             startPrice: values.startPrice,
             minStep: values.minStep,
+            reservePrice: values.reservePrice,
+            privateMode: !!values.privateMode,
+            antiSnipeSeconds: values.antiSnipeSeconds ?? 0,
+            extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -258,6 +279,31 @@ export const AuctionForm = ({
             // scheduleData.append("image", ...) is NOT needed as images are auto-uploaded
             scheduleData.append("startPrice", updateData.startPrice.toString());
             scheduleData.append("minStep", updateData.minStep.toString());
+            if (
+              updateData.reservePrice !== undefined &&
+              updateData.reservePrice !== null
+            ) {
+              scheduleData.append(
+                "reservePrice",
+                updateData.reservePrice.toString(),
+              );
+            }
+            scheduleData.append(
+              "privateMode",
+              updateData.privateMode.toString(),
+            );
+            if (updateData.antiSnipeSeconds !== undefined) {
+              scheduleData.append(
+                "antiSnipeSeconds",
+                updateData.antiSnipeSeconds.toString(),
+              );
+            }
+            if (updateData.extensionSeconds !== undefined) {
+              scheduleData.append(
+                "extensionSeconds",
+                updateData.extensionSeconds.toString(),
+              );
+            }
             scheduleData.append("startTime", updateData.startTime!);
             scheduleData.append("endTime", updateData.endTime!);
 
@@ -266,7 +312,10 @@ export const AuctionForm = ({
           } else {
             // Update Draft
             if (hasDataChanged(values)) {
-              const res = await adminApi.updateDraftAuction(auction.id, updateData as any);
+              const res = await adminApi.updateDraftAuction(
+                auction.id,
+                updateData as any,
+              );
               message.success(res.message);
             } else {
               message.info("No changes to save");
@@ -277,6 +326,10 @@ export const AuctionForm = ({
           const updateData = {
             title: values.title,
             description: values.description || "",
+            reservePrice: values.reservePrice,
+            privateMode: !!values.privateMode,
+            antiSnipeSeconds: values.antiSnipeSeconds ?? 0,
+            extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -318,7 +371,7 @@ export const AuctionForm = ({
         label="Title"
         rules={[{ required: true, message: "Title is required" }]}
       >
-        <Input placeholder="Enter auction title" />
+        <Input placeholder="Enter auction title" disabled={isScheduledStatus} />
       </Form.Item>
 
       {/* Description */}
@@ -360,7 +413,7 @@ export const AuctionForm = ({
         )}
       </Form.Item>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
         {/* Start Price */}
         <Form.Item
           name="startPrice"
@@ -409,6 +462,55 @@ export const AuctionForm = ({
             disabled={isScheduledStatus}
             className="w-full"
           />
+        </Form.Item>
+
+        {/* Reserve Price */}
+        <Form.Item
+          name="reservePrice"
+          label="Reserve Price (Optional)"
+          tooltip="When the auction ends and the highest bid is less than the reserve price, it will be moved to the ENDED NO SALE status, no one wins and you can relist."
+          rules={[
+            {
+              pattern: /^\d+(\.\d{1,2})?$/,
+              message: "Enter a valid price",
+            },
+          ]}
+        >
+          <InputNumber
+            placeholder="Optional reserve price"
+            min={0}
+            step={0.01}
+            precision={2}
+            className="w-full"
+          />
+        </Form.Item>
+
+        {/* Private Auction */}
+        <Form.Item
+          name="privateMode"
+          label="Private Auction"
+          valuePropName="checked"
+          tooltip="If enabled, this auction will not be listed publicly and only accessible via a direct link."
+        >
+          <Switch />
+        </Form.Item>
+
+        {/* Anti-Snipe Seconds */}
+        <Form.Item
+          name="antiSnipeSeconds"
+          label="Anti-Snipe (Seconds)"
+          tooltip="The window (in seconds) before the auction ends. Any bid placed within this time will trigger an extension."
+        >
+          <InputNumber defaultValue={0} min={0} max={60} className="w-full" />
+        </Form.Item>
+
+        {/* Extension Seconds */}
+        <Form.Item
+          name="extensionSeconds"
+          label="Extension (Seconds)"
+          tooltip="The amount of time (in seconds) the auction will be extended by when a bid is placed within the anti-snipe window."
+        >
+          <InputNumber min={0} max={300} className="w-full" defaultValue={0} />
         </Form.Item>
       </div>
 
@@ -479,7 +581,7 @@ export const AuctionForm = ({
       </div>
 
       {/* Action Buttons */}
-      <Form.Item className="mb-0 mt-6">
+      <Form.Item className="mb-0 mt-2">
         <Space>
           {mode === "create" && !localAuction ? (
             <>

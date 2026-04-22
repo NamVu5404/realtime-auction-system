@@ -117,6 +117,7 @@ const AdminDashboardContent: React.FC = () => {
     { name: "Live", value: overview.liveCount },
     { name: "Scheduled", value: overview.scheduledCount },
     { name: "Ended", value: overview.endedCount },
+    { name: "Ended No Sale", value: overview.endedNoSaleCount },
     { name: "Cancelled", value: overview.cancelledCount },
     { name: "Draft", value: overview.draftCount },
   ].filter((d) => d.value > 0);

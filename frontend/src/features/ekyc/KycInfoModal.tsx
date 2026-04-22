@@ -29,7 +29,7 @@ const KycInfoModal = ({ visible, onCancel, userId }: KycInfoModalProps) => {
   const fetchKycInfo = async () => {
     setLoading(true);
     try {
-      const data = userId 
+      const data = userId
         ? await kycApi.getKycInfoByUserId(userId)
         : await kycApi.getMyKycInfo();
       setKycInfo(data);
@@ -70,7 +70,7 @@ const KycInfoModal = ({ visible, onCancel, userId }: KycInfoModalProps) => {
       open={visible}
       onCancel={onCancel}
       footer={[
-        <Button key="close" size="large" onClick={onCancel} type="primary">
+        <Button key="close" onClick={onCancel} type="primary">
           Close
         </Button>,
       ]}

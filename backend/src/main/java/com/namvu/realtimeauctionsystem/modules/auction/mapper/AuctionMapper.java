@@ -24,4 +24,15 @@ public interface AuctionMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     void updateEntity(UpdateScheduledAuctionRequest request, @MappingTarget Auction auction);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "currentPrice", ignore = true)
+    @Mapping(target = "highestBidder", ignore = true)
+    @Mapping(target = "extensionCount", ignore = true)
+    @Mapping(target = "notifiedEndingSoon", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    @Mapping(target = "startTime", ignore = true)
+    @Mapping(target = "endTime", ignore = true)
+    Auction cloneToNewDraft(Auction auction);
 }

@@ -15,7 +15,7 @@ import java.util.List;
 public interface AuctionService {
     PageResponse<AuctionResponse> getAuctionsByStatus(AuctionStatus status, Pageable pageable);
 
-    AuctionResponse getAuctionDetail(Long id);
+    AuctionResponse getAuctionDetail(Long id, String token);
 
     AuctionResponse saveDraft(CreateAuctionRequest request);
 
@@ -24,6 +24,8 @@ public interface AuctionService {
     AuctionResponse updateDraftAuction(Long id, UpdateDraftAuctionRequest request);
 
     AuctionResponse updateScheduledAuction(Long id, UpdateScheduledAuctionRequest request);
+
+    AuctionResponse relistAuction(Long auctionId);
 
     CancelAuctionResponse cancelAuction(Long id, CancelAuctionRequest request);
 
@@ -60,4 +62,6 @@ public interface AuctionService {
     AuctionOverviewProjection getAdminAuctionOverviewData();
 
     List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat);
+
+    String getAuctionToken(Long id);
 }

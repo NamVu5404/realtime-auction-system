@@ -11,7 +11,7 @@ import lombok.Data;
 public class UpdateUserRequest {
 
     @NotBlank(message = "Name is required")
-    @Size(max = 255, message = "Name must not exceed 255 characters")
+    @Size(max = 35, message = "Name must not exceed 35 characters")
     private String name;
 
     @Pattern(

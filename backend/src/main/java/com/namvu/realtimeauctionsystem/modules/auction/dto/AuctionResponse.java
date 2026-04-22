@@ -1,8 +1,8 @@
 package com.namvu.realtimeauctionsystem.modules.auction.dto;
 
+import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.user.dto.UserResponse;
-import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,12 +23,14 @@ public class AuctionResponse {
     private String image; // primary image
     private BigDecimal startPrice;
     private BigDecimal currentPrice;
+    private BigDecimal reservePrice;
     private BigDecimal minStep;
     private AuctionStatus status;
     private Instant startTime;
     private Instant endTime;
     private Integer antiSnipeSeconds;
     private Integer extensionSeconds;
+    private boolean privateMode;
 
     // Seller info
     private UserResponse seller;

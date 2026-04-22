@@ -40,6 +40,11 @@ public enum NotificationConstant {
             "Phiên đấu giá '%s' đã kết thúc. Rất tiếc, bạn không phải người chiến thắng lần này.",
             AUCTION_DETAIL_URL
     ),
+    AUCTION_ENDED_NO_SALE_BIDDER(
+            "Phiên đấu giá đã kết thúc!",
+            "Phiên đấu giá '%s' đã kết thúc do không đạt giá dự trữ. Rất tiếc, không có người chiến thắng lần này.",
+            AUCTION_DETAIL_URL
+    ),
     AUCTION_CANCELLED( // Pending
             "Phiên đấu giá đã bị hủy",
             "Phiên đấu giá '%s' đã bị hủy bởi người tổ chức. Tiền đặt cọc (nếu có) sẽ được hoàn trả.",
@@ -61,6 +66,11 @@ public enum NotificationConstant {
     AUCTION_ENDED_NO_BIDS(
             "Phiên đấu giá kết thúc không có lượt đặt giá",
             "Phiên đấu giá '%s' đã kết thúc mà không có lượt đặt giá nào.",
+            SELLER_AUCTION_DETAIL_URL
+    ),
+    AUCTION_ENDED_NO_SALE_SELLER(
+            "Phiên đấu giá đã kết thúc",
+            "Phiên đấu giá '%s' đã kết thúc nhưng không đạt giá dự trữ. Bạn có thể đăng lại phiên này.",
             SELLER_AUCTION_DETAIL_URL
     ),
     AUCTION_APPROVED( // Pending + mail

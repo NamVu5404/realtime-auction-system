@@ -1,12 +1,7 @@
 package com.namvu.realtimeauctionsystem.modules.auction.repository;
 
 import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionOverviewProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.KpiAuctionProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.RevenueProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionWinProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.SellerAggregateProjection;
-import com.namvu.realtimeauctionsystem.modules.auction.dto.SellerChartProjection;
+import com.namvu.realtimeauctionsystem.modules.auction.dto.*;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
@@ -22,10 +17,12 @@ import java.util.Optional;
 
 @Repository
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
-    @Query("SELECT a FROM Auction a WHERE " +
+    @Query("SELECT a FROM Auction a WHERE (" +
             "(:status = 'LIVE' AND (a.status = 'LIVE' OR (a.status = 'SCHEDULED' AND a.startTime <= :oneHourFromNow))) OR " +
             "(:status = 'SCHEDULED' AND a.status = 'SCHEDULED' AND a.startTime > :oneHourFromNow) OR " +
-            "(:status = 'ENDED' AND a.status = :status) " +
+            "(:status = 'ENDED' AND (a.status = :status OR a.status = 'ENDED_NO_SALE')) " +
+            ") " +
+            "AND a.privateMode = false " +
             "ORDER BY " +
             "CASE WHEN :status = 'LIVE' AND a.status = 'LIVE' THEN 0 " +
             "     WHEN :status = 'LIVE' AND a.status = 'SCHEDULED' THEN 1 " +
@@ -120,6 +117,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
                 COUNT(a) AS totalAuctionsCreated,
                 COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN 1 ELSE 0 END), 0) AS totalAuctionsSold,
                 COALESCE(SUM(CASE WHEN a.status IN ('LIVE', 'SCHEDULED') THEN 1 ELSE 0 END), 0) AS activeAuctions,
+                COALESCE(SUM(CASE WHEN a.status IN ('ENDED', 'ENDED_NO_SALE') THEN 1 ELSE 0 END), 0) AS endedAuctions,
                 COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS totalRevenue,
                 COALESCE(MAX(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS highestSoldPrice
             FROM Auction a
@@ -157,6 +155,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
                 COALESCE(SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END), 0) AS liveCount,
                 COALESCE(SUM(CASE WHEN a.status = 'SCHEDULED' THEN 1 ELSE 0 END), 0) AS scheduledCount,
                 COALESCE(SUM(CASE WHEN a.status = 'ENDED' THEN 1 ELSE 0 END), 0) AS endedCount,
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED_NO_SALE' THEN 1 ELSE 0 END), 0) AS endedNoSaleCount,
                 COALESCE(SUM(CASE WHEN a.status = 'CANCELLED' THEN 1 ELSE 0 END), 0) AS cancelledCount,
                 COALESCE(SUM(CASE WHEN a.status = 'DRAFT' THEN 1 ELSE 0 END), 0) AS draftCount,
                 COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN 1 ELSE 0 END), 0) AS endedWithHighestBidder

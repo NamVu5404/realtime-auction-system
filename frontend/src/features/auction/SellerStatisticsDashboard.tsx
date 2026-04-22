@@ -75,8 +75,8 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
   const stats = data!;
 
   const successRate =
-    stats.totalAuctionsCreated > 0
-      ? Math.round((stats.totalAuctionsSold / stats.totalAuctionsCreated) * 100)
+    stats.totalAuctionsEnded > 0
+      ? Math.round((stats.totalAuctionsSold / stats.totalAuctionsEnded) * 100)
       : 0;
 
   const avgSellingPrice =
@@ -85,8 +85,8 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
       : 0;
 
   const avgBidsPerAuction =
-    stats.totalAuctionsSold > 0
-      ? (stats.totalBidsReceived / stats.totalAuctionsSold).toFixed(1)
+    stats.totalAuctionsEnded > 0
+      ? (stats.totalBidsReceived / stats.totalAuctionsEnded).toFixed(1)
       : "0";
 
   return (
@@ -149,7 +149,7 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
                 }
                 value={stats.totalAuctionsSold}
                 prefix={<TrophyOutlined />}
-                suffix={`/ ${stats.totalAuctionsCreated}`}
+                suffix={`/ ${stats.totalAuctionsEnded}`}
                 styles={{ content: { color: "#fff", fontWeight: "bold" } }}
               />
               <Progress

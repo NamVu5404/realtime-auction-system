@@ -12,6 +12,7 @@ import {
   PlaceBidResponseV2,
   AuctionAuditResponse,
   SellerStatsResponse,
+  ApiResult,
 } from "./types";
 import { ENV } from "../config/env";
 
@@ -63,8 +64,12 @@ export const auctionApi = {
    */
   getAuctionDetail: async (auctionId: number): Promise<Auction> => {
     try {
+      const token = sessionStorage.getItem(`auction_token_${auctionId}`);
+      const headers = token ? { "X-Auction-Token": token } : {};
+
       const response = await axiosClient.get<ApiResponse<Auction>>(
         `/auctions/${auctionId}`,
+        { headers },
       );
       return response.data.result!;
     } catch (error) {
@@ -118,12 +123,16 @@ export const auctionApi = {
     amount: number,
   ): Promise<ApiResponse<PlaceBidResponseV2>> => {
     try {
+      const token = sessionStorage.getItem(`auction_token_${auctionId}`);
+      const headers = token ? { "X-Auction-Token": token } : {};
+
       // NOTE: We manually override baseURL for V2 endpoint
       const response = await axiosClient.post<ApiResponse<PlaceBidResponseV2>>(
         `${ENV.API_V2_URL}/auctions/${auctionId}/bids`,
         {
           amount,
         },
+        { headers },
       );
       return response.data;
     } catch (error) {
@@ -249,6 +258,37 @@ export const auctionApi = {
       );
       return response.data.result!;
     } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+  /**
+   * Relist an auction that ended without a sale
+   * Backend Endpoint: POST /v1/auctions/{auctionId}/relist
+   */
+  relistAuction: async (auctionId: number): Promise<ApiResult<Auction>> => {
+    try {
+      const response = await axiosClient.post<ApiResponse<Auction>>(
+        `/auctions/${auctionId}/relist`,
+      );
+      return { message: response.data.message, result: response.data.result! };
+    } catch (error) {
+      console.error("Failed to relist auction:", error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  /**
+   * Fetch auction share token
+   * Backend Endpoint: GET /api/v1/auctions/{auctionId}/token
+   */
+  getAuctionToken: async (auctionId: number): Promise<string> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<string>>(
+        `/auctions/${auctionId}/token`,
+      );
+      return response.data.result!;
+    } catch (error) {
+      console.error("Failed to fetch auction token:", error);
       throw new Error(extractErrorMessage(error));
     }
   },

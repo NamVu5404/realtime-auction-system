@@ -116,6 +116,29 @@ public class AuctionScheduler {
 
         for (Auction auction : auctionsToEnd) {
             try {
+                if (auction.getReservePrice() != null && auction.getCurrentPrice().compareTo(auction.getReservePrice()) < 0) {
+                    redisAuctionService.deleteAuction(auction.getId());
+
+                    auction.setStatus(AuctionStatus.ENDED_NO_SALE);
+                    auctionRepository.save(auction);
+
+                    // Ghi audit
+                    auctionAuditRepository.save(AuctionAudit.builder()
+                            .auction(auction)
+                            .actionType(AuctionActionType.ENDED_NO_SALE)
+                            .details(Map.of("Description", "Auction ended no sale"))
+                            .build());
+
+                    // AUCTION_ENDED_NO_SALE_BIDDER
+                    Set<Long> bidderIds = bidService.getParticipantIds(auction.getId());
+                    notificationService.processEndedNoSaleBidderNotifications(auction.getId(), auction.getTitle(), bidderIds);
+
+                    // AUCTION_ENDED_NO_SALE_SELLER
+                    notificationService.processEndedNoSaleSellerNotifications(auction.getId(), auction.getTitle(), auction.getSeller().getId());
+
+                    continue;
+                }
+
                 // Update status to ENDED
                 auction.setStatus(AuctionStatus.ENDED);
                 auction = auctionRepository.save(auction);
