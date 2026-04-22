@@ -68,11 +68,11 @@ public class Auction extends Auditable {
 
     @Column(name = "anti_snipe_seconds")
     @Builder.Default
-    private Integer antiSnipeSeconds = 10; // X giây
+    private Integer antiSnipeSeconds = 0;
 
     @Column(name = "extension_seconds")
     @Builder.Default
-    private Integer extensionSeconds = 30; // Y giây
+    private Integer extensionSeconds = 0;
 
     @Column(name = "extension_count")
     @Builder.Default

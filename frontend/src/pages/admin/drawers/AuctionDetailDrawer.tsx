@@ -648,6 +648,65 @@ export const AuctionDetailDrawer = ({
                   </Col>
                 </Row>
               </div>
+
+              {/* Auction Settings */}
+              <div
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: "16px",
+                  padding: "16px 20px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.4)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    marginBottom: "16px",
+                  }}
+                >
+                  Auction Settings
+                </div>
+                <Row gutter={[16, 16]}>
+                  <Col xs={12} sm={6}>
+                    <div className="info-pair">
+                      <span className="info-label">Reserve Price</span>
+                      <span className="info-value">
+                        {auction.reservePrice
+                          ? formatCurrency(auction.reservePrice)
+                          : "None"}
+                      </span>
+                    </div>
+                  </Col>
+                  <Col xs={12} sm={6}>
+                    <div className="info-pair">
+                      <span className="info-label">Private Mode</span>
+                      <span className="info-value">
+                        {auction.privateMode ? "Private" : "Public"}
+                      </span>
+                    </div>
+                  </Col>
+                  <Col xs={12} sm={6}>
+                    <div className="info-pair">
+                      <span className="info-label">Anti-Snipe</span>
+                      <span className="info-value">
+                        {auction.antiSnipeSeconds || 0}s
+                      </span>
+                    </div>
+                  </Col>
+                  <Col xs={12} sm={6}>
+                    <div className="info-pair">
+                      <span className="info-label">Extension</span>
+                      <span className="info-value">
+                        {auction.extensionSeconds || 0}s
+                      </span>
+                    </div>
+                  </Col>
+                </Row>
+              </div>
             </div>
 
             {/* Description */}

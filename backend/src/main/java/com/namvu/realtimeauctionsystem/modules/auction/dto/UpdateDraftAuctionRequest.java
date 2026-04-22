@@ -1,8 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.auction.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,6 +29,14 @@ public class UpdateDraftAuctionRequest {
 
     @Future(message = "End time must be in the future")
     private Instant endTime;
+
+    @Min(value = 0, message = "Anti-snipe seconds must be non-negative")
+    @Max(value = 60, message = "Anti-snipe seconds must be at most 60")
+    private Integer antiSnipeSeconds;
+
+    @Min(value = 0, message = "Extension seconds must be non-negative")
+    @Max(value = 300, message = "Extension seconds must be at most 300")
+    private Integer extensionSeconds;
 
     private BigDecimal reservePrice;
     private boolean privateMode;

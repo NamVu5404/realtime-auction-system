@@ -78,6 +78,8 @@ export const AuctionForm = ({
     if (values.minStep !== auction.minStep) return true;
     if (values.reservePrice !== auction.reservePrice) return true;
     if (!!values.privateMode !== !!auction.privateMode) return true;
+    if (values.antiSnipeSeconds !== auction.antiSnipeSeconds) return true;
+    if (values.extensionSeconds !== auction.extensionSeconds) return true;
 
     // Compare times using Unix timestamps (milliseconds) to avoid ISO string precision issues
     // Form values are dayjs objects (in local timezone from convertUTCToLocal)
@@ -124,6 +126,8 @@ export const AuctionForm = ({
         startTime: startTimeLocal,
         endTime: endTimeLocal,
         privateMode: auction.privateMode ?? false,
+        antiSnipeSeconds: auction.antiSnipeSeconds ?? 0,
+        extensionSeconds: auction.extensionSeconds ?? 0,
       });
 
       // Reset form changed state after initialization
@@ -192,6 +196,8 @@ export const AuctionForm = ({
             minStep: values.minStep,
             reservePrice: values.reservePrice,
             privateMode: !!values.privateMode,
+            antiSnipeSeconds: values.antiSnipeSeconds,
+            extensionSeconds: values.extensionSeconds,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -218,6 +224,8 @@ export const AuctionForm = ({
             minStep: values.minStep,
             reservePrice: values.reservePrice,
             privateMode: !!values.privateMode,
+            antiSnipeSeconds: values.antiSnipeSeconds ?? 0,
+            extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -256,6 +264,8 @@ export const AuctionForm = ({
             minStep: values.minStep,
             reservePrice: values.reservePrice,
             privateMode: !!values.privateMode,
+            antiSnipeSeconds: values.antiSnipeSeconds ?? 0,
+            extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -282,6 +292,18 @@ export const AuctionForm = ({
               "privateMode",
               updateData.privateMode.toString(),
             );
+            if (updateData.antiSnipeSeconds !== undefined) {
+              scheduleData.append(
+                "antiSnipeSeconds",
+                updateData.antiSnipeSeconds.toString(),
+              );
+            }
+            if (updateData.extensionSeconds !== undefined) {
+              scheduleData.append(
+                "extensionSeconds",
+                updateData.extensionSeconds.toString(),
+              );
+            }
             scheduleData.append("startTime", updateData.startTime!);
             scheduleData.append("endTime", updateData.endTime!);
 
@@ -306,6 +328,8 @@ export const AuctionForm = ({
             description: values.description || "",
             reservePrice: values.reservePrice,
             privateMode: !!values.privateMode,
+            antiSnipeSeconds: values.antiSnipeSeconds ?? 0,
+            extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };
@@ -347,7 +371,7 @@ export const AuctionForm = ({
         label="Title"
         rules={[{ required: true, message: "Title is required" }]}
       >
-        <Input placeholder="Enter auction title" />
+        <Input placeholder="Enter auction title" disabled={isScheduledStatus} />
       </Form.Item>
 
       {/* Description */}
@@ -470,6 +494,24 @@ export const AuctionForm = ({
         >
           <Switch />
         </Form.Item>
+
+        {/* Anti-Snipe Seconds */}
+        <Form.Item
+          name="antiSnipeSeconds"
+          label="Anti-Snipe (Seconds)"
+          tooltip="The window (in seconds) before the auction ends. Any bid placed within this time will trigger an extension."
+        >
+          <InputNumber defaultValue={0} min={0} max={60} className="w-full" />
+        </Form.Item>
+
+        {/* Extension Seconds */}
+        <Form.Item
+          name="extensionSeconds"
+          label="Extension (Seconds)"
+          tooltip="The amount of time (in seconds) the auction will be extended by when a bid is placed within the anti-snipe window."
+        >
+          <InputNumber min={0} max={300} className="w-full" defaultValue={0} />
+        </Form.Item>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -539,7 +581,7 @@ export const AuctionForm = ({
       </div>
 
       {/* Action Buttons */}
-      <Form.Item className="mb-0 mt-6">
+      <Form.Item className="mb-0 mt-2">
         <Space>
           {mode === "create" && !localAuction ? (
             <>

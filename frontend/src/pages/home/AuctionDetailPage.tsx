@@ -526,7 +526,7 @@ export const AuctionDetailPage = () => {
         setAuction(data);
       } catch (error: any) {
         message.error(extractErrorMessage(error));
-        navigate(-1);
+        navigate("/");
       } finally {
         setLoading(false);
       }

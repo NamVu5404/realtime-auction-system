@@ -323,6 +323,18 @@ const AdminAuctionPage = () => {
           onClick: () => setDetailDrawer({ visible: true, auction: record }),
         });
 
+        // Show Edit only for editable statuses
+        if (canEdit) {
+          menuItems.push({
+            key: "edit",
+            icon: <EditOutlined />,
+            label: "Edit",
+            onClick: () => {
+              setEditModal({ visible: true, auction: record });
+            },
+          });
+        }
+
         // Show Share for SCHEDULED or LIVE status
         if (
           record.status === AuctionStatus.SCHEDULED ||
@@ -350,18 +362,6 @@ const AdminAuctionPage = () => {
             });
           },
         });
-
-        // Show Edit only for editable statuses
-        if (canEdit) {
-          menuItems.push({
-            key: "edit",
-            icon: <EditOutlined />,
-            label: "Edit",
-            onClick: () => {
-              setEditModal({ visible: true, auction: record });
-            },
-          });
-        }
 
         // Show Cancel only for cancellable statuses
         if (canCancel) {

@@ -29,14 +29,10 @@ import NotFound from './pages/NotFound';
 import SellerAuctionPage from './pages/seller/SellerAuctionPage';
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerNotificationPage from './pages/seller/SellerNotificationPage';
-import { useUIStore } from './store/useUIStore';
-
 // Create a client for React Query
 const queryClient = new QueryClient();
 
 function App() {
-  const darkMode = useUIStore((state) => state.darkMode);
-
   // Mount once globally — writes Kafka health to useUIStore
   // All components read isKafkaAlive from useUIStore, no extra connections
   useHeartbeat();
@@ -61,7 +57,7 @@ function App() {
             colorSuccess: '#10B981',
             colorWarning: '#FED469',
             colorError: '#F43F5E',
-            fontFamily: "'Be Vietnam Pro', Inter, -apple-system, sans-serif",
+            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           },
           components: {
             Message: {

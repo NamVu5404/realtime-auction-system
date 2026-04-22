@@ -231,16 +231,19 @@ export interface UpdateDraftAuctionRequest {
   endTime?: string;
   reservePrice?: number;
   privateMode?: boolean;
+  antiSnipeSeconds?: number;
+  extensionSeconds?: number;
 }
 
 export interface UpdateScheduledAuctionRequest {
-  title?: string;
   description?: string;
   image?: string;
   startTime?: string;
   endTime?: string;
   reservePrice?: number;
   privateMode?: boolean;
+  antiSnipeSeconds?: number;
+  extensionSeconds?: number;
 }
 
 export interface AuthenticationResponse {
