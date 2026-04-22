@@ -8,5 +8,7 @@ public interface AuctionOverviewProjection {
     Long getEndedNoSaleCount();
     Long getCancelledCount();
     Long getDraftCount();
+    Long getPublicCount();
+    Long getPrivateCount();
     Long getEndedWithHighestBidder();
 }

@@ -54,6 +54,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             "(:startTime IS NULL OR a.startTime >= :startTime) AND " +
             "(:endTime IS NULL OR a.endTime <= :endTime) AND " +
             "(:statusStr = 'ALL' OR a.status = :status) AND " +
+            "(:privateMode IS NULL OR a.privateMode = :privateMode) AND " +
             "(:sellerId IS NULL OR s.id = :sellerId) " +
             "ORDER BY a.createdAt DESC")
     Page<Auction> filterAuctions(
@@ -63,6 +64,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             @Param("status") AuctionStatus status,
             @Param("statusStr") String statusStr,
             @Param("sellerId") Long sellerId,
+            @Param("privateMode") Boolean privateMode,
             Pageable pageable
     );
 
@@ -158,7 +160,9 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
                 COALESCE(SUM(CASE WHEN a.status = 'ENDED_NO_SALE' THEN 1 ELSE 0 END), 0) AS endedNoSaleCount,
                 COALESCE(SUM(CASE WHEN a.status = 'CANCELLED' THEN 1 ELSE 0 END), 0) AS cancelledCount,
                 COALESCE(SUM(CASE WHEN a.status = 'DRAFT' THEN 1 ELSE 0 END), 0) AS draftCount,
-                COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN 1 ELSE 0 END), 0) AS endedWithHighestBidder
+                COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN 1 ELSE 0 END), 0) AS endedWithHighestBidder,
+                COALESCE(SUM(CASE WHEN a.privateMode = false THEN 1 ELSE 0 END), 0) AS publicCount,
+                COALESCE(SUM(CASE WHEN a.privateMode = true THEN 1 ELSE 0 END), 0) AS privateCount
             FROM Auction a
         """)
     AuctionOverviewProjection getAdminAuctionOverviewData();

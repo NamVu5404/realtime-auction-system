@@ -32,10 +32,10 @@ public interface AuctionService {
     PlaceBidResponse placeBidV1(PlaceBidRequestV1 request);
 
     PageResponse<AuctionResponse> filterSellerAuction(String keyword, Instant startTime, Instant endTime,
-                                                AuctionStatus status, Pageable pageable);
+                                                      AuctionStatus status, Boolean privateMode, Pageable pageable);
 
     PageResponse<AuctionResponse> filterAdminAuction(String keyword, Instant startTime, Instant endTime,
-                                                AuctionStatus status, Pageable pageable);
+                                                     AuctionStatus status, Boolean privateMode, Pageable pageable);
 
     PageResponse<AuctionHistoryResponse> getAuctionHistory(Long id, Pageable pageable);
 

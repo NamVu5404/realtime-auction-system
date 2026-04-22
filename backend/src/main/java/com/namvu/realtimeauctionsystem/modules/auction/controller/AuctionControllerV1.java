@@ -103,11 +103,12 @@ public class AuctionControllerV1 {
             @RequestParam(required = false) Instant startTime,
             @RequestParam(required = false) Instant endTime,
             @RequestParam(required = false) AuctionStatus status,
+            @RequestParam(required = false) Boolean privateMode,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        return ApiResponse.ok(auctionService.filterSellerAuction(keyword, startTime, endTime, status, pageable));
+        return ApiResponse.ok(auctionService.filterSellerAuction(keyword, startTime, endTime, status, privateMode, pageable));
     }
 
     @GetMapping("/filter-admin")
@@ -116,11 +117,12 @@ public class AuctionControllerV1 {
             @RequestParam(required = false) Instant startTime,
             @RequestParam(required = false) Instant endTime,
             @RequestParam(required = false) AuctionStatus status,
+            @RequestParam(required = false) Boolean privateMode,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        return ApiResponse.ok(auctionService.filterAdminAuction(keyword, startTime, endTime, status, pageable));
+        return ApiResponse.ok(auctionService.filterAdminAuction(keyword, startTime, endTime, status, privateMode, pageable));
     }
 
     @GetMapping("/{id}/history")

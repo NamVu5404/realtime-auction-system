@@ -435,6 +435,7 @@ const AdminUserPage = () => {
                         cancelText: "Cancel",
                         centered: true,
                         okButtonProps: { danger: false },
+                        maskClosable: true,
                       });
                     },
                   }

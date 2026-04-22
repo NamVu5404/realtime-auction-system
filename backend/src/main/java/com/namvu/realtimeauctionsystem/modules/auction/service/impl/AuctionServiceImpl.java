@@ -292,17 +292,17 @@ public class AuctionServiceImpl implements AuctionService {
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('SELLER')")
     public PageResponse<AuctionResponse> filterSellerAuction(String keyword, Instant startTime, Instant endTime,
-                                                             AuctionStatus status, Pageable pageable) {
+                                                             AuctionStatus status, Boolean privateMode, Pageable pageable) {
         Long sellerId = SecurityUtils.getCurrentUserId();
-        return filterAuction(sellerId, keyword, startTime, endTime, status, pageable);
+        return filterAuction(sellerId, keyword, startTime, endTime, status, privateMode, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<AuctionResponse> filterAdminAuction(String keyword, Instant startTime, Instant endTime,
-                                                            AuctionStatus status, Pageable pageable) {
-        return filterAuction(null, keyword, startTime, endTime, status, pageable);
+                                                            AuctionStatus status, Boolean privateMode, Pageable pageable) {
+        return filterAuction(null, keyword, startTime, endTime, status, privateMode, pageable);
     }
 
     @Override
@@ -482,10 +482,10 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     private PageResponse<AuctionResponse> filterAuction(Long sellerId, String keyword, Instant startTime, Instant endTime,
-                                                        AuctionStatus status, Pageable pageable) {
+                                                        AuctionStatus status, Boolean privateMode, Pageable pageable) {
         String statusStr = (status == null) ? AuctionStatus.ALL.name() : status.name();
         Page<Auction> auctionPage = auctionRepository
-                .filterAuctions(keyword, startTime, endTime, status, statusStr, sellerId, pageable);
+                .filterAuctions(keyword, startTime, endTime, status, statusStr, sellerId, privateMode, pageable);
         return getResponse(pageable, auctionPage);
     }
 

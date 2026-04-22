@@ -20,6 +20,7 @@ import {
   Image,
   Input,
   Modal,
+  Select,
   Table,
   Tabs,
   Tag,
@@ -76,6 +77,14 @@ const AdminAuctionPage = () => {
     newParams.set("page", "1");
     setSearchParams(newParams);
   };
+  const privateMode = searchParams.get("privateMode");
+  const setPrivateMode = (mode: string | null | undefined) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (mode) newParams.set("privateMode", mode);
+    else newParams.delete("privateMode");
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
   const [dateRange, setDateRange] = useState<any>(null);
   const [detailDrawer, setDetailDrawer] = useState<{
     visible: boolean;
@@ -112,7 +121,7 @@ const AdminAuctionPage = () => {
 
   // Manual trigger for search - initial query with LIVE status
   const { data, isLoading, refetch } = useQuery<PageResponse<Auction>>({
-    queryKey: ["admin-auctions", page, debouncedKeyword, status, dateRange],
+    queryKey: ["admin-auctions", page, debouncedKeyword, status, dateRange, privateMode],
     queryFn: () =>
       adminApi.filterAdminAuctions(
         page,
@@ -121,6 +130,7 @@ const AdminAuctionPage = () => {
         status,
         dateRange?.[0]?.toISOString(),
         dateRange?.[1]?.toISOString(),
+        privateMode ? privateMode === "true" : undefined,
       ),
     enabled: true,
   });
@@ -204,6 +214,8 @@ const AdminAuctionPage = () => {
 
   const handleClear = () => {
     setDateRange(null);
+    setKeyword("");
+    setPrivateMode(null);
     const newParams = new URLSearchParams();
     newParams.set("page", "1");
     newParams.set("status", AuctionStatus.LIVE);
@@ -405,7 +417,7 @@ const AdminAuctionPage = () => {
           Auction Management
         </h1>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {(keyword || dateRange) && (
+          {(keyword || dateRange || privateMode) && (
             <Button icon={<DeleteOutlined />} onClick={handleClear}>
               Clear All
             </Button>
@@ -417,9 +429,9 @@ const AdminAuctionPage = () => {
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
             Filters
-            {(keyword || dateRange) && (
+            {(keyword || dateRange || privateMode) && (
               <Badge
-                count={[keyword, dateRange].filter(Boolean).length}
+                count={[keyword, dateRange, privateMode].filter(Boolean).length}
                 style={{
                   backgroundColor: "#FED469",
                   color: "#191B24",
@@ -459,7 +471,7 @@ const AdminAuctionPage = () => {
               transition: "opacity 0.2s ease",
             }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <div
                   style={{
@@ -504,6 +516,31 @@ const AdminAuctionPage = () => {
                   showTime
                   format="YYYY-MM-DD HH:mm"
                   className="w-full"
+                />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Mode
+                </div>
+                <Select
+                  placeholder="Select Mode"
+                  value={privateMode || undefined}
+                  onChange={(value) => setPrivateMode(value || null)}
+                  allowClear
+                  style={{ width: "100%" }}
+                  options={[
+                    { label: "Public", value: "false" },
+                    { label: "Private", value: "true" },
+                  ]}
                 />
               </div>
             </div>

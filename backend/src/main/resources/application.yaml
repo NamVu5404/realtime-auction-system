@@ -45,6 +45,7 @@ spring:
     port: 587
     username: ${MAIL_USERNAME:admin.auctionpro@gmail.com}
     password: ${MAIL_PASSWORD:vphtjquwbavbvaqg}
+    display-name: AuctionPro
     properties:
       mail:
         smtp:

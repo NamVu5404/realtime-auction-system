@@ -491,6 +491,8 @@ export interface AdminAuctionOverviewResponse {
   successRate: number;
   totalBidsAllTime: number;
   avgBidsPerAuction: number;
+  publicCount: number;
+  privateCount: number;
 }
 
 export interface CountryStatData {

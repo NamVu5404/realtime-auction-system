@@ -17,6 +17,8 @@ public class AuctionOverviewResponse {
     private Long endedNoSaleCount;
     private Long cancelledCount;
     private Long draftCount;
+    private Long publicCount;
+    private Long privateCount;
     private Double successRate;
     private Long totalBidsAllTime;
     private Double avgBidsPerAuction;

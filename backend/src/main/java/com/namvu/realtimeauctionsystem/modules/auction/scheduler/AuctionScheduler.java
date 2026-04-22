@@ -168,7 +168,8 @@ public class AuctionScheduler {
                             auction.getHighestBidder().getName(),
                             auction.getTitle(),
                             auction.getCurrentPrice(),
-                            auction.getId()
+                            auction.getId(),
+                            auction.getToken()
                     );
 
                     // AUCTION_ENDED_WINNER

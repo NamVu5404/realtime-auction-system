@@ -196,8 +196,8 @@ export const AuctionForm = ({
             minStep: values.minStep,
             reservePrice: values.reservePrice,
             privateMode: !!values.privateMode,
-            antiSnipeSeconds: values.antiSnipeSeconds,
-            extensionSeconds: values.extensionSeconds,
+            antiSnipeSeconds: values.antiSnipeSeconds ?? 0,
+            extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
           };

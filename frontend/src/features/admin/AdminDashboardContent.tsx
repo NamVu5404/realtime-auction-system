@@ -333,10 +333,17 @@ const AdminDashboardContent: React.FC = () => {
                   size="middle"
                 >
                   <Card size="small">
-                    <Statistic
-                      title="Total Auctions"
-                      value={overview.totalAuctions}
-                    />
+                    <div style={{ display: "flex", gap: 32 }}>
+                      <Statistic
+                        title="Total Auctions"
+                        value={overview.totalAuctions}
+                      />
+                      <Statistic title="Public" value={overview.publicCount} />
+                      <Statistic
+                        title="Private"
+                        value={overview.privateCount}
+                      />
+                    </div>
                   </Card>
                   <Card size="small">
                     <Statistic

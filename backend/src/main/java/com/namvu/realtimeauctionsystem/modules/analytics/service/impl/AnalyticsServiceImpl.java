@@ -77,6 +77,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .endedNoSaleCount(data.getEndedNoSaleCount())
                 .cancelledCount(data.getCancelledCount())
                 .draftCount(data.getDraftCount())
+                .publicCount(data.getPublicCount())
+                .privateCount(data.getPrivateCount())
                 .successRate(successRate)
                 .totalBidsAllTime(totalBids)
                 .avgBidsPerAuction(avgBidsPerAuction)
