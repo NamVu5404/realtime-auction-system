@@ -14,7 +14,7 @@ class ArchitectureEnforcementTest {
 
     private static final String[] MODULES = {
             "analytics", "auction", "auth", "bid", "contact", "ekyc", "file", "fraud", "live_chat", "mail",
-            "notification", "seller_registration", "user"
+            "notification", "seller_registration", "user", "wishlist"
     };
 
     @BeforeAll

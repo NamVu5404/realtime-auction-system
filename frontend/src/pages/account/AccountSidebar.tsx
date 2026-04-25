@@ -2,6 +2,7 @@ import {
   AuditOutlined,
   BarChartOutlined,
   BellOutlined,
+  HeartOutlined,
   HistoryOutlined,
   IdcardOutlined,
   SettingOutlined,
@@ -71,6 +72,12 @@ const AccountSidebar = () => {
           icon: <BarChartOutlined />,
           label: "Bid Statistics",
           onClick: () => navigate("/account/bid-stats"),
+        },
+        {
+          key: "/account/wishlist",
+          icon: <HeartOutlined />,
+          label: "My Wishlist",
+          onClick: () => navigate("/account/wishlist"),
         },
         {
           key: "/account/bids",

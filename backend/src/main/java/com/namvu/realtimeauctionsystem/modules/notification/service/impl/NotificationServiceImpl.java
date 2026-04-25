@@ -327,6 +327,38 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    @Override
+    @Async(NOTIFICATION_EXECUTOR)
+    public void processWishlistAuctionStartNotifications(Long auctionId, String title, BigDecimal startPrice, Set<Long> userIds) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_START;
+            String content = type.buildContent(title, MoneyUtils.format(startPrice));
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+
+            userIds.forEach(userId ->
+                    self().createAndPushNotification(userId, type, content, redirectUrl)
+            );
+        } catch (Exception e) {
+            log.warn("Failed to process wishlist auction start notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    @Async(NOTIFICATION_EXECUTOR)
+    public void processWishlistAuctionCancelledNotifications(Long auctionId, String title, Set<Long> userIds) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_CANCELLED;
+            String content = type.buildContent(title);
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+
+            userIds.forEach(userId ->
+                    self().createAndPushNotification(userId, type, content, redirectUrl)
+            );
+        } catch (Exception e) {
+            log.warn("Failed to process wishlist auction cancelled notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
     private void pushNotification(Notification notification) {
         NotificationResponse response = notificationMapper.mapToResponse(notification);
 

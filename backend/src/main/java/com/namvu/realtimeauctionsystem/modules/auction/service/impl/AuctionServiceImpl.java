@@ -20,12 +20,16 @@ import com.namvu.realtimeauctionsystem.modules.bid.dto.PlaceBidResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidQueryService;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
+import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
+import com.namvu.realtimeauctionsystem.modules.wishlist.service.WishListService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -38,6 +42,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -55,6 +60,12 @@ public class AuctionServiceImpl implements AuctionService {
     private final SimpMessagingTemplate messagingTemplate;
     private final AuctionImageService auctionImageService;
     private final BidQueryService bidQueryService;
+    private final NotificationService notificationService;
+
+    // @Lazy breaks the circular dependency: AuctionService <-> WishListService
+    @Lazy
+    @Autowired
+    private WishListService wishListService;
 
     @Override
     @Transactional(readOnly = true)
@@ -247,12 +258,23 @@ public class AuctionServiceImpl implements AuctionService {
         auction.setStatus(AuctionStatus.CANCELLED);
         auction = auctionRepository.save(auction);
 
+        notifyWishlistUsersOnCancelled(auction);
+
         return CancelAuctionResponse.builder()
                 .auctionId(auction.getId())
                 .by(SecurityUtils.getCurrentUserEmail())
                 .timestamp(Instant.now())
                 .reason(request.getReason())
                 .build();
+    }
+
+    private void notifyWishlistUsersOnCancelled(Auction auction) {
+        Set<Long> wishlistUserIds = wishListService.getUserIdsByAuctionId(auction.getId());
+        if (wishlistUserIds.isEmpty()) return;
+
+        notificationService.processWishlistAuctionCancelledNotifications(
+                auction.getId(), auction.getTitle(), wishlistUserIds
+        );
     }
 
     @Override

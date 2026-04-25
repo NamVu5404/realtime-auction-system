@@ -12,6 +12,7 @@ import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionServi
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
 import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
 import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
+import com.namvu.realtimeauctionsystem.modules.wishlist.service.WishListService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -39,6 +40,7 @@ public class AuctionScheduler {
     private final BidService bidService;
     private final NotificationService notificationService;
     private final MailService mailService;
+    private final WishListService wishListService;
 
     /**
      * Chạy mỗi 1 giây, tìm auctions cần start
@@ -89,10 +91,22 @@ public class AuctionScheduler {
                         .details(Map.of("description", "Auction started"))
                         .build());
 
+                // Notify wishlist users
+                notifyWishlistUsersOnStart(auction);
+
             } catch (Exception e) {
                 log.error("Failed to start auction {}", auction.getId(), e);
             }
         }
+    }
+
+    private void notifyWishlistUsersOnStart(Auction auction) {
+        Set<Long> wishlistUserIds = wishListService.getUserIdsByAuctionId(auction.getId());
+        if (wishlistUserIds.isEmpty()) return;
+
+        notificationService.processWishlistAuctionStartNotifications(
+                auction.getId(), auction.getTitle(), auction.getStartPrice(), wishlistUserIds
+        );
     }
 
     /**
