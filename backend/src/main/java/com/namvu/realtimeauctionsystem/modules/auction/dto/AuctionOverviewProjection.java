@@ -5,7 +5,10 @@ public interface AuctionOverviewProjection {
     Long getLiveCount();
     Long getScheduledCount();
     Long getEndedCount();
+    Long getEndedNoSaleCount();
     Long getCancelledCount();
     Long getDraftCount();
+    Long getPublicCount();
+    Long getPrivateCount();
     Long getEndedWithHighestBidder();
 }

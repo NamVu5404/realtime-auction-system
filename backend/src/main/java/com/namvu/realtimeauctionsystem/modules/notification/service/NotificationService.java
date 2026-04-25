@@ -48,4 +48,12 @@ public interface NotificationService {
     void processRevokeSellerNotifications(Long userId, String reason);
 
     void processApplySellerNotifications(Set<Long> adminIds);
+
+    void processEndedNoSaleBidderNotifications(Long auctionId, String title, Set<Long> bidderIds);
+
+    void processEndedNoSaleSellerNotifications(Long auctionId, String title, Long sellerId);
+
+    void processWishlistAuctionStartNotifications(Long auctionId, String title, BigDecimal startPrice, Set<Long> userIds);
+
+    void processWishlistAuctionCancelledNotifications(Long auctionId, String title, Set<Long> userIds);
 }

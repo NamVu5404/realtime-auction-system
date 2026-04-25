@@ -39,7 +39,8 @@ public enum ErrorCode {
     AUCTION_VERSION_CONFLICT(4303, "Auction version conflict", HttpStatus.INTERNAL_SERVER_ERROR),
     AUCTION_STATUS_INVALID(4304, "Invalid auction status", HttpStatus.BAD_REQUEST),
     AUCTION_CONFIG_MISSING(4305, "Auction configuration is missing", HttpStatus.INTERNAL_SERVER_ERROR),
-    START_END_TIME_INVALID(4306, "Start time or end time is invalid", HttpStatus.BAD_REQUEST),
+    START_END_TIME_INVALID(4306, "End time must be after start time", HttpStatus.BAD_REQUEST),
+    RESERVE_PRICE_INVALID(4307, "Reserve price must be greater than or equal to start price", HttpStatus.BAD_REQUEST),
 
     // Bid (44xx)
     BID_REJECTED(4400, "Bid must be greater than or equal to current price plus minimum step", HttpStatus.BAD_REQUEST),
@@ -57,6 +58,7 @@ public enum ErrorCode {
     // Seller Registration (46xx)
     SELLER_REGISTRATION_NOT_FOUND(4600, "Seller registration not found", HttpStatus.NOT_FOUND),
     SELLER_REGISTRATION_PENDING(4601, "Seller registration is pending", HttpStatus.BAD_REQUEST),
+    IDENTITY_VERIFICATION_INCOMPLETE(4602, "Please complete identity verification before proceeding", HttpStatus.BAD_REQUEST),
 
     // Notification (47xx)
     NOTIFICATION_NOT_FOUND(4700, "Notification not found", HttpStatus.NOT_FOUND),
@@ -69,6 +71,30 @@ public enum ErrorCode {
     MESSAGE_NOT_FOUND(4901, "Message not found", HttpStatus.NOT_FOUND),
     RATE_LIMIT_EXCEEDED(4902, "Too many requests, please try again later", HttpStatus.TOO_MANY_REQUESTS),
     USER_BANNED(4903, "User has been banned.", HttpStatus.BAD_REQUEST),
+
+    // Kyc (50xx)
+    CCCD_ALREADY_EXISTS(5000, "Cccd already exists", HttpStatus.CONFLICT),
+    FPT_API_ERROR_1(5001, "Invalid Parameters or Values!", HttpStatus.BAD_REQUEST),
+    FPT_API_ERROR_2(5002, "Failed in cropping", HttpStatus.UNPROCESSABLE_ENTITY),
+    FPT_API_ERROR_3(5003, "Unable to find ID card in the image", HttpStatus.UNPROCESSABLE_ENTITY),
+    FPT_API_ERROR_5(5005, "No URL in the request", HttpStatus.BAD_REQUEST),
+    FPT_API_ERROR_6(5006, "Failed to open the URL!", HttpStatus.BAD_GATEWAY),
+    FPT_API_ERROR_7(5007, "Invalid image file", HttpStatus.UNPROCESSABLE_ENTITY),
+    FPT_API_ERROR_8(5008, "Bad data", HttpStatus.UNPROCESSABLE_ENTITY),
+    FPT_API_ERROR_9(5009, "No string base64 in the request", HttpStatus.BAD_REQUEST),
+    FPT_API_ERROR_10(5010, "String base64 is not valid", HttpStatus.BAD_REQUEST),
+    FPT_NO_DATA(5011, "No data returned from FPT API", HttpStatus.UNPROCESSABLE_ENTITY),
+    FPT_RESPONSE_CODE_407(5012, "Face not recognized", HttpStatus.BAD_REQUEST),
+    FPT_RESPONSE_CODE_408(5013, "Invalid input image format", HttpStatus.BAD_REQUEST),
+    FPT_RESPONSE_CODE_409(5014, "Please upload correct number of image for face check", HttpStatus.BAD_REQUEST),
+    KYC_NOT_FOUND(5015, "KYC not found", HttpStatus.NOT_FOUND),
+    FACE_MATCH_FAILED(5016, "Face verification failed. Faces do not match", HttpStatus.BAD_REQUEST),
+    INVALID_SELFIE_PHOTO(5017, "Live selfie required. Please do not use an ID photo", HttpStatus.BAD_REQUEST),
+    FACE_MATCH_ALREADY_VERIFIED(5018, "Face match already verified", HttpStatus.CONFLICT),
+
+    // Wishlist (51xx)
+    WISHLIST_NOT_FOUND(5100, "Wishlist item not found", HttpStatus.NOT_FOUND),
+    WISHLIST_ALREADY_EXISTS(5101, "Auction is already in your wishlist", HttpStatus.CONFLICT),
     ;
 
     private final int code;

@@ -13,7 +13,8 @@ class ArchitectureEnforcementTest {
     private static JavaClasses importedClasses;
 
     private static final String[] MODULES = {
-            "auction", "auth", "bid", "file", "notification", "seller_registration", "user"
+            "analytics", "auction", "auth", "bid", "contact", "ekyc", "file", "fraud", "live_chat", "mail",
+            "notification", "seller_registration", "user", "wishlist"
     };
 
     @BeforeAll

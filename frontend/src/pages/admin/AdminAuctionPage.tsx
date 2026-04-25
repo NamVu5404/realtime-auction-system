@@ -7,6 +7,7 @@ import {
   MoreOutlined,
   PlusOutlined,
   SearchOutlined,
+  ShareAltOutlined,
   StopOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +20,7 @@ import {
   Image,
   Input,
   Modal,
+  Select,
   Table,
   Tabs,
   Tag,
@@ -36,6 +38,7 @@ import {
 } from "../../api/types";
 import CancelAuctionModal from "../../components/admin/CancelAuctionModal";
 import AuctionForm from "../../features/auction/AuctionForm";
+import ShareAuctionModal from "../../features/auction/ShareAuctionModal";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";
 import { convertUTCToLocal } from "../../utils/dateUtils";
@@ -74,6 +77,14 @@ const AdminAuctionPage = () => {
     newParams.set("page", "1");
     setSearchParams(newParams);
   };
+  const privateMode = searchParams.get("privateMode");
+  const setPrivateMode = (mode: string | null | undefined) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (mode) newParams.set("privateMode", mode);
+    else newParams.delete("privateMode");
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
   const [dateRange, setDateRange] = useState<any>(null);
   const [detailDrawer, setDetailDrawer] = useState<{
     visible: boolean;
@@ -95,6 +106,10 @@ const AdminAuctionPage = () => {
     auctionId?: number;
     auctionTitle?: string;
   }>({ visible: false });
+  const [shareModal, setShareModal] = useState<{
+    visible: boolean;
+    auction: Auction | null;
+  }>({ visible: false, auction: null });
   const [liveAuctions, setLiveAuctions] = useState<Set<number>>(new Set());
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
@@ -106,7 +121,7 @@ const AdminAuctionPage = () => {
 
   // Manual trigger for search - initial query with LIVE status
   const { data, isLoading, refetch } = useQuery<PageResponse<Auction>>({
-    queryKey: ["admin-auctions", page, debouncedKeyword, status, dateRange],
+    queryKey: ["admin-auctions", page, debouncedKeyword, status, dateRange, privateMode],
     queryFn: () =>
       adminApi.filterAdminAuctions(
         page,
@@ -115,6 +130,7 @@ const AdminAuctionPage = () => {
         status,
         dateRange?.[0]?.toISOString(),
         dateRange?.[1]?.toISOString(),
+        privateMode ? privateMode === "true" : undefined,
       ),
     enabled: true,
   });
@@ -198,6 +214,8 @@ const AdminAuctionPage = () => {
 
   const handleClear = () => {
     setDateRange(null);
+    setKeyword("");
+    setPrivateMode(null);
     const newParams = new URLSearchParams();
     newParams.set("page", "1");
     newParams.set("status", AuctionStatus.LIVE);
@@ -317,6 +335,31 @@ const AdminAuctionPage = () => {
           onClick: () => setDetailDrawer({ visible: true, auction: record }),
         });
 
+        // Show Edit only for editable statuses
+        if (canEdit) {
+          menuItems.push({
+            key: "edit",
+            icon: <EditOutlined />,
+            label: "Edit",
+            onClick: () => {
+              setEditModal({ visible: true, auction: record });
+            },
+          });
+        }
+
+        // Show Share for SCHEDULED or LIVE status
+        if (
+          record.status === AuctionStatus.SCHEDULED ||
+          record.status === AuctionStatus.LIVE
+        ) {
+          menuItems.push({
+            key: "share",
+            icon: <ShareAltOutlined />,
+            label: "Share",
+            onClick: () => setShareModal({ visible: true, auction: record }),
+          });
+        }
+
         // Show Audit Logs
         menuItems.push({
           key: "audit-logs",
@@ -331,18 +374,6 @@ const AdminAuctionPage = () => {
             });
           },
         });
-
-        // Show Edit only for editable statuses
-        if (canEdit) {
-          menuItems.push({
-            key: "edit",
-            icon: <EditOutlined />,
-            label: "Edit",
-            onClick: () => {
-              setEditModal({ visible: true, auction: record });
-            },
-          });
-        }
 
         // Show Cancel only for cancellable statuses
         if (canCancel) {
@@ -386,7 +417,7 @@ const AdminAuctionPage = () => {
           Auction Management
         </h1>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {(keyword || dateRange) && (
+          {(keyword || dateRange || privateMode) && (
             <Button icon={<DeleteOutlined />} onClick={handleClear}>
               Clear All
             </Button>
@@ -398,9 +429,9 @@ const AdminAuctionPage = () => {
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
             Filters
-            {(keyword || dateRange) && (
+            {(keyword || dateRange || privateMode) && (
               <Badge
-                count={[keyword, dateRange].filter(Boolean).length}
+                count={[keyword, dateRange, privateMode].filter(Boolean).length}
                 style={{
                   backgroundColor: "#FED469",
                   color: "#191B24",
@@ -440,7 +471,7 @@ const AdminAuctionPage = () => {
               transition: "opacity 0.2s ease",
             }}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <div
                   style={{
@@ -487,6 +518,31 @@ const AdminAuctionPage = () => {
                   className="w-full"
                 />
               </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "rgba(255,255,255,0.45)",
+                    marginBottom: "6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Mode
+                </div>
+                <Select
+                  placeholder="Select Mode"
+                  value={privateMode || undefined}
+                  onChange={(value) => setPrivateMode(value || null)}
+                  allowClear
+                  style={{ width: "100%" }}
+                  options={[
+                    { label: "Public", value: "false" },
+                    { label: "Private", value: "true" },
+                  ]}
+                />
+              </div>
             </div>
             <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
               <Button
@@ -518,6 +574,7 @@ const AdminAuctionPage = () => {
             { label: "DRAFT", key: AuctionStatus.DRAFT },
             { label: "SCHEDULED", key: AuctionStatus.SCHEDULED },
             { label: "ENDED", key: AuctionStatus.ENDED },
+            { label: "ENDED NO SALE", key: AuctionStatus.ENDED_NO_SALE },
             { label: "CANCELLED", key: AuctionStatus.CANCELLED },
           ]}
         />
@@ -605,6 +662,13 @@ const AdminAuctionPage = () => {
           />
         </Modal>
       )}
+
+      {/* Share Auction Modal */}
+      <ShareAuctionModal
+        visible={shareModal.visible}
+        auction={shareModal.auction}
+        onCancel={() => setShareModal({ visible: false, auction: null })}
+      />
     </div>
   );
 };

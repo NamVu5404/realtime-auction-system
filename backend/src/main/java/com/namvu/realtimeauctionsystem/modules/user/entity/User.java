@@ -3,6 +3,7 @@ package com.namvu.realtimeauctionsystem.modules.user.entity;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
 import com.namvu.realtimeauctionsystem.common.entity.Auditable;
+import com.namvu.realtimeauctionsystem.modules.ekyc.entity.KycVerification;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -24,15 +25,16 @@ public class User extends Auditable {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 35)
     private String name;
 
+    @Column(length = 16)
     private String phone;
 
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    private String registerIp;
+    private String publicIp;
 
     private String location;
 
@@ -47,6 +49,11 @@ public class User extends Auditable {
     @Column(nullable = false, length = 20)
     private UserStatus status;
 
+    @OneToOne(mappedBy = "user")
+    private KycVerification kycVerification;
+
+    private boolean isFaceMatch = false;
+
     private Instant bannedUntil; // Ban chat
 
     public void banUser(int minutes) {
@@ -55,6 +62,10 @@ public class User extends Auditable {
 
     public boolean isBanned() {
         return bannedUntil != null && bannedUntil.isAfter(Instant.now());
+    }
+
+    public boolean isVerifiedIdentity() {
+        return kycVerification != null;
     }
 
     @PrePersist

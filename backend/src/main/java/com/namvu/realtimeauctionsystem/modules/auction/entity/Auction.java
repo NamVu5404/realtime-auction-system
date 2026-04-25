@@ -63,13 +63,16 @@ public class Auction extends Auditable {
     @Column(name = "end_time")
     private Instant endTime;
 
+    @Column(precision = 15, scale = 2)
+    private BigDecimal reservePrice;
+
     @Column(name = "anti_snipe_seconds")
     @Builder.Default
-    private Integer antiSnipeSeconds = 10; // X giây
+    private Integer antiSnipeSeconds = 0;
 
     @Column(name = "extension_seconds")
     @Builder.Default
-    private Integer extensionSeconds = 30; // Y giây
+    private Integer extensionSeconds = 0;
 
     @Column(name = "extension_count")
     @Builder.Default
@@ -77,6 +80,11 @@ public class Auction extends Auditable {
 
     @Column(name = "notified_ending_soon", nullable = false)
     private boolean notifiedEndingSoon = false;
+
+    private boolean privateMode = false;
+
+    @Column(unique = true)
+    private String token;
 
     @Version
     @Column(name = "version")

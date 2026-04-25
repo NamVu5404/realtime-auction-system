@@ -108,12 +108,13 @@ export const adminApi = {
     status?: AuctionStatus,
     startTime?: string,
     endTime?: string,
+    privateMode?: boolean,
   ): Promise<PageResponse<Auction>> => {
     try {
       const response = await axiosClient.get<
         ApiResponse<PageResponse<Auction>>
       >("/auctions/filter-seller", {
-        params: { page, size, keyword, status, startTime, endTime },
+        params: { page, size, keyword, status, startTime, endTime, privateMode },
       });
       return response.data.result!;
     } catch (error) {
@@ -128,12 +129,13 @@ export const adminApi = {
     status?: AuctionStatus,
     startTime?: string,
     endTime?: string,
+    privateMode?: boolean,
   ): Promise<PageResponse<Auction>> => {
     try {
       const response = await axiosClient.get<
         ApiResponse<PageResponse<Auction>>
       >("/auctions/filter-admin", {
-        params: { page, size, keyword, status, startTime, endTime },
+        params: { page, size, keyword, status, startTime, endTime, privateMode },
       });
       return response.data.result!;
     } catch (error) {

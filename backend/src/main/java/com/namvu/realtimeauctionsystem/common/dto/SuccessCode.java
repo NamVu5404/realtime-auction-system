@@ -33,6 +33,7 @@ public enum SuccessCode {
     AUCTION_CANCELLED(1302, "Auction cancelled successfully", HttpStatus.OK),
     DRAFT_AUCTION_UPDATED(1303, "Draft auction updated", HttpStatus.OK),
     SCHEDULED_AUCTION_UPDATED(1304, "Scheduled auction updated", HttpStatus.OK),
+    AUCTION_RELIST(1304, "Auction relisted successfully", HttpStatus.OK),
 
     // Bid (14xx)
     BID_PLACED(1400, "Bid placed successfully", HttpStatus.CREATED),
@@ -62,6 +63,14 @@ public enum SuccessCode {
     HIDDEN_MESSAGE(1900, "Hidden this message successfully", HttpStatus.OK),
     BANNED_USER(1901, "User has been banned from chat successfully", HttpStatus.OK),
     UNBANNED_USER(1902, "User has been unbanned from chat successfully", HttpStatus.OK),
+
+    // Kyc (20xx)
+    IDENTITY_VERIFIED(2000, "Identity verified successfully", HttpStatus.OK),
+    FACE_MATCH_SUCCESS(2001, "Face match successfully", HttpStatus.OK),
+
+    // Wishlist (21xx)
+    WISHLIST_ADDED(2100, "Auction added to wishlist", HttpStatus.CREATED),
+    WISHLIST_REMOVED(2101, "Auction removed from wishlist", HttpStatus.OK),
     ;
 
     private final int code;

@@ -36,6 +36,9 @@ public class MailServiceImpl implements MailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    @Value("${spring.mail.display-name}")
+    private String displayName;
+
     @Async(MAIL_EXECUTOR)
     @Override
     public void sendWelcomeEmail(String toEmail, String fullName) {
@@ -93,7 +96,7 @@ public class MailServiceImpl implements MailService {
 
     @Async(MAIL_EXECUTOR)
     @Override
-    public void sendAuctionWinnerEmail(String toEmail, String fullName, String auctionTitle, BigDecimal winningBid, Long auctionId) {
+    public void sendAuctionWinnerEmail(String toEmail, String fullName, String auctionTitle, BigDecimal winningBid, Long auctionId, String token) {
         sendEmail(EmailContext.builder()
                 .to(toEmail)
                 .subject("Congratulations! You've Won the Auction: " + auctionTitle)
@@ -102,7 +105,8 @@ public class MailServiceImpl implements MailService {
                         FULL_NAME, fullName,
                         AUCTION_TITLE, auctionTitle,
                         WINNING_BID, winningBid,
-                        AUCTION_ID, auctionId
+                        AUCTION_ID, auctionId,
+                        "token", token
                 ))
                 .build());
     }
@@ -120,7 +124,7 @@ public class MailServiceImpl implements MailService {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom(fromEmail);
+            helper.setFrom(fromEmail, displayName);
             helper.setTo(emailContext.getTo());
             helper.setSubject(emailContext.getSubject());
             helper.setText(htmlContent, true);

@@ -12,6 +12,7 @@ import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionServi
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
 import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
 import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
+import com.namvu.realtimeauctionsystem.modules.wishlist.service.WishListService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -39,6 +40,7 @@ public class AuctionScheduler {
     private final BidService bidService;
     private final NotificationService notificationService;
     private final MailService mailService;
+    private final WishListService wishListService;
 
     /**
      * Chạy mỗi 1 giây, tìm auctions cần start
@@ -89,10 +91,22 @@ public class AuctionScheduler {
                         .details(Map.of("description", "Auction started"))
                         .build());
 
+                // Notify wishlist users
+                notifyWishlistUsersOnStart(auction);
+
             } catch (Exception e) {
                 log.error("Failed to start auction {}", auction.getId(), e);
             }
         }
+    }
+
+    private void notifyWishlistUsersOnStart(Auction auction) {
+        Set<Long> wishlistUserIds = wishListService.getUserIdsByAuctionId(auction.getId());
+        if (wishlistUserIds.isEmpty()) return;
+
+        notificationService.processWishlistAuctionStartNotifications(
+                auction.getId(), auction.getTitle(), auction.getStartPrice(), wishlistUserIds
+        );
     }
 
     /**
@@ -116,6 +130,29 @@ public class AuctionScheduler {
 
         for (Auction auction : auctionsToEnd) {
             try {
+                if (auction.getReservePrice() != null && auction.getCurrentPrice().compareTo(auction.getReservePrice()) < 0) {
+                    redisAuctionService.deleteAuction(auction.getId());
+
+                    auction.setStatus(AuctionStatus.ENDED_NO_SALE);
+                    auctionRepository.save(auction);
+
+                    // Ghi audit
+                    auctionAuditRepository.save(AuctionAudit.builder()
+                            .auction(auction)
+                            .actionType(AuctionActionType.ENDED_NO_SALE)
+                            .details(Map.of("Description", "Auction ended no sale"))
+                            .build());
+
+                    // AUCTION_ENDED_NO_SALE_BIDDER
+                    Set<Long> bidderIds = bidService.getParticipantIds(auction.getId());
+                    notificationService.processEndedNoSaleBidderNotifications(auction.getId(), auction.getTitle(), bidderIds);
+
+                    // AUCTION_ENDED_NO_SALE_SELLER
+                    notificationService.processEndedNoSaleSellerNotifications(auction.getId(), auction.getTitle(), auction.getSeller().getId());
+
+                    continue;
+                }
+
                 // Update status to ENDED
                 auction.setStatus(AuctionStatus.ENDED);
                 auction = auctionRepository.save(auction);
@@ -145,7 +182,8 @@ public class AuctionScheduler {
                             auction.getHighestBidder().getName(),
                             auction.getTitle(),
                             auction.getCurrentPrice(),
-                            auction.getId()
+                            auction.getId(),
+                            auction.getToken()
                     );
 
                     // AUCTION_ENDED_WINNER

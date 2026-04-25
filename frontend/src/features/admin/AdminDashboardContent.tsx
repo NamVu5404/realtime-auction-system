@@ -117,6 +117,7 @@ const AdminDashboardContent: React.FC = () => {
     { name: "Live", value: overview.liveCount },
     { name: "Scheduled", value: overview.scheduledCount },
     { name: "Ended", value: overview.endedCount },
+    { name: "Ended No Sale", value: overview.endedNoSaleCount },
     { name: "Cancelled", value: overview.cancelledCount },
     { name: "Draft", value: overview.draftCount },
   ].filter((d) => d.value > 0);
@@ -332,10 +333,17 @@ const AdminDashboardContent: React.FC = () => {
                   size="middle"
                 >
                   <Card size="small">
-                    <Statistic
-                      title="Total Auctions"
-                      value={overview.totalAuctions}
-                    />
+                    <div style={{ display: "flex", gap: 32 }}>
+                      <Statistic
+                        title="Total Auctions"
+                        value={overview.totalAuctions}
+                      />
+                      <Statistic title="Public" value={overview.publicCount} />
+                      <Statistic
+                        title="Private"
+                        value={overview.privateCount}
+                      />
+                    </div>
                   </Card>
                   <Card size="small">
                     <Statistic

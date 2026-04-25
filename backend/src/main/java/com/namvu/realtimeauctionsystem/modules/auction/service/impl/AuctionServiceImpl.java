@@ -20,12 +20,16 @@ import com.namvu.realtimeauctionsystem.modules.bid.dto.PlaceBidResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidQueryService;
 import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
+import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
+import com.namvu.realtimeauctionsystem.modules.wishlist.service.WishListService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -38,6 +42,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.AUCTION_TOPIC_PREFIX;
@@ -54,6 +60,12 @@ public class AuctionServiceImpl implements AuctionService {
     private final SimpMessagingTemplate messagingTemplate;
     private final AuctionImageService auctionImageService;
     private final BidQueryService bidQueryService;
+    private final NotificationService notificationService;
+
+    // @Lazy breaks the circular dependency: AuctionService <-> WishListService
+    @Lazy
+    @Autowired
+    private WishListService wishListService;
 
     @Override
     @Transactional(readOnly = true)
@@ -68,11 +80,11 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     @Transactional(readOnly = true)
-    public AuctionResponse getAuctionDetail(Long id) {
+    public AuctionResponse getAuctionDetail(Long id, String token) {
         Auction auction = auctionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
 
-        canViewAuction(auction);
+        canViewAuction(auction, token);
 
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         response.setImages(auctionImageService.getAuctionImages(List.of(id)));
@@ -91,6 +103,7 @@ public class AuctionServiceImpl implements AuctionService {
         Long sellerId = SecurityUtils.getCurrentUserId();
         auction.setSeller(userService.getUserReference(sellerId));
 
+        handlePrivateAuction(auction);
         auction = auctionRepository.save(auction);
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         populateImages(response);
@@ -106,8 +119,12 @@ public class AuctionServiceImpl implements AuctionService {
         Instant startTime = request.getStartTime();
         Instant endTime = request.getEndTime();
 
-        if (startTime.isBefore(now.plusSeconds(30)) || endTime.isBefore(startTime)) {
+        if (startTime.isBefore(now.plusMillis(1)) || endTime.isBefore(startTime)) {
             throw new AppException(ErrorCode.START_END_TIME_INVALID);
+        }
+
+        if (request.getReservePrice() != null && request.getReservePrice().compareTo(request.getStartPrice()) < 0) {
+            throw new AppException(ErrorCode.RESERVE_PRICE_INVALID);
         }
 
         Auction auction;
@@ -135,6 +152,7 @@ public class AuctionServiceImpl implements AuctionService {
             auction.setSeller(userService.getUserReference(sellerId));
         }
 
+        handlePrivateAuction(auction);
         auction = auctionRepository.save(auction);
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         populateImages(response);
@@ -155,6 +173,7 @@ public class AuctionServiceImpl implements AuctionService {
         checkAuctionOwnership(auction);
 
         auctionMapper.updateEntity(request, auction);
+        handlePrivateAuction(auction);
         auction = auctionRepository.save(auction);
 
         AuctionResponse response = auctionMapper.mapToResponse(auction);
@@ -182,14 +201,38 @@ public class AuctionServiceImpl implements AuctionService {
             throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
         }
 
+        if (request.getReservePrice() != null && request.getReservePrice().compareTo(auction.getStartPrice()) < 0) {
+            throw new AppException(ErrorCode.RESERVE_PRICE_INVALID);
+        }
+
         checkAuctionOwnership(auction);
 
         auctionMapper.updateEntity(request, auction);
+        handlePrivateAuction(auction);
         auction = auctionRepository.save(auction);
 
         AuctionResponse response = auctionMapper.mapToResponse(auction);
         populateImages(response);
         return response;
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('SELLER')")
+    public AuctionResponse relistAuction(Long auctionId) {
+        Auction auction = getAuctionDetailById(auctionId);
+        checkAuctionOwnership(auction);
+
+        if (auction.getStatus() != AuctionStatus.ENDED_NO_SALE) {
+            throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
+        }
+
+        Auction newAuction = auctionMapper.cloneToNewDraft(auction);
+        newAuction.setStatus(AuctionStatus.DRAFT);
+        newAuction.setExtensionCount(0);
+        newAuction.setNotifiedEndingSoon(false);
+        newAuction = auctionRepository.save(newAuction);
+
+        return auctionMapper.mapToResponse(newAuction);
     }
 
     @Override
@@ -215,12 +258,23 @@ public class AuctionServiceImpl implements AuctionService {
         auction.setStatus(AuctionStatus.CANCELLED);
         auction = auctionRepository.save(auction);
 
+        notifyWishlistUsersOnCancelled(auction);
+
         return CancelAuctionResponse.builder()
                 .auctionId(auction.getId())
                 .by(SecurityUtils.getCurrentUserEmail())
                 .timestamp(Instant.now())
                 .reason(request.getReason())
                 .build();
+    }
+
+    private void notifyWishlistUsersOnCancelled(Auction auction) {
+        Set<Long> wishlistUserIds = wishListService.getUserIdsByAuctionId(auction.getId());
+        if (wishlistUserIds.isEmpty()) return;
+
+        notificationService.processWishlistAuctionCancelledNotifications(
+                auction.getId(), auction.getTitle(), wishlistUserIds
+        );
     }
 
     @Override
@@ -260,17 +314,17 @@ public class AuctionServiceImpl implements AuctionService {
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('SELLER')")
     public PageResponse<AuctionResponse> filterSellerAuction(String keyword, Instant startTime, Instant endTime,
-                                                             AuctionStatus status, Pageable pageable) {
+                                                             AuctionStatus status, Boolean privateMode, Pageable pageable) {
         Long sellerId = SecurityUtils.getCurrentUserId();
-        return filterAuction(sellerId, keyword, startTime, endTime, status, pageable);
+        return filterAuction(sellerId, keyword, startTime, endTime, status, privateMode, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('ADMIN')")
     public PageResponse<AuctionResponse> filterAdminAuction(String keyword, Instant startTime, Instant endTime,
-                                                            AuctionStatus status, Pageable pageable) {
-        return filterAuction(null, keyword, startTime, endTime, status, pageable);
+                                                            AuctionStatus status, Boolean privateMode, Pageable pageable) {
+        return filterAuction(null, keyword, startTime, endTime, status, privateMode, pageable);
     }
 
     @Override
@@ -370,6 +424,7 @@ public class AuctionServiceImpl implements AuctionService {
                 .totalRevenue(aggregate.getTotalRevenue())
                 .totalAuctionsCreated(aggregate.getTotalAuctionsCreated())
                 .totalAuctionsSold(aggregate.getTotalAuctionsSold())
+                .totalAuctionsEnded(aggregate.getEndedAuctions())
                 .activeAuctions(aggregate.getActiveAuctions())
                 .totalBidsReceived(totalBidsReceived)
                 .highestSoldPrice(aggregate.getHighestSoldPrice())
@@ -394,6 +449,17 @@ public class AuctionServiceImpl implements AuctionService {
     @Transactional(readOnly = true)
     public List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat) {
         return auctionRepository.getAdminRevenueChartData(startDate, timeFormat);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'SELLER')")
+    public String getAuctionToken(Long id) {
+        Auction auction = getAuctionDetailById(id);
+        if (!SecurityUtils.isAdmin()) {
+            checkAuctionOwnership(auction);
+        }
+        return auction.getToken();
     }
 
     private void populateImages(List<AuctionResponse> responses) {
@@ -438,10 +504,10 @@ public class AuctionServiceImpl implements AuctionService {
     }
 
     private PageResponse<AuctionResponse> filterAuction(Long sellerId, String keyword, Instant startTime, Instant endTime,
-                                                        AuctionStatus status, Pageable pageable) {
+                                                        AuctionStatus status, Boolean privateMode, Pageable pageable) {
         String statusStr = (status == null) ? AuctionStatus.ALL.name() : status.name();
         Page<Auction> auctionPage = auctionRepository
-                .filterAuctions(keyword, startTime, endTime, status, statusStr, sellerId, pageable);
+                .filterAuctions(keyword, startTime, endTime, status, statusStr, sellerId, privateMode, pageable);
         return getResponse(pageable, auctionPage);
     }
 
@@ -461,8 +527,9 @@ public class AuctionServiceImpl implements AuctionService {
                 .build();
     }
 
-    private void canViewAuction(Auction auction) {
-        if (auction.getStatus() != AuctionStatus.DRAFT && auction.getStatus() != AuctionStatus.CANCELLED) {
+    private void canViewAuction(Auction auction, String token) {
+        if (auction.getStatus() != AuctionStatus.DRAFT && auction.getStatus() != AuctionStatus.CANCELLED
+                && (!auction.isPrivateMode() || auction.getToken().equals(token))) {
             return;
         }
 
@@ -472,6 +539,14 @@ public class AuctionServiceImpl implements AuctionService {
 
         if (!isSeller && !isAdmin) {
             throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
+    }
+
+    private void handlePrivateAuction(Auction auction) {
+        if (auction.isPrivateMode()) {
+            auction.setToken(UUID.randomUUID().toString());
+        } else {
+            auction.setToken(null);
         }
     }
 }

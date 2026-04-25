@@ -2,10 +2,9 @@ package com.namvu.realtimeauctionsystem.modules.user.controller;
 
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.Role;
 import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStatus;
-import com.namvu.realtimeauctionsystem.modules.user.dto.*;
-
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
+import com.namvu.realtimeauctionsystem.modules.user.dto.*;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserAuditService;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import jakarta.validation.Valid;
@@ -36,6 +35,11 @@ public class UserController {
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
         return ApiResponse.ok(userService.getUsers(keyword, role, status, pageable));
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<UserResponse> getMe() {
+        return ApiResponse.ok(userService.getMe());
     }
 
     @PatchMapping("/{userId}/block")

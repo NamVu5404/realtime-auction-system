@@ -20,7 +20,7 @@ public enum NotificationConstant {
             "Sản phẩm '%s' vừa bị vượt giá. Giá cao nhất hiện tại: %s. Đặt lại ngay để không bỏ lỡ!",
             AUCTION_DETAIL_URL
     ),
-    AUCTION_START( // Pending
+    AUCTION_START(
             "Phiên đấu giá đã bắt đầu",
             "Phiên đấu giá '%s' bạn quan tâm vừa chính thức bắt đầu. Giá khởi điểm: %s.",
             AUCTION_DETAIL_URL
@@ -40,10 +40,15 @@ public enum NotificationConstant {
             "Phiên đấu giá '%s' đã kết thúc. Rất tiếc, bạn không phải người chiến thắng lần này.",
             AUCTION_DETAIL_URL
     ),
-    AUCTION_CANCELLED( // Pending
+    AUCTION_ENDED_NO_SALE_BIDDER(
+            "Phiên đấu giá đã kết thúc!",
+            "Phiên đấu giá '%s' đã kết thúc do không đạt giá dự trữ. Rất tiếc, không có người chiến thắng lần này.",
+            AUCTION_DETAIL_URL
+    ),
+    AUCTION_CANCELLED(
             "Phiên đấu giá đã bị hủy",
             "Phiên đấu giá '%s' đã bị hủy bởi người tổ chức. Tiền đặt cọc (nếu có) sẽ được hoàn trả.",
-            AUCTION_DETAIL_URL
+            HOME_URL
     ),
 
     // ==================== SELLER ====================
@@ -61,6 +66,11 @@ public enum NotificationConstant {
     AUCTION_ENDED_NO_BIDS(
             "Phiên đấu giá kết thúc không có lượt đặt giá",
             "Phiên đấu giá '%s' đã kết thúc mà không có lượt đặt giá nào.",
+            SELLER_AUCTION_DETAIL_URL
+    ),
+    AUCTION_ENDED_NO_SALE_SELLER(
+            "Phiên đấu giá đã kết thúc",
+            "Phiên đấu giá '%s' đã kết thúc nhưng không đạt giá dự trữ. Bạn có thể đăng lại phiên này.",
             SELLER_AUCTION_DETAIL_URL
     ),
     AUCTION_APPROVED( // Pending + mail
@@ -149,6 +159,7 @@ public enum NotificationConstant {
             /* This utility class should not be instantiated */
         }
 
+        public static final String HOME_URL = "/";
         public static final String AUCTION_DETAIL_URL = "/auction/%d";
         public static final String SELLER_AUCTION_DETAIL_URL = "/seller/auctions/%d";
         public static final String SELLER_DASHBOARD_URL = "/seller";

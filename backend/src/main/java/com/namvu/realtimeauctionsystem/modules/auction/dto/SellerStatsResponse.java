@@ -16,6 +16,7 @@ public class SellerStatsResponse {
     private BigDecimal totalRevenue;
     private Long totalAuctionsCreated;
     private Long totalAuctionsSold;
+    private Long totalAuctionsEnded;
     private Long activeAuctions;
     private Long totalBidsReceived;
     private BigDecimal highestSoldPrice;

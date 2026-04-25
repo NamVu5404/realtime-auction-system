@@ -20,7 +20,7 @@ import {
 } from "antd";
 import confetti from "canvas-confetti";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { extractErrorMessage } from "../../api/apiUtils";
 import { auctionApi } from "../../api/auctionApi";
 import {
@@ -41,6 +41,8 @@ import { formatAuctionTime, getTimeRemaining } from "../../utils/dateUtils";
 import { formatCurrency } from "../../utils/format";
 import { getAvatarUrl } from "../../utils/imageUtils";
 import FloatingChat from "../../features/auction/chat/FloatingChat";
+import WishlistButton from "../../features/auction/WishlistButton";
+import { useWishlistBatch } from "../../hooks/useWishlist";
 
 // Tách phần bidding form ra component riêng với state nội bộ
 const BiddingSection = memo(
@@ -268,6 +270,7 @@ BiddingSection.displayName = "BiddingSection";
  */
 export const AuctionDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
@@ -282,6 +285,8 @@ export const AuctionDetailPage = () => {
 
   const auctionId = id ? parseInt(id, 10) : null;
   const hasCelebratedRef = useRef(false);
+
+  const { wishlistedSet } = useWishlistBatch(auctionId ? [auctionId] : []);
 
   // ✅ Premium Celebration Effect (Confetti + Notification) with Persistence
   const triggerCelebration = useCallback(
@@ -341,6 +346,17 @@ export const AuctionDetailPage = () => {
     },
     [user?.id, auction?.id],
   );
+
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token && auctionId) {
+      const storageKey = `auction_token_${auctionId}`;
+      sessionStorage.setItem(storageKey, token);
+      searchParams.delete("token");
+      setSearchParams(searchParams, { replace: true });
+      console.log(`[PrivateMode] Token saved and removed from URL`);
+    }
+  }, [auctionId, searchParams, setSearchParams]);
 
   // ✅ Persistent Celebration Switch:
   // Fires whenever an auction moves to ENDED status and the current user is the winner.
@@ -514,7 +530,7 @@ export const AuctionDetailPage = () => {
         setAuction(data);
       } catch (error: any) {
         message.error(extractErrorMessage(error));
-        navigate(-1);
+        navigate("/");
       } finally {
         setLoading(false);
       }
@@ -880,19 +896,43 @@ export const AuctionDetailPage = () => {
                 )}
               </div>
 
-              {/* Title */}
-              <h1
+              {/* Title & Actions */}
+              <div
                 style={{
-                  fontSize: "clamp(1.4rem, 3vw, 2rem)",
-                  fontWeight: 800,
-                  color: "#fff",
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.2,
-                  margin: 0,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: "16px",
                 }}
               >
-                {auction.title}
-              </h1>
+                <h1
+                  style={{
+                    fontSize: "clamp(1.4rem, 3vw, 2rem)",
+                    fontWeight: 800,
+                    color: "#fff",
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.2,
+                    margin: 0,
+                    flex: 1,
+                  }}
+                >
+                  {auction.title}
+                </h1>
+
+                <WishlistButton
+                  auctionId={auction.id}
+                  isWishListed={wishlistedSet.has(auction.id)}
+                  size="large"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "12px",
+                    width: "44px",
+                    height: "44px",
+                    flexShrink: 0,
+                  }}
+                />
+              </div>
 
               {/* Image Carousel */}
               <AuctionImageCarousel images={auction.images} />
@@ -1328,53 +1368,57 @@ export const AuctionDetailPage = () => {
                         <div className="price-label">
                           {auction.status === AuctionStatus.ENDED
                             ? "Winner 🏆"
-                            : "Highest Bidder"}
+                            : auction.status !== AuctionStatus.ENDED_NO_SALE
+                              ? "Highest Bidder"
+                              : "No Sale"}
                         </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                          }}
-                        >
-                          {auction.highestBidder?.avatarUrl && (
-                            <Image
-                              src={getAvatarUrl(
-                                auction.highestBidder.avatarUrl,
-                              )}
-                              alt={auction.highestBidder.name}
-                              style={{
-                                width: "36px",
-                                height: "36px",
-                                borderRadius: "50%",
-                                objectFit: "cover",
-                              }}
-                              preview={false}
-                            />
-                          )}
-                          <div>
-                            <div
-                              style={{
-                                fontWeight: 600,
-                                color:
-                                  auction.status === AuctionStatus.LIVE
-                                    ? "#FED469"
-                                    : "#fff",
-                                fontSize: "14px",
-                              }}
-                            >
-                              {auction.highestBidder?.name}
-                            </div>
-                            <div
-                              style={{
-                                fontSize: "12px",
-                                color: "rgba(255,255,255,0.4)",
-                              }}
-                            >
-                              {auction.highestBidder?.email}
+                        {auction.status !== AuctionStatus.ENDED_NO_SALE && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                            }}
+                          >
+                            {auction.highestBidder?.avatarUrl && (
+                              <Image
+                                src={getAvatarUrl(
+                                  auction.highestBidder.avatarUrl,
+                                )}
+                                alt={auction.highestBidder.name}
+                                style={{
+                                  width: "36px",
+                                  height: "36px",
+                                  borderRadius: "50%",
+                                  objectFit: "cover",
+                                }}
+                                preview={false}
+                              />
+                            )}
+                            <div>
+                              <div
+                                style={{
+                                  fontWeight: 600,
+                                  color:
+                                    auction.status === AuctionStatus.LIVE
+                                      ? "#FED469"
+                                      : "#fff",
+                                  fontSize: "14px",
+                                }}
+                              >
+                                {auction.highestBidder?.name}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: "12px",
+                                  color: "rgba(255,255,255,0.4)",
+                                }}
+                              >
+                                {auction.highestBidder?.email}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </Col>
                   )}

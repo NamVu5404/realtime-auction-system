@@ -161,13 +161,13 @@ const ProfilePage = () => {
             name="name"
             rules={[
               { required: true, message: "Please enter your name" },
-              { max: 255, message: "Name cannot exceed 255 characters" },
+              { max: 35, message: "Name cannot exceed 35 characters" },
             ]}
           >
             <Input
               placeholder="Enter your full name"
               size="large"
-              maxLength={255}
+              maxLength={35}
             />
           </Form.Item>
 

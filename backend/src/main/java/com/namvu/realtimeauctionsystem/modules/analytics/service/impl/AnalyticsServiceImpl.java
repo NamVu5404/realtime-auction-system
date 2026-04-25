@@ -61,12 +61,12 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         AuctionOverviewProjection data = auctionService.getAdminAuctionOverviewData();
         long totalBids = bidQueryService.countAllBids();
         
-        double successRate = data.getEndedCount() > 0 
-                ? (data.getEndedWithHighestBidder().doubleValue() / data.getEndedCount()) * 100
+        double successRate = (data.getEndedCount() + data.getEndedNoSaleCount()) > 0
+                ? (data.getEndedWithHighestBidder().doubleValue() / (data.getEndedCount() + data.getEndedNoSaleCount())) * 100
                 : 0.0;
                 
-        double avgBidsPerAuction = data.getLiveCount() + data.getEndedCount() > 0
-                ? (double) totalBids / (data.getLiveCount() + data.getEndedCount())
+        double avgBidsPerAuction = data.getLiveCount() + data.getEndedCount() + data.getEndedNoSaleCount() > 0
+                ? (double) totalBids / (data.getLiveCount() + data.getEndedCount() + data.getEndedNoSaleCount())
                 : 0.0;
 
         return AuctionOverviewResponse.builder()
@@ -74,8 +74,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .liveCount(data.getLiveCount())
                 .scheduledCount(data.getScheduledCount())
                 .endedCount(data.getEndedCount())
+                .endedNoSaleCount(data.getEndedNoSaleCount())
                 .cancelledCount(data.getCancelledCount())
                 .draftCount(data.getDraftCount())
+                .publicCount(data.getPublicCount())
+                .privateCount(data.getPrivateCount())
                 .successRate(successRate)
                 .totalBidsAllTime(totalBids)
                 .avgBidsPerAuction(avgBidsPerAuction)

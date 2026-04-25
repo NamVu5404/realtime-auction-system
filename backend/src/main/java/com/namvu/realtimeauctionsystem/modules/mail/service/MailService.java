@@ -13,5 +13,5 @@ public interface MailService {
 
     void sendUserBlockEmail(String toEmail, String fullName, String reason);
 
-    void sendAuctionWinnerEmail(String toEmail, String fullName, String auctionTitle, BigDecimal winningBid, Long auctionId);
+    void sendAuctionWinnerEmail(String toEmail, String fullName, String auctionTitle, BigDecimal winningBid, Long auctionId, String token);
 }

@@ -71,6 +71,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public UserResponse getMe() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return userMapper.mapToResponse(userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)));
+    }
+
+    @Override
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public BlockUserResponse blockUser(Long userId, BlockUserRequest request) {
@@ -220,6 +228,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public void banUserFromChat(Long userId, int minutes) {
         User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
@@ -230,16 +239,21 @@ public class UserServiceImpl implements UserService {
         }
 
         user.banUser(minutes);
-        userRepository.save(user);
+        user = userRepository.save(user);
+
+        userAuditService.banChatAudit(user, user.getBannedUntil());
     }
 
     @Override
+    @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public void unbanUserFromChat(Long userId) {
         User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         user.setBannedUntil(null);
         userRepository.save(user);
+
+        userAuditService.unbanChatAudit(user);
     }
 
     @Override

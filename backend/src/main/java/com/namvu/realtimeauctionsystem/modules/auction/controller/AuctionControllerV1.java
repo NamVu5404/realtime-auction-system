@@ -45,8 +45,11 @@ public class AuctionControllerV1 {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<AuctionResponse> getAuctionDetail(@PathVariable Long id) {
-        return ApiResponse.ok(auctionService.getAuctionDetail(id));
+    public ApiResponse<AuctionResponse> getAuctionDetail(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-Auction-Token", required = false) String token
+    ) {
+        return ApiResponse.ok(auctionService.getAuctionDetail(id, token));
     }
 
     @PostMapping("/draft")
@@ -73,6 +76,11 @@ public class AuctionControllerV1 {
         return ApiResponse.of(SCHEDULED_AUCTION_UPDATED, auctionService.updateScheduledAuction(id, request));
     }
 
+    @PostMapping("/{auctionId}/relist")
+    public ApiResponse<AuctionResponse> relistAuction(@PathVariable Long auctionId) {
+        return ApiResponse.of(AUCTION_RELIST, auctionService.relistAuction(auctionId));
+    }
+
     @PatchMapping("/{id}/cancel")
     public ApiResponse<CancelAuctionResponse> cancelAuction(@PathVariable Long id,
                                                             @RequestBody @Valid CancelAuctionRequest request) {
@@ -95,11 +103,12 @@ public class AuctionControllerV1 {
             @RequestParam(required = false) Instant startTime,
             @RequestParam(required = false) Instant endTime,
             @RequestParam(required = false) AuctionStatus status,
+            @RequestParam(required = false) Boolean privateMode,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        return ApiResponse.ok(auctionService.filterSellerAuction(keyword, startTime, endTime, status, pageable));
+        return ApiResponse.ok(auctionService.filterSellerAuction(keyword, startTime, endTime, status, privateMode, pageable));
     }
 
     @GetMapping("/filter-admin")
@@ -108,11 +117,12 @@ public class AuctionControllerV1 {
             @RequestParam(required = false) Instant startTime,
             @RequestParam(required = false) Instant endTime,
             @RequestParam(required = false) AuctionStatus status,
+            @RequestParam(required = false) Boolean privateMode,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
-        return ApiResponse.ok(auctionService.filterAdminAuction(keyword, startTime, endTime, status, pageable));
+        return ApiResponse.ok(auctionService.filterAdminAuction(keyword, startTime, endTime, status, privateMode, pageable));
     }
 
     @GetMapping("/{id}/history")
@@ -170,5 +180,10 @@ public class AuctionControllerV1 {
             @RequestParam(value = "period", defaultValue = "MONTH") String period
     ) {
         return ApiResponse.ok(auctionService.getSellerStats(sellerId, period));
+    }
+
+    @GetMapping("/{id}/token")
+    public ApiResponse<String> getAuctionToken(@PathVariable Long id) {
+        return ApiResponse.ok(auctionService.getAuctionToken(id));
     }
 }

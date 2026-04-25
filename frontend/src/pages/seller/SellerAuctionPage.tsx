@@ -6,6 +6,7 @@ import {
   HistoryOutlined,
   MoreOutlined,
   PlusOutlined,
+  ReloadOutlined,
   SearchOutlined,
   StopOutlined,
 } from "@ant-design/icons";
@@ -19,17 +20,17 @@ import {
   Image,
   Input,
   Modal,
-  Space,
+  Select,
   Table,
   Tabs,
   Tag,
   message,
 } from "antd";
 import dayjs from "dayjs";
-import { useEffect, useState, useMemo } from "react";
-import { useSearchParams, useParams, useNavigate } from "react-router-dom";
-import { auctionApi } from "../../api/auctionApi";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import adminApi from "../../api/adminApi";
+import { auctionApi } from "../../api/auctionApi";
 import {
   Auction,
   AuctionStatus,
@@ -41,9 +42,11 @@ import AuctionForm from "../../features/auction/AuctionForm";
 import { useDebounce } from "../../hooks/useDebounce";
 import { convertUTCToLocal } from "../../utils/dateUtils";
 import formatCurrency, { formatDateTime } from "../../utils/format";
+import { DEFAULT_AUCTION_IMAGE, getImageUrl } from "../../utils/imageUtils";
 import { getStatusColor } from "../../utils/statusUtils";
-import { getImageUrl, DEFAULT_AUCTION_IMAGE } from "../../utils/imageUtils";
 import AuctionDetailDrawer from "../admin/drawers/AuctionDetailDrawer";
+import ShareAuctionModal from "../../features/auction/ShareAuctionModal";
+import { ShareAltOutlined } from "@ant-design/icons";
 import AuctionAuditDrawer from "../admin/drawers/AuctionAuditDrawer";
 
 const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
@@ -74,6 +77,14 @@ const SellerAuctionPage = () => {
     newParams.set("page", "1");
     setSearchParams(newParams);
   };
+  const privateMode = searchParams.get("privateMode");
+  const setPrivateMode = (mode: string | null | undefined) => {
+    const newParams = new URLSearchParams(searchParams);
+    if (mode) newParams.set("privateMode", mode);
+    else newParams.delete("privateMode");
+    newParams.set("page", "1");
+    setSearchParams(newParams);
+  };
   const [dateRange, setDateRange] = useState<any>(null);
   const [detailDrawer, setDetailDrawer] = useState<{
     visible: boolean;
@@ -95,6 +106,14 @@ const SellerAuctionPage = () => {
     auctionId?: number;
     auctionTitle?: string;
   }>({ visible: false });
+  const [relistModal, setRelistModal] = useState<{
+    visible: boolean;
+    auctionId?: number;
+  }>({ visible: false });
+  const [shareModal, setShareModal] = useState<{
+    visible: boolean;
+    auction: Auction | null;
+  }>({ visible: false, auction: null });
   const [liveAuctions, setLiveAuctions] = useState<Set<number>>(new Set());
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
@@ -133,7 +152,7 @@ const SellerAuctionPage = () => {
 
   // Manual trigger for search - initial query with LIVE status
   const { data, isLoading, refetch } = useQuery<PageResponse<Auction>>({
-    queryKey: ["seller-auctions", page, debouncedKeyword, status, dateRange],
+    queryKey: ["seller-auctions", page, debouncedKeyword, status, dateRange, privateMode],
     queryFn: () =>
       adminApi.filterSellerAuctions(
         page,
@@ -142,6 +161,7 @@ const SellerAuctionPage = () => {
         status,
         dateRange?.[0]?.toISOString(),
         dateRange?.[1]?.toISOString(),
+        privateMode ? privateMode === "true" : undefined,
       ),
     enabled: true,
   });
@@ -225,6 +245,8 @@ const SellerAuctionPage = () => {
 
   const handleClear = () => {
     setDateRange(null);
+    setKeyword("");
+    setPrivateMode(null);
     const newParams = new URLSearchParams();
     newParams.set("page", "1");
     newParams.set("status", AuctionStatus.LIVE);
@@ -262,6 +284,22 @@ const SellerAuctionPage = () => {
       auctionId: auction.id,
       auctionTitle: auction.title,
     });
+  };
+  const relistMutation = useMutation({
+    mutationFn: auctionApi.relistAuction,
+    onSuccess: (data) => {
+      message.success(data.message);
+      queryClient.invalidateQueries({ queryKey: ["seller-auctions"] });
+      setRelistModal({ visible: false });
+      setStatus(AuctionStatus.DRAFT);
+      navigate(`/seller/auctions?status=${AuctionStatus.DRAFT}`);
+      refetch();
+    },
+    onError: (error: any) => message.error(error.message),
+  });
+
+  const handleRelist = (auctionId: number) => {
+    setRelistModal({ visible: true, auctionId });
   };
 
   const columns = [
@@ -348,6 +386,41 @@ const SellerAuctionPage = () => {
             ),
         });
 
+        // Show Relist for ENDED_NO_SALE status
+        if (record.status === AuctionStatus.ENDED_NO_SALE) {
+          menuItems.push({
+            key: "relist",
+            icon: <ReloadOutlined />,
+            label: "Relist",
+            onClick: () => handleRelist(record.id),
+          });
+        }
+
+        // Show Edit only for editable statuses
+        if (canEdit) {
+          menuItems.push({
+            key: "edit",
+            icon: <EditOutlined />,
+            label: "Edit",
+            onClick: () => {
+              setEditModal({ visible: true, auction: record });
+            },
+          });
+        }
+
+        // Show Share for SCHEDULED or LIVE status
+        if (
+          record.status === AuctionStatus.SCHEDULED ||
+          record.status === AuctionStatus.LIVE
+        ) {
+          menuItems.push({
+            key: "share",
+            icon: <ShareAltOutlined />,
+            label: "Share",
+            onClick: () => setShareModal({ visible: true, auction: record }),
+          });
+        }
+
         // Show Audit Logs
         menuItems.push({
           key: "audit-logs",
@@ -363,18 +436,6 @@ const SellerAuctionPage = () => {
           },
         });
 
-        // Show Edit only for editable statuses
-        if (canEdit) {
-          menuItems.push({
-            key: "edit",
-            icon: <EditOutlined />,
-            label: "Edit",
-            onClick: () => {
-              setEditModal({ visible: true, auction: record });
-            },
-          });
-        }
-
         // Show Cancel only for cancellable statuses
         if (canCancel) {
           menuItems.push({
@@ -388,7 +449,11 @@ const SellerAuctionPage = () => {
 
         return (
           <Dropdown menu={{ items: menuItems }} placement="bottomRight">
-            <Button type="text" icon={<MoreOutlined />} />
+            <Button
+              type="text"
+              icon={<MoreOutlined />}
+              className="hover:text-[#FED469]"
+            />
           </Dropdown>
         );
       },
@@ -398,26 +463,12 @@ const SellerAuctionPage = () => {
   return (
     <div>
       {/* Page Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "24px",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "24px",
-            fontWeight: 800,
-            letterSpacing: "-0.02em",
-            margin: 0,
-          }}
-        >
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-extrabold tracking-tight m-0">
           Auction Management
         </h1>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {(keyword || dateRange) && (
+        <div className="flex items-center gap-2">
+          {(keyword || dateRange || privateMode) && (
             <Button icon={<DeleteOutlined />} onClick={handleClear}>
               Clear All
             </Button>
@@ -426,18 +477,20 @@ const SellerAuctionPage = () => {
             icon={<FilterOutlined />}
             onClick={() => setIsFilterOpen((v) => !v)}
             type={isFilterOpen ? "primary" : "default"}
-            style={{ display: "flex", alignItems: "center", gap: 6 }}
+            className="flex items-center gap-1.5"
           >
             Filters
-            {(keyword || dateRange) && (
+            {(keyword || dateRange || privateMode) && (
               <Badge
-                count={[keyword, dateRange].filter(Boolean).length}
-                style={{
-                  backgroundColor: "#FED469",
-                  color: "#191B24",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  marginLeft: 4,
+                count={[keyword, dateRange, privateMode].filter(Boolean).length}
+                className="ml-1"
+                styles={{
+                  indicator: {
+                    backgroundColor: "#FED469",
+                    color: "#191B24",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                  },
                 }}
               />
             )}
@@ -454,60 +507,31 @@ const SellerAuctionPage = () => {
 
       {/* Collapsible Filter */}
       <div
-        style={{
-          display: "grid",
-          gridTemplateRows: isFilterOpen ? "1fr" : "0fr",
-          transition: "grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
-          marginBottom: isFilterOpen ? "24px" : 0,
-          transitionProperty: "grid-template-rows, margin-bottom",
-        }}
+        className={`grid transition-all duration-300 ease-in-out ${
+          isFilterOpen ? "grid-rows-[1fr] mb-6" : "grid-rows-[0fr] mb-0"
+        }`}
       >
-        <div style={{ overflow: "hidden" }}>
+        <div className="overflow-hidden">
           <div
-            className="filter-container"
-            style={{
-              animation: "none",
-              opacity: isFilterOpen ? 1 : 0,
-              transition: "opacity 0.2s ease",
-            }}
+            className={`filter-container !transition-opacity !duration-200 ${
+              isFilterOpen ? "opacity-100" : "opacity-0"
+            }`}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: "rgba(255,255,255,0.45)",
-                    marginBottom: "6px",
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                  }}
-                >
+                <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1.5">
                   Search
                 </div>
                 <Input
                   placeholder="Search by Title, Description"
-                  prefix={
-                    <SearchOutlined
-                      style={{ color: "rgba(255,255,255,0.3)" }}
-                    />
-                  }
+                  prefix={<SearchOutlined className="text-white/30" />}
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   onPressEnter={handleSearch}
                 />
               </div>
               <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: "rgba(255,255,255,0.45)",
-                    marginBottom: "6px",
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                  }}
-                >
+                <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1.5">
                   Date Range
                 </div>
                 <RangePicker
@@ -518,8 +542,24 @@ const SellerAuctionPage = () => {
                   className="w-full"
                 />
               </div>
+              <div>
+                <div className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-1.5">
+                  Mode
+                </div>
+                <Select
+                  placeholder="Select Mode"
+                  value={privateMode || undefined}
+                  onChange={(value) => setPrivateMode(value || null)}
+                  allowClear
+                  style={{ width: "100%" }}
+                  options={[
+                    { label: "Public", value: "false" },
+                    { label: "Private", value: "true" },
+                  ]}
+                />
+              </div>
             </div>
-            <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+            <div className="mt-4 flex gap-2.5">
               <Button
                 type="primary"
                 icon={<SearchOutlined />}
@@ -549,6 +589,7 @@ const SellerAuctionPage = () => {
             { label: "DRAFT", key: AuctionStatus.DRAFT },
             { label: "SCHEDULED", key: AuctionStatus.SCHEDULED },
             { label: "ENDED", key: AuctionStatus.ENDED },
+            { label: "ENDED NO SALE", key: AuctionStatus.ENDED_NO_SALE },
             { label: "CANCELLED", key: AuctionStatus.CANCELLED },
           ]}
         />
@@ -636,6 +677,31 @@ const SellerAuctionPage = () => {
           />
         </Modal>
       )}
+
+      {/* Relist Auction Modal */}
+      <Modal
+        title="Relist Auction"
+        open={relistModal.visible}
+        onCancel={() => setRelistModal({ visible: false })}
+        onOk={() =>
+          relistModal.auctionId && relistMutation.mutate(relistModal.auctionId)
+        }
+        okText="Relist"
+        cancelText="Cancel"
+        confirmLoading={relistMutation.isPending}
+        centered
+      >
+        <div className="py-4 text-white/80">
+          Are you sure you want to relist this auction? It will be moved back to
+          DRAFT status where you can manage it again.
+        </div>
+      </Modal>
+      {/* Share Auction Modal */}
+      <ShareAuctionModal
+        visible={shareModal.visible}
+        auction={shareModal.auction}
+        onCancel={() => setShareModal({ visible: false, auction: null })}
+      />
     </div>
   );
 };

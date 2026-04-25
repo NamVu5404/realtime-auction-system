@@ -79,13 +79,27 @@
       /* gray-600 */
     }
 
-    /* Winner Summary Box - Consistent with highlight-box style */
+    /* Winner Summary Box - Premium SaaS style with email-safe table rows */
     .highlight-box {
-      background-color: #FAFAFA;
-      border: 1px solid #F3F4F6;
+      background-color: #FBFCFF;
+      border: 1px solid #E5E7EB;
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 32px;
+    }
+
+    .summary-title {
+      margin: 0 0 6px 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .summary-subtitle {
+      margin: 0 0 18px 0;
+      font-size: 13px;
+      color: #6B7280;
+      line-height: 1.5;
     }
 
     .winner-details {
@@ -95,18 +109,17 @@
     }
 
     .detail-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #F3F4F6;
+      padding: 13px 0;
     }
 
-    .detail-item:last-child {
-      margin-bottom: 0;
-      padding-bottom: 0;
-      border-bottom: none;
+    .detail-item:not(:last-child) {
+      border-bottom: 1px solid #EDF0F4;
+    }
+
+    .detail-row {
+      width: 100%;
+      display: table;
+      table-layout: fixed;
     }
 
     .detail-label {
@@ -115,17 +128,38 @@
       color: #6B7280;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      display: table-cell;
+      vertical-align: middle;
+      padding: 0;
+      width: 42%;
     }
 
     .detail-value {
       font-size: 15px;
       font-weight: 700;
       color: #111827;
+      display: table-cell;
+      vertical-align: middle;
+      padding: 0;
+      text-align: right;
     }
 
     .winning-price {
       color: #059669;
       font-size: 18px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background-color: #ECFDF5;
+      color: #047857;
+      border: 1px solid #A7F3D0;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
     }
 
     .cta-container {
@@ -193,18 +227,27 @@
 
         <!-- Winner Summary Box -->
         <div class="highlight-box">
+          <h3 class="summary-title">Winning Summary</h3>
+          <p class="summary-subtitle">Your winning order is confirmed. Please complete payment to secure your item.</p>
+
           <ul class="winner-details">
             <li class="detail-item">
-              <span class="detail-label">Item Won</span>
-              <span class="detail-value" th:text="${auctionTitle}">Premium Item</span>
+              <div class="detail-row">
+                <span class="detail-label">Item Won</span>
+                <span class="detail-value" th:text="${auctionTitle}">Premium Item</span>
+              </div>
             </li>
             <li class="detail-item">
-              <span class="detail-label">Winning Bid</span>
-              <span class="detail-value winning-price" th:text="${#numbers.formatCurrency(winningBid)}">$0.00</span>
+              <div class="detail-row">
+                <span class="detail-label">Winning Bid</span>
+                <span class="detail-value winning-price" th:text="${#numbers.formatCurrency(winningBid)}">$0.00</span>
+              </div>
             </li>
             <li class="detail-item">
-              <span class="detail-label">Status</span>
-              <span class="detail-value" style="color: #059669;">Confirmed</span>
+              <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="detail-value"><span class="status-badge">Confirmed</span></span>
+              </div>
             </li>
           </ul>
         </div>
@@ -212,7 +255,10 @@
         <p class="message">Please complete your payment process within 24 hours to ensure priority shipping and finalize the transaction.</p>
 
         <div class="cta-container">
-          <a th:href="'http://localhost:5173/auction/' + ${auctionId}" class="cta-btn">Claim Your Item Now</a>
+          <a th:href="'http://localhost:5173/auction/' + ${auctionId} + (${token != null} ? '?token=' + ${token} : '')"
+             class="cta-btn">
+            Claim Your Item Now
+          </a>
         </div>
 
         <p class="message" style="margin-bottom: 0;">We're excited to see what you'll bring to the block!<br><strong>The

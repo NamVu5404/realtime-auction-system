@@ -12,6 +12,7 @@ export enum AuctionStatus {
   SCHEDULED = "SCHEDULED",
   LIVE = "LIVE",
   ENDED = "ENDED",
+  ENDED_NO_SALE = "ENDED_NO_SALE",
   CANCELLED = "CANCELLED",
 }
 
@@ -44,6 +45,8 @@ export enum UserActionType {
   SELLER_ROLE_REVOKED = "SELLER_ROLE_REVOKED",
   SELLER_APPROVED = "SELLER_APPROVED",
   SELLER_REJECTED = "SELLER_REJECTED",
+  BAN_CHAT = "BAN_CHAT",
+  UNBAN_CHAT = "UNBAN_CHAT",
 }
 
 export enum AuctionActionType {
@@ -74,6 +77,8 @@ export interface User {
   status?: "ACTIVE" | "BLOCKED";
   phone?: string;
   bannedUntil?: string; // ISO date string if user is banned from chat
+  isVerifiedIdentity?: boolean;
+  isFaceMatch?: boolean;
 }
 
 /**
@@ -92,6 +97,24 @@ export interface SellerResponse {
   liveAuctions: number;
   endedAuctions: number;
   totalRevenue: number;
+}
+
+/**
+ * Kyc Response - Derived from KycResponse.java
+ */
+export interface KycResponse {
+  userId: number;
+  cccdNumber: string;
+  name: string;
+  dob: string;
+  sex: string;
+  address: string;
+  doe: string;
+  frontImageUrl: string;
+  backImageUrl: string;
+  faceMatchUrl: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -123,6 +146,8 @@ export interface Auction {
   endTime: string;
   antiSnipeSeconds: number;
   extensionSeconds: number;
+  reservePrice?: number;
+  privateMode?: boolean;
   seller: User;
   highestBidder?: User | null;
   createdAt: string;
@@ -190,6 +215,33 @@ export interface CreateAuctionRequest {
   minStep: number;
   startTime: string;
   endTime: string;
+  antiSnipeSeconds?: number;
+  extensionSeconds?: number;
+  reservePrice?: number;
+  privateMode?: boolean;
+}
+
+export interface UpdateDraftAuctionRequest {
+  title?: string;
+  description?: string;
+  image?: string;
+  startPrice?: number;
+  minStep?: number;
+  startTime?: string;
+  endTime?: string;
+  reservePrice?: number;
+  privateMode?: boolean;
+  antiSnipeSeconds?: number;
+  extensionSeconds?: number;
+}
+
+export interface UpdateScheduledAuctionRequest {
+  description?: string;
+  image?: string;
+  startTime?: string;
+  endTime?: string;
+  reservePrice?: number;
+  privateMode?: boolean;
   antiSnipeSeconds?: number;
   extensionSeconds?: number;
 }
@@ -411,6 +463,7 @@ export interface SellerStatsResponse {
   totalBidsReceived: number;
   highestSoldPrice: number;
   totalUniqueBidders: number;
+  totalAuctionsEnded: number;
   revenueChart: SellerChartData[];
 }
 
@@ -432,11 +485,14 @@ export interface AdminAuctionOverviewResponse {
   liveCount: number;
   scheduledCount: number;
   endedCount: number;
+  endedNoSaleCount: number;
   cancelledCount: number;
   draftCount: number;
   successRate: number;
   totalBidsAllTime: number;
   avgBidsPerAuction: number;
+  publicCount: number;
+  privateCount: number;
 }
 
 export interface CountryStatData {
@@ -493,15 +549,15 @@ export interface TopPerformingResponse {
  * Live Chat Types — Derived from LiveChatResponse.java & LiveChatRequest.java
  */
 export interface LiveChatMessage {
-  id?: number;          // Present for history messages (from REST), absent for real-time WS broadcasts
+  id?: number; // Present for history messages (from REST), absent for real-time WS broadcasts
   auctionId: number;
   senderId: number;
   senderName: string;
   senderAvatar?: string;
   senderRole?: UserRole; // Prioritized role of the sender
   content: string;
-  hidden?: boolean;    // True if the message was hidden by an admin
-  createdAt?: string;   // ISO string — present in history, absent in WS broadcast
+  hidden?: boolean; // True if the message was hidden by an admin
+  createdAt?: string; // ISO string — present in history, absent in WS broadcast
 }
 
 export interface LiveChatRequest {
@@ -510,4 +566,19 @@ export interface LiveChatRequest {
 
 export interface ListLiveChatResponse {
   data: LiveChatMessage[];
+}
+
+export interface WishListResponse {
+  id: number;
+  auctionId: number;
+  title: string;
+  image?: string;
+  startPrice: number;
+  currentPrice: number;
+  status: AuctionStatus;
+  startTime: string;
+  endTime: string;
+  sellerName?: string;
+  privateMode?: boolean;
+  createdAt: string;
 }

@@ -7,16 +7,18 @@ import { formatAuctionTime, getTimeRemaining } from "../../utils/dateUtils";
 import { formatCurrency } from "../../utils/format";
 import { DEFAULT_AUCTION_IMAGE, getImageUrl } from "../../utils/imageUtils";
 import Countdown from "./Countdown";
+import WishlistButton from "./WishlistButton";
 
 const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 
 interface AuctionCardProps {
   auction: Auction;
   onCountdownComplete?: () => void;
+  isWishListed?: boolean;
 }
 
 export const AuctionCard = memo(
-  ({ auction, onCountdownComplete }: AuctionCardProps) => {
+  ({ auction, onCountdownComplete, isWishListed = false }: AuctionCardProps) => {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [countdownStarted, setCountdownStarted] = useState(false);
@@ -130,6 +132,19 @@ export const AuctionCard = memo(
           {/* Status badge */}
           <div style={{ position: "absolute", top: "12px", left: "12px" }}>
             <StatusBadge />
+          </div>
+
+          {/* Wishlist Button */}
+          <div style={{ position: "absolute", top: "12px", right: "12px", zIndex: 10 }}>
+            <WishlistButton
+              auctionId={auction.id}
+              isWishListed={isWishListed}
+              style={{
+                background: "rgba(0,0,0,0.4)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                backdropFilter: "blur(4px)",
+              }}
+            />
           </div>
         </div>
 

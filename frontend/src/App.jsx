@@ -16,6 +16,7 @@ import NotificationsPage from './pages/account/NotificationsPage';
 import ProfilePage from './pages/account/ProfilePage';
 import SecurityLogsPage from './pages/account/SecurityLogsPage';
 import SellerRegPage from './pages/account/SellerRegPage';
+import WishlistPage from './pages/account/WishlistPage';
 import AdminAuctionPage from './pages/admin/AdminAuctionPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminNotificationPage from './pages/admin/AdminNotificationPage';
@@ -29,14 +30,10 @@ import NotFound from './pages/NotFound';
 import SellerAuctionPage from './pages/seller/SellerAuctionPage';
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerNotificationPage from './pages/seller/SellerNotificationPage';
-import { useUIStore } from './store/useUIStore';
-
 // Create a client for React Query
 const queryClient = new QueryClient();
 
 function App() {
-  const darkMode = useUIStore((state) => state.darkMode);
-
   // Mount once globally — writes Kafka health to useUIStore
   // All components read isKafkaAlive from useUIStore, no extra connections
   useHeartbeat();
@@ -61,7 +58,7 @@ function App() {
             colorSuccess: '#10B981',
             colorWarning: '#FED469',
             colorError: '#F43F5E',
-            fontFamily: "'Be Vietnam Pro', Inter, -apple-system, sans-serif",
+            fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
           },
           components: {
             Message: {
@@ -160,6 +157,7 @@ function App() {
                   <Route path="notifications" element={<NotificationsPage />} />
                   <Route path="bid-stats" element={<BidStatisticsPage />} />
                   <Route path="bids" element={<BidsPage />} />
+                  <Route path="wishlist" element={<WishlistPage />} />
                   <Route path="seller-reg" element={<SellerRegPage />} />
                   <Route path="identity-verification" element={<IdentityVerificationPage />} />
                   <Route path="security-logs" element={<SecurityLogsPage />} />
