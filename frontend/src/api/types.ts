@@ -567,3 +567,18 @@ export interface LiveChatRequest {
 export interface ListLiveChatResponse {
   data: LiveChatMessage[];
 }
+
+export interface WishListResponse {
+  id: number;
+  auctionId: number;
+  title: string;
+  image?: string;
+  startPrice: number;
+  currentPrice: number;
+  status: AuctionStatus;
+  startTime: string;
+  endTime: string;
+  sellerName?: string;
+  privateMode?: boolean;
+  createdAt: string;
+}

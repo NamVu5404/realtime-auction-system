@@ -41,6 +41,8 @@ import { formatAuctionTime, getTimeRemaining } from "../../utils/dateUtils";
 import { formatCurrency } from "../../utils/format";
 import { getAvatarUrl } from "../../utils/imageUtils";
 import FloatingChat from "../../features/auction/chat/FloatingChat";
+import WishlistButton from "../../features/auction/WishlistButton";
+import { useWishlistBatch } from "../../hooks/useWishlist";
 
 // Tách phần bidding form ra component riêng với state nội bộ
 const BiddingSection = memo(
@@ -283,6 +285,8 @@ export const AuctionDetailPage = () => {
 
   const auctionId = id ? parseInt(id, 10) : null;
   const hasCelebratedRef = useRef(false);
+
+  const { wishlistedSet } = useWishlistBatch(auctionId ? [auctionId] : []);
 
   // ✅ Premium Celebration Effect (Confetti + Notification) with Persistence
   const triggerCelebration = useCallback(
@@ -892,19 +896,43 @@ export const AuctionDetailPage = () => {
                 )}
               </div>
 
-              {/* Title */}
-              <h1
+              {/* Title & Actions */}
+              <div
                 style={{
-                  fontSize: "clamp(1.4rem, 3vw, 2rem)",
-                  fontWeight: 800,
-                  color: "#fff",
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.2,
-                  margin: 0,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: "16px",
                 }}
               >
-                {auction.title}
-              </h1>
+                <h1
+                  style={{
+                    fontSize: "clamp(1.4rem, 3vw, 2rem)",
+                    fontWeight: 800,
+                    color: "#fff",
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.2,
+                    margin: 0,
+                    flex: 1,
+                  }}
+                >
+                  {auction.title}
+                </h1>
+
+                <WishlistButton
+                  auctionId={auction.id}
+                  isWishListed={wishlistedSet.has(auction.id)}
+                  size="large"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "12px",
+                    width: "44px",
+                    height: "44px",
+                    flexShrink: 0,
+                  }}
+                />
+              </div>
 
               {/* Image Carousel */}
               <AuctionImageCarousel images={auction.images} />

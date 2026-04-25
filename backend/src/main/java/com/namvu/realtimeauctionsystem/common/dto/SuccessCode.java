@@ -67,6 +67,10 @@ public enum SuccessCode {
     // Kyc (20xx)
     IDENTITY_VERIFIED(2000, "Identity verified successfully", HttpStatus.OK),
     FACE_MATCH_SUCCESS(2001, "Face match successfully", HttpStatus.OK),
+
+    // Wishlist (21xx)
+    WISHLIST_ADDED(2100, "Auction added to wishlist", HttpStatus.CREATED),
+    WISHLIST_REMOVED(2101, "Auction removed from wishlist", HttpStatus.OK),
     ;
 
     private final int code;

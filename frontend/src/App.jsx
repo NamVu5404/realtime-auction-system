@@ -16,6 +16,7 @@ import NotificationsPage from './pages/account/NotificationsPage';
 import ProfilePage from './pages/account/ProfilePage';
 import SecurityLogsPage from './pages/account/SecurityLogsPage';
 import SellerRegPage from './pages/account/SellerRegPage';
+import WishlistPage from './pages/account/WishlistPage';
 import AdminAuctionPage from './pages/admin/AdminAuctionPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminNotificationPage from './pages/admin/AdminNotificationPage';
@@ -156,6 +157,7 @@ function App() {
                   <Route path="notifications" element={<NotificationsPage />} />
                   <Route path="bid-stats" element={<BidStatisticsPage />} />
                   <Route path="bids" element={<BidsPage />} />
+                  <Route path="wishlist" element={<WishlistPage />} />
                   <Route path="seller-reg" element={<SellerRegPage />} />
                   <Route path="identity-verification" element={<IdentityVerificationPage />} />
                   <Route path="security-logs" element={<SecurityLogsPage />} />

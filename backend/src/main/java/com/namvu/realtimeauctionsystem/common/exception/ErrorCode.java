@@ -91,6 +91,10 @@ public enum ErrorCode {
     FACE_MATCH_FAILED(5016, "Face verification failed. Faces do not match", HttpStatus.BAD_REQUEST),
     INVALID_SELFIE_PHOTO(5017, "Live selfie required. Please do not use an ID photo", HttpStatus.BAD_REQUEST),
     FACE_MATCH_ALREADY_VERIFIED(5018, "Face match already verified", HttpStatus.CONFLICT),
+
+    // Wishlist (51xx)
+    WISHLIST_NOT_FOUND(5100, "Wishlist item not found", HttpStatus.NOT_FOUND),
+    WISHLIST_ALREADY_EXISTS(5101, "Auction is already in your wishlist", HttpStatus.CONFLICT),
     ;
 
     private final int code;

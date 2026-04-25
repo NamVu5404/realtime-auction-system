@@ -1,12 +1,20 @@
 import { Row, Col, Empty, Pagination } from "antd";
 import { Auction } from "../../api/types";
 import AuctionCard from "./AuctionCard";
-import { memo } from "react";
+import { memo, useMemo } from "react";
+import { useWishlistBatch } from "../../hooks/useWishlist";
 
 interface AuctionListProps {
   auctions: Auction[];
   onCountdownComplete?: () => void;
   emptyMessage?: string;
+  gridSpan?: {
+    xs?: number;
+    sm?: number;
+    md?: number;
+    lg?: number;
+    xl?: number;
+  };
   // Pagination props
   currentPage?: number; // frontend 1-indexed
   pageSize?: number;
@@ -26,11 +34,15 @@ export const AuctionList = memo(
     auctions,
     onCountdownComplete,
     emptyMessage = "No auctions found",
+    gridSpan = { xs: 24, sm: 12, md: 8, lg: 6 },
     currentPage = 1,
     pageSize = 20,
     totalElements = 0,
     onPageChange,
   }: AuctionListProps) => {
+    const auctionIds = useMemo(() => auctions.map((a) => a.id), [auctions]);
+    const { wishlistedSet } = useWishlistBatch(auctionIds);
+
     if (!auctions || auctions.length === 0) {
       return <Empty description={emptyMessage} />;
     }
@@ -39,10 +51,18 @@ export const AuctionList = memo(
       <div>
         <Row gutter={[24, 24]} className="w-full">
           {auctions.map((auction) => (
-            <Col key={auction.id} xs={24} sm={12} md={8} lg={6}>
+            <Col 
+              key={auction.id} 
+              xs={gridSpan.xs} 
+              sm={gridSpan.sm} 
+              md={gridSpan.md} 
+              lg={gridSpan.lg}
+              xl={gridSpan.xl}
+            >
               <AuctionCard
                 auction={auction}
                 onCountdownComplete={onCountdownComplete}
+                isWishListed={wishlistedSet.has(auction.id)}
               />
             </Col>
           ))}
@@ -69,6 +89,7 @@ export const AuctionList = memo(
       prevProps.auctions === nextProps.auctions &&
       prevProps.onCountdownComplete === nextProps.onCountdownComplete &&
       prevProps.emptyMessage === nextProps.emptyMessage &&
+      JSON.stringify(prevProps.gridSpan) === JSON.stringify(nextProps.gridSpan) &&
       prevProps.currentPage === nextProps.currentPage &&
       prevProps.pageSize === nextProps.pageSize &&
       prevProps.totalElements === nextProps.totalElements &&
