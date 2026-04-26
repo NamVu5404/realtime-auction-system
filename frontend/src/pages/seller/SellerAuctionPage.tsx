@@ -152,7 +152,14 @@ const SellerAuctionPage = () => {
 
   // Manual trigger for search - initial query with LIVE status
   const { data, isLoading, refetch } = useQuery<PageResponse<Auction>>({
-    queryKey: ["seller-auctions", page, debouncedKeyword, status, dateRange, privateMode],
+    queryKey: [
+      "seller-auctions",
+      page,
+      debouncedKeyword,
+      status,
+      dateRange,
+      privateMode,
+    ],
     queryFn: () =>
       adminApi.filterSellerAuctions(
         page,
@@ -304,65 +311,8 @@ const SellerAuctionPage = () => {
 
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-    },
-    {
-      title: "Image",
-      dataIndex: "image",
-      key: "image",
-      render: (image: string) => (
-        <Image
-          src={getImageUrl(image)}
-          width={50}
-          height={50}
-          fallback={DEFAULT_IMAGE}
-          style={{
-            width: "50px",
-            height: "50px",
-            objectFit: "cover",
-            objectPosition: "center center",
-          }}
-        />
-      ),
-    },
-    {
-      title: "Title",
-      dataIndex: "title",
-      key: "title",
-    },
-    {
-      title: "Price",
-      dataIndex: "currentPrice",
-      key: "currentPrice",
-      render: (currentPrice: number) => (
-        <span style={{ color: "#FED469" }}>{formatCurrency(currentPrice)}</span>
-      ),
-    },
-    {
-      title: "Start Time",
-      dataIndex: "startTime",
-      key: "startTime",
-      render: (date: string) => formatDateTime(date),
-    },
-    {
-      title: "End Time",
-      dataIndex: "endTime",
-      key: "endTime",
-      render: (date: string) => formatDateTime(date),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: AuctionStatus) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
-      ),
-    },
-    {
-      title: "Actions",
       key: "actions",
+      width: 10,
       render: (record: Auction) => {
         const menuItems = [];
         const isLiveNow = liveAuctions.has(record.id);
@@ -457,6 +407,63 @@ const SellerAuctionPage = () => {
           </Dropdown>
         );
       },
+    },
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
+      title: "Image",
+      dataIndex: "image",
+      key: "image",
+      render: (image: string) => (
+        <Image
+          src={getImageUrl(image)}
+          width={50}
+          height={50}
+          fallback={DEFAULT_IMAGE}
+          style={{
+            width: "50px",
+            height: "50px",
+            objectFit: "cover",
+            objectPosition: "center center",
+          }}
+        />
+      ),
+    },
+    {
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
+    },
+    {
+      title: "Price",
+      dataIndex: "currentPrice",
+      key: "currentPrice",
+      render: (currentPrice: number) => (
+        <span style={{ color: "#FED469" }}>{formatCurrency(currentPrice)}</span>
+      ),
+    },
+    {
+      title: "Start Time",
+      dataIndex: "startTime",
+      key: "startTime",
+      render: (date: string) => formatDateTime(date),
+    },
+    {
+      title: "End Time",
+      dataIndex: "endTime",
+      key: "endTime",
+      render: (date: string) => formatDateTime(date),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status: AuctionStatus) => (
+        <Tag color={getStatusColor(status)}>{status}</Tag>
+      ),
     },
   ];
 
