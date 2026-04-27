@@ -111,6 +111,28 @@ public class MailServiceImpl implements MailService {
                 .build());
     }
 
+    @Async(MAIL_EXECUTOR)
+    @Override
+    public void sendAuctionApprovalEmail(String toEmail, String fullName, String auctionTitle, String startTime) {
+        sendEmail(EmailContext.builder()
+                .to(toEmail)
+                .subject("Your Auction Has Been Approved: " + auctionTitle)
+                .template("mail/auction-approval")
+                .variables(Map.of(FULL_NAME, fullName, AUCTION_TITLE, auctionTitle, "startTime", startTime))
+                .build());
+    }
+
+    @Async(MAIL_EXECUTOR)
+    @Override
+    public void sendAuctionRejectionEmail(String toEmail, String fullName, String auctionTitle, String reason) {
+        sendEmail(EmailContext.builder()
+                .to(toEmail)
+                .subject("Update on Your Auction Submission: " + auctionTitle)
+                .template("mail/auction-rejection")
+                .variables(Map.of(FULL_NAME, fullName, AUCTION_TITLE, auctionTitle, REASON, reason != null ? reason : ""))
+                .build());
+    }
+
     private void sendEmail(EmailContext emailContext) {
         log.info("Sending email to {} with template {}", emailContext.getTo(), emailContext.getTemplate());
         try {

@@ -337,6 +337,59 @@ export const adminApi = {
       throw new Error(extractErrorMessage(error));
     }
   },
+
+  getPendingAuctionReviewCount: async (): Promise<number> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<number>>(
+        "/auctions/pending-review/count",
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getPendingAuctionReviews: async (
+    page: number = 1,
+    size: number = 20,
+  ): Promise<PageResponse<Auction>> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<PageResponse<Auction>>>(
+        "/auctions/filter-admin",
+        { params: { page, size, status: AuctionStatus.PENDING_REVIEW } },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  approveAuction: async (auctionId: number): Promise<ApiResult<Auction>> => {
+    try {
+      const response = await axiosClient.patch<ApiResponse<Auction>>(
+        `/auctions/${auctionId}/approve`,
+      );
+      return { message: response.data.message, result: response.data.result! };
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  rejectAuction: async (
+    auctionId: number,
+    reason: string,
+  ): Promise<ApiResult<Auction>> => {
+    try {
+      const response = await axiosClient.patch<ApiResponse<Auction>>(
+        `/auctions/${auctionId}/reject`,
+        null,
+        { params: { reason } },
+      );
+      return { message: response.data.message, result: response.data.result! };
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
 };
 
 export default adminApi;

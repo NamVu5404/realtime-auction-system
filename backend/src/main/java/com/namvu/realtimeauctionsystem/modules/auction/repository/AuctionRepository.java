@@ -91,6 +91,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     @EntityGraph(attributePaths = {"seller"})
     List<Auction> findByStatus(AuctionStatus status);
 
+    long countByStatus(AuctionStatus status);
+
     @Modifying
     @Query("UPDATE Auction a SET a.status = 'CANCELLED' " +
             "WHERE a.seller.id = :sellerId " +

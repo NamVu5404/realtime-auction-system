@@ -27,6 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -356,6 +359,60 @@ public class NotificationServiceImpl implements NotificationService {
             );
         } catch (Exception e) {
             log.warn("Failed to process wishlist auction cancelled notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    @Async(NOTIFICATION_EXECUTOR)
+    public void processAuctionPendingReviewNotifications(Long sellerId, Long auctionId, String title) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_PENDING_REVIEW;
+            String content = type.buildContent(title);
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+            self().createAndPushNotification(sellerId, type, content, redirectUrl);
+        } catch (Exception e) {
+            log.warn("Failed to process auction pending review notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    public void processAuctionApprovedNotifications(Long sellerId, Long auctionId, String title, Instant startTime) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_APPROVED;
+            String formattedTime = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
+                    .withZone(ZoneId.of("Asia/Ho_Chi_Minh"))
+                    .format(startTime);
+            String content = type.buildContent(title, formattedTime);
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+            self().createAndPushNotification(sellerId, type, content, redirectUrl);
+        } catch (Exception e) {
+            log.warn("Failed to process auction approved notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    public void processAuctionRejectedNotifications(Long sellerId, Long auctionId, String title, String reason) {
+        try {
+            NotificationConstant type = NotificationConstant.AUCTION_REJECTED;
+            String content = type.buildContent(title, reason != null ? reason : "Không có lý do cụ thể");
+            String redirectUrl = type.buildRedirectUrl(auctionId);
+            self().createAndPushNotification(sellerId, type, content, redirectUrl);
+        } catch (Exception e) {
+            log.warn("Failed to process auction rejected notifications for auction {}: {}", auctionId, e.getMessage());
+        }
+    }
+
+    @Override
+    public void processAdminAuctionReviewNotifications(Set<Long> adminIds, Long auctionId, String title) {
+        try {
+            NotificationConstant type = NotificationConstant.REQUEST_REVIEW_AUCTION;
+            String content = type.buildContent(title);
+            String redirectUrl = type.getRedirectUrl();
+            adminIds.forEach(adminId ->
+                    self().createAndPushNotification(adminId, type, content, redirectUrl)
+            );
+        } catch (Exception e) {
+            log.warn("Failed to process admin auction review notifications for auction {}: {}", auctionId, e.getMessage());
         }
     }
 

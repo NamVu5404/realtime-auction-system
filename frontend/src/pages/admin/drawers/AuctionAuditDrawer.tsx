@@ -1,10 +1,14 @@
 import {
   AlertOutlined,
   CheckCircleOutlined,
+  CloseCircleOutlined,
   EditOutlined,
   FileTextOutlined,
   PlusCircleOutlined,
+  RobotOutlined,
+  SafetyCertificateOutlined,
   SettingOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Card, Drawer, Empty, Pagination, Skeleton, Tag } from "antd";
@@ -46,6 +50,16 @@ const getActionColor = (actionType: AuctionActionType): string => {
       return "orange";
     case AuctionActionType.RESULT:
       return "gold";
+    case AuctionActionType.PENDING_REVIEW:
+      return "processing";
+    case AuctionActionType.AI_REVIEW_APPROVED:
+    case AuctionActionType.ADMIN_REVIEW_APPROVED:
+      return "success";
+    case AuctionActionType.AI_REVIEW_REJECTED:
+    case AuctionActionType.ADMIN_REVIEW_REJECTED:
+      return "error";
+    case AuctionActionType.AI_REVIEW_FALLBACK:
+      return "warning";
     default:
       return "default";
   }
@@ -66,6 +80,16 @@ const getActionIcon = (actionType: AuctionActionType) => {
       return <SettingOutlined />;
     case AuctionActionType.CANCELLED:
       return <AlertOutlined />;
+    case AuctionActionType.PENDING_REVIEW:
+      return <SafetyCertificateOutlined />;
+    case AuctionActionType.AI_REVIEW_APPROVED:
+    case AuctionActionType.AI_REVIEW_FALLBACK:
+      return <RobotOutlined />;
+    case AuctionActionType.AI_REVIEW_REJECTED:
+      return <CloseCircleOutlined />;
+    case AuctionActionType.ADMIN_REVIEW_APPROVED:
+    case AuctionActionType.ADMIN_REVIEW_REJECTED:
+      return <UserOutlined />;
     default:
       return <FileTextOutlined />;
   }

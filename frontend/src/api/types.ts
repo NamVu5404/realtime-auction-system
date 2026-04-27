@@ -9,11 +9,19 @@
 export enum AuctionStatus {
   ALL = "ALL",
   DRAFT = "DRAFT",
+  PENDING_REVIEW = "PENDING_REVIEW",
   SCHEDULED = "SCHEDULED",
   LIVE = "LIVE",
   ENDED = "ENDED",
   ENDED_NO_SALE = "ENDED_NO_SALE",
   CANCELLED = "CANCELLED",
+  REJECTED = "REJECTED",
+}
+
+export enum AiReviewDecision {
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  FALLBACK_TO_ADMIN = "FALLBACK_TO_ADMIN",
 }
 
 /**
@@ -47,16 +55,6 @@ export enum UserActionType {
   SELLER_REJECTED = "SELLER_REJECTED",
   BAN_CHAT = "BAN_CHAT",
   UNBAN_CHAT = "UNBAN_CHAT",
-}
-
-export enum AuctionActionType {
-  CREATED = "CREATED",
-  UPDATED = "UPDATED",
-  CANCELLED = "CANCELLED",
-  START = "START",
-  END = "END",
-  RESULT = "RESULT",
-  FRAUD = "FRAUD",
 }
 
 export enum RequestStatus {
@@ -322,6 +320,39 @@ export interface AuctionAuditResponse {
   createdAt: string;
   details: Record<string, any>;
   updatedBy: string;
+}
+
+/**
+ * AI Review Log - Derived from AiReviewLog.java
+ */
+export interface AiReviewLog {
+  id: number;
+  auctionId: number;
+  decision: AiReviewDecision;
+  confidence?: number;
+  reasons?: string;
+  responseTimeMs?: number;
+  model?: string;
+  errorMessage?: string;
+  createdAt: string;
+}
+
+export enum AuctionActionType {
+  CREATED = "CREATED",
+  UPDATED = "UPDATED",
+  CANCELLED = "CANCELLED",
+  START = "START",
+  END = "END",
+  ENDED_NO_SALE = "ENDED_NO_SALE",
+  RESULT = "RESULT",
+  FRAUD = "FRAUD",
+  RELIST = "RELIST",
+  PENDING_REVIEW = "PENDING_REVIEW",
+  AI_REVIEW_APPROVED = "AI_REVIEW_APPROVED",
+  AI_REVIEW_REJECTED = "AI_REVIEW_REJECTED",
+  AI_REVIEW_FALLBACK = "AI_REVIEW_FALLBACK",
+  ADMIN_REVIEW_APPROVED = "ADMIN_REVIEW_APPROVED",
+  ADMIN_REVIEW_REJECTED = "ADMIN_REVIEW_REJECTED",
 }
 
 /**

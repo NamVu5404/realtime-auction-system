@@ -322,7 +322,8 @@ const SellerAuctionPage = () => {
           !isLiveNow;
         const canCancel =
           (record.status === AuctionStatus.DRAFT ||
-            record.status === AuctionStatus.SCHEDULED) &&
+            record.status === AuctionStatus.SCHEDULED ||
+            record.status === AuctionStatus.PENDING_REVIEW) &&
           !isLiveNow;
 
         // Always show View Detail
@@ -594,10 +595,12 @@ const SellerAuctionPage = () => {
             { label: "ALL", key: AuctionStatus.ALL },
             { label: "LIVE", key: AuctionStatus.LIVE },
             { label: "DRAFT", key: AuctionStatus.DRAFT },
+            { label: "PENDING REVIEW", key: AuctionStatus.PENDING_REVIEW },
             { label: "SCHEDULED", key: AuctionStatus.SCHEDULED },
             { label: "ENDED", key: AuctionStatus.ENDED },
             { label: "ENDED NO SALE", key: AuctionStatus.ENDED_NO_SALE },
             { label: "CANCELLED", key: AuctionStatus.CANCELLED },
+            { label: "REJECTED", key: AuctionStatus.REJECTED },
           ]}
         />
       </div>

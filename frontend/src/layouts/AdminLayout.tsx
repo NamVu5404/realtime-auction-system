@@ -8,7 +8,9 @@ import {
   UserOutlined,
   ShopOutlined,
   MailOutlined,
+  SafetyCertificateOutlined,
 } from "@ant-design/icons";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
@@ -18,6 +20,7 @@ import NotificationBell from "../components/common/NotificationBell";
 import { useNotificationWebSocket } from "../hooks/useNotificationWebSocket";
 import { getAvatarUrl } from "../utils/imageUtils";
 import logo from "../assets/images/logo.png";
+import adminApi from "../api/adminApi";
 
 const { Sider, Header, Content } = Layout;
 
@@ -31,6 +34,12 @@ const AdminLayout = () => {
 
   // Initialize real-time notification socket
   useNotificationWebSocket();
+
+  const { data: pendingReviewCount = 0 } = useQuery({
+    queryKey: ["pending-review-count-layout"],
+    queryFn: () => adminApi.getPendingAuctionReviewCount(),
+    refetchInterval: 60000,
+  });
 
   const menuItems = [
     {
@@ -60,6 +69,26 @@ const AdminLayout = () => {
       icon: <AuditOutlined />,
       label: "Auction Management",
       onClick: () => navigate("/admin/auctions"),
+    },
+    {
+      key: "auction-review",
+      icon: (
+        <Badge count={pendingReviewCount} size="small" offset={[4, 0]}>
+          <SafetyCertificateOutlined />
+        </Badge>
+      ),
+      label: (
+        <span>
+          Auction Review
+          {pendingReviewCount > 0 && (
+            <Badge
+              count={pendingReviewCount}
+              style={{ marginLeft: 8, backgroundColor: "#FED469", color: "#191B24" }}
+            />
+          )}
+        </span>
+      ),
+      onClick: () => navigate("/admin/auction-review"),
     },
     {
       key: "sellers",

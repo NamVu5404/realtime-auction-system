@@ -34,6 +34,9 @@ public enum SuccessCode {
     DRAFT_AUCTION_UPDATED(1303, "Draft auction updated", HttpStatus.OK),
     SCHEDULED_AUCTION_UPDATED(1304, "Scheduled auction updated", HttpStatus.OK),
     AUCTION_RELIST(1304, "Auction relisted successfully", HttpStatus.OK),
+    AUCTION_REVIEW_SUBMITTED(1305, "Auction submitted for review", HttpStatus.CREATED),
+    AUCTION_REVIEW_APPROVED(1306, "Auction approved successfully", HttpStatus.OK),
+    AUCTION_REVIEW_REJECTED(1307, "Auction rejected successfully", HttpStatus.OK),
 
     // Bid (14xx)
     BID_PLACED(1400, "Bid placed successfully", HttpStatus.CREATED),

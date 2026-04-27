@@ -73,6 +73,11 @@ public enum NotificationConstant {
             "Phiên đấu giá '%s' đã kết thúc nhưng không đạt giá dự trữ. Bạn có thể đăng lại phiên này.",
             SELLER_AUCTION_DETAIL_URL
     ),
+    AUCTION_PENDING_REVIEW(
+            "Phiên đấu giá đang chờ kiểm duyệt",
+            "Phiên đấu giá '%s' của bạn đang được kiểm duyệt tự động. Kết quả sẽ được thông báo sớm.",
+            SELLER_AUCTION_DETAIL_URL
+    ),
     AUCTION_APPROVED( // Pending + mail
             "Phiên đấu giá đã được phê duyệt",
             "Phiên đấu giá '%s' của bạn đã được kiểm duyệt và sẽ bắt đầu vào lúc %s.",
@@ -82,6 +87,14 @@ public enum NotificationConstant {
             "Phiên đấu giá bị từ chối",
             "Phiên đấu giá '%s' của bạn bị từ chối kiểm duyệt. Lý do: %s.",
             SELLER_AUCTION_DETAIL_URL
+    ),
+
+    // ==================== ADMIN ====================
+
+    REQUEST_REVIEW_AUCTION(
+            "Phiên đấu giá cần kiểm duyệt",
+            "Có phiên đấu giá '%s' đang chờ kiểm duyệt thủ công.",
+            ADMIN_AUCTION_REVIEW_URL
     ),
 
     // ==================== ACCOUNT ====================
@@ -167,5 +180,6 @@ public enum NotificationConstant {
         public static final String ACCOUNT_SECURITY_URL = "/account/security-logs";
         public static final String ACCOUNT_VERIFY_URL = "/account/verify";
         public static final String ADMIN_SELLER_MANAGEMENT_URL = "/admin/sellers?tab=requests";
+        public static final String ADMIN_AUCTION_REVIEW_URL = "/admin/auction-review";
     }
 }
