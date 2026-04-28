@@ -7,7 +7,6 @@ import com.namvu.realtimeauctionsystem.modules.notification.dto.NotificationResp
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -60,7 +59,7 @@ public interface NotificationService {
 
     void processAuctionPendingReviewNotifications(Long sellerId, Long auctionId, String title);
 
-    void processAuctionApprovedNotifications(Long sellerId, Long auctionId, String title, Instant startTime);
+    void processAuctionApprovedNotifications(Long sellerId, Long auctionId, String title);
 
     void processAuctionRejectedNotifications(Long sellerId, Long auctionId, String title, String reason);
 

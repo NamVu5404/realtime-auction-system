@@ -27,9 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -376,13 +373,10 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void processAuctionApprovedNotifications(Long sellerId, Long auctionId, String title, Instant startTime) {
+    public void processAuctionApprovedNotifications(Long sellerId, Long auctionId, String title) {
         try {
             NotificationConstant type = NotificationConstant.AUCTION_APPROVED;
-            String formattedTime = DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
-                    .withZone(ZoneId.of("Asia/Ho_Chi_Minh"))
-                    .format(startTime);
-            String content = type.buildContent(title, formattedTime);
+            String content = type.buildContent(title);
             String redirectUrl = type.buildRedirectUrl(auctionId);
             self().createAndPushNotification(sellerId, type, content, redirectUrl);
         } catch (Exception e) {

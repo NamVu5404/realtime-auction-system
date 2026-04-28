@@ -13,6 +13,8 @@ public class AuctionOverviewResponse {
     private Long totalAuctions;
     private Long liveCount;
     private Long scheduledCount;
+    private Long pendingReviewCount;
+    private Long rejectedCount;
     private Long endedCount;
     private Long endedNoSaleCount;
     private Long cancelledCount;

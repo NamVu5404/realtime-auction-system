@@ -15,7 +15,7 @@ public interface MailService {
 
     void sendAuctionWinnerEmail(String toEmail, String fullName, String auctionTitle, BigDecimal winningBid, Long auctionId, String token);
 
-    void sendAuctionApprovalEmail(String toEmail, String fullName, String auctionTitle, String startTime);
+    void sendAuctionApprovalEmail(String toEmail, String fullName, String auctionTitle);
 
     void sendAuctionRejectionEmail(String toEmail, String fullName, String auctionTitle, String reason);
 }

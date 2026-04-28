@@ -6,11 +6,9 @@ import {
   EyeOutlined,
   InfoCircleOutlined,
   RobotOutlined,
-  UserOutlined,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Avatar,
   Button,
   Card,
   Col,
@@ -21,7 +19,6 @@ import {
   Space,
   Statistic,
   Table,
-  Tag,
   Tooltip,
   Typography,
 } from "antd";
@@ -30,6 +27,8 @@ import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import adminApi from "../../api/adminApi";
 import { Auction, AuctionStatus } from "../../api/types";
+import formatCurrency from "../../utils/format";
+import { DEFAULT_AUCTION_IMAGE, getImageUrl } from "../../utils/imageUtils";
 import AuctionAuditDrawer from "./drawers/AuctionAuditDrawer";
 import { AuctionDetailDrawer } from "./drawers/AuctionDetailDrawer";
 
@@ -125,7 +124,7 @@ const AuctionReviewPage: React.FC = () => {
         <Space>
           {record.image ? (
             <img
-              src={record.image}
+              src={getImageUrl(record.image)}
               alt=""
               style={{
                 width: 48,
@@ -136,22 +135,19 @@ const AuctionReviewPage: React.FC = () => {
               }}
             />
           ) : (
-            <div
+            <img
+              src={DEFAULT_AUCTION_IMAGE}
+              alt=""
               style={{
                 width: 48,
                 height: 48,
                 borderRadius: 8,
-                background: "rgba(255,255,255,0.06)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                objectFit: "cover",
                 flexShrink: 0,
               }}
-            >
-              <ClockCircleOutlined style={{ color: "rgba(255,255,255,0.3)" }} />
-            </div>
+            />
           )}
-          <Space direction="vertical" size={2}>
+          <Space orientation="vertical" size={2}>
             <Text strong style={{ maxWidth: 220, display: "block" }}>
               {record.title}
             </Text>
@@ -160,7 +156,7 @@ const AuctionReviewPage: React.FC = () => {
               ellipsis={{ rows: 2 }}
               style={{ fontSize: 12, margin: 0, maxWidth: 220 }}
             >
-              {record.description}
+              #{record.id}
             </Paragraph>
           </Space>
         </Space>
@@ -170,14 +166,11 @@ const AuctionReviewPage: React.FC = () => {
       title: "Seller",
       key: "seller",
       render: (record: Auction) => (
-        <Space>
-          <Avatar size="small" icon={<UserOutlined />} />
-          <Space direction="vertical" size={0}>
-            <Text style={{ fontSize: 13 }}>{record.seller?.name}</Text>
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              {record.seller?.email}
-            </Text>
-          </Space>
+        <Space orientation="vertical" size={0}>
+          <Text style={{ fontSize: 13 }}>{record.seller?.name}</Text>
+          <Text type="secondary" style={{ fontSize: 11 }}>
+            {record.seller?.email}
+          </Text>
         </Space>
       ),
     },
@@ -186,7 +179,7 @@ const AuctionReviewPage: React.FC = () => {
       key: "price",
       render: (record: Auction) => (
         <Text strong style={{ color: "var(--color-gold-start)" }}>
-          {record.startPrice?.toLocaleString("vi-VN")}₫
+          {formatCurrency(record.startPrice)}
         </Text>
       ),
     },
@@ -204,21 +197,6 @@ const AuctionReviewPage: React.FC = () => {
             {dayjs(record.endTime).format("DD/MM/YYYY HH:mm")}
           </Text>
         </Space>
-      ),
-    },
-    {
-      title: "Status",
-      key: "status",
-      render: (record: Auction) => (
-        <Tag
-          color="orange"
-          icon={<RobotOutlined />}
-          style={{ borderRadius: 6 }}
-        >
-          {record.status === AuctionStatus.PENDING_REVIEW
-            ? "Pending Review"
-            : record.status}
-        </Tag>
       ),
     },
     {
@@ -424,7 +402,9 @@ const AuctionReviewPage: React.FC = () => {
         ]}
       >
         <div style={{ padding: "8px 0" }}>
-          <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+          <div
+            style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}
+          >
             <div
               style={{
                 width: "40px",
@@ -437,7 +417,9 @@ const AuctionReviewPage: React.FC = () => {
                 flexShrink: 0,
               }}
             >
-              <ExclamationCircleOutlined style={{ fontSize: "20px", color: "#f87171" }} />
+              <ExclamationCircleOutlined
+                style={{ fontSize: "20px", color: "#f87171" }}
+              />
             </div>
             <div style={{ flex: 1 }}>
               <Text style={{ color: "rgba(255,255,255,0.85)" }}>
@@ -479,7 +461,11 @@ const AuctionReviewPage: React.FC = () => {
 
       <AuctionAuditDrawer
         auctionId={auditAuctionId}
-        auctionTitle={auditAuctionId ? auctions?.data.find(a => a.id === auditAuctionId)?.title : undefined}
+        auctionTitle={
+          auditAuctionId
+            ? auctions?.data.find((a) => a.id === auditAuctionId)?.title
+            : undefined
+        }
         visible={auditDrawerVisible}
         onClose={() => setAuditDrawerVisible(false)}
         page={auditPage}

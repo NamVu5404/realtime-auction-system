@@ -8,6 +8,7 @@ import {
   UserOutlined,
   ShopOutlined,
   MailOutlined,
+  RobotOutlined,
   SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
@@ -77,17 +78,7 @@ const AdminLayout = () => {
           <SafetyCertificateOutlined />
         </Badge>
       ),
-      label: (
-        <span>
-          Auction Review
-          {pendingReviewCount > 0 && (
-            <Badge
-              count={pendingReviewCount}
-              style={{ marginLeft: 8, backgroundColor: "#FED469", color: "#191B24" }}
-            />
-          )}
-        </span>
-      ),
+      label: <span>Auction Review</span>,
       onClick: () => navigate("/admin/auction-review"),
     },
     {
@@ -101,6 +92,12 @@ const AdminLayout = () => {
       icon: <MailOutlined />,
       label: "Contact",
       onClick: () => navigate("/admin/contacts"),
+    },
+    {
+      key: "ai-logs",
+      icon: <RobotOutlined />,
+      label: "AI Review Logs",
+      onClick: () => navigate("/admin/ai-logs"),
     },
   ];
 

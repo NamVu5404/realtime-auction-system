@@ -325,9 +325,17 @@ export interface AuctionAuditResponse {
 /**
  * AI Review Log - Derived from AiReviewLog.java
  */
+export interface AiLogCountResponse {
+  total: number;
+  approved: number;
+  rejected: number;
+  fallbackToAdmin: number;
+}
+
 export interface AiReviewLog {
   id: number;
   auctionId: number;
+  auctionTitle?: string;
   decision: AiReviewDecision;
   confidence?: number;
   reasons?: string;
@@ -491,6 +499,8 @@ export interface SellerStatsResponse {
   totalAuctionsCreated: number;
   totalAuctionsSold: number;
   activeAuctions: number;
+  pendingReviewCount: number;
+  rejectedCount: number;
   totalBidsReceived: number;
   highestSoldPrice: number;
   totalUniqueBidders: number;
@@ -515,6 +525,8 @@ export interface AdminAuctionOverviewResponse {
   totalAuctions: number;
   liveCount: number;
   scheduledCount: number;
+  pendingReviewCount: number;
+  rejectedCount: number;
   endedCount: number;
   endedNoSaleCount: number;
   cancelledCount: number;

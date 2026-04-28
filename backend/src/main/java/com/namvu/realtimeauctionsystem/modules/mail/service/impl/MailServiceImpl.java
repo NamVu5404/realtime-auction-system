@@ -113,12 +113,12 @@ public class MailServiceImpl implements MailService {
 
     @Async(MAIL_EXECUTOR)
     @Override
-    public void sendAuctionApprovalEmail(String toEmail, String fullName, String auctionTitle, String startTime) {
+    public void sendAuctionApprovalEmail(String toEmail, String fullName, String auctionTitle) {
         sendEmail(EmailContext.builder()
                 .to(toEmail)
                 .subject("Your Auction Has Been Approved: " + auctionTitle)
                 .template("mail/auction-approval")
-                .variables(Map.of(FULL_NAME, fullName, AUCTION_TITLE, auctionTitle, "startTime", startTime))
+                .variables(Map.of(FULL_NAME, fullName, AUCTION_TITLE, auctionTitle))
                 .build());
     }
 

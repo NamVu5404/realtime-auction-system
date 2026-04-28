@@ -13,10 +13,12 @@ import {
   Result,
 } from "antd";
 import {
-  FireOutlined,
-  TrophyOutlined,
+  ClockCircleOutlined,
+  CloseCircleOutlined,
   DotChartOutlined,
+  FireOutlined,
   ShoppingOutlined,
+  TrophyOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
 import {
@@ -204,7 +206,7 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
         Quick Stats
       </Title>
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }} align="stretch">
-        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+        <Col xs={12} sm={6} md={6} style={{ display: "flex" }}>
           <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Total Bids Received"
@@ -213,7 +215,7 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
             />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+        <Col xs={12} sm={6} md={6} style={{ display: "flex" }}>
           <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Unique Bidders"
@@ -222,7 +224,7 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
             />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+        <Col xs={12} sm={6} md={6} style={{ display: "flex" }}>
           <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Avg Selling Price"
@@ -231,12 +233,12 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
             />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+        <Col xs={12} sm={6} md={6} style={{ display: "flex" }}>
           <Card size="small" style={{ flex: 1 }}>
             <Statistic title="Avg Bids/Auction" value={avgBidsPerAuction} />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+        <Col xs={12} sm={6} md={6} style={{ display: "flex" }}>
           <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Total Created"
@@ -245,7 +247,27 @@ const SellerStatisticsDashboard: React.FC<SellerStatisticsDashboardProps> = ({
             />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={8} style={{ display: "flex" }}>
+        <Col xs={12} sm={6} md={6} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
+            <Statistic
+              title="Pending Review"
+              value={stats.pendingReviewCount ?? 0}
+              prefix={<ClockCircleOutlined />}
+              styles={{ content: { color: "#f59e0b" } }}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} sm={6} md={6} style={{ display: "flex" }}>
+          <Card size="small" style={{ flex: 1 }}>
+            <Statistic
+              title="Rejected"
+              value={stats.rejectedCount ?? 0}
+              prefix={<CloseCircleOutlined />}
+              styles={{ content: { color: "#ef4444" } }}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} sm={6} md={6} style={{ display: "flex" }}>
           <Card size="small" style={{ flex: 1 }}>
             <Statistic
               title="Highest Sold Item"

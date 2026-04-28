@@ -13,8 +13,8 @@ import com.namvu.realtimeauctionsystem.modules.auction.dto.*;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.AuctionAudit;
 import com.namvu.realtimeauctionsystem.modules.auction.mapper.AuctionMapper;
-import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionAuditRepository;
 import com.namvu.realtimeauctionsystem.modules.auction.repository.AuctionRepository;
+import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionAuditService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionImageService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionService;
@@ -45,14 +45,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.WebSocketDestination.AUCTION_TOPIC_PREFIX;
@@ -63,7 +57,6 @@ import static com.namvu.realtimeauctionsystem.common.constant.MessagingConstant.
 public class AuctionServiceImpl implements AuctionService {
 
     private final AuctionRepository auctionRepository;
-    private final AuctionAuditRepository auctionAuditRepository;
     private final AuctionMapper auctionMapper;
     private final UserService userService;
     private final RedisAuctionService redisAuctionService;
@@ -82,6 +75,11 @@ public class AuctionServiceImpl implements AuctionService {
     @Lazy
     @Autowired
     private AiReviewService aiReviewService;
+
+    // @Lazy breaks circular dependency: AuctionService <-> AuctionAuditService
+    @Lazy
+    @Autowired
+    private AuctionAuditService auctionAuditService;
 
     @Override
     @Transactional(readOnly = true)
@@ -169,15 +167,6 @@ public class AuctionServiceImpl implements AuctionService {
 
         handlePrivateAuction(auction);
         auction = auctionRepository.save(auction);
-
-        // Audit: submitted for review
-        Map<String, Object> pendingDetails = new HashMap<>();
-        pendingDetails.put("submittedBy", SecurityUtils.getCurrentUserEmail());
-        auctionAuditRepository.save(AuctionAudit.builder()
-                .auction(auction)
-                .actionType(AuctionActionType.PENDING_REVIEW)
-                .details(pendingDetails)
-                .build());
 
         // Notify seller that auction is under review (async)
         notificationService.processAuctionPendingReviewNotifications(
@@ -309,8 +298,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Transactional
     @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public AuctionResponse approveAuction(Long auctionId) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+        Auction auction = this.getAuctionDetailById(auctionId);
 
         if (auction.getStatus() != AuctionStatus.PENDING_REVIEW) {
             throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
@@ -326,10 +314,8 @@ public class AuctionServiceImpl implements AuctionService {
         saveReviewAudit(auction, AuctionActionType.ADMIN_REVIEW_APPROVED, adminEmail, null);
 
         User seller = auction.getSeller();
-        notificationService.processAuctionApprovedNotifications(
-                seller.getId(), auctionId, auction.getTitle(), auction.getStartTime());
-        mailService.sendAuctionApprovalEmail(
-                seller.getEmail(), seller.getName(), auction.getTitle(), formatInstant(auction.getStartTime()));
+        notificationService.processAuctionApprovedNotifications(seller.getId(), auctionId, auction.getTitle());
+        mailService.sendAuctionApprovalEmail(seller.getEmail(), seller.getName(), auction.getTitle());
 
         log.info("Admin {} approved auction {} -> status={}", adminEmail, auctionId, newStatus);
 
@@ -343,8 +329,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Transactional
     @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public AuctionResponse rejectAuction(Long auctionId, String reason) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+        Auction auction = this.getAuctionDetailById(auctionId);
 
         if (auction.getStatus() != AuctionStatus.PENDING_REVIEW) {
             throw new AppException(ErrorCode.AUCTION_STATUS_INVALID);
@@ -357,10 +342,8 @@ public class AuctionServiceImpl implements AuctionService {
         saveReviewAudit(auction, AuctionActionType.ADMIN_REVIEW_REJECTED, adminEmail, reason);
 
         User seller = auction.getSeller();
-        notificationService.processAuctionRejectedNotifications(
-                seller.getId(), auctionId, auction.getTitle(), reason);
-        mailService.sendAuctionRejectionEmail(
-                seller.getEmail(), seller.getName(), auction.getTitle(), reason);
+        notificationService.processAuctionRejectedNotifications(seller.getId(), auctionId, auction.getTitle(), reason);
+        mailService.sendAuctionRejectionEmail(seller.getEmail(), seller.getName(), auction.getTitle(), reason);
 
         log.info("Admin {} rejected auction {}, reason={}", adminEmail, auctionId, reason);
 
@@ -373,8 +356,7 @@ public class AuctionServiceImpl implements AuctionService {
     @Transactional
     @CacheEvict(value = CacheNameConstant.AUCTIONS, allEntries = true)
     public void handleAiReviewResult(Long auctionId, AiReviewDecision decision, String reasons, String model) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));
+        Auction auction = this.getAuctionDetailById(auctionId);
 
         if (auction.getStatus() != AuctionStatus.PENDING_REVIEW) {
             log.warn("Auction {} is no longer PENDING_REVIEW (current: {}), skipping AI result",
@@ -392,20 +374,16 @@ public class AuctionServiceImpl implements AuctionService {
                 auction.setStatus(newStatus);
                 auctionRepository.save(auction);
                 saveReviewAudit(auction, AuctionActionType.AI_REVIEW_APPROVED, "AI:" + model, reasons);
-                notificationService.processAuctionApprovedNotifications(
-                        seller.getId(), auctionId, auction.getTitle(), auction.getStartTime());
-                mailService.sendAuctionApprovalEmail(
-                        seller.getEmail(), seller.getName(), auction.getTitle(), formatInstant(auction.getStartTime()));
+                notificationService.processAuctionApprovedNotifications(seller.getId(), auctionId, auction.getTitle());
+                mailService.sendAuctionApprovalEmail(seller.getEmail(), seller.getName(), auction.getTitle());
                 log.info("AI approved auction {} -> status={}, model={}", auctionId, newStatus, model);
             }
             case REJECTED -> {
                 auction.setStatus(AuctionStatus.REJECTED);
                 auctionRepository.save(auction);
                 saveReviewAudit(auction, AuctionActionType.AI_REVIEW_REJECTED, "AI:" + model, reasons);
-                notificationService.processAuctionRejectedNotifications(
-                        seller.getId(), auctionId, auction.getTitle(), reasons);
-                mailService.sendAuctionRejectionEmail(
-                        seller.getEmail(), seller.getName(), auction.getTitle(), reasons);
+                notificationService.processAuctionRejectedNotifications(seller.getId(), auctionId, auction.getTitle(), reasons);
+                mailService.sendAuctionRejectionEmail(seller.getEmail(), seller.getName(), auction.getTitle(), reasons);
                 log.info("AI rejected auction {}, reasons={}, model={}", auctionId, reasons, model);
             }
             case FALLBACK_TO_ADMIN -> {
@@ -429,17 +407,11 @@ public class AuctionServiceImpl implements AuctionService {
         if (reasons != null && !reasons.isBlank()) {
             details.put("reasons", reasons);
         }
-        auctionAuditRepository.save(AuctionAudit.builder()
+        auctionAuditService.saveAuctionAudit(AuctionAudit.builder()
                 .auction(auction)
                 .actionType(actionType)
                 .details(details)
                 .build());
-    }
-
-    private String formatInstant(Instant instant) {
-        return DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")
-                .withZone(ZoneId.of("Asia/Ho_Chi_Minh"))
-                .format(instant);
     }
 
     private void notifyWishlistUsersOnCancelled(Auction auction) {
@@ -600,6 +572,8 @@ public class AuctionServiceImpl implements AuctionService {
                 .totalAuctionsSold(aggregate.getTotalAuctionsSold())
                 .totalAuctionsEnded(aggregate.getEndedAuctions())
                 .activeAuctions(aggregate.getActiveAuctions())
+                .pendingReviewCount(aggregate.getPendingReviewCount())
+                .rejectedCount(aggregate.getRejectedCount())
                 .totalBidsReceived(totalBidsReceived)
                 .highestSoldPrice(aggregate.getHighestSoldPrice())
                 .totalUniqueBidders(totalUniqueBidders)

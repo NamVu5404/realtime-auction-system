@@ -75,15 +75,15 @@ public enum NotificationConstant {
     ),
     AUCTION_PENDING_REVIEW(
             "Phiên đấu giá đang chờ kiểm duyệt",
-            "Phiên đấu giá '%s' của bạn đang được kiểm duyệt tự động. Kết quả sẽ được thông báo sớm.",
+            "Phiên đấu giá '%s' của bạn đang được kiểm duyệt. Kết quả sẽ được thông báo sớm.",
             SELLER_AUCTION_DETAIL_URL
     ),
-    AUCTION_APPROVED( // Pending + mail
+    AUCTION_APPROVED(
             "Phiên đấu giá đã được phê duyệt",
-            "Phiên đấu giá '%s' của bạn đã được kiểm duyệt và sẽ bắt đầu vào lúc %s.",
+            "Phiên đấu giá '%s' của bạn đã được kiểm duyệt.",
             SELLER_AUCTION_DETAIL_URL
     ),
-    AUCTION_REJECTED( // Pending + mail
+    AUCTION_REJECTED(
             "Phiên đấu giá bị từ chối",
             "Phiên đấu giá '%s' của bạn bị từ chối kiểm duyệt. Lý do: %s.",
             SELLER_AUCTION_DETAIL_URL

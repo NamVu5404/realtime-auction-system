@@ -18,6 +18,8 @@ public class SellerStatsResponse {
     private Long totalAuctionsSold;
     private Long totalAuctionsEnded;
     private Long activeAuctions;
+    private Long pendingReviewCount;
+    private Long rejectedCount;
     private Long totalBidsReceived;
     private BigDecimal highestSoldPrice;
     private Long totalUniqueBidders;

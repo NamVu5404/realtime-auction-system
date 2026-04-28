@@ -463,7 +463,7 @@ const SellerAuctionPage = () => {
       dataIndex: "status",
       key: "status",
       render: (status: AuctionStatus) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
+        <Tag color={getStatusColor(status)}>{status.replace(/_/g, " ")}</Tag>
       ),
     },
   ];

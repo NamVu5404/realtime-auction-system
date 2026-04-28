@@ -10,7 +10,6 @@ public enum AuctionActionType {
     RESULT,
     FRAUD,
     RELIST,
-    PENDING_REVIEW,
     AI_REVIEW_APPROVED,
     AI_REVIEW_REJECTED,
     AI_REVIEW_FALLBACK,
