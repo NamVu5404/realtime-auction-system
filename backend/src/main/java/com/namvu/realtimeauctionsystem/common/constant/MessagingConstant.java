@@ -43,5 +43,6 @@ public class MessagingConstant {
         public static final String NOTIFICATION_EXECUTOR = "notificationExecutor";
         public static final String MAIL_EXECUTOR = "mailExecutor";
         public static final String CHAT_EXECUTOR = "chatExecutor";
+        public static final String AI_REVIEW_EXECUTOR = "aiReviewExecutor";
     }
 }

@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -123,8 +124,16 @@ public class WishListServiceImpl implements WishListService {
 
     private Map<Long, String> buildPrimaryImageMap(List<Long> auctionIds) {
         if (auctionIds.isEmpty()) return Map.of();
-        return auctionImageService.getAuctionImages(auctionIds).stream()
+
+        Map<Long, List<FileResponse>> imagesByAuction = auctionImageService.getAuctionImages(auctionIds).stream()
+                .collect(Collectors.groupingBy(FileResponse::ownerId));
+
+        Map<Long, String> result = new HashMap<>();
+        imagesByAuction.forEach((auctionId, images) -> images.stream()
                 .filter(img -> Boolean.TRUE.equals(img.isPrimary()))
-                .collect(Collectors.toMap(FileResponse::ownerId, f -> f.filePath() + "/" + f.storageName(), (a, b) -> a));
+                .findFirst()
+                .or(() -> images.stream().findFirst())
+                .ifPresent(img -> result.put(auctionId, img.filePath() + "/" + img.storageName())));
+        return result;
     }
 }

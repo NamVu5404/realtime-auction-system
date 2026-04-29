@@ -227,120 +227,8 @@ const AdminUserPage = () => {
 
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-    },
-    {
-      title: "Full Name",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Email Address",
-      dataIndex: "email",
-      key: "email",
-    },
-    {
-      title: "Phone Number",
-      dataIndex: "phone",
-      key: "phone",
-    },
-    {
-      title: "Location",
-      dataIndex: "location",
-      key: "location",
-    },
-    {
-      title: "IP Address",
-      dataIndex: "publicIp",
-      key: "publicIp",
-    },
-    {
-      title: "CCCD",
-      dataIndex: "isVerifiedIdentity",
-      key: "isVerifiedIdentity",
-      align: "center" as const,
-      render: (verified: boolean) => (
-        <Tooltip title={verified ? "Verified" : "Unverified"}>
-          {verified ? (
-            <CheckCircleFilled
-              style={{ color: "var(--color-accent-green)", fontSize: "16px" }}
-            />
-          ) : (
-            <CloseCircleFilled
-              style={{ color: "var(--color-text-muted)", fontSize: "16px" }}
-            />
-          )}
-        </Tooltip>
-      ),
-    },
-    {
-      title: "Face",
-      dataIndex: "isFaceMatch",
-      key: "isFaceMatch",
-      align: "center" as const,
-      render: (matched: boolean) => (
-        <Tooltip title={matched ? "Face Matched" : "Unmatched"}>
-          {matched ? (
-            <CheckCircleFilled
-              style={{ color: "var(--color-accent-green)", fontSize: "16px" }}
-            />
-          ) : (
-            <CloseCircleFilled
-              style={{ color: "var(--color-text-muted)", fontSize: "16px" }}
-            />
-          )}
-        </Tooltip>
-      ),
-    },
-    {
-      title: "Roles",
-      dataIndex: "roles",
-      key: "roles",
-      render: (roles: UserRole[]) => (
-        <Space size={[0, 4]} wrap>
-          {roles
-            ?.slice() // tránh mutate dữ liệu gốc
-            .sort((a, b) => roleOrder[a] - roleOrder[b])
-            .map((r) => (
-              <Tag key={r} {...roleStyles[r]}>
-                {r}
-              </Tag>
-            ))}
-        </Space>
-      ),
-    },
-    {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string, record: User) => (
-        <Tag color={status === "ACTIVE" ? "green" : "red"}>{status}</Tag>
-      ),
-    },
-    {
-      title: "Chat Banned Until",
-      dataIndex: "bannedUntil",
-      key: "bannedUntil",
-      render: (date: string) =>
-        date ? (
-          <span>
-            {new Date(date) > new Date(8640000000000000)
-              ? "Permanent"
-              : formatDateTime(date)}
-          </span>
-        ) : null,
-    },
-    {
-      title: "Created At",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date: string) => formatDateTime(date),
-    },
-    {
-      title: "Actions",
       key: "actions",
+      width: 10,
       render: (record: User) => (
         <Dropdown
           menu={{
@@ -462,6 +350,118 @@ const AdminUserPage = () => {
           <Button type="text" icon={<MoreOutlined />} />
         </Dropdown>
       ),
+    },
+    {
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
+      title: "Full Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Email Address",
+      dataIndex: "email",
+      key: "email",
+    },
+    {
+      title: "Phone Number",
+      dataIndex: "phone",
+      key: "phone",
+    },
+    {
+      title: "Location",
+      dataIndex: "location",
+      key: "location",
+    },
+    {
+      title: "IP Address",
+      dataIndex: "publicIp",
+      key: "publicIp",
+    },
+    {
+      title: "CCCD",
+      dataIndex: "isVerifiedIdentity",
+      key: "isVerifiedIdentity",
+      align: "center" as const,
+      render: (verified: boolean) => (
+        <Tooltip title={verified ? "Verified" : "Unverified"}>
+          {verified ? (
+            <CheckCircleFilled
+              style={{ color: "var(--color-accent-green)", fontSize: "16px" }}
+            />
+          ) : (
+            <CloseCircleFilled
+              style={{ color: "var(--color-text-muted)", fontSize: "16px" }}
+            />
+          )}
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Face",
+      dataIndex: "isFaceMatch",
+      key: "isFaceMatch",
+      align: "center" as const,
+      render: (matched: boolean) => (
+        <Tooltip title={matched ? "Face Matched" : "Unmatched"}>
+          {matched ? (
+            <CheckCircleFilled
+              style={{ color: "var(--color-accent-green)", fontSize: "16px" }}
+            />
+          ) : (
+            <CloseCircleFilled
+              style={{ color: "var(--color-text-muted)", fontSize: "16px" }}
+            />
+          )}
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Roles",
+      dataIndex: "roles",
+      key: "roles",
+      render: (roles: UserRole[]) => (
+        <Space size={[0, 4]} wrap>
+          {roles
+            ?.slice() // tránh mutate dữ liệu gốc
+            .sort((a, b) => roleOrder[a] - roleOrder[b])
+            .map((r) => (
+              <Tag key={r} {...roleStyles[r]}>
+                {r}
+              </Tag>
+            ))}
+        </Space>
+      ),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (status: string, record: User) => (
+        <Tag color={status === "ACTIVE" ? "green" : "red"}>{status}</Tag>
+      ),
+    },
+    {
+      title: "Chat Banned Until",
+      dataIndex: "bannedUntil",
+      key: "bannedUntil",
+      render: (date: string) =>
+        date ? (
+          <span>
+            {new Date(date) > new Date(8640000000000000)
+              ? "Permanent"
+              : formatDateTime(date)}
+          </span>
+        ) : null,
+    },
+    {
+      title: "Created At",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date: string) => formatDateTime(date),
     },
   ];
 

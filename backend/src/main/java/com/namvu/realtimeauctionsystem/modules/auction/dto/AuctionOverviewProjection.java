@@ -4,6 +4,8 @@ public interface AuctionOverviewProjection {
     Long getTotalAuctions();
     Long getLiveCount();
     Long getScheduledCount();
+    Long getPendingReviewCount();
+    Long getRejectedCount();
     Long getEndedCount();
     Long getEndedNoSaleCount();
     Long getCancelledCount();

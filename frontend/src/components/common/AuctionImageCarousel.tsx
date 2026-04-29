@@ -94,7 +94,7 @@ export const AuctionImageCarousel = ({
     <div className="w-full max-w-5xl mx-auto select-none group/carousel font-sans">
       {/* Carousel Viewport */}
       <div
-        className={`relative w-full ${aspectClass} ${heightClass} overflow-hidden rounded-2xl bg-zinc-950`}
+        className={`relative w-full ${aspectClass} ${heightClass} overflow-hidden rounded-2xl border border-solid border-[var(--color-border-md)] bg-[var(--color-card-high)] group/carousel shadow-2xl`}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -116,7 +116,10 @@ export const AuctionImageCarousel = ({
                     src={url}
                     alt={`Auction item ${index + 1}`}
                     className="max-w-full max-h-full w-auto h-auto rounded-xl shadow-2xl transition-all duration-300"
-                    style={{ objectFit: "contain" }}
+                    style={{
+                      objectFit: "contain",
+                      filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.4))",
+                    }}
                     placeholder={
                       <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 rounded-xl">
                         <Spin size="large" />
@@ -145,21 +148,49 @@ export const AuctionImageCarousel = ({
           <>
             <button
               onClick={goPrev}
-              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white transition-all opacity-0 group-hover/carousel:opacity-100 border border-white/10"
-              aria-label="Previous"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full 
+                 bg-white/5 backdrop-blur-md border border-solid border-[var(--color-gold-border)]
+                 text-[var(--color-gold-start)] hover:bg-[var(--color-gold-start)] hover:text-[var(--color-text-on-gold)]
+                 transition-all duration-500 ease-in-out
+                 opacity-0 group-hover/carousel:opacity-100 shadow-[0_0_20px_rgba(0,0,0,0.4)]"
             >
-              <span className="text-xl">‹</span>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
             </button>
             <button
               onClick={goNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white transition-all opacity-0 group-hover/carousel:opacity-100 border border-white/10"
-              aria-label="Next"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 flex items-center justify-center rounded-full 
+                 bg-white/5 backdrop-blur-md border border-solid border-[var(--color-gold-border)]
+                 text-[var(--color-gold-start)] hover:bg-[var(--color-gold-start)] hover:text-[var(--color-text-on-gold)]
+                 transition-all duration-500 ease-in-out
+                 opacity-0 group-hover/carousel:opacity-100 shadow-[0_0_20px_rgba(0,0,0,0.4)]"
             >
-              <span className="text-xl">›</span>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
             </button>
 
             {/* Counter */}
-            <div className="absolute top-4 right-4 z-20 px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-white text-xs font-bold border border-white/10 shadow-lg">
+            <div className="absolute top-4 right-4 z-20 px-3 py-1 bg-[var(--color-surface)]/80 backdrop-blur-md rounded-full text-[var(--color-gold-start)] text-[xs] font-bold border border-[var(--color-gold-border)] shadow-lg">
               {currentIndex + 1} / {urls.length}
             </div>
           </>
@@ -175,8 +206,8 @@ export const AuctionImageCarousel = ({
               onClick={() => goTo(index)}
               className={`transition-all duration-300 rounded-full ${
                 index === currentIndex
-                  ? "w-8 h-2 bg-yellow-400"
-                  : "w-2 h-2 bg-zinc-700 hover:bg-zinc-500"
+                  ? "w-8 h-2 bg-gradient-to-r from-[#fed469] to-[#feecbb] shadow-[0_0_10px_rgba(254,212,105,0.4)]"
+                  : "w-2 h-2 bg-[var(--color-text-muted)] hover:bg-[var(--color-text-secondary)]"
               }`}
               aria-label={`Go to ${index + 1}`}
             />

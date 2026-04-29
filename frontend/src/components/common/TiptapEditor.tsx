@@ -194,12 +194,16 @@ export const TiptapEditor = ({
     <div
       className={`border rounded-lg transition-all duration-200 ${
         disabled
-          ? "border-zinc-800 bg-zinc-900/30 opacity-60"
-          : "border-zinc-800 bg-zinc-950 focus-within:border-blue-500 hover:border-zinc-600"
+          ? "border-zinc-700 bg-zinc-800/20 cursor-not-allowed"
+          : "border-zinc-800 bg-zinc-900/40 backdrop-blur-sm focus-within:border-blue-500/50 hover:border-zinc-700"
       }`}
     >
       <MenuBar editor={editor} disabled={disabled} />
-      <div className="p-4 min-h-[150px] cursor-text prose prose-invert prose-sm prose-zinc max-w-none">
+      <div
+        className={`p-4 min-h-[150px] prose prose-invert prose-sm prose-zinc max-w-none ${
+          disabled ? "opacity-80 pointer-events-none" : "cursor-text"
+        }`}
+      >
         <EditorContent editor={editor} />
       </div>
     </div>

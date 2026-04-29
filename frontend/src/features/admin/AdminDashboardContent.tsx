@@ -1,4 +1,6 @@
 import {
+  ClockCircleOutlined,
+  CloseCircleOutlined,
   LineChartOutlined,
   MailOutlined,
   PlayCircleOutlined,
@@ -47,12 +49,14 @@ import { getAvatarUrl } from "../../utils/imageUtils";
 const { Title, Text } = Typography;
 
 const COLORS = [
-  "#10b981",
-  "#3b82f6",
-  "#fba919",
-  "#ef4444",
-  "#8b5cf6",
-  "#6b7280",
+  "#10b981", // Live
+  "#3b82f6", // Scheduled
+  "#8b5cf6", // Ended
+  "#f59e0b", // Ended No Sale
+  "#6b7280", // Cancelled
+  "#9ca3af", // Draft
+  "#ef4444", // Rejected
+  "#fba919", // Pending Review
 ];
 
 const AdminDashboardContent: React.FC = () => {
@@ -120,6 +124,8 @@ const AdminDashboardContent: React.FC = () => {
     { name: "Ended No Sale", value: overview.endedNoSaleCount },
     { name: "Cancelled", value: overview.cancelledCount },
     { name: "Draft", value: overview.draftCount },
+    { name: "Rejected", value: overview.rejectedCount },
+    { name: "Pending Review", value: overview.pendingReviewCount },
   ].filter((d) => d.value > 0);
 
   return (

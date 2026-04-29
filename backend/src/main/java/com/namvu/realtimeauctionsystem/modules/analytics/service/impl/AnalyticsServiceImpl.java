@@ -73,6 +73,8 @@ public class AnalyticsServiceImpl implements AnalyticsService {
                 .totalAuctions(data.getTotalAuctions())
                 .liveCount(data.getLiveCount())
                 .scheduledCount(data.getScheduledCount())
+                .pendingReviewCount(data.getPendingReviewCount())
+                .rejectedCount(data.getRejectedCount())
                 .endedCount(data.getEndedCount())
                 .endedNoSaleCount(data.getEndedNoSaleCount())
                 .cancelledCount(data.getCancelledCount())

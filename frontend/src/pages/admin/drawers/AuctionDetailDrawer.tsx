@@ -321,7 +321,7 @@ export const AuctionDetailDrawer = ({
               color={getStatusColor(auction.status)}
               className="text-base px-3 py-1 flex items-center gap-2 m-0 border-0"
             >
-              {auction.status}
+              {auction.status.replace(/_/g, " ")}
             </Tag>
 
             {/* Connection Status Indicator */}

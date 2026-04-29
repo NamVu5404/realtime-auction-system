@@ -186,4 +186,24 @@ public class AuctionControllerV1 {
     public ApiResponse<String> getAuctionToken(@PathVariable Long id) {
         return ApiResponse.ok(auctionService.getAuctionToken(id));
     }
+
+    @PatchMapping("/{id}/approve")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<AuctionResponse> approveAuction(@PathVariable Long id) {
+        return ApiResponse.of(AUCTION_REVIEW_APPROVED, auctionService.approveAuction(id));
+    }
+
+    @PatchMapping("/{id}/reject")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<AuctionResponse> rejectAuction(
+            @PathVariable Long id,
+            @RequestParam String reason) {
+        return ApiResponse.of(AUCTION_REVIEW_REJECTED, auctionService.rejectAuction(id, reason));
+    }
+
+    @GetMapping("/pending-review/count")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ApiResponse<Long> getPendingReviewCount() {
+        return ApiResponse.ok(auctionService.countPendingReviewAuctions());
+    }
 }

@@ -59,4 +59,15 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    @Bean(AI_REVIEW_EXECUTOR)
+    public Executor aiReviewExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(5);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("ai-review-");
+        executor.initialize();
+        return executor;
+    }
 }

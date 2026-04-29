@@ -91,6 +91,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     @EntityGraph(attributePaths = {"seller"})
     List<Auction> findByStatus(AuctionStatus status);
 
+    long countByStatus(AuctionStatus status);
+
     @Modifying
     @Query("UPDATE Auction a SET a.status = 'CANCELLED' " +
             "WHERE a.seller.id = :sellerId " +
@@ -120,6 +122,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
                 COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN 1 ELSE 0 END), 0) AS totalAuctionsSold,
                 COALESCE(SUM(CASE WHEN a.status IN ('LIVE', 'SCHEDULED') THEN 1 ELSE 0 END), 0) AS activeAuctions,
                 COALESCE(SUM(CASE WHEN a.status IN ('ENDED', 'ENDED_NO_SALE') THEN 1 ELSE 0 END), 0) AS endedAuctions,
+                COALESCE(SUM(CASE WHEN a.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END), 0) AS pendingReviewCount,
+                COALESCE(SUM(CASE WHEN a.status = 'REJECTED' THEN 1 ELSE 0 END), 0) AS rejectedCount,
                 COALESCE(SUM(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS totalRevenue,
                 COALESCE(MAX(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.currentPrice ELSE 0 END), 0) AS highestSoldPrice
             FROM Auction a
@@ -156,6 +160,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
                 COUNT(a) AS totalAuctions,
                 COALESCE(SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END), 0) AS liveCount,
                 COALESCE(SUM(CASE WHEN a.status = 'SCHEDULED' THEN 1 ELSE 0 END), 0) AS scheduledCount,
+                COALESCE(SUM(CASE WHEN a.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END), 0) AS pendingReviewCount,
+                COALESCE(SUM(CASE WHEN a.status = 'REJECTED' THEN 1 ELSE 0 END), 0) AS rejectedCount,
                 COALESCE(SUM(CASE WHEN a.status = 'ENDED' THEN 1 ELSE 0 END), 0) AS endedCount,
                 COALESCE(SUM(CASE WHEN a.status = 'ENDED_NO_SALE' THEN 1 ELSE 0 END), 0) AS endedNoSaleCount,
                 COALESCE(SUM(CASE WHEN a.status = 'CANCELLED' THEN 1 ELSE 0 END), 0) AS cancelledCount,

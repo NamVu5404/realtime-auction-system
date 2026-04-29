@@ -15,15 +15,19 @@ export const getStatusColor = (status: AuctionStatus): string => {
     case AuctionStatus.LIVE:
       return 'green';
     case AuctionStatus.DRAFT:
-      return 'default'; // Grey
+      return 'default';
+    case AuctionStatus.PENDING_REVIEW:
+      return 'processing';
     case AuctionStatus.SCHEDULED:
       return 'blue';
     case AuctionStatus.ENDED:
       return 'red';
     case AuctionStatus.ENDED_NO_SALE:
-      return 'orange'; // or 'volcano'
+      return 'orange';
     case AuctionStatus.CANCELLED:
       return 'red';
+    case AuctionStatus.REJECTED:
+      return 'error';
     default:
       return 'default';
   }
