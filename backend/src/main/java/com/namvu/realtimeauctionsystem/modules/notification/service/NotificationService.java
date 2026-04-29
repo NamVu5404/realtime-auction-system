@@ -56,4 +56,12 @@ public interface NotificationService {
     void processWishlistAuctionStartNotifications(Long auctionId, String title, BigDecimal startPrice, Set<Long> userIds);
 
     void processWishlistAuctionCancelledNotifications(Long auctionId, String title, Set<Long> userIds);
+
+    void processAuctionPendingReviewNotifications(Long sellerId, Long auctionId, String title);
+
+    void processAuctionApprovedNotifications(Long sellerId, Long auctionId, String title);
+
+    void processAuctionRejectedNotifications(Long sellerId, Long auctionId, String title, String reason);
+
+    void processAdminAuctionReviewNotifications(Set<Long> adminIds, Long auctionId, String title);
 }

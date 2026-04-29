@@ -1,5 +1,6 @@
 package com.namvu.realtimeauctionsystem.modules.auction.service;
 
+import com.namvu.realtimeauctionsystem.common.constant.AiReviewDecision;
 import com.namvu.realtimeauctionsystem.common.constant.AuctionStatus;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.*;
@@ -64,4 +65,12 @@ public interface AuctionService {
     List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat);
 
     String getAuctionToken(Long id);
+
+    AuctionResponse approveAuction(Long auctionId);
+
+    AuctionResponse rejectAuction(Long auctionId, String reason);
+
+    void handleAiReviewResult(Long auctionId, AiReviewDecision decision, String reasons, String model);
+
+    long countPendingReviewAuctions();
 }

@@ -1,38 +1,35 @@
-import React, { useState, useEffect } from "react";
-import { Upload, App, Button, Progress, Card } from "antd";
 import {
-  InboxOutlined,
-  StarOutlined,
-  StarFilled,
   DeleteOutlined,
+  InboxOutlined,
   MenuOutlined,
+  StarFilled,
+  StarOutlined,
 } from "@ant-design/icons";
 import {
-  DndContext,
   closestCenter,
+  DndContext,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
-  MouseSensor,
-  TouchSensor,
 } from "@dnd-kit/core";
 import {
   arrayMove,
+  rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
-  rectSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { fileApi } from "../../api/fileApi";
+import { App, Button, Card, Progress, Upload } from "antd";
+import React, { useEffect, useState } from "react";
 import { extractErrorMessage } from "../../api/apiUtils";
+import { fileApi } from "../../api/fileApi";
 import {
-  FileResponse,
-  OwnerType,
-  FileMetadataRequest,
   AuctionStatus,
+  FileMetadataRequest,
+  FileResponse,
 } from "../../api/types";
 import { getImageUrl } from "../../utils/imageUtils";
 
@@ -96,7 +93,7 @@ const SortableImageItem = ({
       className="relative group aspect-square"
     >
       <Card
-        className={`w-full h-full overflow-hidden border-zinc-800 bg-zinc-900 flex flex-col p-1 ${
+        className={`w-full h-full overflow-hidden bg-[var(--color-bg)] flex flex-col p-0 ${
           file.isPrimary ? "border-yellow-500/50" : ""
         }`}
         styles={{ body: { padding: 0, height: "100%" } }}

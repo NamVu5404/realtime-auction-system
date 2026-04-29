@@ -4,8 +4,10 @@ public enum AuctionStatus {
     ALL,
     DRAFT,
     SCHEDULED,
+    PENDING_REVIEW,
     LIVE,
     ENDED,
     ENDED_NO_SALE,
-    CANCELLED
+    CANCELLED,
+    REJECTED,
 }

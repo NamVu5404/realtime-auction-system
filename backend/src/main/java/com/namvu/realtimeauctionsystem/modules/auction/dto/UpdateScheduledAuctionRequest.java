@@ -13,8 +13,6 @@ import java.time.Instant;
 @AllArgsConstructor
 public class UpdateScheduledAuctionRequest {
 
-    private String description;
-
     @NotNull(message = "Start time is required")
     @Future(message = "Start time must be in the future")
     private Instant startTime;

@@ -376,14 +376,17 @@ export const AuctionForm = ({
 
       {/* Description */}
       <Form.Item name="description" label="Description">
-        <TiptapEditor placeholder="Enter auction description" />
+        <TiptapEditor
+          placeholder="Enter auction description"
+          disabled={isScheduledStatus}
+        />
       </Form.Item>
 
       {/* Image Section */}
       <Form.Item label="Images">
         {(mode === "edit" && localAuction) ||
         (mode === "create" && localAuction) ? (
-          <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800">
+          <div className="bg-[var(--color-card)] p-4 rounded-xl border border-solid border-[var(--color-border-md)] shadow-sm">
             <AuctionImageManager
               key={localAuction!.id}
               auctionId={localAuction!.id}

@@ -21,6 +21,8 @@ import AdminAuctionPage from './pages/admin/AdminAuctionPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminNotificationPage from './pages/admin/AdminNotificationPage';
 import AdminUserPage from './pages/admin/AdminUserPage';
+import AILogsPage from './pages/admin/AILogsPage';
+import AuctionReviewPage from './pages/admin/AuctionReviewPage';
 import ContactManagementPage from './pages/admin/ContactManagementPage';
 import SellerManagementPage from './pages/admin/SellerManagementPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
@@ -122,9 +124,11 @@ function App() {
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUserPage />} />
                 <Route path="auctions" element={<AdminAuctionPage />} />
+                <Route path="auction-review" element={<AuctionReviewPage />} />
                 <Route path="sellers" element={<SellerManagementPage />} />
                 <Route path="contacts" element={<ContactManagementPage />} />
                 <Route path="notifications" element={<AdminNotificationPage />} />
+                <Route path="ai-logs" element={<AILogsPage />} />
               </Route>
 
               {/* Seller Routes with SellerLayout (Sidebar + Seller Header) */}
