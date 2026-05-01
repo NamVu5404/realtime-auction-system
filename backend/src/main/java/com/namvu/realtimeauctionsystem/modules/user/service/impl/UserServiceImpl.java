@@ -325,4 +325,21 @@ public class UserServiceImpl implements UserService {
                         .build())
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TopSellerPublicResponse> getPublicTopSellers(int limit) {
+        return userRepository.getPublicTopSellers(PageRequest.of(0, limit)).stream()
+                .map(p -> TopSellerPublicResponse.builder()
+                        .id(p.getSellerId())
+                        .name(p.getName())
+                        .avatarUrl(p.getAvatarUrl())
+                        .location(p.getLocation())
+                        .isVerifiedIdentity(Boolean.TRUE.equals(p.getIsVerifiedIdentity()))
+                        .totalAuctions(p.getTotalAuctions())
+                        .liveAuctions(p.getLiveAuctions())
+                        .soldAuctions(p.getSoldAuctions())
+                        .build())
+                .toList();
+    }
 }

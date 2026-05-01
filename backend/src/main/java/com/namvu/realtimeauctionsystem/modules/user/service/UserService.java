@@ -52,4 +52,6 @@ public interface UserService {
     UserAnalyticsResponse getUserAnalytics();
 
     List<TopSellerData> getTopSellers(int limit);
+
+    List<TopSellerPublicResponse> getPublicTopSellers(int limit);
 }

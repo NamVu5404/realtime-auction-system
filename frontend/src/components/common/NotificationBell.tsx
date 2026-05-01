@@ -286,6 +286,11 @@ const NotificationBell: React.FC = () => {
         size="small"
         offset={[-2, 6]}
         styles={{
+          root: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
           indicator: {
             backgroundColor: "var(--color-gold-start)",
             color: "var(--color-text-on-gold)",

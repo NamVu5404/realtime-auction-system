@@ -12,7 +12,7 @@ const AccountLayout = () => {
         minHeight: "100vh",
       }}
     >
-      <div className="container mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10 flex flex-col lg:flex-row gap-6 md:gap-10">
+      <div className="container mx-auto max-w-7xl px-4 py-6 md:px-0 md:py-10 flex flex-col lg:flex-row gap-6 md:gap-10">
         <AccountSidebar />
         <Content
           style={{

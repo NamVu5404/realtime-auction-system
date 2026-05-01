@@ -566,6 +566,17 @@ export interface AdminRevenueChartResponse {
  * Top Performers Types
  */
 
+export interface TopSellerPublicResponse {
+  id: number;
+  name: string;
+  avatarUrl?: string;
+  location?: string;
+  isVerifiedIdentity: boolean;
+  totalAuctions: number;
+  liveAuctions: number;
+  soldAuctions: number;
+}
+
 export interface TopSellerData {
   sellerId: number;
   name: string;

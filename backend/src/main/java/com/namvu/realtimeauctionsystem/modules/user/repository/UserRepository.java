@@ -5,6 +5,7 @@ import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStat
 import com.namvu.realtimeauctionsystem.modules.user.dto.CountryStatsProjection;
 import com.namvu.realtimeauctionsystem.modules.user.dto.SellerResponse;
 import com.namvu.realtimeauctionsystem.modules.user.dto.TopSellerProjection;
+import com.namvu.realtimeauctionsystem.modules.user.dto.TopSellerPublicProjection;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -121,4 +122,24 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 ORDER BY totalRevenue DESC
             """)
     List<TopSellerProjection> getTopSellers(Pageable pageable);
+
+    @Query("""
+                SELECT
+                    u.id AS sellerId,
+                    u.name AS name,
+                    u.avatarUrl AS avatarUrl,
+                    u.location AS location,
+                    CASE WHEN kv.id IS NOT NULL THEN true ELSE false END AS isVerifiedIdentity,
+                    COUNT(a.id) AS totalAuctions,
+                    COALESCE(SUM(CASE WHEN a.status = 'LIVE' THEN 1 ELSE 0 END), 0) AS liveAuctions,
+                    COUNT(CASE WHEN a.status = 'ENDED' AND a.highestBidder IS NOT NULL THEN a.id ELSE NULL END) AS soldAuctions
+                FROM User u
+                JOIN u.roles r
+                LEFT JOIN u.kycVerification kv
+                LEFT JOIN Auction a ON a.seller.id = u.id
+                WHERE r = 'SELLER' AND u.status = 'ACTIVE'
+                GROUP BY u.id, u.name, u.avatarUrl, u.location, kv.id
+                ORDER BY soldAuctions DESC
+            """)
+    List<TopSellerPublicProjection> getPublicTopSellers(Pageable pageable);
 }

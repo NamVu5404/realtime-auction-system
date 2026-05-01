@@ -1,6 +1,6 @@
 import axiosClient from "./axiosClient";
 import { extractErrorMessage } from "./apiUtils";
-import { ApiResponse, ApiResult, PageResponse, User } from "./types";
+import { ApiResponse, ApiResult, PageResponse, TopSellerPublicResponse, User } from "./types";
 
 export interface UpdateUserRequest {
   name: string;
@@ -60,6 +60,18 @@ const userApi = {
   getMe: async (): Promise<User> => {
     try {
       const response = await axiosClient.get<ApiResponse<User>>("/users/me");
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getPublicTopSellers: async (limit = 10): Promise<TopSellerPublicResponse[]> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<TopSellerPublicResponse[]>>(
+        "/users/public/top-sellers",
+        { params: { limit } },
+      );
       return response.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));

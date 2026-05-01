@@ -41,7 +41,7 @@ const WishlistPage = () => {
 
   const { data, isLoading } = useQuery<PageResponse<WishListResponse>, Error>({
     queryKey: ["wishlist", page],
-    queryFn: () => wishlistApi.getMyWishList(page, 20),
+    queryFn: () => wishlistApi.getMyWishList(page, 12),
     enabled: isAuthenticated,
   });
 
@@ -98,7 +98,7 @@ const WishlistPage = () => {
           totalElements={data?.totalElements || 0}
           onPageChange={handlePageChange}
           emptyMessage="Your wishlist is empty"
-          gridSpan={{ xs: 24, sm: 24, md: 12, lg: 12, xl: 8 }}
+          gridSpan={{ xs: 12, sm: 12, md: 8, lg: 8, xl: 6 }}
         />
       )}
     </div>

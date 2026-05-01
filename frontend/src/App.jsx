@@ -27,6 +27,7 @@ import ContactManagementPage from './pages/admin/ContactManagementPage';
 import SellerManagementPage from './pages/admin/SellerManagementPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import AuctionDetailPage from './pages/home/AuctionDetailPage';
+import AuctionsPage from './pages/home/AuctionsPage';
 import HomePage from './pages/home/HomePage';
 import NotFound from './pages/NotFound';
 import SellerAuctionPage from './pages/seller/SellerAuctionPage';
@@ -104,6 +105,7 @@ function App() {
               {/* Public Routes with MainLayout (Header + Footer) */}
               <Route element={<MainLayout />}>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/auctions" element={<AuctionsPage />} />
                 <Route path="/auction/:id" element={<AuctionDetailPage />} />
                 <Route
                   path="/my-bids"

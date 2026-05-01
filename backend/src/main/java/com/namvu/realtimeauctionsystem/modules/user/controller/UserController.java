@@ -13,6 +13,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.*;
@@ -93,5 +95,12 @@ public class UserController {
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
         return ApiResponse.ok(userService.getSellers(pageable));
+    }
+
+    @GetMapping("/public/top-sellers")
+    public ApiResponse<List<TopSellerPublicResponse>> getPublicTopSellers(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ApiResponse.ok(userService.getPublicTopSellers(limit));
     }
 }
