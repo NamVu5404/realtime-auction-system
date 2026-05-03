@@ -342,4 +342,19 @@ public class UserServiceImpl implements UserService {
                         .build())
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TopBidderPublicResponse> getPublicTopBidders(int limit) {
+        return userRepository.getPublicTopBidders(PageRequest.of(0, limit)).stream()
+                .map(p -> new TopBidderPublicResponse(
+                        p.getId(),
+                        p.getName(),
+                        p.getAvatarUrl(),
+                        p.getLocation(),
+                        p.getTotalBids(),
+                        p.getTotalAuctionsParticipated(),
+                        p.getTotalWins()))
+                .toList();
+    }
 }

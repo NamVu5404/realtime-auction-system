@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App as AppAntd, ConfigProvider, theme } from 'antd';
-import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Navigate, Route, BrowserRouter as Router, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import './App.css';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { AntdStaticSetter } from './components/AntdStaticSetter';
@@ -35,6 +36,21 @@ import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerNotificationPage from './pages/seller/SellerNotificationPage';
 // Create a client for React Query
 const queryClient = new QueryClient();
+
+const ScrollToTop = () => {
+  const location = useLocation();
+  const navType = useNavigationType();
+
+  useEffect(() => {
+    // Chỉ cuộn lên top nếu là navigate mới (PUSH hoặc REPLACE).
+    // Nếu là back (POP), trình duyệt sẽ tự khôi phục vị trí scroll cũ.
+    if (navType !== "POP") {
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname, navType]);
+
+  return null;
+};
 
 function App() {
   // Mount once globally — writes Kafka health to useUIStore
@@ -101,6 +117,7 @@ function App() {
         <AppAntd>
           <AntdStaticSetter />
           <Router>
+            <ScrollToTop />
             <Routes>
               {/* Public Routes with MainLayout (Header + Footer) */}
               <Route element={<MainLayout />}>

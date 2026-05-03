@@ -5,16 +5,22 @@ import {
   SettingOutlined,
   ShopOutlined,
   UserOutlined,
+  ClockCircleOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import type { InputRef } from "antd";
 import { Avatar, Dropdown, Input, Layout, MenuProps, Space, Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import logo from "../../assets/images/logo.png";
 import GoogleLoginButton from "../../auth/GoogleLoginButton";
 import { useAuth } from "../../hooks/useAuth";
+import { useDebounce } from "../../hooks/useDebounce";
+import { auctionApi } from "../../api/auctionApi";
 import { useNotificationWebSocket } from "../../hooks/useNotificationWebSocket";
-import { getAvatarUrl } from "../../utils/imageUtils";
+import { getAvatarUrl, getImageUrl } from "../../utils/imageUtils";
+import { formatCurrency } from "../../utils/format";
 import NotificationBell from "../common/NotificationBell";
 
 const { Header: AntHeader } = Layout;
@@ -35,6 +41,24 @@ export const Header = () => {
   const searchRef = useRef<InputRef>(null);
 
   const [scrolled, setScrolled] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("search-history");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const debouncedSearch = useDebounce(searchValue, 300);
+
+  const { data: searchResults, isFetching: isSearching } = useQuery({
+    queryKey: ["searchAuctions", debouncedSearch],
+    queryFn: () => auctionApi.searchAuctions(debouncedSearch, 1, 5),
+    enabled: debouncedSearch.trim().length > 0,
+    staleTime: 60000,
+  });
 
   useNotificationWebSocket();
 
@@ -49,6 +73,27 @@ export const Header = () => {
     if (searchOpen) searchRef.current?.focus();
   }, [searchOpen]);
 
+  const saveToSearchHistory = (keyword: string) => {
+    const q = keyword.trim();
+    if (!q) return;
+    setSearchHistory((prev) => {
+      const filtered = prev.filter((item) => item !== q);
+      const updated = [q, ...filtered].slice(0, 5);
+      localStorage.setItem("search-history", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const removeFromSearchHistory = (e: React.MouseEvent, keyword: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSearchHistory((prev) => {
+      const updated = prev.filter((item) => item !== keyword);
+      localStorage.setItem("search-history", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const handleLogout = async () => {
     setLoading(true);
     try {
@@ -59,13 +104,131 @@ export const Header = () => {
     }
   };
 
-  const handleSearch = (value: string) => {
+  const closeDropdown = () => {
+    setSearchOpen(false);
+    setIsSearchFocused(false);
+    setSearchValue("");
+  };
+
+  const handleSearchSubmit = (value: string) => {
     const q = value.trim();
     if (!q) return;
+    saveToSearchHistory(q);
     navigate(`/auctions?q=${encodeURIComponent(q)}`);
-    setSearchValue("");
-    setSearchOpen(false);
+    closeDropdown();
   };
+
+  const handleResultClick = (id: number, title: string) => {
+    saveToSearchHistory(title);
+    navigate(`/auction/${id}`);
+    closeDropdown();
+  };
+
+  // Inline JSX — NOT a sub-component to avoid unmount/remount on every keystroke
+  const searchDropdownJSX = (() => {
+    const showDropdown = isSearchFocused || searchOpen;
+    if (!showDropdown) return null;
+
+    if (debouncedSearch) {
+      const hasResults = searchResults?.data && searchResults.data.length > 0;
+      return (
+        <div
+          className="absolute left-0 w-full bg-[var(--color-card-high)] border border-[var(--color-border-md)] rounded-md overflow-hidden z-[9999] flex flex-col text-left shadow-2xl"
+          style={{ top: "calc(100% - 5px)" }}
+        >
+          {isSearching ? (
+            <div className="p-4 text-center">
+              <Spin size="small" />
+            </div>
+          ) : hasResults ? (
+            <>
+              {searchResults!.data.map((auction) => {
+                const imgSrc = getImageUrl(auction.image);
+                return (
+                  <div
+                    key={auction.id}
+                    className="flex items-center gap-3 px-3 py-4 cursor-pointer hover:bg-[var(--color-card-hover)] border-b border-[var(--color-border-md)] transition-colors last:border-b-0"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleResultClick(auction.id, auction.title);
+                    }}
+                  >
+                    <img
+                      src={imgSrc}
+                      alt={auction.title}
+                      className="w-10 h-8 rounded shrink-0 object-cover bg-[var(--color-bg)]"
+                    />
+                    <div className="flex flex-col flex-1 min-w-0 justify-center">
+                      <div
+                        className="text-[13px] font-semibold text-[var(--color-text-primary)] truncate w-full leading-tight mb-0.5"
+                        title={auction.title}
+                      >
+                        {auction.title}
+                      </div>
+                      <div className="flex items-center text-[11px] leading-tight">
+                        <span
+                          className="font-bold"
+                          style={{ color: "var(--color-gold-start)" }}
+                        >
+                          {formatCurrency(auction.currentPrice)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div
+                className="flex items-center justify-center gap-2 h-9 cursor-pointer text-[var(--color-text-secondary)] hover:text-[var(--color-gold-start)] hover:bg-[var(--color-card-hover)] transition-colors border-t border-[var(--color-border-md)] bg-[var(--color-card)]"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSearchSubmit(debouncedSearch);
+                }}
+              >
+                <SearchOutlined className="text-[14px]" />
+                <span className="text-[12px] leading-none">
+                  View all results
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="p-4 text-center text-[13px] text-[var(--color-text-muted)]">
+              No results found for "{debouncedSearch}"
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (searchHistory.length === 0) return null;
+
+    return (
+      <div
+        className="absolute left-0 w-full bg-[var(--color-card-high)] border border-[var(--color-border-md)] rounded-md overflow-hidden z-[9999] flex flex-col text-left shadow-2xl"
+        style={{ top: "calc(100% - 5px)" }}
+      >
+        {searchHistory.map((item, idx) => (
+          <div
+            key={`${item}-${idx}`}
+            className="flex items-center justify-between px-4 py-2.5 cursor-pointer hover:bg-[var(--color-card-hover)] transition-colors"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setSearchValue(item);
+              handleSearchSubmit(item);
+            }}
+          >
+            <div className="flex items-center gap-2 flex-1 min-w-0 text-[var(--color-text-secondary)] text-[13px]">
+              <ClockCircleOutlined className="text-[14px] shrink-0" />
+              <span className="truncate block leading-tight">{item}</span>
+            </div>
+            <CloseOutlined
+              className="text-[var(--color-text-secondary)] text-[12px] p-1 shrink-0 hover:text-[var(--color-accent-red)] transition-colors"
+              onMouseDown={(e) => removeFromSearchHistory(e, item)}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  })();
 
   const userMenuItems: MenuProps["items"] = [
     ...(user?.roles?.includes("ADMIN")
@@ -162,12 +325,12 @@ export const Header = () => {
             <img
               src={logo}
               alt="AuctionPro"
-              style={{ height: "27px", objectFit: "contain" }}
+              style={{ height: "32px", objectFit: "contain" }}
             />
             <span
               className="hidden sm:block"
               style={{
-                fontSize: "19px",
+                fontSize: "24px",
                 fontWeight: 800,
                 letterSpacing: "-0.025em",
                 background: "linear-gradient(135deg, #FED469 0%, #FEECBB 100%)",
@@ -181,7 +344,7 @@ export const Header = () => {
           </div>
 
           {/* Search — desktop */}
-          <div className="hidden md:block">
+          <div className="hidden md:block" style={{ position: "relative" }}>
             <Input
               prefix={
                 <SearchOutlined style={{ color: "#fff", fontSize: "12px" }} />
@@ -189,15 +352,19 @@ export const Header = () => {
               placeholder="Search auctions..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              onPressEnter={() => handleSearch(searchValue)}
+              onPressEnter={() => handleSearchSubmit(searchValue)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
               style={{
                 border: "1px solid #fff",
                 color: "#fff",
                 fontSize: "12.5px",
-                height: "34px",
-                width: "200px",
+                height: "32px",
+                width: "320px",
               }}
+              allowClear
             />
+            {searchDropdownJSX}
           </div>
 
           {/* Search icon — mobile */}
@@ -361,18 +528,24 @@ export const Header = () => {
             backdropFilter: "blur(20px)",
           }}
         >
-          <Input
-            ref={searchRef}
-            prefix={<SearchOutlined style={{ color: "#fff" }} />}
-            placeholder="Search auctions..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            onPressEnter={() => handleSearch(searchValue)}
-            style={{
-              color: "#fff",
-              fontSize: "14px",
-            }}
-          />
+          <div style={{ position: "relative" }}>
+            <Input
+              ref={searchRef}
+              prefix={<SearchOutlined style={{ color: "#fff" }} />}
+              placeholder="Search auctions..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onPressEnter={() => handleSearchSubmit(searchValue)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              style={{
+                color: "#fff",
+                fontSize: "14px",
+              }}
+              allowClear
+            />
+            {searchDropdownJSX}
+          </div>
         </div>
       )}
     </>

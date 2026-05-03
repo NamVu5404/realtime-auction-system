@@ -65,7 +65,7 @@ export const Footer = () => {
               />
               <span
                 style={{
-                  fontSize: "30px",
+                  fontSize: "32px",
                   fontWeight: 800,
                   letterSpacing: "-0.02em",
                   background:

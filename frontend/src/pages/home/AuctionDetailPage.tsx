@@ -296,10 +296,12 @@ export const AuctionDetailPage = () => {
 
       // Persist to localStorage to prevent re-triggering across sessions
       if (user?.id && auction?.id) {
-        localStorage.setItem(
-          `celebrated_auction_${user.id}_${auction.id}`,
-          "true",
-        );
+        const key = `celebrated_auctions_${user.id}`;
+        const ids: number[] = JSON.parse(localStorage.getItem(key) ?? "[]");
+        if (!ids.includes(auction.id)) {
+          ids.push(auction.id);
+          localStorage.setItem(key, JSON.stringify(ids));
+        }
       }
 
       console.log("🏆 YOU WON! Triggering premium celebration...");
@@ -350,8 +352,9 @@ export const AuctionDetailPage = () => {
   useEffect(() => {
     const token = searchParams.get("token");
     if (token && auctionId) {
-      const storageKey = `auction_token_${auctionId}`;
-      sessionStorage.setItem(storageKey, token);
+      const tokens = JSON.parse(localStorage.getItem("auction_tokens") ?? "{}");
+      tokens[auctionId] = token;
+      localStorage.setItem("auction_tokens", JSON.stringify(tokens));
       searchParams.delete("token");
       setSearchParams(searchParams, { replace: true });
       console.log(`[PrivateMode] Token saved and removed from URL`);
@@ -366,9 +369,10 @@ export const AuctionDetailPage = () => {
       if (!auction || !user?.id) return;
 
       // Check localStorage first for absolute persistence
-      const isAlreadyCelebrated = localStorage.getItem(
-        `celebrated_auction_${user.id}_${auction.id}`,
+      const ids: number[] = JSON.parse(
+        localStorage.getItem(`celebrated_auctions_${user.id}`) ?? "[]",
       );
+      const isAlreadyCelebrated = ids.includes(auction.id);
       if (isAlreadyCelebrated) {
         hasCelebratedRef.current = true;
         return;

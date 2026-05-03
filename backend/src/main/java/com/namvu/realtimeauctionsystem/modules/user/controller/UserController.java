@@ -103,4 +103,11 @@ public class UserController {
     ) {
         return ApiResponse.ok(userService.getPublicTopSellers(limit));
     }
+
+    @GetMapping("/public/top-bidders")
+    public ApiResponse<List<TopBidderPublicResponse>> getPublicTopBidders(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ApiResponse.ok(userService.getPublicTopBidders(limit));
+    }
 }

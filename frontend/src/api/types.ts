@@ -295,6 +295,7 @@ export interface MyBidHistoryResponse {
   auctionId: number;
   auctionTitle: string;
   auctionStatus: AuctionStatus;
+  image: string;
   amount: number;
   currentPrice: number;
   status: BidStatus;
@@ -597,6 +598,25 @@ export interface MostActiveAuctionData {
 export interface TopPerformingResponse {
   topSellers: TopSellerData[];
   mostActiveAuctions: MostActiveAuctionData[];
+}
+
+export interface TopBidderPublicResponse {
+  id: number;
+  name: string;
+  avatarUrl?: string;
+  location?: string;
+  totalBids: number;
+  totalAuctionsParticipated: number;
+  totalWins: number;
+}
+
+export interface RecentBidFeedResponse {
+  bidderName: string;
+  bidderAvatarUrl?: string;
+  auctionTitle: string;
+  auctionId: number;
+  amount: number;
+  createdAt: string;
 }
 
 /**

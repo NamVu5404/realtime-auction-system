@@ -14,7 +14,7 @@ import java.time.Instant;
 import java.util.List;
 
 public interface AuctionService {
-    PageResponse<AuctionResponse> getAuctionsByStatus(AuctionStatus status, Pageable pageable);
+    PageResponse<AuctionResponse> filterAuctionForUser(String q, AuctionStatus status, Pageable pageable);
 
     AuctionResponse getAuctionDetail(Long id, String token);
 
@@ -65,6 +65,12 @@ public interface AuctionService {
     List<RevenueProjection> getAdminRevenueChartData(Instant startDate, String timeFormat);
 
     String getAuctionToken(Long id);
+
+    List<AuctionResponse> getMyRecentBidAuctions(int limit);
+
+    List<AuctionResponse> getTrendingAuctions(int limit);
+
+    List<AuctionResponse> getMostWishlistedAuctions(int limit);
 
     AuctionResponse approveAuction(Long auctionId);
 

@@ -302,6 +302,8 @@ const AdminAuctionPage = () => {
         // Show Share for SCHEDULED or LIVE status
         if (
           record.status === AuctionStatus.SCHEDULED ||
+          record.status === AuctionStatus.ENDED ||
+          record.status === AuctionStatus.ENDED_NO_SALE ||
           record.status === AuctionStatus.LIVE
         ) {
           menuItems.push({

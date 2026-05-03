@@ -8,6 +8,7 @@ import com.namvu.realtimeauctionsystem.common.exception.ErrorCode;
 import com.namvu.realtimeauctionsystem.common.utils.SecurityUtils;
 import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionWinProjection;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
+import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionImageService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.*;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
@@ -15,6 +16,7 @@ import com.namvu.realtimeauctionsystem.modules.bid.repository.BidRepository;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
 import com.namvu.realtimeauctionsystem.modules.bid.service.OutboxService;
 import com.namvu.realtimeauctionsystem.modules.bid.service.RedisLuaService;
+import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +44,7 @@ public class BidServiceImpl implements BidService {
     private final RedisLuaService redisLuaService;
     private final OutboxService outboxService;
     private final AuctionService auctionService;
+    private final AuctionImageService auctionImageService;
 
     /**
      * Place bid V2: Lua Script + Outbox Pattern
@@ -203,9 +206,18 @@ public class BidServiceImpl implements BidService {
     private MyBidHistoryResponse mapToResponse(Bid bid) {
         Auction auction = bid.getAuction();
 
+        List<FileResponse> images = auctionImageService.getAuctionImages(List.of(auction.getId()));
+        String primaryImageUrl = images.stream()
+                .filter(img -> img.isPrimary() != null && img.isPrimary())
+                .findFirst()
+                .or(() -> images.stream().findFirst())
+                .map(img -> img.filePath() + "/" + img.storageName())
+                .orElse(null);
+
         return MyBidHistoryResponse.builder()
                 .auctionId(auction.getId())
                 .auctionTitle(auction.getTitle())
+                .image(primaryImageUrl)
                 .auctionStatus(auction.getStatus())
                 .currentPrice(auction.getCurrentPrice())
                 .amount(bid.getAmount())

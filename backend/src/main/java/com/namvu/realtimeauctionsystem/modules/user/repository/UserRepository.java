@@ -5,6 +5,7 @@ import com.namvu.realtimeauctionsystem.common.constant.SecurityConstant.UserStat
 import com.namvu.realtimeauctionsystem.modules.user.dto.CountryStatsProjection;
 import com.namvu.realtimeauctionsystem.modules.user.dto.SellerResponse;
 import com.namvu.realtimeauctionsystem.modules.user.dto.TopSellerProjection;
+import com.namvu.realtimeauctionsystem.modules.user.dto.TopBidderPublicProjection;
 import com.namvu.realtimeauctionsystem.modules.user.dto.TopSellerPublicProjection;
 import com.namvu.realtimeauctionsystem.modules.user.entity.User;
 import org.springframework.data.domain.Page;
@@ -142,4 +143,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 ORDER BY soldAuctions DESC
             """)
     List<TopSellerPublicProjection> getPublicTopSellers(Pageable pageable);
+
+    @Query("""
+                SELECT
+                    u.id AS id,
+                    u.name AS name,
+                    u.avatarUrl AS avatarUrl,
+                    u.location AS location,
+                    COUNT(b.id) AS totalBids,
+                    COUNT(DISTINCT b.auction.id) AS totalAuctionsParticipated,
+                    COUNT(CASE WHEN a.status = 'ENDED' AND a.highestBidder.id = u.id THEN a.id ELSE NULL END) AS totalWins
+                FROM User u
+                JOIN Bid b ON b.bidder.id = u.id
+                JOIN Auction a ON a.id = b.auction.id
+                WHERE u.status = 'ACTIVE'
+                GROUP BY u.id, u.name, u.avatarUrl, u.location
+                ORDER BY totalWins DESC, totalBids DESC
+            """)
+    List<TopBidderPublicProjection> getPublicTopBidders(Pageable pageable);
 }

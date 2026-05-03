@@ -80,6 +80,10 @@ public interface BidRepository extends JpaRepository<Bid, Long> {
         );
     }
 
+    @EntityGraph(attributePaths = {"bidder", "auction"})
+    @Query("SELECT b FROM Bid b JOIN b.auction a WHERE a.privateMode = false ORDER BY b.createdAt DESC")
+    List<Bid> findRecentPublicBids(Pageable pageable);
+
     @Query("""
             SELECT
                 FUNCTION('DATE_FORMAT', b.createdAt, :timeFormat) AS periodLabel,

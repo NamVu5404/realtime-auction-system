@@ -54,4 +54,6 @@ public interface UserService {
     List<TopSellerData> getTopSellers(int limit);
 
     List<TopSellerPublicResponse> getPublicTopSellers(int limit);
+
+    List<TopBidderPublicResponse> getPublicTopBidders(int limit);
 }

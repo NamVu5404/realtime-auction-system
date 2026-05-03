@@ -4,20 +4,30 @@ import {
   ClockCircleOutlined,
   HeartFilled,
   HeartOutlined,
+  LockOutlined,
   RiseOutlined,
   ShopOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Carousel, Empty, Skeleton } from "antd";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { bidApi } from "../../api/bidApi";
+import { auctionApi } from "../../api/auctionApi";
+import bidApi from "../../api/bidApi";
 import {
   Auction,
   AuctionStatus,
   MyBidHistoryResponse,
+  RecentBidFeedResponse,
+  TopBidderPublicResponse,
   TopSellerPublicResponse,
 } from "../../api/types";
 import userApi from "../../api/userApi";
@@ -49,21 +59,21 @@ function useDragScroll() {
     let startScrollLeft = 0;
 
     const onMouseDown = (e: MouseEvent) => {
+      e.preventDefault();
       isDown = true;
-      startX = e.pageX;
+      startX = e.clientX;
       startScrollLeft = el.scrollLeft;
       el.style.cursor = "grabbing";
-      el.style.userSelect = "none";
     };
     const onMouseMove = (e: MouseEvent) => {
       if (!isDown) return;
-      el.scrollLeft = startScrollLeft - (e.pageX - startX);
+      e.preventDefault();
+      el.scrollLeft = startScrollLeft - (e.clientX - startX);
     };
     const onStop = () => {
       if (!isDown) return;
       isDown = false;
       el.style.cursor = "grab";
-      el.style.userSelect = "";
       if (Math.abs(el.scrollLeft - startScrollLeft) > 4) {
         el.addEventListener("click", (e) => e.stopPropagation(), {
           capture: true,
@@ -86,6 +96,87 @@ function useDragScroll() {
   }, []);
   return ref;
 }
+
+function useDragScrollY() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let isDown = false;
+    let startY = 0;
+    let startScrollTop = 0;
+
+    const onMouseDown = (e: MouseEvent) => {
+      isDown = true;
+      startY = e.clientY;
+      startScrollTop = el.scrollTop;
+      el.style.cursor = "grabbing";
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isDown) return;
+      e.preventDefault();
+      el.scrollTop = startScrollTop - (e.clientY - startY);
+    };
+    const onStop = () => {
+      if (!isDown) return;
+      isDown = false;
+      el.style.cursor = "grab";
+      if (Math.abs(el.scrollTop - startScrollTop) > 4) {
+        el.addEventListener("click", (e) => e.stopPropagation(), {
+          capture: true,
+          once: true,
+        });
+      }
+    };
+
+    el.addEventListener("mousedown", onMouseDown);
+    el.addEventListener("mousemove", onMouseMove);
+    el.addEventListener("mouseup", onStop);
+    el.addEventListener("mouseleave", onStop);
+    return () => {
+      el.removeEventListener("mousedown", onMouseDown);
+      el.removeEventListener("mousemove", onMouseMove);
+      el.removeEventListener("mouseup", onStop);
+      el.removeEventListener("mouseleave", onStop);
+    };
+  }, []);
+  return ref;
+}
+
+// ─── LazySection — chỉ render khi vào viewport ───────────────────────────────
+
+function useLazyVisible(rootMargin = "200px") {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setVisible(true);
+      },
+      { rootMargin },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visible, rootMargin]);
+  return { ref, visible };
+}
+
+const LazySection = ({
+  children,
+  minHeight = 200,
+}: {
+  children: React.ReactNode;
+  minHeight?: number;
+}) => {
+  const { ref, visible } = useLazyVisible();
+  return (
+    <div ref={ref} style={{ minHeight: visible ? undefined : minHeight }}>
+      {visible && children}
+    </div>
+  );
+};
 
 const isEndingSoon = (endTime: string) => {
   const diff = new Date(endTime).getTime() - Date.now();
@@ -247,6 +338,252 @@ const TopSellersSection = ({
   );
 };
 
+// ─── Community (Top Bidders + Trending + Wishlisted + Live Activity) ─────────
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  return `${Math.floor(h / 24)}d`;
+}
+
+const CommunitySection = ({
+  bidders,
+  biddersLoading,
+  trending,
+  trendingLoading,
+  wishlisted,
+  wishlistedLoading,
+  feed,
+  feedLoading,
+}: {
+  bidders: TopBidderPublicResponse[];
+  biddersLoading: boolean;
+  trending: Auction[];
+  trendingLoading: boolean;
+  wishlisted: Auction[];
+  wishlistedLoading: boolean;
+  feed: RecentBidFeedResponse[];
+  feedLoading: boolean;
+}) => {
+  const navigate = useNavigate();
+  const stripRef = useDragScroll();
+
+  const BidderStrip = () => (
+    <div ref={stripRef} className="community-bidders-strip hide-scrollbar">
+      {biddersLoading
+        ? [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 7,
+                flexShrink: 0,
+              }}
+            >
+              <Skeleton.Avatar active size={54} />
+              <Skeleton.Input
+                active
+                size="small"
+                style={{ width: 48, height: 10 }}
+              />
+            </div>
+          ))
+        : bidders.map((b, i) => {
+            const fallback = `https://ui-avatars.com/api/?background=2a2d3e&color=fed469&bold=true&size=128&name=${encodeURIComponent(b.name)}`;
+            const src = b.avatarUrl ? getAvatarUrl(b.avatarUrl) : fallback;
+            return (
+              <div key={b.id} className="community-bidder-item">
+                <div
+                  className={`community-bidder-ring${i >= 3 ? " muted" : ""}`}
+                >
+                  <img
+                    src={src}
+                    alt={b.name}
+                    className="community-bidder-avatar"
+                    onError={(e) => {
+                      e.currentTarget.src = fallback;
+                    }}
+                  />
+                  {i < 3 && (
+                    <span className="community-bidder-rank">{i + 1}</span>
+                  )}
+                </div>
+                <p className="community-bidder-name">{b.name}</p>
+                <p className="community-bidder-wins">
+                  {b.totalWins} Wins · {b.totalBids} Bids
+                </p>
+              </div>
+            );
+          })}
+    </div>
+  );
+
+  const RankedCol = ({
+    icon,
+    title,
+    items,
+    loading,
+    metaFn,
+  }: {
+    icon: string;
+    title: string;
+    items: Auction[];
+    loading: boolean;
+    metaFn: (a: Auction) => React.ReactNode;
+  }) => {
+    const bodyRef = useDragScrollY();
+    return (
+      <div className="community-col">
+        <div className="community-col-header">
+          <span className="community-col-icon">{icon}</span>
+          <p className="community-col-title">{title}</p>
+        </div>
+        <div ref={bodyRef} className="community-col-body">
+          {loading
+            ? [1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="community-row">
+                  <Skeleton.Avatar
+                    active
+                    size={36}
+                    shape="square"
+                    style={{ borderRadius: 8 }}
+                  />
+                  <Skeleton active title={{ width: "80%" }} paragraph={false} />
+                </div>
+              ))
+            : items.map((a, i) => (
+                <div
+                  key={a.id}
+                  className="community-row"
+                  onClick={() => navigate(`/auction/${a.id}`)}
+                >
+                  <span className={`community-row-rank${i < 3 ? " top3" : ""}`}>
+                    {i + 1}
+                  </span>
+                  <img
+                    src={getImageUrl(a.image) || DEFAULT_AUCTION_IMAGE}
+                    alt={a.title}
+                    className="community-row-thumb"
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_AUCTION_IMAGE;
+                    }}
+                  />
+                  <div className="community-row-info">
+                    <p className="community-row-title">{a.title}</p>
+                    <p className="community-row-sub">{metaFn(a)}</p>
+                  </div>
+                </div>
+              ))}
+        </div>
+      </div>
+    );
+  };
+
+  const FeedCol = () => {
+    const bodyRef = useDragScrollY();
+    return (
+      <div className="community-col">
+        <div className="community-col-header">
+          <span className="community-col-icon">⚡</span>
+          <p className="community-col-title">Live Activity</p>
+        </div>
+        <div ref={bodyRef} className="community-col-body">
+          {feedLoading
+            ? [1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="community-feed-item">
+                  <Skeleton.Avatar active size={28} />
+                  <Skeleton
+                    active
+                    title={{ width: "60%" }}
+                    paragraph={{ rows: 1, width: "80%" }}
+                  />
+                </div>
+              ))
+            : feed.map((bid, i) => {
+                const fallback = `https://ui-avatars.com/api/?background=2a2d3e&color=fed469&bold=true&size=64&name=${encodeURIComponent(bid.bidderName)}`;
+                const src = bid.bidderAvatarUrl
+                  ? getAvatarUrl(bid.bidderAvatarUrl)
+                  : fallback;
+                return (
+                  <div
+                    key={i}
+                    className="community-feed-item"
+                    onClick={() => navigate(`/auction/${bid.auctionId}`)}
+                  >
+                    <img
+                      src={src}
+                      alt={bid.bidderName}
+                      className="community-feed-avatar"
+                      onError={(e) => {
+                        e.currentTarget.src = fallback;
+                      }}
+                    />
+                    <div className="community-feed-body">
+                      <p className="community-feed-who">{bid.bidderName}</p>
+                      <p className="community-feed-what">{bid.auctionTitle}</p>
+                      <p className="community-feed-amount">
+                        {formatCurrency(bid.amount)}
+                      </p>
+                    </div>
+                    <span className="community-feed-time">
+                      {timeAgo(bid.createdAt)}
+                    </span>
+                  </div>
+                );
+              })}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="community-panel">
+      <div
+        className="community-col-header-bidders"
+        style={{ borderBottom: "none", paddingBottom: 0 }}
+      >
+        <span className="community-col-icon">🏆</span>
+        <p className="community-col-title-bidders">Top Bidders</p>
+      </div>
+      <BidderStrip />
+      <div className="community-bottom">
+        <RankedCol
+          icon="🔥"
+          title="Hot Right Now"
+          items={trending}
+          loading={trendingLoading}
+          metaFn={(a) => (
+            <>
+              <span className="community-row-sub-accent">
+                {formatCurrency(a.currentPrice)}
+              </span>{" "}
+              · {a.status}
+            </>
+          )}
+        />
+        <RankedCol
+          icon="❤️"
+          title="Most Wishlisted"
+          items={wishlisted}
+          loading={wishlistedLoading}
+          metaFn={(a) => (
+            <span className="community-row-sub-accent">
+              {formatCurrency(a.currentPrice)}
+            </span>
+          )}
+        />
+        <FeedCol />
+      </div>
+    </div>
+  );
+};
+
 // ─── Categories ───────────────────────────────────────────────────────────────
 
 const CATEGORIES = [
@@ -315,6 +652,96 @@ const SectionHeader = ({
   );
 };
 
+// ─── Recently Bid Section ────────────────────────────────────────────────────
+
+const getAuctionToken = (auctionId: number): string | null =>
+  (
+    JSON.parse(localStorage.getItem("auction_tokens") ?? "{}") as Record<
+      string,
+      string
+    >
+  )[auctionId] ?? null;
+
+const LockedBidCard = ({ auction }: { auction: Auction }) => (
+  <div
+    className="locked-bid-card"
+    style={{ minWidth: "240px", maxWidth: "260px" }}
+  >
+    <div className="locked-bid-card-icon">
+      <LockOutlined />
+    </div>
+    <p className="locked-bid-card-title">
+      #{auction.id}-{auction.title}
+    </p>
+    <p className="locked-bid-card-hint">
+      Access this auction via <br />
+      the original share link
+    </p>
+  </div>
+);
+
+const RecentlyBidSection = ({
+  auctions,
+  loading,
+  onCountdownComplete,
+}: HScrollProps) => {
+  const scrollRef = useDragScroll();
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", gap: "16px" }}>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} style={{ minWidth: "240px", flexShrink: 0 }}>
+            <Skeleton.Image
+              active
+              style={{ width: "240px", height: "160px", borderRadius: "12px" }}
+            />
+            <Skeleton
+              active
+              paragraph={{ rows: 2 }}
+              style={{ marginTop: "8px" }}
+            />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!auctions.length) return null;
+
+  return (
+    <div
+      ref={scrollRef}
+      style={{
+        display: "flex",
+        gap: "16px",
+        overflowX: "auto",
+        paddingTop: "8px",
+        paddingBottom: "16px",
+        paddingRight: "8px",
+        userSelect: "none",
+      }}
+      className="hide-scrollbar"
+    >
+      {auctions.map((auction) => (
+        <div
+          key={auction.id}
+          style={{ minWidth: "240px", maxWidth: "260px", flexShrink: 0 }}
+        >
+          {auction.privateMode && !getAuctionToken(auction.id) ? (
+            <LockedBidCard auction={auction} />
+          ) : (
+            <AuctionCard
+              auction={auction}
+              onCountdownComplete={onCountdownComplete}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 // ─── My Bids Section ─────────────────────────────────────────────────────────
 
 type BidParticipation = "leading" | "outbid" | "won";
@@ -359,38 +786,121 @@ const BID_STATUS_META: Record<
   },
 };
 
-const MyBidAura = ({
+const MyBidPoster = ({
   bid,
   onClick,
 }: {
   bid: MyBidHistoryResponse;
   onClick: () => void;
 }) => {
+  const [hovered, setHovered] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const participation = deriveBidStatus(bid);
-  const meta = BID_STATUS_META[participation];
   const isWinning = participation === "leading" || participation === "won";
+  const imgSrc = bid.image ? getImageUrl(bid.image) : DEFAULT_AUCTION_IMAGE;
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (wrapperRef.current) {
+      const r = wrapperRef.current.getBoundingClientRect();
+      setPos({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setHovered(true);
+    }, 500);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setHovered(false);
+  };
 
   return (
     <div
-      className="my-bid-aura"
-      style={
-        {
-          "--bid-bg": meta.bg,
-          "--bid-border": meta.border,
-          "--bid-glow": meta.glow,
-        } as React.CSSProperties
-      }
+      ref={wrapperRef}
+      className="my-bid-poster"
       onClick={onClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
-      <span className={`bid-status-badge ${meta.className}`}>{meta.label}</span>
-      <p className="my-bid-aura-title">{bid.auctionTitle}</p>
-      <div className="my-bid-aura-prices">
-        <span className="my-bid-aura-my">{formatCurrency(bid.amount)}</span>
-        <span className="my-bid-aura-sep">→</span>
-        <span className={`my-bid-aura-current${isWinning ? " gold" : ""}`}>
-          {formatCurrency(bid.currentPrice)}
+      <div className="my-bid-poster-image-wrap">
+        <img
+          src={imgSrc}
+          alt={bid.auctionTitle}
+          className="my-bid-poster-img"
+          onError={(e) => {
+            e.currentTarget.src = DEFAULT_AUCTION_IMAGE;
+          }}
+        />
+        <div className="my-bid-poster-overlay" />
+        <span className={`my-bid-poster-badge ${participation}`}>
+          {BID_STATUS_META[participation].label}
         </span>
       </div>
+      <p className="my-bid-poster-title">{bid.auctionTitle}</p>
+      <p className="my-bid-poster-amount-text">{formatCurrency(bid.amount)}</p>
+
+      {hovered &&
+        createPortal(
+          <div className="my-bid-preview" style={{ left: pos.x, top: pos.y }}>
+            <div style={{ position: "relative" }}>
+              <img
+                src={imgSrc}
+                alt={bid.auctionTitle}
+                className="my-bid-preview-img"
+                onError={(e) => {
+                  e.currentTarget.src = DEFAULT_AUCTION_IMAGE;
+                }}
+              />
+              <div className="my-bid-preview-img-overlay" />
+            </div>
+            <div className="my-bid-preview-body">
+              <p className="my-bid-preview-title">{bid.auctionTitle}</p>
+              <div className="my-bid-preview-divider" />
+              <div className="my-bid-preview-row">
+                <p className="my-bid-preview-label">My Bid</p>
+                <p className="my-bid-preview-value">
+                  {formatCurrency(bid.amount)}
+                </p>
+              </div>
+              <div className="my-bid-preview-row">
+                <p className="my-bid-preview-label">Current Price</p>
+                <p
+                  className={`my-bid-preview-value${isWinning ? " accent" : ""}`}
+                >
+                  {formatCurrency(bid.currentPrice)}
+                </p>
+              </div>
+              <div className="my-bid-preview-divider" />
+              <div className="my-bid-preview-row">
+                <p className="my-bid-preview-label">Status</p>
+                <span
+                  className={`bid-status-badge ${BID_STATUS_META[participation].className}`}
+                >
+                  {BID_STATUS_META[participation].label}
+                </span>
+              </div>
+              <div className="my-bid-preview-row">
+                <p className="my-bid-preview-label">Bid Date</p>
+                <p
+                  className="my-bid-preview-value"
+                  style={{ fontSize: "11px" }}
+                >
+                  {new Date(bid.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 };
@@ -408,13 +918,20 @@ const MyBidsSection = ({
 
   if (loading) {
     return (
-      <div className="top-sellers-scroll hide-scrollbar">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton.Button
-            key={i}
-            active
-            style={{ width: 175, height: 108, borderRadius: 12 }}
-          />
+      <div style={{ display: "flex", gap: "12px" }}>
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} style={{ flexShrink: 0, width: 200 }}>
+            <Skeleton.Image
+              active
+              style={{ width: 200, height: 150, borderRadius: 12 }}
+            />
+            <Skeleton
+              active
+              title={{ width: "100%" }}
+              paragraph={{ rows: 1, width: "60%" }}
+              style={{ marginTop: 8 }}
+            />
+          </div>
         ))}
       </div>
     );
@@ -432,9 +949,19 @@ const MyBidsSection = ({
     );
 
   return (
-    <div ref={scrollRef} className="top-sellers-scroll hide-scrollbar">
+    <div
+      ref={scrollRef}
+      style={{
+        display: "flex",
+        gap: "12px",
+        overflowX: "auto",
+        paddingBottom: "8px",
+        userSelect: "none",
+      }}
+      className="hide-scrollbar"
+    >
       {bids.map((bid) => (
-        <MyBidAura
+        <MyBidPoster
           key={bid.createdAt}
           bid={bid}
           onClick={() => onNavigate(bid.auctionId)}
@@ -457,8 +984,6 @@ const HScrollSection = ({
   loading,
   onCountdownComplete,
 }: HScrollProps) => {
-  const ids = useMemo(() => auctions.map((a) => a.id), [auctions]);
-  const { wishlistedSet } = useWishlistBatch(ids);
   const scrollRef = useDragScroll();
 
   if (loading) {
@@ -494,6 +1019,7 @@ const HScrollSection = ({
           paddingTop: "8px",
           paddingBottom: "16px",
           paddingRight: "8px",
+          userSelect: "none",
         }}
         className="hide-scrollbar"
       >
@@ -504,7 +1030,6 @@ const HScrollSection = ({
           >
             <AuctionCard
               auction={auction}
-              isWishListed={wishlistedSet.has(auction.id)}
               onCountdownComplete={onCountdownComplete}
             />
           </div>
@@ -753,7 +1278,7 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
               >
                 Time Left
               </p>
-              <p
+              <span
                 style={{
                   fontSize: "16px",
                   fontWeight: 800,
@@ -764,7 +1289,7 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
                 }}
               >
                 <Countdown compact targetTime={auction.endTime} isLive />
-              </p>
+              </span>
             </div>
           </div>
 
@@ -873,6 +1398,40 @@ const HomePage = () => {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: recentBidAuctions = [], isLoading: recentBidLoading } =
+    useQuery({
+      queryKey: ["my-recent-bid-auctions"],
+      queryFn: () => auctionApi.getMyRecentBidAuctions(10),
+      enabled: isAuthenticated,
+      staleTime: 60 * 1000,
+    });
+
+  const { data: topBidders = [], isLoading: topBiddersLoading } = useQuery({
+    queryKey: ["top-bidders-public"],
+    queryFn: () => userApi.getPublicTopBidders(12),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: trendingAuctions = [], isLoading: trendingLoading } = useQuery({
+    queryKey: ["trending-auctions"],
+    queryFn: () => auctionApi.getTrendingAuctions(5),
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const { data: mostWishlisted = [], isLoading: wishlistedLoading } = useQuery({
+    queryKey: ["most-wishlisted-auctions"],
+    queryFn: () => auctionApi.getMostWishlistedAuctions(5),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: recentPublicBids = [], isLoading: recentPublicBidsLoading } =
+    useQuery({
+      queryKey: ["recent-public-bids"],
+      queryFn: () => bidApi.getRecentPublicBids(10),
+      staleTime: 30 * 1000,
+      refetchInterval: 30 * 1000,
+    });
+
   const { data: bidHistoryData, isLoading: bidHistoryLoading } = useQuery({
     queryKey: ["my-bid-history-home"],
     queryFn: () => bidApi.getMyBidHistory(1, 10),
@@ -904,12 +1463,6 @@ const HomePage = () => {
     [liveAuctions],
   );
   const scheduledAuctions = scheduledData?.data ?? [];
-
-  const wishlistIds = useMemo(
-    () => wishlistData?.data.map((w) => w.auctionId) ?? [],
-    [wishlistData],
-  );
-  const { wishlistedSet: wishlistSet } = useWishlistBatch(wishlistIds);
 
   const myBids = useMemo(() => bidHistoryData?.data ?? [], [bidHistoryData]);
 
@@ -1086,7 +1639,7 @@ const HomePage = () => {
                 style={{
                   background: "var(--color-surface)",
                   border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: "12px",
+                  borderRadius: "var(--radius-md)",
                   padding: "20px 8px",
                   cursor: "pointer",
                   display: "flex",
@@ -1121,111 +1674,151 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* ── Upcoming ── */}
-        <section style={{ marginBottom: "52px" }}>
-          <SectionHeader
-            title="Coming Up"
-            linkTo="/auctions?status=scheduled"
-          />
-          {scheduledAuctions.length > 0 ? (
-            <HScrollSection
-              auctions={scheduledAuctions}
-              loading={scheduledLoading}
-              onCountdownComplete={handleCountdownComplete}
-            />
-          ) : (
-            !scheduledLoading && (
-              <Empty
-                description={
-                  <span style={{ color: "rgba(255,255,255,0.3)" }}>
-                    No upcoming auctions
-                  </span>
-                }
-              />
-            )
+        {/* ── Recently Bid ── */}
+        {isAuthenticated &&
+          (recentBidLoading || recentBidAuctions.length > 0) && (
+            <LazySection minHeight={280}>
+              <section style={{ marginBottom: "52px" }}>
+                <SectionHeader title="Recently Bid" />
+                <RecentlyBidSection
+                  auctions={recentBidAuctions}
+                  loading={recentBidLoading}
+                  onCountdownComplete={handleCountdownComplete}
+                />
+              </section>
+            </LazySection>
           )}
-        </section>
+
+        {/* ── Community (Top Bidders + Trending + Wishlisted + Feed) ── */}
+        <LazySection minHeight={420}>
+          <section style={{ marginBottom: "52px" }}>
+            <CommunitySection
+              bidders={topBidders}
+              biddersLoading={topBiddersLoading}
+              trending={trendingAuctions}
+              trendingLoading={trendingLoading}
+              wishlisted={mostWishlisted}
+              wishlistedLoading={wishlistedLoading}
+              feed={recentPublicBids}
+              feedLoading={recentPublicBidsLoading}
+            />
+          </section>
+        </LazySection>
+
+        {/* ── Upcoming ── */}
+        <LazySection minHeight={280}>
+          <section style={{ marginBottom: "52px" }}>
+            <SectionHeader
+              title="Coming Up"
+              linkTo="/auctions?status=scheduled"
+            />
+            {scheduledAuctions.length > 0 ? (
+              <HScrollSection
+                auctions={scheduledAuctions}
+                loading={scheduledLoading}
+                onCountdownComplete={handleCountdownComplete}
+              />
+            ) : (
+              !scheduledLoading && (
+                <Empty
+                  description={
+                    <span style={{ color: "rgba(255,255,255,0.3)" }}>
+                      No upcoming auctions
+                    </span>
+                  }
+                />
+              )
+            )}
+          </section>
+        </LazySection>
 
         {/* ── My Bids ── */}
         {isAuthenticated && (bidHistoryLoading || myBids.length > 0) && (
-          <section style={{ marginBottom: "52px" }}>
-            <SectionHeader title="My Bids" linkTo="/account/bids" />
-            <MyBidsSection
-              bids={myBids}
-              loading={bidHistoryLoading}
-              onNavigate={(id) => navigate(`/auction/${id}`)}
-            />
-          </section>
+          <LazySection minHeight={160}>
+            <section style={{ marginBottom: "52px" }}>
+              <SectionHeader title="My Bids" linkTo="/account/bids" />
+              <MyBidsSection
+                bids={myBids}
+                loading={bidHistoryLoading}
+                onNavigate={(id) => navigate(`/auction/${id}`)}
+              />
+            </section>
+          </LazySection>
         )}
 
         {/* ── Recently Ended ── */}
         {(endedLoading || endedAuctions.length > 0) && (
-          <section style={{ marginBottom: "52px" }}>
-            <SectionHeader
-              title="Recently Ended"
-              linkTo="/auctions?status=ended"
-            />
-            <HScrollSection
-              auctions={endedAuctions}
-              loading={endedLoading}
-              onCountdownComplete={handleCountdownComplete}
-            />
-          </section>
+          <LazySection minHeight={280}>
+            <section style={{ marginBottom: "52px" }}>
+              <SectionHeader
+                title="Recently Ended"
+                linkTo="/auctions?status=ended"
+              />
+              <HScrollSection
+                auctions={endedAuctions}
+                loading={endedLoading}
+                onCountdownComplete={handleCountdownComplete}
+              />
+            </section>
+          </LazySection>
         )}
 
         {/* ── Top Sellers ── */}
         {topSellersLoading || topSellers.length > 0 ? (
-          <section style={{ marginBottom: "52px" }}>
-            <SectionHeader title="Top Sellers" />
-            <TopSellersSection
-              sellers={topSellers}
-              loading={topSellersLoading}
-            />
-          </section>
+          <LazySection minHeight={140}>
+            <section style={{ marginBottom: "52px" }}>
+              <SectionHeader title="Top Sellers" />
+              <TopSellersSection
+                sellers={topSellers}
+                loading={topSellersLoading}
+              />
+            </section>
+          </LazySection>
         ) : null}
 
         {/* ── Wishlist preview ── */}
         {isAuthenticated && wishlistData && wishlistData.data.length > 0 && (
-          <section style={{ marginBottom: "52px" }}>
-            <SectionHeader title="Wishlist" linkTo="/account/wishlist" />
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                gap: "16px",
-              }}
-            >
-              {wishlistData.data.map((item) => (
-                <AuctionCard
-                  key={item.auctionId}
-                  auction={{
-                    id: item.auctionId,
-                    title: item.title,
-                    description: "",
-                    image: item.image,
-                    startPrice: item.startPrice,
-                    currentPrice: item.currentPrice,
-                    minStep: 0,
-                    status: item.status,
-                    startTime: item.startTime,
-                    endTime: item.endTime,
-                    antiSnipeSeconds: 0,
-                    extensionSeconds: 0,
-                    privateMode: item.privateMode,
-                    seller: {
-                      id: 0,
-                      email: "",
-                      name: item.sellerName ?? "Unknown",
-                      roles: [],
-                    },
-                    createdAt: item.createdAt,
-                  }}
-                  isWishListed={wishlistSet.has(item.auctionId)}
-                  onCountdownComplete={handleCountdownComplete}
-                />
-              ))}
-            </div>
-          </section>
+          <LazySection minHeight={280}>
+            <section style={{ marginBottom: "52px" }}>
+              <SectionHeader title="Wishlist" linkTo="/account/wishlist" />
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                {wishlistData.data.map((item) => (
+                  <AuctionCard
+                    key={item.auctionId}
+                    auction={{
+                      id: item.auctionId,
+                      title: item.title,
+                      description: "",
+                      image: item.image,
+                      startPrice: item.startPrice,
+                      currentPrice: item.currentPrice,
+                      minStep: 0,
+                      status: item.status,
+                      startTime: item.startTime,
+                      endTime: item.endTime,
+                      antiSnipeSeconds: 0,
+                      extensionSeconds: 0,
+                      privateMode: item.privateMode,
+                      seller: {
+                        id: 0,
+                        email: "",
+                        name: item.sellerName ?? "Unknown",
+                        roles: [],
+                      },
+                      createdAt: item.createdAt,
+                    }}
+                    onCountdownComplete={handleCountdownComplete}
+                  />
+                ))}
+              </div>
+            </section>
+          </LazySection>
         )}
       </div>
     </div>
