@@ -613,6 +613,15 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResponse<AuctionResponse> getMyParticipatedAuctions(int page, int size) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Auction> auctionPage = auctionRepository.findRecentlyBidByUserPaged(userId, pageable);
+        return getResponse(pageable, auctionPage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<AuctionResponse> getMyRecentBidAuctions(int limit) {
         Long userId = SecurityUtils.getCurrentUserId();
         List<AuctionResponse> responses = auctionRepository.findRecentlyBidByUser(userId, PageRequest.of(0, limit))

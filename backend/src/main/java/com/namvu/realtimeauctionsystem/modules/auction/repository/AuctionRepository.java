@@ -106,6 +106,19 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             """)
     List<Auction> findRecentlyBidByUser(@Param("userId") Long userId, Pageable pageable);
 
+    @Query(value = """
+                SELECT a FROM Auction a
+                WHERE a.id IN (
+                    SELECT b.auction.id FROM Bid b WHERE b.bidder.id = :userId
+                )
+                ORDER BY (
+                    SELECT MAX(b2.createdAt) FROM Bid b2
+                    WHERE b2.auction.id = a.id AND b2.bidder.id = :userId
+                ) DESC
+            """,
+            countQuery = "SELECT COUNT(DISTINCT b.auction.id) FROM Bid b WHERE b.bidder.id = :userId")
+    Page<Auction> findRecentlyBidByUserPaged(@Param("userId") Long userId, Pageable pageable);
+
     @EntityGraph(attributePaths = {"seller"})
     List<Auction> findByStatus(AuctionStatus status);
 

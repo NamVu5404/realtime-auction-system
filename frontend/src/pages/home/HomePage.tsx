@@ -22,6 +22,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { auctionApi } from "../../api/auctionApi";
 import bidApi from "../../api/bidApi";
+import { heroSlideApi } from "../../api/heroSlideApi";
 import {
   Auction,
   AuctionStatus,
@@ -438,6 +439,60 @@ const CommunitySection = ({
     metaFn: (a: Auction) => React.ReactNode;
   }) => {
     const bodyRef = useDragScrollY();
+
+    useEffect(() => {
+      const el = bodyRef.current;
+      if (!el) return;
+
+      let animationId: number;
+      let isPaused = false;
+      let userScrollTimeout: ReturnType<typeof setTimeout>;
+      let direction = 1; // 1 for down, -1 for up;
+
+      const scroll = () => {
+        if (!isPaused) {
+          el.scrollTop += direction * 0.5;
+          // Reverse direction at boundaries instead of jumping to top
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
+            direction = -1;
+          } else if (el.scrollTop <= 0) {
+            direction = 1;
+          }
+        }
+        animationId = requestAnimationFrame(scroll);
+      };
+
+      animationId = requestAnimationFrame(scroll);
+
+      const handleMouseEnter = () => {
+        isPaused = true;
+      };
+      const handleMouseLeave = () => {
+        isPaused = false;
+      };
+
+      const handleWheel = () => {
+        // Pause auto-scroll briefly when user scrolls
+        isPaused = true;
+        clearTimeout(userScrollTimeout);
+        userScrollTimeout = setTimeout(() => {
+          isPaused = false;
+        }, 3000);
+      };
+
+      el.addEventListener("mouseenter", handleMouseEnter);
+      el.addEventListener("mouseleave", handleMouseLeave);
+      el.addEventListener("wheel", handleWheel);
+
+      return () => {
+        cancelAnimationFrame(animationId);
+        clearTimeout(userScrollTimeout);
+        el.removeEventListener("mouseenter", handleMouseEnter);
+        el.removeEventListener("mouseleave", handleMouseLeave);
+        el.removeEventListener("wheel", handleWheel);
+      };
+    }, []);
+
     return (
       <div className="community-col">
         <div className="community-col-header">
@@ -487,6 +542,60 @@ const CommunitySection = ({
 
   const FeedCol = () => {
     const bodyRef = useDragScrollY();
+
+    useEffect(() => {
+      const el = bodyRef.current;
+      if (!el) return;
+
+      let animationId: number;
+      let isPaused = false;
+      let userScrollTimeout: ReturnType<typeof setTimeout>;
+      let direction = 1; // 1 for down, -1 for up;
+
+      const scroll = () => {
+        if (!isPaused) {
+          el.scrollTop += direction * 0.5;
+          // Reverse direction at boundaries instead of jumping to top
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
+            direction = -1;
+          } else if (el.scrollTop <= 0) {
+            direction = 1;
+          }
+        }
+        animationId = requestAnimationFrame(scroll);
+      };
+
+      animationId = requestAnimationFrame(scroll);
+
+      const handleMouseEnter = () => {
+        isPaused = true;
+      };
+      const handleMouseLeave = () => {
+        isPaused = false;
+      };
+
+      const handleWheel = () => {
+        // Pause auto-scroll briefly when user scrolls
+        isPaused = true;
+        clearTimeout(userScrollTimeout);
+        userScrollTimeout = setTimeout(() => {
+          isPaused = false;
+        }, 3000);
+      };
+
+      el.addEventListener("mouseenter", handleMouseEnter);
+      el.addEventListener("mouseleave", handleMouseLeave);
+      el.addEventListener("wheel", handleWheel);
+
+      return () => {
+        cancelAnimationFrame(animationId);
+        clearTimeout(userScrollTimeout);
+        el.removeEventListener("mouseenter", handleMouseEnter);
+        el.removeEventListener("mouseleave", handleMouseLeave);
+        el.removeEventListener("wheel", handleWheel);
+      };
+    }, []);
+
     return (
       <div className="community-col">
         <div className="community-col-header">
@@ -665,7 +774,7 @@ const getAuctionToken = (auctionId: number): string | null =>
 const LockedBidCard = ({ auction }: { auction: Auction }) => (
   <div
     className="locked-bid-card"
-    style={{ minWidth: "240px", maxWidth: "260px" }}
+    style={{ minWidth: "240px", maxWidth: "260px", height: "100%" }}
   >
     <div className="locked-bid-card-icon">
       <LockOutlined />
@@ -674,8 +783,7 @@ const LockedBidCard = ({ auction }: { auction: Auction }) => (
       #{auction.id}-{auction.title}
     </p>
     <p className="locked-bid-card-hint">
-      Access this auction via <br />
-      the original share link
+      Access via the original share link
     </p>
   </div>
 );
@@ -726,7 +834,13 @@ const RecentlyBidSection = ({
       {auctions.map((auction) => (
         <div
           key={auction.id}
-          style={{ minWidth: "240px", maxWidth: "260px", flexShrink: 0 }}
+          style={{
+            minWidth: "240px",
+            maxWidth: "260px",
+            flexShrink: 0,
+            display: "flex",
+            flexDirection: "column",
+          }}
         >
           {auction.privateMode && !getAuctionToken(auction.id) ? (
             <LockedBidCard auction={auction} />
@@ -1026,7 +1140,13 @@ const HScrollSection = ({
         {auctions.map((auction) => (
           <div
             key={auction.id}
-            style={{ minWidth: "240px", maxWidth: "260px", flexShrink: 0 }}
+            style={{
+              minWidth: "240px",
+              maxWidth: "260px",
+              flexShrink: 0,
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
             <AuctionCard
               auction={auction}
@@ -1072,7 +1192,7 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
           height: "100%",
           objectFit: "cover",
           objectPosition: "center",
-          backgroundColor: "#1f2230", // Màu nền chờ
+          backgroundColor: "var(--color-bg)", // Màu nền chờ
           color: "transparent", // Ẩn alt text và icon lỗi mặc định
         }}
       />
@@ -1147,33 +1267,35 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
         }}
       >
         {/* LIVE badge */}
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            background: "rgba(239,68,68,0.85)",
-            backdropFilter: "blur(8px)",
-            color: "#fff",
-            fontSize: "10px",
-            fontWeight: 700,
-            letterSpacing: "0.12em",
-            padding: "4px 12px",
-            borderRadius: "100px",
-            marginBottom: "16px",
-          }}
-        >
-          <span
+        {auction.status === AuctionStatus.LIVE && (
+          <div
             style={{
-              width: "5px",
-              height: "5px",
-              borderRadius: "50%",
-              background: "#fff",
-              animation: "pulseDot 1.4s ease-in-out infinite",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "rgba(239,68,68,0.85)",
+              backdropFilter: "blur(8px)",
+              color: "#fff",
+              fontSize: "10px",
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              padding: "4px 12px",
+              borderRadius: "100px",
+              marginBottom: "16px",
             }}
-          />
-          Live Now
-        </div>
+          >
+            <span
+              style={{
+                width: "5px",
+                height: "5px",
+                borderRadius: "50%",
+                background: "#fff",
+                animation: "pulseDot 1.4s ease-in-out infinite",
+              }}
+            />
+            Live Now
+          </div>
+        )}
 
         {/* Title */}
         <h2
@@ -1235,7 +1357,11 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
                 margin: "0 0 3px",
               }}
             >
-              Current Price
+              {auction.status === AuctionStatus.LIVE
+                ? "Current Price"
+                : auction.status === AuctionStatus.SCHEDULED
+                  ? "Starting Price"
+                  : "Final Price"}
             </p>
             <p
               style={{
@@ -1251,47 +1377,56 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
             </p>
           </div>
 
-          {/* Divider */}
-          <div
-            style={{
-              width: "1px",
-              height: "36px",
-              background: "rgba(255,255,255,0.12)",
-            }}
-          />
+          {(auction.status === AuctionStatus.LIVE ||
+            auction.status === AuctionStatus.SCHEDULED) && (
+            <>
+              <div
+                style={{
+                  width: "1px",
+                  height: "36px",
+                  background: "rgba(255,255,255,0.12)",
+                }}
+              />
 
-          {/* Countdown */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <ClockCircleOutlined
-              style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px" }}
-            />
-            <div>
-              <p
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 600,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: "rgba(255,255,255,0.45)",
-                  margin: "0 0 1px",
-                }}
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
-                Time Left
-              </p>
-              <span
-                style={{
-                  fontSize: "16px",
-                  fontWeight: 800,
-                  color: "#fff",
-                  letterSpacing: "0.04em",
-                  fontVariantNumeric: "tabular-nums",
-                  margin: 0,
-                }}
-              >
-                <Countdown compact targetTime={auction.endTime} isLive />
-              </span>
-            </div>
-          </div>
+                <ClockCircleOutlined
+                  style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px" }}
+                />
+                <div>
+                  <p
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: "rgba(255,255,255,0.45)",
+                      margin: "0 0 1px",
+                    }}
+                  >
+                    Time Left
+                  </p>
+                  <span
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: 800,
+                      color: "#fff",
+                      letterSpacing: "0.04em",
+                      fontVariantNumeric: "tabular-nums",
+                      margin: 0,
+                    }}
+                  >
+                    <Countdown
+                      compact
+                      targetTime={auction.endTime}
+                      isLive={auction.status === AuctionStatus.LIVE}
+                    />
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Seller */}
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -1331,19 +1466,34 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
 
         {/* CTAs */}
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          <Button
-            icon={<RiseOutlined />}
-            type="primary"
-            size="large"
-            onClick={() => navigate(`/auction/${auction.id}`)}
-            style={{
-              height: "44px",
-              padding: "0 28px",
-              fontSize: "14px",
-            }}
-          >
-            Place Bid
-          </Button>
+          {auction.status === AuctionStatus.LIVE ? (
+            <Button
+              icon={<RiseOutlined />}
+              type="primary"
+              size="large"
+              onClick={() => navigate(`/auction/${auction.id}`)}
+              style={{
+                height: "44px",
+                padding: "0 28px",
+                fontSize: "14px",
+              }}
+            >
+              Place Bid
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              size="large"
+              onClick={() => navigate(`/auction/${auction.id}`)}
+              style={{
+                height: "44px",
+                padding: "0 28px",
+                fontSize: "14px",
+              }}
+            >
+              View Details
+            </Button>
+          )}
           <Button
             icon={
               isWishListed ? (
@@ -1375,6 +1525,13 @@ const HomePage = () => {
   const carouselRef = useRef<any>(null);
 
   // ── Data fetching (logic unchanged) ──────────────────────────
+  const { data: configuredHeroSlides = [], isLoading: heroSlidesLoading } =
+    useQuery({
+      queryKey: ["public-hero-slides"],
+      queryFn: heroSlideApi.getPublicHeroSlides,
+      staleTime: 2 * 60 * 1000,
+    });
+
   const { data: liveData, isLoading: liveLoading } = useAuctions(
     AuctionStatus.LIVE,
     1,
@@ -1457,7 +1614,13 @@ const HomePage = () => {
 
   // ── Derived data ──────────────────────────────────────────────
   const liveAuctions = liveData?.data ?? [];
-  const heroAuctions = useMemo(() => liveAuctions.slice(0, 5), [liveAuctions]);
+  const heroAuctions = useMemo(
+    () =>
+      configuredHeroSlides.length > 0
+        ? configuredHeroSlides
+        : liveAuctions.slice(0, 5),
+    [configuredHeroSlides, liveAuctions],
+  );
   const endingSoon = useMemo(
     () => liveAuctions.filter((a) => isEndingSoon(a.endTime)),
     [liveAuctions],
@@ -1468,7 +1631,7 @@ const HomePage = () => {
 
   const endedAuctions = endedData?.data ?? [];
 
-  const hasHero = liveLoading || heroAuctions.length > 0;
+  const hasHero = liveLoading || heroSlidesLoading || heroAuctions.length > 0;
 
   return (
     <div
@@ -1588,98 +1751,107 @@ const HomePage = () => {
         }}
       >
         {/* ── Live Now ── */}
-        <section style={{ marginBottom: "52px" }}>
-          <SectionHeader title="Live Now" linkTo="/auctions?status=live" />
-          {liveAuctions.length > 0 ? (
-            <HScrollSection
-              auctions={liveAuctions}
-              loading={liveLoading}
-              onCountdownComplete={handleCountdownComplete}
-            />
-          ) : (
-            !liveLoading && (
-              <Empty
-                description={
-                  <span style={{ color: "rgba(255,255,255,0.3)" }}>
-                    No live auctions at the moment
-                  </span>
-                }
+        <LazySection minHeight={280}>
+          <section style={{ marginBottom: "52px" }}>
+            <SectionHeader title="Live Now" linkTo="/auctions?status=live" />
+            {liveAuctions.length > 0 ? (
+              <HScrollSection
+                auctions={liveAuctions}
+                loading={liveLoading}
+                onCountdownComplete={handleCountdownComplete}
               />
-            )
-          )}
-        </section>
+            ) : (
+              !liveLoading && (
+                <Empty
+                  description={
+                    <span style={{ color: "rgba(255,255,255,0.3)" }}>
+                      No live auctions at the moment
+                    </span>
+                  }
+                />
+              )
+            )}
+          </section>
+        </LazySection>
 
         {/* ── Ending Soon ── */}
         {(liveLoading || endingSoon.length > 0) && (
-          <section style={{ marginBottom: "52px" }}>
-            <SectionHeader title="Ending Soon" linkTo="/auctions?status=live" />
-            <HScrollSection
-              auctions={endingSoon}
-              loading={liveLoading}
-              onCountdownComplete={handleCountdownComplete}
-            />
-          </section>
+          <LazySection minHeight={280}>
+            <section style={{ marginBottom: "52px" }}>
+              <SectionHeader
+                title="Ending Soon"
+                linkTo="/auctions?status=live"
+              />
+              <HScrollSection
+                auctions={endingSoon}
+                loading={liveLoading}
+                onCountdownComplete={handleCountdownComplete}
+              />
+            </section>
+          </LazySection>
         )}
 
         {/* ── Categories ── */}
-        <section style={{ marginBottom: "52px" }}>
-          <SectionHeader title="Categories" />
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "10px",
-            }}
-            className="sm:grid-cols-6"
-          >
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.label}
-                onClick={() => navigate(`/auctions`)}
-                style={{
-                  background: "var(--color-surface)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "20px 8px",
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "8px",
-                  transition: "all 0.15s",
-                  color: "rgba(255,255,255,0.55)",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  letterSpacing: "0.01em",
-                }}
-                onMouseEnter={(e) => {
-                  const el = e.currentTarget as HTMLButtonElement;
-                  el.style.borderColor = "rgba(254,212,105,0.25)";
-                  el.style.background = "rgba(254,212,105,0.04)";
-                  el.style.color = "#FED469";
-                }}
-                onMouseLeave={(e) => {
-                  const el = e.currentTarget as HTMLButtonElement;
-                  el.style.borderColor = "rgba(255,255,255,0.06)";
-                  el.style.background = "var(--color-surface)";
-                  el.style.color = "rgba(255,255,255,0.55)";
-                }}
-              >
-                <span style={{ fontSize: "24px", lineHeight: 1 }}>
-                  {cat.icon}
-                </span>
-                <span>{cat.label}</span>
-              </button>
-            ))}
-          </div>
-        </section>
+        <LazySection minHeight={200}>
+          <section style={{ marginBottom: "52px" }}>
+            <SectionHeader title="Categories" />
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "10px",
+              }}
+              className="sm:grid-cols-6"
+            >
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.label}
+                  onClick={() => navigate(`/auctions`)}
+                  style={{
+                    background: "var(--color-surface)",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: "var(--radius-md)",
+                    padding: "20px 8px",
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "all 0.15s",
+                    color: "rgba(255,255,255,0.55)",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    letterSpacing: "0.01em",
+                  }}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.borderColor = "rgba(254,212,105,0.25)";
+                    el.style.background = "rgba(254,212,105,0.04)";
+                    el.style.color = "#FED469";
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget as HTMLButtonElement;
+                    el.style.borderColor = "rgba(255,255,255,0.06)";
+                    el.style.background = "var(--color-surface)";
+                    el.style.color = "rgba(255,255,255,0.55)";
+                  }}
+                >
+                  <span style={{ fontSize: "24px", lineHeight: 1 }}>
+                    {cat.icon}
+                  </span>
+                  <span>{cat.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </LazySection>
 
         {/* ── Recently Bid ── */}
         {isAuthenticated &&
           (recentBidLoading || recentBidAuctions.length > 0) && (
             <LazySection minHeight={280}>
               <section style={{ marginBottom: "52px" }}>
-                <SectionHeader title="Recently Bid" />
+                <SectionHeader title="Recently Bid" linkTo="/participated" />
                 <RecentlyBidSection
                   auctions={recentBidAuctions}
                   loading={recentBidLoading}

@@ -1,17 +1,77 @@
 import { WifiOutlined } from "@ant-design/icons";
 import { useQueryClient } from "@tanstack/react-query";
-import { Empty, Spin, Tabs } from "antd";
+import { Empty, Pagination, Spin, Tabs } from "antd";
 import { useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AuctionStatus } from "../../api/types";
-import AuctionList from "../../features/auction/AuctionList";
+import { Auction, AuctionStatus } from "../../api/types";
+import AuctionCard from "../../features/auction/AuctionCard";
 import { useAuctions } from "../../hooks/useAuctions";
 import { useWebSocket } from "../../hooks/useWebSocket";
 
-/**
- * /auctions — full browse page with LIVE / UPCOMING / ENDED tabs.
- * Logic copied directly from original HomePage; only layout differs.
- */
+// ── 5-column grid + pagination ────────────────────────────────────────────────
+
+interface BrowseGridProps {
+  auctions: Auction[];
+  totalElements: number;
+  pageSize: number;
+  currentPage: number;
+  onPageChange: (p: number) => void;
+  onCountdownComplete: () => void;
+  emptyMsg: string;
+}
+
+const BrowseGrid = ({
+  auctions,
+  totalElements,
+  pageSize,
+  currentPage,
+  onPageChange,
+  onCountdownComplete,
+  emptyMsg,
+}: BrowseGridProps) => {
+  if (!auctions || auctions.length === 0) {
+    return (
+      <div className="auctions-grid-empty">
+        <Empty
+          description={
+            <span style={{ color: "var(--color-text-muted)", fontSize: 14 }}>
+              {emptyMsg}
+            </span>
+          }
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="auctions-grid-5">
+        {auctions.map((auction) => (
+          <AuctionCard
+            key={auction.id}
+            auction={auction}
+            onCountdownComplete={onCountdownComplete}
+          />
+        ))}
+      </div>
+      {totalElements > pageSize && (
+        <div className="auctions-grid-pagination">
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={totalElements}
+            onChange={onPageChange}
+            showSizeChanger={false}
+            showTotal={(total) => `${total} auctions`}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
 const AuctionsPage = () => {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -66,42 +126,27 @@ const AuctionsPage = () => {
     [activeTab, setSearchParams, searchQuery],
   );
 
-  const renderContent = (emptyMsg: string) => (
+  const renderBrowseTab = (emptyMsg: string) => (
     <Spin spinning={isLoading}>
-      {!isLoading && data?.data && data.data.length > 0 ? (
-        <AuctionList
-          auctions={data.data}
-          onCountdownComplete={handleCountdownComplete}
-          currentPage={data.currentPage}
-          pageSize={data.pageSize}
-          totalElements={data.totalElements}
+      {!isLoading ? (
+        <BrowseGrid
+          auctions={data?.data ?? []}
+          totalElements={data?.totalElements ?? 0}
+          pageSize={data?.pageSize ?? pageSize}
+          currentPage={data?.currentPage ?? currentPage}
           onPageChange={handlePageChange}
-          gridSpan={{ xs: 12, sm: 12, md: 8, lg: 6 }}
+          onCountdownComplete={handleCountdownComplete}
+          emptyMsg={emptyMsg}
         />
-      ) : (
-        !isLoading && (
-          <div style={{ padding: "60px 0", textAlign: "center" }}>
-            <Empty
-              description={
-                <span
-                  style={{ color: "rgba(255,255,255,0.35)", fontSize: "14px" }}
-                >
-                  {emptyMsg}
-                </span>
-              }
-            />
-          </div>
-        )
-      )}
+      ) : null}
     </Spin>
   );
 
   const tabs = [
     {
       key: "live",
-      label:
-        activeTab === "live" ? `LIVE (${data?.totalElements ?? 0})` : "LIVE",
-      children: renderContent("No live auctions at the moment"),
+      label: activeTab === "live" ? `LIVE (${data?.totalElements ?? 0})` : "LIVE",
+      children: renderBrowseTab("No live auctions at the moment"),
     },
     {
       key: "scheduled",
@@ -109,13 +154,13 @@ const AuctionsPage = () => {
         activeTab === "scheduled"
           ? `UPCOMING (${data?.totalElements ?? 0})`
           : "UPCOMING",
-      children: renderContent("No upcoming auctions"),
+      children: renderBrowseTab("No upcoming auctions"),
     },
     {
       key: "ended",
       label:
         activeTab === "ended" ? `ENDED (${data?.totalElements ?? 0})` : "ENDED",
-      children: renderContent("No ended auctions"),
+      children: renderBrowseTab("No ended auctions"),
     },
   ];
 
@@ -196,16 +241,22 @@ const AuctionsPage = () => {
         )}
 
         {searchQuery ? (
-          <div style={{ marginTop: "24px" }}>
-            {renderContent(`No results found for "${searchQuery}"`)}
-          </div>
+          <Spin spinning={isLoading}>
+            {!isLoading && (
+              <BrowseGrid
+                auctions={data?.data ?? []}
+                totalElements={data?.totalElements ?? 0}
+                pageSize={data?.pageSize ?? pageSize}
+                currentPage={data?.currentPage ?? currentPage}
+                onPageChange={handlePageChange}
+                onCountdownComplete={handleCountdownComplete}
+                emptyMsg={`No results found for "${searchQuery}"`}
+              />
+            )}
+          </Spin>
         ) : (
           <Tabs
-            activeKey={
-              Object.keys(statusMap).find(
-                (k) => statusMap[k] === currentStatus,
-              ) || "live"
-            }
+            activeKey={activeTab}
             onChange={handleTabChange}
             items={tabs}
             size="middle"

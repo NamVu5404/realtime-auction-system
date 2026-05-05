@@ -36,14 +36,13 @@ const BidsPage = () => {
       render: (image: string) => (
         <Image
           src={getImageUrl(image)}
-          width={50}
-          height={50}
           fallback={DEFAULT_AUCTION_IMAGE}
           style={{
-            width: "50px",
-            height: "50px",
+            width: 64,
+            height: 42,
             objectFit: "cover",
-            objectPosition: "center center",
+            borderRadius: 6,
+            flexShrink: 0,
           }}
         />
       ),

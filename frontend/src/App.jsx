@@ -24,12 +24,14 @@ import AdminNotificationPage from './pages/admin/AdminNotificationPage';
 import AdminUserPage from './pages/admin/AdminUserPage';
 import AILogsPage from './pages/admin/AILogsPage';
 import AuctionReviewPage from './pages/admin/AuctionReviewPage';
+import AdminHeroSlidePage from './pages/admin/AdminHeroSlidePage';
 import ContactManagementPage from './pages/admin/ContactManagementPage';
 import SellerManagementPage from './pages/admin/SellerManagementPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import AuctionDetailPage from './pages/home/AuctionDetailPage';
 import AuctionsPage from './pages/home/AuctionsPage';
 import HomePage from './pages/home/HomePage';
+import ParticipatedAuctionsPage from './pages/home/ParticipatedAuctionsPage';
 import NotFound from './pages/NotFound';
 import SellerAuctionPage from './pages/seller/SellerAuctionPage';
 import SellerDashboard from './pages/seller/SellerDashboard';
@@ -124,6 +126,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/auctions" element={<AuctionsPage />} />
                 <Route path="/auction/:id" element={<AuctionDetailPage />} />
+                <Route path="/participated" element={<ParticipatedAuctionsPage />} />
                 <Route
                   path="/my-bids"
                   element={<Navigate to="/account/bids" replace />}
@@ -148,6 +151,7 @@ function App() {
                 <Route path="contacts" element={<ContactManagementPage />} />
                 <Route path="notifications" element={<AdminNotificationPage />} />
                 <Route path="ai-logs" element={<AILogsPage />} />
+                <Route path="hero-slides" element={<AdminHeroSlidePage />} />
               </Route>
 
               {/* Seller Routes with SellerLayout (Sidebar + Seller Header) */}

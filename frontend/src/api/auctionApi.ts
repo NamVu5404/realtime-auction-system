@@ -318,6 +318,21 @@ export const auctionApi = {
     }
   },
 
+  getMyParticipatedAuctions: async (
+    page: number = 1,
+    size: number = 10,
+  ): Promise<PaginatedAuctions> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<PaginatedAuctions>>(
+        "/auctions/my-participated",
+        { params: { page, size } },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
   getMyRecentBidAuctions: async (limit = 5): Promise<Auction[]> => {
     try {
       const response = await axiosClient.get<ApiResponse<Auction[]>>(

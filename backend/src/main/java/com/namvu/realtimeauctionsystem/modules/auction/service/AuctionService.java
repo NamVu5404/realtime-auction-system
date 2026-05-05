@@ -68,6 +68,8 @@ public interface AuctionService {
 
     List<AuctionResponse> getMyRecentBidAuctions(int limit);
 
+    PageResponse<AuctionResponse> getMyParticipatedAuctions(int page, int size);
+
     List<AuctionResponse> getTrendingAuctions(int limit);
 
     List<AuctionResponse> getMostWishlistedAuctions(int limit);

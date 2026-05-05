@@ -656,3 +656,14 @@ export interface WishListResponse {
   privateMode?: boolean;
   createdAt: string;
 }
+
+
+export interface HeroSlide {
+  id: number;
+  auctionId: number;
+  auctionTitle: string;
+  auctionImage?: string;
+  auctionStatus: AuctionStatus;
+  position: number;
+  active: boolean;
+}

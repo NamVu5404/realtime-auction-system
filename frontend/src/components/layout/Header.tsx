@@ -26,9 +26,10 @@ import NotificationBell from "../common/NotificationBell";
 const { Header: AntHeader } = Layout;
 
 const NAV_LINKS = [
-  { label: "Home", path: "/" },
-  { label: "Auctions", path: "/auctions" },
-  { label: "About Us", path: "https://auctionpro-psi.vercel.app/about-us/" },
+  { label: "Home", path: "/", authOnly: false },
+  { label: "Auctions", path: "/auctions", authOnly: false },
+  { label: "Participated", path: "/participated", authOnly: true },
+  { label: "About Us", path: "https://auctionpro-psi.vercel.app/about-us/", authOnly: false },
 ];
 
 export const Header = () => {
@@ -396,7 +397,7 @@ export const Header = () => {
             gap: "2px",
           }}
         >
-          {NAV_LINKS.map((link) => {
+          {NAV_LINKS.filter((link) => !link.authOnly || isAuthenticated).map((link) => {
             const isExternal = link.path.startsWith("http");
 
             const active = isExternal

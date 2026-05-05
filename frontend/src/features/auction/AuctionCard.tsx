@@ -1,5 +1,4 @@
 import {
-  EyeOutlined,
   HeartFilled,
   HeartOutlined,
   LockOutlined,
@@ -96,8 +95,15 @@ const AuctionPreviewContent = ({
   const gridItems: GridItem[] = [];
 
   if (isLive) {
-    gridItems.push({ label: "Min Bid", value: `+${formatCurrency(auction.minStep)}`, cls: "accent" });
-    gridItems.push({ label: "Ends", value: formatAuctionTime(auction.endTime) });
+    gridItems.push({
+      label: "Min Bid",
+      value: `+${formatCurrency(auction.minStep)}`,
+      cls: "accent",
+    });
+    gridItems.push({
+      label: "Ends",
+      value: formatAuctionTime(auction.endTime),
+    });
     if (hasReserve) {
       gridItems.push({
         label: "Reserve",
@@ -106,20 +112,44 @@ const AuctionPreviewContent = ({
       });
     }
     if (auction.antiSnipeSeconds && auction.antiSnipeSeconds > 0) {
-      gridItems.push({ label: "Anti-snipe", value: `${auction.antiSnipeSeconds}s` });
-      gridItems.push({ label: "Extension", value: `${auction.extensionSeconds}s` });
+      gridItems.push({
+        label: "Anti-snipe",
+        value: `${auction.antiSnipeSeconds}s`,
+      });
+      gridItems.push({
+        label: "Extension",
+        value: `${auction.extensionSeconds}s`,
+      });
     }
   } else if (isScheduled) {
-    gridItems.push({ label: "Starts", value: formatAuctionTime(auction.startTime) });
-    gridItems.push({ label: "Ends", value: formatAuctionTime(auction.endTime) });
-    gridItems.push({ label: "Min Bid", value: `+${formatCurrency(auction.minStep)}` });
+    gridItems.push({
+      label: "Starts",
+      value: formatAuctionTime(auction.startTime),
+    });
+    gridItems.push({
+      label: "Ends",
+      value: formatAuctionTime(auction.endTime),
+    });
+    gridItems.push({
+      label: "Min Bid",
+      value: `+${formatCurrency(auction.minStep)}`,
+    });
     if (hasReserve) {
-      gridItems.push({ label: "Reserve", value: formatCurrency(auction.reservePrice!) });
+      gridItems.push({
+        label: "Reserve",
+        value: formatCurrency(auction.reservePrice!),
+      });
     }
   } else {
     // ENDED / ENDED_NO_SALE
-    gridItems.push({ label: "Ended", value: formatAuctionTime(auction.endTime) });
-    gridItems.push({ label: "Min Bid", value: `+${formatCurrency(auction.minStep)}` });
+    gridItems.push({
+      label: "Ended",
+      value: formatAuctionTime(auction.endTime),
+    });
+    gridItems.push({
+      label: "Min Bid",
+      value: `+${formatCurrency(auction.minStep)}`,
+    });
     if (hasReserve) {
       gridItems.push({
         label: "Reserve",
@@ -148,7 +178,9 @@ const AuctionPreviewContent = ({
           src={getImageUrl(auction.image) || DEFAULT_IMAGE}
           alt={auction.title}
           className="auction-preview-img"
-          onError={(e) => { e.currentTarget.src = DEFAULT_IMAGE; }}
+          onError={(e) => {
+            e.currentTarget.src = DEFAULT_IMAGE;
+          }}
         />
         <div className="auction-preview-img-gradient" />
 
@@ -161,7 +193,9 @@ const AuctionPreviewContent = ({
             </span>
           )}
           {isScheduled && <span className="badge-upcoming">UPCOMING</span>}
-          {isEnded && !isEndedNoSale && <span className="badge-ended">ENDED</span>}
+          {isEnded && !isEndedNoSale && (
+            <span className="badge-ended">ENDED</span>
+          )}
           {isEndedNoSale && <span className="badge-ended">NO SALE</span>}
           {auction.privateMode && <LockBadge />}
         </div>
@@ -185,7 +219,9 @@ const AuctionPreviewContent = ({
             src={sellerAvatar}
             alt={auction.seller?.name}
             className="auction-preview-seller-avatar"
-            onError={(e) => { e.currentTarget.src = sellerFallback; }}
+            onError={(e) => {
+              e.currentTarget.src = sellerFallback;
+            }}
           />
           <p className="auction-preview-seller-name">
             {auction.seller?.name || "Unknown Seller"}
@@ -200,7 +236,9 @@ const AuctionPreviewContent = ({
             {gridItems.map((item) => (
               <div key={item.label} className="auction-preview-grid-item">
                 <p className="auction-preview-grid-label">{item.label}</p>
-                <p className={`auction-preview-grid-value${item.cls ? ` ${item.cls}` : ""}`}>
+                <p
+                  className={`auction-preview-grid-value${item.cls ? ` ${item.cls}` : ""}`}
+                >
                   {item.value}
                 </p>
               </div>
@@ -213,14 +251,31 @@ const AuctionPreviewContent = ({
           <div className="auction-preview-leader">
             {auction.highestBidder ? (
               <>
-                <UserOutlined style={{ color: "var(--color-gold-start)", fontSize: "14px", flexShrink: 0 }} />
+                <UserOutlined
+                  style={{
+                    color: "var(--color-gold-start)",
+                    fontSize: "14px",
+                    flexShrink: 0,
+                  }}
+                />
                 <p className="auction-preview-leader-tag">Leading</p>
-                <p className="auction-preview-leader-name">{auction.highestBidder.name}</p>
+                <p className="auction-preview-leader-name">
+                  {auction.highestBidder.name}
+                </p>
               </>
             ) : (
               <>
-                <TrophyOutlined style={{ color: "var(--color-text-muted)", fontSize: "14px", flexShrink: 0 }} />
-                <p className="auction-preview-leader-tag" style={{ color: "var(--color-text-muted)", fontWeight: 600 }}>
+                <TrophyOutlined
+                  style={{
+                    color: "var(--color-text-muted)",
+                    fontSize: "14px",
+                    flexShrink: 0,
+                  }}
+                />
+                <p
+                  className="auction-preview-leader-tag"
+                  style={{ color: "var(--color-text-muted)", fontWeight: 600 }}
+                >
                   No bids yet — be first!
                 </p>
               </>
@@ -231,9 +286,17 @@ const AuctionPreviewContent = ({
         {/* Winner (ENDED with winner) */}
         {isEnded && !isEndedNoSale && auction.highestBidder && (
           <div className="auction-preview-leader">
-            <TrophyOutlined style={{ color: "var(--color-gold-start)", fontSize: "14px", flexShrink: 0 }} />
+            <TrophyOutlined
+              style={{
+                color: "var(--color-gold-start)",
+                fontSize: "14px",
+                flexShrink: 0,
+              }}
+            />
             <p className="auction-preview-leader-tag">Winner</p>
-            <p className="auction-preview-leader-name">{auction.highestBidder.name}</p>
+            <p className="auction-preview-leader-name">
+              {auction.highestBidder.name}
+            </p>
           </div>
         )}
       </div>
@@ -242,29 +305,36 @@ const AuctionPreviewContent = ({
       <div className="auction-preview-footer">
         <Button
           type="primary"
-          icon={<EyeOutlined />}
-          onClick={(e) => { e.stopPropagation(); navigate(`/auction/${auction.id}`); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/auction/${auction.id}`);
+          }}
           style={{ fontWeight: 600, letterSpacing: "0.02em" }}
         >
           View Detail
         </Button>
-        {isAuthenticated && (
-          <Button
-            icon={
-              isWishlisted
-                ? <HeartFilled style={{ color: "#F43F5E" }} />
-                : <HeartOutlined />
-            }
-            loading={wishlistLoading}
-            onClick={(e) => { e.stopPropagation(); toggleWishlist(); }}
-            style={{
-              width: 38,
-              borderColor: isWishlisted ? "rgba(244,63,94,0.4)" : "var(--color-border-md)",
-              background: isWishlisted ? "rgba(244,63,94,0.08)" : "transparent",
-              flexShrink: 0,
-            }}
-          />
-        )}
+        <Button
+          icon={
+            isWishlisted ? (
+              <HeartFilled style={{ color: "#F43F5E" }} />
+            ) : (
+              <HeartOutlined />
+            )
+          }
+          loading={wishlistLoading}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist();
+          }}
+          style={{
+            width: 38,
+            borderColor: isWishlisted
+              ? "rgba(244,63,94,0.4)"
+              : "var(--color-border-md)",
+            background: isWishlisted ? "rgba(244,63,94,0.08)" : "transparent",
+            flexShrink: 0,
+          }}
+        />
       </div>
     </div>
   );
@@ -394,7 +464,9 @@ export const AuctionCard = memo(
               src={auctionImageUrl}
               alt={auction.title}
               preview={false}
-              styles={{ root: { width: "100%", height: "100%", display: "block" } }}
+              styles={{
+                root: { width: "100%", height: "100%", display: "block" },
+              }}
               style={{
                 width: "100%",
                 height: "100%",
@@ -413,7 +485,8 @@ export const AuctionCard = memo(
                 left: 0,
                 right: 0,
                 height: "70px",
-                background: "linear-gradient(to top, var(--color-card), transparent)",
+                background:
+                  "linear-gradient(to top, var(--color-card), transparent)",
                 pointerEvents: "none",
               }}
             />

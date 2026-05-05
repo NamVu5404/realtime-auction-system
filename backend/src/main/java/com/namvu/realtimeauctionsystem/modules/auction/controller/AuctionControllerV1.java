@@ -217,6 +217,15 @@ public class AuctionControllerV1 {
         return ApiResponse.ok(auctionService.getMyRecentBidAuctions(limit));
     }
 
+    @GetMapping("/my-participated")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<PageResponse<AuctionResponse>> getMyParticipatedAuctions(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ApiResponse.ok(auctionService.getMyParticipatedAuctions(page, size));
+    }
+
     @GetMapping("/trending")
     public ApiResponse<List<AuctionResponse>> getTrendingAuctions(
             @RequestParam(defaultValue = "5") int limit
