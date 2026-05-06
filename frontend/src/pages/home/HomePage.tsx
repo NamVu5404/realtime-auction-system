@@ -4,7 +4,6 @@ import {
   ClockCircleOutlined,
   HeartFilled,
   HeartOutlined,
-  LockOutlined,
   RiseOutlined,
   ShopOutlined,
   ThunderboltOutlined,
@@ -351,6 +350,205 @@ function timeAgo(iso: string): string {
   return `${Math.floor(h / 24)}d`;
 }
 
+function useAutoScroll(speed: number) {
+  const ref = useDragScrollY();
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    let animationId: number;
+    let isPaused = false;
+    let atBoundary = false;
+    let boundaryTimeout: ReturnType<typeof setTimeout>;
+    let userScrollTimeout: ReturnType<typeof setTimeout>;
+    let direction = 1;
+    let pos = el.scrollTop;
+
+    const scroll = () => {
+      if (!isPaused && !atBoundary) {
+        pos += direction * speed;
+        el.scrollTop = pos;
+        if (direction === 1 && pos + el.clientHeight >= el.scrollHeight) {
+          atBoundary = true;
+          boundaryTimeout = setTimeout(() => {
+            direction = -1;
+            atBoundary = false;
+          }, 1000);
+        } else if (direction === -1 && pos <= 0) {
+          atBoundary = true;
+          boundaryTimeout = setTimeout(() => {
+            direction = 1;
+            atBoundary = false;
+          }, 1000);
+        }
+      }
+      animationId = requestAnimationFrame(scroll);
+    };
+
+    animationId = requestAnimationFrame(scroll);
+
+    const handleMouseEnter = () => {
+      isPaused = true;
+    };
+    const handleMouseLeave = () => {
+      isPaused = false;
+    };
+    const handleWheel = () => {
+      isPaused = true;
+      clearTimeout(userScrollTimeout);
+      userScrollTimeout = setTimeout(() => {
+        isPaused = false;
+      }, 3000);
+    };
+
+    el.addEventListener("mouseenter", handleMouseEnter);
+    el.addEventListener("mouseleave", handleMouseLeave);
+    el.addEventListener("wheel", handleWheel);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      clearTimeout(boundaryTimeout);
+      clearTimeout(userScrollTimeout);
+      el.removeEventListener("mouseenter", handleMouseEnter);
+      el.removeEventListener("mouseleave", handleMouseLeave);
+      el.removeEventListener("wheel", handleWheel);
+    };
+  }, [speed]);
+
+  return ref;
+}
+
+const RankedCol = ({
+  icon,
+  title,
+  items,
+  loading,
+  metaFn,
+  scrollSpeed = 0.5,
+}: {
+  icon: string;
+  title: string;
+  items: Auction[];
+  loading: boolean;
+  metaFn: (a: Auction) => React.ReactNode;
+  scrollSpeed?: number;
+}) => {
+  const navigate = useNavigate();
+  const bodyRef = useAutoScroll(scrollSpeed);
+
+  return (
+    <div className="community-col">
+      <div className="community-col-header">
+        <span className="community-col-icon">{icon}</span>
+        <p className="community-col-title">{title}</p>
+      </div>
+      <div ref={bodyRef} className="community-col-body">
+        {loading
+          ? [1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="community-row">
+                <Skeleton.Avatar
+                  active
+                  size={36}
+                  shape="square"
+                  style={{ borderRadius: 8 }}
+                />
+                <Skeleton active title={{ width: "80%" }} paragraph={false} />
+              </div>
+            ))
+          : items.map((a, i) => (
+              <div
+                key={a.id}
+                className="community-row"
+                onClick={() => navigate(`/auction/${a.id}`)}
+              >
+                <span className={`community-row-rank${i < 3 ? " top3" : ""}`}>
+                  {i + 1}
+                </span>
+                <img
+                  src={getImageUrl(a.image) || DEFAULT_AUCTION_IMAGE}
+                  alt={a.title}
+                  className="community-row-thumb"
+                  onError={(e) => {
+                    e.currentTarget.src = DEFAULT_AUCTION_IMAGE;
+                  }}
+                />
+                <div className="community-row-info">
+                  <p className="community-row-title">{a.title}</p>
+                  <p className="community-row-sub">{metaFn(a)}</p>
+                </div>
+              </div>
+            ))}
+      </div>
+    </div>
+  );
+};
+
+const FeedCol = ({
+  loading,
+  feed,
+}: {
+  loading: boolean;
+  feed: RecentBidFeedResponse[];
+}) => {
+  const navigate = useNavigate();
+  const bodyRef = useAutoScroll(0.375);
+
+  return (
+    <div className="community-col">
+      <div className="community-col-header">
+        <span className="community-col-icon">⚡</span>
+        <p className="community-col-title">Live Activity</p>
+      </div>
+      <div ref={bodyRef} className="community-col-body">
+        {loading
+          ? [1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="community-feed-item">
+                <Skeleton.Avatar active size={28} />
+                <Skeleton
+                  active
+                  title={{ width: "60%" }}
+                  paragraph={{ rows: 1, width: "80%" }}
+                />
+              </div>
+            ))
+          : feed.map((bid, i) => {
+              const fallback = `https://ui-avatars.com/api/?background=2a2d3e&color=fed469&bold=true&size=64&name=${encodeURIComponent(bid.bidderName)}`;
+              const src = bid.bidderAvatarUrl
+                ? getAvatarUrl(bid.bidderAvatarUrl)
+                : fallback;
+              return (
+                <div
+                  key={i}
+                  className="community-feed-item"
+                  onClick={() => navigate(`/auction/${bid.auctionId}`)}
+                >
+                  <img
+                    src={src}
+                    alt={bid.bidderName}
+                    className="community-feed-avatar"
+                    onError={(e) => {
+                      e.currentTarget.src = fallback;
+                    }}
+                  />
+                  <div className="community-feed-body">
+                    <p className="community-feed-who">{bid.bidderName}</p>
+                    <p className="community-feed-what">{bid.auctionTitle}</p>
+                    <p className="community-feed-amount">
+                      {formatCurrency(bid.amount)}
+                    </p>
+                  </div>
+                  <span className="community-feed-time">
+                    {timeAgo(bid.createdAt)}
+                  </span>
+                </div>
+              );
+            })}
+      </div>
+    </div>
+  );
+};
+
 const CommunitySection = ({
   bidders,
   biddersLoading,
@@ -370,7 +568,6 @@ const CommunitySection = ({
   feed: RecentBidFeedResponse[];
   feedLoading: boolean;
 }) => {
-  const navigate = useNavigate();
   const stripRef = useDragScroll();
 
   const BidderStrip = () => (
@@ -425,232 +622,6 @@ const CommunitySection = ({
     </div>
   );
 
-  const RankedCol = ({
-    icon,
-    title,
-    items,
-    loading,
-    metaFn,
-  }: {
-    icon: string;
-    title: string;
-    items: Auction[];
-    loading: boolean;
-    metaFn: (a: Auction) => React.ReactNode;
-  }) => {
-    const bodyRef = useDragScrollY();
-
-    useEffect(() => {
-      const el = bodyRef.current;
-      if (!el) return;
-
-      let animationId: number;
-      let isPaused = false;
-      let userScrollTimeout: ReturnType<typeof setTimeout>;
-      let direction = 1; // 1 for down, -1 for up;
-
-      const scroll = () => {
-        if (!isPaused) {
-          el.scrollTop += direction * 0.5;
-          // Reverse direction at boundaries instead of jumping to top
-          if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
-            direction = -1;
-          } else if (el.scrollTop <= 0) {
-            direction = 1;
-          }
-        }
-        animationId = requestAnimationFrame(scroll);
-      };
-
-      animationId = requestAnimationFrame(scroll);
-
-      const handleMouseEnter = () => {
-        isPaused = true;
-      };
-      const handleMouseLeave = () => {
-        isPaused = false;
-      };
-
-      const handleWheel = () => {
-        // Pause auto-scroll briefly when user scrolls
-        isPaused = true;
-        clearTimeout(userScrollTimeout);
-        userScrollTimeout = setTimeout(() => {
-          isPaused = false;
-        }, 3000);
-      };
-
-      el.addEventListener("mouseenter", handleMouseEnter);
-      el.addEventListener("mouseleave", handleMouseLeave);
-      el.addEventListener("wheel", handleWheel);
-
-      return () => {
-        cancelAnimationFrame(animationId);
-        clearTimeout(userScrollTimeout);
-        el.removeEventListener("mouseenter", handleMouseEnter);
-        el.removeEventListener("mouseleave", handleMouseLeave);
-        el.removeEventListener("wheel", handleWheel);
-      };
-    }, []);
-
-    return (
-      <div className="community-col">
-        <div className="community-col-header">
-          <span className="community-col-icon">{icon}</span>
-          <p className="community-col-title">{title}</p>
-        </div>
-        <div ref={bodyRef} className="community-col-body">
-          {loading
-            ? [1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="community-row">
-                  <Skeleton.Avatar
-                    active
-                    size={36}
-                    shape="square"
-                    style={{ borderRadius: 8 }}
-                  />
-                  <Skeleton active title={{ width: "80%" }} paragraph={false} />
-                </div>
-              ))
-            : items.map((a, i) => (
-                <div
-                  key={a.id}
-                  className="community-row"
-                  onClick={() => navigate(`/auction/${a.id}`)}
-                >
-                  <span className={`community-row-rank${i < 3 ? " top3" : ""}`}>
-                    {i + 1}
-                  </span>
-                  <img
-                    src={getImageUrl(a.image) || DEFAULT_AUCTION_IMAGE}
-                    alt={a.title}
-                    className="community-row-thumb"
-                    onError={(e) => {
-                      e.currentTarget.src = DEFAULT_AUCTION_IMAGE;
-                    }}
-                  />
-                  <div className="community-row-info">
-                    <p className="community-row-title">{a.title}</p>
-                    <p className="community-row-sub">{metaFn(a)}</p>
-                  </div>
-                </div>
-              ))}
-        </div>
-      </div>
-    );
-  };
-
-  const FeedCol = () => {
-    const bodyRef = useDragScrollY();
-
-    useEffect(() => {
-      const el = bodyRef.current;
-      if (!el) return;
-
-      let animationId: number;
-      let isPaused = false;
-      let userScrollTimeout: ReturnType<typeof setTimeout>;
-      let direction = 1; // 1 for down, -1 for up;
-
-      const scroll = () => {
-        if (!isPaused) {
-          el.scrollTop += direction * 0.5;
-          // Reverse direction at boundaries instead of jumping to top
-          if (el.scrollTop + el.clientHeight >= el.scrollHeight) {
-            direction = -1;
-          } else if (el.scrollTop <= 0) {
-            direction = 1;
-          }
-        }
-        animationId = requestAnimationFrame(scroll);
-      };
-
-      animationId = requestAnimationFrame(scroll);
-
-      const handleMouseEnter = () => {
-        isPaused = true;
-      };
-      const handleMouseLeave = () => {
-        isPaused = false;
-      };
-
-      const handleWheel = () => {
-        // Pause auto-scroll briefly when user scrolls
-        isPaused = true;
-        clearTimeout(userScrollTimeout);
-        userScrollTimeout = setTimeout(() => {
-          isPaused = false;
-        }, 3000);
-      };
-
-      el.addEventListener("mouseenter", handleMouseEnter);
-      el.addEventListener("mouseleave", handleMouseLeave);
-      el.addEventListener("wheel", handleWheel);
-
-      return () => {
-        cancelAnimationFrame(animationId);
-        clearTimeout(userScrollTimeout);
-        el.removeEventListener("mouseenter", handleMouseEnter);
-        el.removeEventListener("mouseleave", handleMouseLeave);
-        el.removeEventListener("wheel", handleWheel);
-      };
-    }, []);
-
-    return (
-      <div className="community-col">
-        <div className="community-col-header">
-          <span className="community-col-icon">⚡</span>
-          <p className="community-col-title">Live Activity</p>
-        </div>
-        <div ref={bodyRef} className="community-col-body">
-          {feedLoading
-            ? [1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="community-feed-item">
-                  <Skeleton.Avatar active size={28} />
-                  <Skeleton
-                    active
-                    title={{ width: "60%" }}
-                    paragraph={{ rows: 1, width: "80%" }}
-                  />
-                </div>
-              ))
-            : feed.map((bid, i) => {
-                const fallback = `https://ui-avatars.com/api/?background=2a2d3e&color=fed469&bold=true&size=64&name=${encodeURIComponent(bid.bidderName)}`;
-                const src = bid.bidderAvatarUrl
-                  ? getAvatarUrl(bid.bidderAvatarUrl)
-                  : fallback;
-                return (
-                  <div
-                    key={i}
-                    className="community-feed-item"
-                    onClick={() => navigate(`/auction/${bid.auctionId}`)}
-                  >
-                    <img
-                      src={src}
-                      alt={bid.bidderName}
-                      className="community-feed-avatar"
-                      onError={(e) => {
-                        e.currentTarget.src = fallback;
-                      }}
-                    />
-                    <div className="community-feed-body">
-                      <p className="community-feed-who">{bid.bidderName}</p>
-                      <p className="community-feed-what">{bid.auctionTitle}</p>
-                      <p className="community-feed-amount">
-                        {formatCurrency(bid.amount)}
-                      </p>
-                    </div>
-                    <span className="community-feed-time">
-                      {timeAgo(bid.createdAt)}
-                    </span>
-                  </div>
-                );
-              })}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="community-panel">
       <div
@@ -667,12 +638,13 @@ const CommunitySection = ({
           title="Hot Right Now"
           items={trending}
           loading={trendingLoading}
+          scrollSpeed={0.25}
           metaFn={(a) => (
             <>
               <span className="community-row-sub-accent">
                 {formatCurrency(a.currentPrice)}
               </span>{" "}
-              · {a.status}
+              · {a.status === AuctionStatus.LIVE ? "LIVE" : "ENDED"}
             </>
           )}
         />
@@ -681,13 +653,14 @@ const CommunitySection = ({
           title="Most Wishlisted"
           items={wishlisted}
           loading={wishlistedLoading}
+          scrollSpeed={0.25}
           metaFn={(a) => (
             <span className="community-row-sub-accent">
               {formatCurrency(a.currentPrice)}
             </span>
           )}
         />
-        <FeedCol />
+        <FeedCol loading={feedLoading} feed={feed} />
       </div>
     </div>
   );
@@ -763,31 +736,6 @@ const SectionHeader = ({
 
 // ─── Recently Bid Section ────────────────────────────────────────────────────
 
-const getAuctionToken = (auctionId: number): string | null =>
-  (
-    JSON.parse(localStorage.getItem("auction_tokens") ?? "{}") as Record<
-      string,
-      string
-    >
-  )[auctionId] ?? null;
-
-const LockedBidCard = ({ auction }: { auction: Auction }) => (
-  <div
-    className="locked-bid-card"
-    style={{ minWidth: "240px", maxWidth: "260px", height: "100%" }}
-  >
-    <div className="locked-bid-card-icon">
-      <LockOutlined />
-    </div>
-    <p className="locked-bid-card-title">
-      #{auction.id}-{auction.title}
-    </p>
-    <p className="locked-bid-card-hint">
-      Access via the original share link
-    </p>
-  </div>
-);
-
 const RecentlyBidSection = ({
   auctions,
   loading,
@@ -842,14 +790,10 @@ const RecentlyBidSection = ({
             flexDirection: "column",
           }}
         >
-          {auction.privateMode && !getAuctionToken(auction.id) ? (
-            <LockedBidCard auction={auction} />
-          ) : (
-            <AuctionCard
-              auction={auction}
-              onCountdownComplete={onCountdownComplete}
-            />
-          )}
+          <AuctionCard
+            auction={auction}
+            onCountdownComplete={onCountdownComplete}
+          />
         </div>
       ))}
     </div>
@@ -1565,26 +1509,26 @@ const HomePage = () => {
 
   const { data: topBidders = [], isLoading: topBiddersLoading } = useQuery({
     queryKey: ["top-bidders-public"],
-    queryFn: () => userApi.getPublicTopBidders(12),
+    queryFn: () => userApi.getPublicTopBidders(15),
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: trendingAuctions = [], isLoading: trendingLoading } = useQuery({
     queryKey: ["trending-auctions"],
-    queryFn: () => auctionApi.getTrendingAuctions(5),
+    queryFn: () => auctionApi.getTrendingAuctions(10),
     staleTime: 2 * 60 * 1000,
   });
 
   const { data: mostWishlisted = [], isLoading: wishlistedLoading } = useQuery({
     queryKey: ["most-wishlisted-auctions"],
-    queryFn: () => auctionApi.getMostWishlistedAuctions(5),
+    queryFn: () => auctionApi.getMostWishlistedAuctions(10),
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: recentPublicBids = [], isLoading: recentPublicBidsLoading } =
     useQuery({
       queryKey: ["recent-public-bids"],
-      queryFn: () => bidApi.getRecentPublicBids(10),
+      queryFn: () => bidApi.getRecentPublicBids(15),
       staleTime: 30 * 1000,
       refetchInterval: 30 * 1000,
     });

@@ -221,7 +221,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     @Query("""
             SELECT a FROM Auction a
             WHERE a.privateMode = false
-            AND a.status IN ('LIVE', 'ENDED')
+            AND a.status IN ('LIVE', 'ENDED', 'ENDED_NO_SALE')
             AND EXISTS (SELECT b FROM Bid b WHERE b.auction.id = a.id AND b.createdAt >= :since)
             ORDER BY (
                 SELECT COUNT(b2.id) FROM Bid b2 WHERE b2.auction.id = a.id AND b2.createdAt >= :since
@@ -232,7 +232,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     @Query("""
             SELECT a FROM Auction a
             WHERE a.privateMode = false
-            AND a.status IN ('LIVE', 'SCHEDULED', 'ENDED')
+            AND a.status IN ('LIVE', 'SCHEDULED', 'ENDED', 'ENDED_NO_SALE')
             AND EXISTS (SELECT w FROM WishList w WHERE w.auction.id = a.id)
             ORDER BY (SELECT COUNT(w2.id) FROM WishList w2 WHERE w2.auction.id = a.id) DESC
         """)

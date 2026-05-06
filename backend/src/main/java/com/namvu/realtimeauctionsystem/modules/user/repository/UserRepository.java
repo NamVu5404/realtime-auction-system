@@ -144,21 +144,21 @@ public interface UserRepository extends JpaRepository<User, Long> {
             """)
     List<TopSellerPublicProjection> getPublicTopSellers(Pageable pageable);
 
-    @Query("""
+    @Query(value = """
                 SELECT
                     u.id AS id,
                     u.name AS name,
-                    u.avatarUrl AS avatarUrl,
+                    u.avatar_url AS avatarUrl,
                     u.location AS location,
                     COUNT(b.id) AS totalBids,
-                    COUNT(DISTINCT b.auction.id) AS totalAuctionsParticipated,
-                    COUNT(CASE WHEN a.status = 'ENDED' AND a.highestBidder.id = u.id THEN a.id ELSE NULL END) AS totalWins
-                FROM User u
-                JOIN Bid b ON b.bidder.id = u.id
-                JOIN Auction a ON a.id = b.auction.id
+                    COUNT(DISTINCT b.auction_id) AS totalAuctionsParticipated,
+                    COUNT(DISTINCT CASE WHEN a.status = 'ENDED' AND a.highest_bidder_id = u.id THEN a.id END) AS totalWins
+                FROM users u
+                JOIN bids b ON b.bidder_id = u.id
+                JOIN auctions a ON a.id = b.auction_id
                 WHERE u.status = 'ACTIVE'
-                GROUP BY u.id, u.name, u.avatarUrl, u.location
+                GROUP BY u.id, u.name, u.avatar_url, u.location
                 ORDER BY totalWins DESC, totalBids DESC
-            """)
+            """, nativeQuery = true)
     List<TopBidderPublicProjection> getPublicTopBidders(Pageable pageable);
 }

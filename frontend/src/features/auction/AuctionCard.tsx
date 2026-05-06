@@ -26,6 +26,14 @@ const DEFAULT_IMAGE = DEFAULT_AUCTION_IMAGE;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+const getAuctionToken = (auctionId: number): string | null =>
+  (
+    JSON.parse(localStorage.getItem("auction_tokens") ?? "{}") as Record<
+      string,
+      string
+    >
+  )[auctionId] ?? null;
+
 const LockBadge = () => (
   <span
     style={{
@@ -357,6 +365,24 @@ export const AuctionCard = memo(
     const cardRef = useRef<HTMLDivElement>(null);
     const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    if (auction.privateMode && !getAuctionToken(auction.id)) {
+      return (
+        <div className="locked-grid-card">
+          <div className="locked-grid-card-inner">
+            <div className="locked-grid-card-icon">
+              <LockOutlined />
+            </div>
+            <p className="locked-grid-card-title">
+              #{auction.id} · {auction.title}
+            </p>
+            <p className="locked-grid-card-hint">
+              Access via the original share link
+            </p>
+          </div>
+        </div>
+      );
+    }
 
     const isLive = auction.status === AuctionStatus.LIVE;
     const isScheduled = auction.status === AuctionStatus.SCHEDULED;

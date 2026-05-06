@@ -1,39 +1,13 @@
-import { LockOutlined, WifiOutlined } from "@ant-design/icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Empty, Pagination, Spin } from "antd";
 import { useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { auctionApi } from "../../api/auctionApi";
-import { Auction } from "../../api/types";
 import AuctionCard from "../../features/auction/AuctionCard";
 import { useWebSocket } from "../../hooks/useWebSocket";
 import { useAuthStore } from "../../store/useAuthStore";
 
 const PAGE_SIZE = 20;
-
-const getAuctionToken = (auctionId: number): string | null =>
-  (
-    JSON.parse(localStorage.getItem("auction_tokens") ?? "{}") as Record<
-      string,
-      string
-    >
-  )[auctionId] ?? null;
-
-const LockedGridCard = ({ auction }: { auction: Auction }) => (
-  <div className="locked-grid-card">
-    <div className="locked-grid-card-inner">
-      <div className="locked-grid-card-icon">
-        <LockOutlined />
-      </div>
-      <p className="locked-grid-card-title">
-        #{auction.id} · {auction.title}
-      </p>
-      <p className="locked-grid-card-hint">
-        Access via the original share link
-      </p>
-    </div>
-  </div>
-);
 
 const ParticipatedAuctionsPage = () => {
   const queryClient = useQueryClient();
@@ -119,17 +93,13 @@ const ParticipatedAuctionsPage = () => {
           ) : (
             <>
               <div className="auctions-grid-5">
-                {auctions.map((auction) =>
-                  auction.privateMode && !getAuctionToken(auction.id) ? (
-                    <LockedGridCard key={auction.id} auction={auction} />
-                  ) : (
-                    <AuctionCard
-                      key={auction.id}
-                      auction={auction}
-                      onCountdownComplete={handleCountdownComplete}
-                    />
-                  ),
-                )}
+                {auctions.map((auction) => (
+                  <AuctionCard
+                    key={auction.id}
+                    auction={auction}
+                    onCountdownComplete={handleCountdownComplete}
+                  />
+                ))}
               </div>
               {totalElements > PAGE_SIZE && (
                 <div className="auctions-grid-pagination">
