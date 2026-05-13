@@ -215,3 +215,58 @@
   color: var(--color-text-primary);
   line-height: 1.4;
 }
+
+/* -------------------------------------------------------
+   Auction image carousel overlays
+   ------------------------------------------------------- */
+.carousel-badges-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.carousel-wishlist-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+
+/* -------------------------------------------------------
+   Wishlist button — detail page header row
+   ------------------------------------------------------- */
+.wishlist-btn.ant-btn {
+  background: rgba(15, 17, 26, 0.55) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  width: 44px !important;
+  height: 44px !important;
+  flex-shrink: 0;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+.wishlist-btn.ant-btn:hover {
+  background: rgba(15, 17, 26, 0.75) !important;
+  border-color: rgba(244, 63, 94, 0.5) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* -------------------------------------------------------
+   Auction Detail — responsive column order (mobile first)
+   ------------------------------------------------------- */
+@media (max-width: 991px) {
+  .detail-right-col {
+    order: -1;
+  }
+}
