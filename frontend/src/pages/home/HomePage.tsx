@@ -171,8 +171,10 @@ const LazySection = ({
   minHeight?: number;
 }) => {
   const { ref, visible } = useLazyVisible();
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+  const effectiveMinHeight = visible ? undefined : (isMobile ? Math.min(minHeight, 120) : minHeight);
   return (
-    <div ref={ref} style={{ minHeight: visible ? undefined : minHeight }}>
+    <div ref={ref} style={{ minHeight: effectiveMinHeight }}>
       {visible && children}
     </div>
   );
@@ -689,6 +691,7 @@ const SectionHeader = ({
   const navigate = useNavigate();
   return (
     <div
+      className="section-header"
       style={{
         display: "flex",
         alignItems: "center",
@@ -766,36 +769,39 @@ const RecentlyBidSection = ({
   if (!auctions.length) return null;
 
   return (
-    <div
-      ref={scrollRef}
-      style={{
-        display: "flex",
-        gap: "16px",
-        overflowX: "auto",
-        paddingTop: "8px",
-        paddingBottom: "16px",
-        paddingRight: "8px",
-        userSelect: "none",
-      }}
-      className="hide-scrollbar"
-    >
-      {auctions.map((auction) => (
-        <div
-          key={auction.id}
-          style={{
-            minWidth: "240px",
-            maxWidth: "260px",
-            flexShrink: 0,
-            display: "flex",
-            flexDirection: "column",
-          }}
-        >
-          <AuctionCard
-            auction={auction}
-            onCountdownComplete={onCountdownComplete}
-          />
-        </div>
-      ))}
+    <div className="h-scroll-wrapper">
+      <div
+        ref={scrollRef}
+        className="hide-scrollbar"
+        style={{
+          display: "flex",
+          gap: "16px",
+          overflowX: "auto",
+          paddingTop: "8px",
+          paddingBottom: "16px",
+          paddingRight: "8px",
+          userSelect: "none",
+        }}
+      >
+        {auctions.map((auction) => (
+          <div
+            key={auction.id}
+            className="h-scroll-card"
+            style={{
+              minWidth: "240px",
+              maxWidth: "260px",
+              flexShrink: 0,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <AuctionCard
+              auction={auction}
+              onCountdownComplete={onCountdownComplete}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -1067,7 +1073,7 @@ const HScrollSection = ({
   if (!auctions.length) return null;
 
   return (
-    <div>
+    <div className="h-scroll-wrapper">
       <div
         ref={scrollRef}
         style={{
@@ -1084,6 +1090,7 @@ const HScrollSection = ({
         {auctions.map((auction) => (
           <div
             key={auction.id}
+            className="h-scroll-card"
             style={{
               minWidth: "240px",
               maxWidth: "260px",
@@ -1116,6 +1123,7 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
 
   return (
     <div
+      className="hero-slide-root"
       style={{
         position: "relative",
         width: "100%",
@@ -1199,6 +1207,7 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
 
       {/* Content */}
       <div
+        className="hero-content-box"
         style={{
           position: "absolute",
           bottom: 0,
@@ -1262,6 +1271,7 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
 
         {/* Description */}
         <div
+          className="hero-description"
           style={{
             fontSize: "14px",
             color: "#fff",
@@ -1281,6 +1291,7 @@ const HeroSlide = ({ auction }: { auction: Auction }) => {
 
         {/* Meta row */}
         <div
+          className="hero-meta-row"
           style={{
             display: "flex",
             alignItems: "center",
@@ -1467,6 +1478,7 @@ const HomePage = () => {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuthStore();
   const carouselRef = useRef<any>(null);
+  const wishlistScrollRef = useDragScroll();
 
   // ── Data fetching (logic unchanged) ──────────────────────────
   const { data: configuredHeroSlides = [], isLoading: heroSlidesLoading } =
@@ -1689,6 +1701,7 @@ const HomePage = () => {
 
       {/* ══ CONTENT SECTIONS ══ */}
       <div
+        className="home-content"
         style={{
           maxWidth: "1280px",
           margin: "0 auto",
@@ -1721,7 +1734,7 @@ const HomePage = () => {
         {/* ── Ending Soon ── */}
         {(liveLoading || endingSoon.length > 0) && (
           <LazySection minHeight={280}>
-            <section style={{ marginBottom: "52px" }}>
+            <section className="home-section" style={{ marginBottom: "52px" }}>
               <SectionHeader
                 title="Ending Soon"
                 linkTo="/auctions?status=live"
@@ -1794,7 +1807,7 @@ const HomePage = () => {
         {isAuthenticated &&
           (recentBidLoading || recentBidAuctions.length > 0) && (
             <LazySection minHeight={280}>
-              <section style={{ marginBottom: "52px" }}>
+              <section className="home-section" style={{ marginBottom: "52px" }}>
                 <SectionHeader title="Recently Bid" linkTo="/participated" />
                 <RecentlyBidSection
                   auctions={recentBidAuctions}
@@ -1851,7 +1864,7 @@ const HomePage = () => {
         {/* ── My Bids ── */}
         {isAuthenticated && (bidHistoryLoading || myBids.length > 0) && (
           <LazySection minHeight={160}>
-            <section style={{ marginBottom: "52px" }}>
+            <section className="home-section" style={{ marginBottom: "52px" }}>
               <SectionHeader title="My Bids" linkTo="/account/bids" />
               <MyBidsSection
                 bids={myBids}
@@ -1865,7 +1878,7 @@ const HomePage = () => {
         {/* ── Recently Ended ── */}
         {(endedLoading || endedAuctions.length > 0) && (
           <LazySection minHeight={280}>
-            <section style={{ marginBottom: "52px" }}>
+            <section className="home-section" style={{ marginBottom: "52px" }}>
               <SectionHeader
                 title="Recently Ended"
                 linkTo="/auctions?status=ended"
@@ -1882,7 +1895,7 @@ const HomePage = () => {
         {/* ── Top Sellers ── */}
         {topSellersLoading || topSellers.length > 0 ? (
           <LazySection minHeight={140}>
-            <section style={{ marginBottom: "52px" }}>
+            <section className="home-section" style={{ marginBottom: "52px" }}>
               <SectionHeader title="Top Sellers" />
               <TopSellersSection
                 sellers={topSellers}
@@ -1895,43 +1908,62 @@ const HomePage = () => {
         {/* ── Wishlist preview ── */}
         {isAuthenticated && wishlistData && wishlistData.data.length > 0 && (
           <LazySection minHeight={280}>
-            <section style={{ marginBottom: "52px" }}>
+            <section className="home-section" style={{ marginBottom: "52px" }}>
               <SectionHeader title="Wishlist" linkTo="/account/wishlist" />
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                  gap: "16px",
-                }}
-              >
-                {wishlistData.data.map((item) => (
-                  <AuctionCard
-                    key={item.auctionId}
-                    auction={{
-                      id: item.auctionId,
-                      title: item.title,
-                      description: "",
-                      image: item.image,
-                      startPrice: item.startPrice,
-                      currentPrice: item.currentPrice,
-                      minStep: 0,
-                      status: item.status,
-                      startTime: item.startTime,
-                      endTime: item.endTime,
-                      antiSnipeSeconds: 0,
-                      extensionSeconds: 0,
-                      privateMode: item.privateMode,
-                      seller: {
-                        id: 0,
-                        email: "",
-                        name: item.sellerName ?? "Unknown",
-                        roles: [],
-                      },
-                      createdAt: item.createdAt,
-                    }}
-                    onCountdownComplete={handleCountdownComplete}
-                  />
-                ))}
+              <div className="h-scroll-wrapper">
+                <div
+                  ref={wishlistScrollRef}
+                  className="hide-scrollbar"
+                  style={{
+                    display: "flex",
+                    gap: "16px",
+                    overflowX: "auto",
+                    paddingTop: "8px",
+                    paddingBottom: "16px",
+                    paddingRight: "8px",
+                    userSelect: "none",
+                  }}
+                >
+                  {wishlistData.data.map((item) => (
+                    <div
+                      key={item.auctionId}
+                      className="h-scroll-card"
+                      style={{
+                        minWidth: "240px",
+                        maxWidth: "260px",
+                        flexShrink: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    >
+                      <AuctionCard
+                        auction={{
+                          id: item.auctionId,
+                          title: item.title,
+                          description: "",
+                          image: item.image,
+                          startPrice: item.startPrice,
+                          currentPrice: item.currentPrice,
+                          minStep: 0,
+                          status: item.status,
+                          startTime: item.startTime,
+                          endTime: item.endTime,
+                          antiSnipeSeconds: 0,
+                          extensionSeconds: 0,
+                          privateMode: item.privateMode,
+                          seller: {
+                            id: 0,
+                            email: "",
+                            name: item.sellerName ?? "Unknown",
+                            roles: [],
+                          },
+                          createdAt: item.createdAt,
+                        }}
+                        onCountdownComplete={handleCountdownComplete}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </section>
           </LazySection>

@@ -39,7 +39,7 @@ export const Footer = () => {
         color: "rgba(255,255,255,0.6)",
       }}
     >
-      <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+      <div className="footer-inner" style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <Row gutter={[48, 40]}>
           {/* Brand & About */}
           <Col xs={24} sm={24} md={9}>

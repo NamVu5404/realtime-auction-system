@@ -42,16 +42,18 @@ const ParticipatedAuctionsPage = () => {
 
   return (
     <div
+      className="page-outer-padded"
       style={{
         background: "var(--color-bg)",
         minHeight: "100vh",
         padding: "40px 0",
       }}
     >
-      <div className="mx-auto" style={{ maxWidth: "1280px" }}>
+      <div className="page-container-padded mx-auto" style={{ maxWidth: "1280px" }}>
         {/* Header */}
         <div style={{ marginBottom: "24px" }}>
           <div
+            className="page-header-row"
             style={{
               display: "flex",
               alignItems: "center",

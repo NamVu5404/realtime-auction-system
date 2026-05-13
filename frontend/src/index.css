@@ -2898,3 +2898,193 @@ button:focus-visible {
   margin: 0;
   line-height: 1.45;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   END-USER MOBILE RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Fix overflow-x gây width > 100vw.
+   Dùng clip thay hidden trên body — clip không tạo scroll container mới,
+   tránh break window.scrollY (header background on scroll). */
+body {
+  overflow-x: clip;
+}
+
+/* 1. Grid — 1 cột trên phone nhỏ */
+@media (max-width: 479px) {
+  .auctions-grid-5 {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+
+/* 2. Home content container & sections */
+@media (max-width: 639px) {
+  .home-content {
+    padding: 0 16px;
+  }
+
+  .home-section {
+    margin-bottom: 24px !important;
+  }
+
+  .section-header h2 {
+    font-size: 18px;
+  }
+}
+
+/* 3. Header */
+.header-root {
+  max-width: 100vw !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 639px) {
+  .header-root {
+    padding: 0 12px !important;
+  }
+
+  /* Avatar trigger — bỏ padding/border/bg dư trên mobile, chỉ giữ avatar icon */
+  .header-avatar-btn {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    gap: 0 !important;
+  }
+}
+
+/* 4. Hero Slide */
+@media (max-width: 639px) {
+  .hero-slide-root {
+    height: 380px !important;
+  }
+
+  .hero-content-box {
+    max-width: 100% !important;
+    padding: 0 16px 20px 16px !important;
+  }
+
+  .hero-description {
+    display: none !important;
+  }
+
+  .hero-meta-row {
+    gap: 10px !important;
+    margin-bottom: 14px !important;
+  }
+
+  /* Hero thumbnail dots — ẩn hoàn toàn, selector đủ mạnh hơn Slick */
+  .slick-dots.hero-dots,
+  .slick-slider .slick-dots.hero-dots {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+
+/* 5. Horizontal scroll cards */
+@media (max-width: 639px) {
+  .h-scroll-card {
+    min-width: 200px !important;
+    max-width: 215px !important;
+  }
+
+  .h-scroll-wrapper {
+    position: relative;
+  }
+
+  .h-scroll-wrapper::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 16px;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--color-bg));
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+/* 6. AuctionsPage & ParticipatedPage — fix double padding */
+@media (max-width: 639px) {
+  .page-outer-padded {
+    padding-top: 16px !important;
+    padding-bottom: 32px !important;
+  }
+
+  .page-container-padded {
+    padding: 0 16px !important;
+  }
+
+  .page-header-row h2 {
+    font-size: 18px !important;
+  }
+}
+
+/* 9. Footer mobile padding */
+@media (max-width: 639px) {
+  .footer-inner {
+    padding: 0 16px;
+  }
+}
+
+/* 7. Page wrapper padding — giảm khoảng cách header→content trên mobile */
+@media (max-width: 639px) {
+  .detail-page-wrapper {
+    padding-top: 16px !important;
+    padding-bottom: 32px !important;
+  }
+}
+
+/* 8. Notification popover — không tràn màn mobile */
+@media (max-width: 639px) {
+  .notification-popover {
+    max-width: calc(100vw - 24px) !important;
+    left: 12px !important;
+    right: 12px !important;
+  }
+
+  .notification-popover .ant-popover-inner {
+    max-width: 100% !important;
+  }
+}
+
+/* 8. Mobile nav drawer */
+.mobile-nav-drawer .ant-drawer-body {
+  padding: 0 !important;
+  background: var(--color-surface) !important;
+}
+
+.mobile-nav-drawer .ant-drawer-header {
+  background: var(--color-surface) !important;
+  border-bottom: 1px solid var(--color-border-md) !important;
+}
+
+.mobile-nav-drawer .ant-drawer-title {
+  color: var(--color-text-primary) !important;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.mobile-nav-link:hover,
+.mobile-nav-link--active {
+  background: var(--color-gold-subtle);
+  color: var(--color-gold-start);
+}
+
+.mobile-nav-link--active {
+  font-weight: 600;
+  border-left: 3px solid var(--color-gold-start);
+  padding-left: 17px;
+}

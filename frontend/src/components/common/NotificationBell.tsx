@@ -103,7 +103,7 @@ const NotificationBell: React.FC = () => {
   const content = (
     <div
       style={{
-        width: 380,
+        width: "min(380px, calc(100vw - 24px))",
         maxHeight: 600,
         overflow: "hidden",
         display: "flex",

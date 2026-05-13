@@ -1,15 +1,20 @@
 import {
   DashboardOutlined,
   LogoutOutlined,
+  MenuOutlined,
   SearchOutlined,
   SettingOutlined,
   ShopOutlined,
   UserOutlined,
   ClockCircleOutlined,
   CloseOutlined,
+  HomeOutlined,
+  UnorderedListOutlined,
+  HistoryOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
 import type { InputRef } from "antd";
-import { Avatar, Dropdown, Input, Layout, MenuProps, Space, Spin } from "antd";
+import { Avatar, Drawer, Dropdown, Input, Layout, MenuProps, Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -37,12 +42,13 @@ export const Header = () => {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const searchRef = useRef<InputRef>(null);
 
   const [scrolled, setScrolled] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [drawerEverOpened, setDrawerEverOpened] = useState(false);
   const [searchHistory, setSearchHistory] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem("search-history");
@@ -70,9 +76,6 @@ export const Header = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    if (searchOpen) searchRef.current?.focus();
-  }, [searchOpen]);
 
   const saveToSearchHistory = (keyword: string) => {
     const q = keyword.trim();
@@ -127,7 +130,7 @@ export const Header = () => {
 
   // Inline JSX — NOT a sub-component to avoid unmount/remount on every keystroke
   const searchDropdownJSX = (() => {
-    const showDropdown = isSearchFocused || searchOpen;
+    const showDropdown = isSearchFocused;
     if (!showDropdown) return null;
 
     if (debouncedSearch) {
@@ -287,6 +290,7 @@ export const Header = () => {
         }}
       />
       <AntHeader
+        className="header-root"
         style={{
           background: scrolled ? "rgba(15,17,26,0.95)" : "transparent",
           backdropFilter: scrolled ? "blur(20px)" : "none",
@@ -295,6 +299,8 @@ export const Header = () => {
             "background 0.5s ease, border-color 0.5s ease, box-shadow 0.3s ease",
           display: "flex",
           alignItems: "center",
+          overflowX: "clip" as "hidden",
+          overflowY: "visible",
           padding: "0 24px",
           position: "fixed",
           top: 0,
@@ -310,16 +316,19 @@ export const Header = () => {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "16px",
-            flexShrink: 0,
+            gap: "10px",
+            flex: 1,
+            minWidth: 0,
           }}
         >
+          {/* Logo */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
               cursor: "pointer",
               gap: "7px",
+              flexShrink: 0,
             }}
             onClick={() => navigate("/")}
           >
@@ -344,7 +353,7 @@ export const Header = () => {
             </span>
           </div>
 
-          {/* Search — desktop */}
+          {/* Search — desktop full input */}
           <div className="hidden md:block" style={{ position: "relative" }}>
             <Input
               prefix={
@@ -368,22 +377,28 @@ export const Header = () => {
             {searchDropdownJSX}
           </div>
 
-          {/* Search icon — mobile */}
-          <button
-            className="md:hidden"
-            onClick={() => setSearchOpen((v) => !v)}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "rgba(255,255,255,0.65)",
-              padding: "4px",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <SearchOutlined style={{ fontSize: "17px" }} />
-          </button>
+          {/* Search — mobile inline Input (luôn hiện, gõ thẳng) */}
+          <div className="md:hidden" style={{ position: "relative", flex: 1, minWidth: 0 }}>
+            <Input
+              ref={searchRef}
+              prefix={<SearchOutlined style={{ color: "rgba(255,255,255,0.45)", fontSize: "12px" }} />}
+              placeholder="Search auctions..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onPressEnter={() => handleSearchSubmit(searchValue)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#fff",
+                fontSize: "12px",
+                height: "32px",
+              }}
+              allowClear
+            />
+            {searchDropdownJSX}
+          </div>
         </div>
 
         {/* CENTER — nav links */}
@@ -445,18 +460,26 @@ export const Header = () => {
         </nav>
 
         {/* Right */}
-        <Space
-          size={10}
-          align="center"
-          style={{ flexShrink: 0, display: "flex", alignItems: "center" }}
-        >
-          {isAuthenticated && user && (
-            <div
-              style={{ display: "flex", alignItems: "center", height: "42px" }}
-            >
-              <NotificationBell />
-            </div>
-          )}
+        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+          {isAuthenticated && user && <NotificationBell />}
+
+          {/* Hamburger — mobile only */}
+          <button
+            className="md:hidden"
+            onClick={() => { setMobileMenuOpen(true); setDrawerEverOpened(true); }}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "rgba(255,255,255,0.75)",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <MenuOutlined style={{ fontSize: "20px" }} />
+          </button>
+
           {isAuthenticated && user ? (
             <Dropdown menu={{ items: userMenuItems }} trigger={["click"]}>
               <div
@@ -471,7 +494,7 @@ export const Header = () => {
                   background: "rgba(255,255,255,0.03)",
                   transition: "all 0.15s",
                 }}
-                className="hover:border-[rgba(254,212,105,0.25)] hover:bg-[rgba(254,212,105,0.04)]"
+                className="header-avatar-btn hover:border-[rgba(254,212,105,0.25)] hover:bg-[rgba(254,212,105,0.04)]"
               >
                 <Avatar
                   size={32}
@@ -485,25 +508,10 @@ export const Header = () => {
                   }}
                 />
                 <div className="hidden sm:block">
-                  <p
-                    style={{
-                      color: "#fff",
-                      fontSize: "12.5px",
-                      fontWeight: 600,
-                      lineHeight: 1.2,
-                      margin: 0,
-                    }}
-                  >
+                  <p style={{ color: "#fff", fontSize: "12.5px", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
                     {user.name}
                   </p>
-                  <p
-                    style={{
-                      color: "rgba(255,255,255,0.38)",
-                      fontSize: "11px",
-                      lineHeight: 1.2,
-                      margin: 0,
-                    }}
-                  >
+                  <p style={{ color: "rgba(255,255,255,0.38)", fontSize: "11px", lineHeight: 1.2, margin: 0 }}>
                     {user.email}
                   </p>
                 </div>
@@ -514,41 +522,68 @@ export const Header = () => {
               <GoogleLoginButton />
             </Spin>
           )}
-        </Space>
+        </div>
       </AntHeader>
 
-      {/* Mobile search dropdown */}
-      {searchOpen && (
-        <div
-          className="md:hidden"
-          style={{
-            position: "sticky",
-            top: "64px",
-            zIndex: 49,
-            padding: "10px 16px",
-            backdropFilter: "blur(20px)",
-          }}
-        >
-          <div style={{ position: "relative" }}>
-            <Input
-              ref={searchRef}
-              prefix={<SearchOutlined style={{ color: "#fff" }} />}
-              placeholder="Search auctions..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onPressEnter={() => handleSearchSubmit(searchValue)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-              style={{
-                color: "#fff",
-                fontSize: "14px",
-              }}
-              allowClear
-            />
-            {searchDropdownJSX}
+      {/* Mobile nav drawer — chỉ mount sau lần mở đầu tiên, tránh panel tồn tại trong DOM khi chưa cần */}
+      {drawerEverOpened && (
+      <Drawer
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        placement="right"
+        styles={{ wrapper: { width: 280 } }}
+        title={
+          <span style={{ color: "var(--color-text-primary)", fontWeight: 700 }}>
+            Menu
+          </span>
+        }
+        className="mobile-nav-drawer"
+        closeIcon={<CloseOutlined style={{ color: "var(--color-text-secondary)" }} />}
+      >
+        {NAV_LINKS.filter((link) => !link.authOnly || isAuthenticated).map((link) => {
+          const isExternal = link.path.startsWith("http");
+          const active = isExternal
+            ? false
+            : link.path === "/"
+              ? location.pathname === "/"
+              : location.pathname.startsWith(link.path);
+
+          const icon =
+            link.path === "/" ? <HomeOutlined /> :
+            link.path === "/auctions" ? <UnorderedListOutlined /> :
+            link.path === "/participated" ? <HistoryOutlined /> :
+            <InfoCircleOutlined />;
+
+          const handleClick = () => {
+            setMobileMenuOpen(false);
+            if (isExternal) window.open(link.path, "_blank", "noreferrer");
+            else navigate(link.path);
+          };
+
+          return (
+            <div
+              key={link.path}
+              className={`mobile-nav-link${active ? " mobile-nav-link--active" : ""}`}
+              onClick={handleClick}
+            >
+              {icon}
+              {link.label}
+            </div>
+          );
+        })}
+
+        {isAuthenticated && (
+          <div
+            className="mobile-nav-link"
+            onClick={() => { setMobileMenuOpen(false); navigate("/account/profile"); }}
+          >
+            <SettingOutlined />
+            Account Settings
           </div>
-        </div>
+        )}
+      </Drawer>
       )}
+
     </>
   );
 };

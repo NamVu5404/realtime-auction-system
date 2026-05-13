@@ -734,6 +734,7 @@ export const AuctionDetailPage = () => {
 
   return (
     <div
+      className="detail-page-wrapper"
       style={{
         background: "var(--color-bg)",
         minHeight: "100vh",
