@@ -45,26 +45,25 @@ export const useAuctions = (
   status: AuctionStatus,
   page: number = 1,
   size: number = 20,
+  q?: string,
 ): UseQueryResult<PaginatedAuctions, Error> => {
   return useQuery({
-    // Unique query key based on parameters
-    queryKey: ["auctions", status, page, size],
+    // Unique query key based on parameters (including search term)
+    queryKey: ["auctions", status, page, size, q ?? ""],
 
-    // Query function
-    queryFn: () => auctionApi.getAuctionsByStatus(status, page, size),
+    // Query function — passes q if present, otherwise omits it
+    queryFn: () => q?.trim()
+      ? auctionApi.searchAuctions(q.trim(), page, size)
+      : auctionApi.getAuctionsByStatus(status, page, size),
 
     // Optimization settings
-    staleTime: 5000, // Consider data fresh for 5 seconds
-    gcTime: 10 * 60 * 1000, // Keep cache for 10 minutes (formerly cacheTime)
+    staleTime: 5000,
+    gcTime: 10 * 60 * 1000,
 
     // Keep previous data while fetching new data (prevents flickering)
-    // when switching tabs or pages
     placeholderData: (previousData) => previousData,
 
-    // Automatically refetch on window focus
     refetchOnWindowFocus: false,
-
-    // Retry on error (up to 2 times)
     retry: 2,
   });
 };

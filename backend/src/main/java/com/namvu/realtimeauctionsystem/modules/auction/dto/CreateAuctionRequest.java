@@ -16,8 +16,11 @@ public class CreateAuctionRequest {
     private Long id;
 
     @NotBlank(groups = {Draft.class, Scheduler.class}, message = "Title is required")
+    @Size(min = 10, max = 150, groups = {Draft.class, Scheduler.class}, message = "Title must be between 10 and 150 characters")
     private String title;
 
+    @NotBlank(groups = Scheduler.class, message = "Description is required when scheduling")
+    @Size(max = 10000, groups = {Draft.class, Scheduler.class}, message = "Description must not exceed 10000 characters")
     private String description;
 
     @NotNull(groups = Scheduler.class, message = "Initial price is required")

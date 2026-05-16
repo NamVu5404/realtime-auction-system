@@ -30,8 +30,6 @@ export const WishlistButton: React.FC<WishlistButtonProps> = ({
     toggleWishlist();
   };
 
-  if (!isAuthenticated) return null;
-
   return (
     <Button
       type={type}

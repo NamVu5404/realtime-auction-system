@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App as AppAntd, ConfigProvider, theme } from 'antd';
-import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Navigate, Route, BrowserRouter as Router, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import './App.css';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { AntdStaticSetter } from './components/AntdStaticSetter';
@@ -23,17 +24,36 @@ import AdminNotificationPage from './pages/admin/AdminNotificationPage';
 import AdminUserPage from './pages/admin/AdminUserPage';
 import AILogsPage from './pages/admin/AILogsPage';
 import AuctionReviewPage from './pages/admin/AuctionReviewPage';
+import AdminHeroSlidePage from './pages/admin/AdminHeroSlidePage';
 import ContactManagementPage from './pages/admin/ContactManagementPage';
 import SellerManagementPage from './pages/admin/SellerManagementPage';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import AuctionDetailPage from './pages/home/AuctionDetailPage';
+import AuctionsPage from './pages/home/AuctionsPage';
 import HomePage from './pages/home/HomePage';
+import ParticipatedAuctionsPage from './pages/home/ParticipatedAuctionsPage';
+import SellersPage from './pages/home/SellersPage';
 import NotFound from './pages/NotFound';
 import SellerAuctionPage from './pages/seller/SellerAuctionPage';
 import SellerDashboard from './pages/seller/SellerDashboard';
 import SellerNotificationPage from './pages/seller/SellerNotificationPage';
 // Create a client for React Query
 const queryClient = new QueryClient();
+
+const ScrollToTop = () => {
+  const location = useLocation();
+  const navType = useNavigationType();
+
+  useEffect(() => {
+    // Chỉ cuộn lên top nếu là navigate mới (PUSH hoặc REPLACE).
+    // Nếu là back (POP), trình duyệt sẽ tự khôi phục vị trí scroll cũ.
+    if (navType !== "POP") {
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname, navType]);
+
+  return null;
+};
 
 function App() {
   // Mount once globally — writes Kafka health to useUIStore
@@ -100,11 +120,15 @@ function App() {
         <AppAntd>
           <AntdStaticSetter />
           <Router>
+            <ScrollToTop />
             <Routes>
               {/* Public Routes with MainLayout (Header + Footer) */}
               <Route element={<MainLayout />}>
                 <Route path="/" element={<HomePage />} />
+                <Route path="/auctions" element={<AuctionsPage />} />
                 <Route path="/auction/:id" element={<AuctionDetailPage />} />
+                <Route path="/participated" element={<ParticipatedAuctionsPage />} />
+                <Route path="/sellers" element={<SellersPage />} />
                 <Route
                   path="/my-bids"
                   element={<Navigate to="/account/bids" replace />}
@@ -129,6 +153,7 @@ function App() {
                 <Route path="contacts" element={<ContactManagementPage />} />
                 <Route path="notifications" element={<AdminNotificationPage />} />
                 <Route path="ai-logs" element={<AILogsPage />} />
+                <Route path="hero-slides" element={<AdminHeroSlidePage />} />
               </Route>
 
               {/* Seller Routes with SellerLayout (Sidebar + Seller Header) */}

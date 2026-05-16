@@ -1,6 +1,8 @@
 import {
   BarChartOutlined,
+  CheckCircleFilled,
   CheckCircleOutlined,
+  CloseCircleFilled,
   DeleteOutlined,
   EyeOutlined,
   FilterOutlined,
@@ -8,11 +10,9 @@ import {
   MoreOutlined,
   SearchOutlined,
   ShopOutlined,
+  SolutionOutlined,
   StopOutlined,
   UnlockOutlined,
-  SolutionOutlined,
-  CheckCircleFilled,
-  CloseCircleFilled,
 } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -21,6 +21,7 @@ import {
   Button,
   Drawer,
   Dropdown,
+  Image,
   Input,
   message,
   Modal,
@@ -45,9 +46,10 @@ import {
 } from "../../api/types";
 import AccountTrackingDrawer from "../../components/admin/AccountTrackingDrawer";
 import BidStatisticsDashboard from "../../features/bid/BidStatisticsDashboard";
-import { useDebounce } from "../../hooks/useDebounce";
 import KycInfoModal from "../../features/ekyc/KycInfoModal";
+import { useDebounce } from "../../hooks/useDebounce";
 import formatCurrency, { formatDateTime } from "../../utils/format";
+import { DEFAULT_AUCTION_IMAGE, getImageUrl } from "../../utils/imageUtils";
 
 const AdminUserPage = () => {
   const { modal } = App.useApp();
@@ -466,6 +468,25 @@ const AdminUserPage = () => {
   ];
 
   const historyColumns = [
+    {
+      title: "Image",
+      dataIndex: "image",
+      key: "image",
+      render: (image: string) => (
+        <Image
+          src={getImageUrl(image)}
+          width={50}
+          height={50}
+          fallback={DEFAULT_AUCTION_IMAGE}
+          style={{
+            width: "50px",
+            height: "50px",
+            objectFit: "cover",
+            objectPosition: "center center",
+          }}
+        />
+      ),
+    },
     {
       title: "Item",
       dataIndex: "auctionTitle",

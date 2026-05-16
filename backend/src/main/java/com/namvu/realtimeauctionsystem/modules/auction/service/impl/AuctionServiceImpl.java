@@ -37,6 +37,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -84,10 +85,10 @@ public class AuctionServiceImpl implements AuctionService {
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CacheNameConstant.AUCTIONS, key = "#status.name() + '-' + #pageable.pageNumber")
-    public PageResponse<AuctionResponse> getAuctionsByStatus(AuctionStatus status, Pageable pageable) {
+    public PageResponse<AuctionResponse> filterAuctionForUser(String q, AuctionStatus status, Pageable pageable) {
         Instant oneHourFromNow = Instant.now().plus(1, ChronoUnit.HOURS);
 
-        Page<Auction> auctionPage = auctionRepository.findByCustomStatus(status, oneHourFromNow, pageable);
+        Page<Auction> auctionPage = auctionRepository.findByCustomStatus(q, status, oneHourFromNow, pageable);
 
         return getResponse(pageable, auctionPage);
     }
@@ -608,6 +609,52 @@ public class AuctionServiceImpl implements AuctionService {
             checkAuctionOwnership(auction);
         }
         return auction.getToken();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<AuctionResponse> getMyParticipatedAuctions(int page, int size) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Auction> auctionPage = auctionRepository.findRecentlyBidByUserPaged(userId, pageable);
+        return getResponse(pageable, auctionPage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuctionResponse> getMyRecentBidAuctions(int limit) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        List<AuctionResponse> responses = auctionRepository.findRecentlyBidByUser(userId, PageRequest.of(0, limit))
+                .stream()
+                .map(auctionMapper::mapToResponse)
+                .toList();
+        populateImages(responses);
+        return responses;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuctionResponse> getTrendingAuctions(int limit) {
+        Instant since = Instant.now().minus(24, ChronoUnit.HOURS);
+        List<AuctionResponse> responses = auctionRepository
+                .findTrendingAuctions(since, PageRequest.of(0, limit))
+                .stream()
+                .map(auctionMapper::mapToResponse)
+                .toList();
+        populateImages(responses);
+        return responses;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AuctionResponse> getMostWishlistedAuctions(int limit) {
+        List<AuctionResponse> responses = auctionRepository
+                .findMostWishlisted(PageRequest.of(0, limit))
+                .stream()
+                .map(auctionMapper::mapToResponse)
+                .toList();
+        populateImages(responses);
+        return responses;
     }
 
     private void populateImages(List<AuctionResponse> responses) {

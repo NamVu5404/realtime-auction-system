@@ -17,6 +17,7 @@ import java.time.Instant;
 public class MyBidHistoryResponse {
     private Long auctionId;
     private String auctionTitle;
+    private String image;
     private AuctionStatus auctionStatus;
     private BigDecimal currentPrice; // auction
     private BigDecimal amount; // bidder

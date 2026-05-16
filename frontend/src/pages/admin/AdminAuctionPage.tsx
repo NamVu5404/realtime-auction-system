@@ -302,6 +302,8 @@ const AdminAuctionPage = () => {
         // Show Share for SCHEDULED or LIVE status
         if (
           record.status === AuctionStatus.SCHEDULED ||
+          record.status === AuctionStatus.ENDED ||
+          record.status === AuctionStatus.ENDED_NO_SALE ||
           record.status === AuctionStatus.LIVE
         ) {
           menuItems.push({
@@ -357,15 +359,14 @@ const AdminAuctionPage = () => {
       render: (image: string) => (
         <Image
           src={getImageUrl(image)}
-          width={50}
-          height={50}
-          fallback={DEFAULT_IMAGE}
           style={{
-            width: "50px",
-            height: "50px",
+            width: 64,
+            height: 42,
             objectFit: "cover",
-            objectPosition: "center center",
+            borderRadius: 6,
+            flexShrink: 0,
           }}
+          fallback={DEFAULT_IMAGE}
         />
       ),
     },
@@ -397,9 +398,7 @@ const AdminAuctionPage = () => {
       dataIndex: "status",
       key: "status",
       render: (status: AuctionStatus) => (
-        <Tag color={getStatusColor(status)}>
-          {status.replace(/_/g, " ")}
-        </Tag>
+        <Tag color={getStatusColor(status)}>{status.replace(/_/g, " ")}</Tag>
       ),
     },
   ];

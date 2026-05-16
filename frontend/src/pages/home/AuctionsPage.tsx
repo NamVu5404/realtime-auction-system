@@ -1,0 +1,281 @@
+import { WifiOutlined } from "@ant-design/icons";
+import { useQueryClient } from "@tanstack/react-query";
+import { Empty, Pagination, Spin, Tabs } from "antd";
+import { useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Auction, AuctionStatus } from "../../api/types";
+import AuctionCard from "../../features/auction/AuctionCard";
+import { useAuctions } from "../../hooks/useAuctions";
+import { useWebSocket } from "../../hooks/useWebSocket";
+
+// ── 5-column grid + pagination ────────────────────────────────────────────────
+
+interface BrowseGridProps {
+  auctions: Auction[];
+  totalElements: number;
+  pageSize: number;
+  currentPage: number;
+  onPageChange: (p: number) => void;
+  onCountdownComplete: () => void;
+  emptyMsg: string;
+}
+
+const BrowseGrid = ({
+  auctions,
+  totalElements,
+  pageSize,
+  currentPage,
+  onPageChange,
+  onCountdownComplete,
+  emptyMsg,
+}: BrowseGridProps) => {
+  if (!auctions || auctions.length === 0) {
+    return (
+      <div className="auctions-grid-empty">
+        <Empty
+          description={
+            <span style={{ color: "var(--color-text-muted)", fontSize: 14 }}>
+              {emptyMsg}
+            </span>
+          }
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="auctions-grid-5">
+        {auctions.map((auction) => (
+          <AuctionCard
+            key={auction.id}
+            auction={auction}
+            onCountdownComplete={onCountdownComplete}
+          />
+        ))}
+      </div>
+      {totalElements > pageSize && (
+        <div className="auctions-grid-pagination">
+          <Pagination
+            current={currentPage}
+            pageSize={pageSize}
+            total={totalElements}
+            onChange={onPageChange}
+            showSizeChanger={false}
+            showTotal={(total) => `${total} auctions`}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Main page ─────────────────────────────────────────────────────────────────
+
+const AuctionsPage = () => {
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const activeTab = searchParams.get("status") || "live";
+  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  const searchQuery = searchParams.get("q") || undefined;
+  const pageSize = 20;
+
+  const statusMap: Record<string, AuctionStatus> = {
+    live: AuctionStatus.LIVE,
+    scheduled: AuctionStatus.SCHEDULED,
+    ended: AuctionStatus.ENDED,
+  };
+
+  const currentStatus = statusMap[activeTab] || AuctionStatus.LIVE;
+
+  const { data, isLoading, error } = useAuctions(
+    currentStatus,
+    currentPage,
+    pageSize,
+    searchQuery,
+  );
+
+  const onPriceUpdate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["auctions"] });
+  }, [queryClient]);
+
+  const { isConnected } = useWebSocket({ onPriceUpdate });
+
+  const handleCountdownComplete = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["auctions"] });
+  }, [queryClient]);
+
+  const handleTabChange = useCallback(
+    (key: string) =>
+      setSearchParams({
+        status: key,
+        page: "1",
+        ...(searchQuery ? { q: searchQuery } : {}),
+      }),
+    [setSearchParams, searchQuery],
+  );
+
+  const handlePageChange = useCallback(
+    (p: number) =>
+      setSearchParams({
+        status: activeTab,
+        page: p.toString(),
+        ...(searchQuery ? { q: searchQuery } : {}),
+      }),
+    [activeTab, setSearchParams, searchQuery],
+  );
+
+  const renderBrowseTab = (emptyMsg: string) => (
+    <Spin spinning={isLoading}>
+      {!isLoading ? (
+        <BrowseGrid
+          auctions={data?.data ?? []}
+          totalElements={data?.totalElements ?? 0}
+          pageSize={data?.pageSize ?? pageSize}
+          currentPage={data?.currentPage ?? currentPage}
+          onPageChange={handlePageChange}
+          onCountdownComplete={handleCountdownComplete}
+          emptyMsg={emptyMsg}
+        />
+      ) : null}
+    </Spin>
+  );
+
+  const tabs = [
+    {
+      key: "live",
+      label: activeTab === "live" ? `LIVE (${data?.totalElements ?? 0})` : "LIVE",
+      children: renderBrowseTab("No live auctions at the moment"),
+    },
+    {
+      key: "scheduled",
+      label:
+        activeTab === "scheduled"
+          ? `UPCOMING (${data?.totalElements ?? 0})`
+          : "UPCOMING",
+      children: renderBrowseTab("No upcoming auctions"),
+    },
+    {
+      key: "ended",
+      label:
+        activeTab === "ended" ? `ENDED (${data?.totalElements ?? 0})` : "ENDED",
+      children: renderBrowseTab("No ended auctions"),
+    },
+  ];
+
+  return (
+    <div
+      className="page-outer-padded"
+      style={{
+        background: "var(--color-bg)",
+        minHeight: "100vh",
+        padding: "40px 0",
+      }}
+    >
+      <div className="page-container-padded mx-auto" style={{ maxWidth: "1280px" }}>
+        {/* Header */}
+        <div style={{ marginBottom: "24px" }}>
+          <div
+            className="page-header-row"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: "12px",
+            }}
+          >
+            <div>
+              <h2
+                style={{
+                  fontSize: "24px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  margin: "0 0 4px",
+                }}
+              >
+                {searchQuery ? (
+                  <>
+                    Results for{" "}
+                    <span style={{ color: "var(--color-gold-start)" }}>
+                      &#34;{searchQuery}&#34;
+                    </span>
+                  </>
+                ) : (
+                  "All Auctions"
+                )}
+              </h2>
+              <p style={{ margin: 0, fontSize: "13px", color: "var(--color-text-muted)" }}>
+                {searchQuery
+                  ? "Showing auctions matching your search"
+                  : "Browse and bid on live, upcoming and ended auctions"}
+              </p>
+            </div>
+            {isConnected ? (
+              <span className="status-pill status-pill-connected">
+                <WifiOutlined style={{ fontSize: "11px" }} />
+                Real-time active
+              </span>
+            ) : (
+              <span className="status-pill status-pill-reconnecting">
+                <span
+                  style={{
+                    display: "inline-block",
+                    animation: "spin 1s linear infinite",
+                  }}
+                >
+                  ⟳
+                </span>
+                Connecting...
+              </span>
+            )}
+          </div>
+        </div>
+
+        {error && (
+          <div
+            style={{
+              marginBottom: "24px",
+              padding: "14px 18px",
+              background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.3)",
+              borderRadius: "12px",
+              color: "#f87171",
+              fontSize: "14px",
+            }}
+          >
+            ⚠ Failed to load auctions: {error.message}
+          </div>
+        )}
+
+        {searchQuery ? (
+          <Spin spinning={isLoading}>
+            {!isLoading && (
+              <BrowseGrid
+                auctions={data?.data ?? []}
+                totalElements={data?.totalElements ?? 0}
+                pageSize={data?.pageSize ?? pageSize}
+                currentPage={data?.currentPage ?? currentPage}
+                onPageChange={handlePageChange}
+                onCountdownComplete={handleCountdownComplete}
+                emptyMsg={`No results found for "${searchQuery}"`}
+              />
+            )}
+          </Spin>
+        ) : (
+          <Tabs
+            activeKey={activeTab}
+            onChange={handleTabChange}
+            items={tabs}
+            size="middle"
+            className="auction-tabs"
+            animated={false}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AuctionsPage;

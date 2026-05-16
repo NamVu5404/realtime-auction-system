@@ -9,74 +9,87 @@
 }
 
 /* -------------------------------------------------------
-   Ghost pill badges
+   Premium Glass Badges (Compact & Transparent)
    ------------------------------------------------------- */
 .badge-live {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 12px;
+  padding: 3px 10px;
   border-radius: 100px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  border: 0.5px solid rgba(74, 222, 128, 0.45);
-  color: #4ade80;
-  background: rgba(74, 222, 128, 0.07);
+  color: #ef4444; /* Neon Red */
+  background: rgba(15, 17, 26, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .badge-upcoming {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 12px;
+  padding: 3px 10px;
   border-radius: 100px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  border: 0.5px solid rgba(96, 165, 250, 0.45);
-  color: #60a5fa;
-  background: rgba(96, 165, 250, 0.07);
+  color: #60a5fa; /* Bright Blue */
+  background: rgba(15, 17, 26, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .badge-soon {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 12px;
+  padding: 3px 10px;
   border-radius: 100px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  border: 0.5px solid rgba(254, 212, 105, 0.45);
-  color: #fed469;
-  background: rgba(254, 212, 105, 0.07);
+  color: #fed469; /* Gold */
+  background: rgba(15, 17, 26, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(254, 212, 105, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .badge-ended {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 12px;
+  padding: 3px 10px;
   border-radius: 100px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  border: 0.5px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(15, 17, 26, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .live-pulse-dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #4ade80;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
   animation: pulseDot 1.5s ease-in-out infinite;
 }
 
@@ -201,4 +214,59 @@
   font-weight: 500;
   color: var(--color-text-primary);
   line-height: 1.4;
+}
+
+/* -------------------------------------------------------
+   Auction image carousel overlays
+   ------------------------------------------------------- */
+.carousel-badges-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.carousel-wishlist-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+
+/* -------------------------------------------------------
+   Wishlist button — detail page header row
+   ------------------------------------------------------- */
+.wishlist-btn.ant-btn {
+  background: rgba(15, 17, 26, 0.55) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 12px !important;
+  width: 44px !important;
+  height: 44px !important;
+  flex-shrink: 0;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35) !important;
+}
+
+.wishlist-btn.ant-btn:hover {
+  background: rgba(15, 17, 26, 0.75) !important;
+  border-color: rgba(244, 63, 94, 0.5) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* -------------------------------------------------------
+   Auction Detail — responsive column order (mobile first)
+   ------------------------------------------------------- */
+@media (max-width: 991px) {
+  .detail-right-col {
+    order: -1;
+  }
 }

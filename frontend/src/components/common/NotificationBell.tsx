@@ -103,7 +103,7 @@ const NotificationBell: React.FC = () => {
   const content = (
     <div
       style={{
-        width: 380,
+        width: "min(380px, calc(100vw - 24px))",
         maxHeight: 600,
         overflow: "hidden",
         display: "flex",
@@ -286,6 +286,11 @@ const NotificationBell: React.FC = () => {
         size="small"
         offset={[-2, 6]}
         styles={{
+          root: {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          },
           indicator: {
             backgroundColor: "var(--color-gold-start)",
             color: "var(--color-text-on-gold)",

@@ -23,6 +23,7 @@ import React, { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import adminApi from "../../api/adminApi";
 import { AiReviewDecision, AiReviewLog } from "../../api/types";
+import useDebounce from "../../hooks/useDebounce";
 
 const { Text } = Typography;
 
@@ -55,6 +56,7 @@ const AILogsPage: React.FC = () => {
   const [decision, setDecision] = useState<AiReviewDecision | undefined>(
     undefined,
   );
+  const debouncedAuctionId = useDebounce(auctionId, 300);
 
   const setPage = (p: number) => {
     const params = new URLSearchParams(searchParams);
@@ -63,12 +65,12 @@ const AILogsPage: React.FC = () => {
   };
 
   const { data, isLoading } = useQuery({
-    queryKey: ["ai-logs", page, auctionId, decision],
-    queryFn: () => adminApi.getAiLogs(page, 20, auctionId, decision),
+    queryKey: ["ai-logs", page, debouncedAuctionId, decision],
+    queryFn: () => adminApi.getAiLogs(page, 20, debouncedAuctionId, decision),
   });
 
   const { data: counts } = useQuery({
-    queryKey: ["ai-logs-counts", auctionId],
+    queryKey: ["ai-logs-counts"],
     queryFn: () => adminApi.getAiLogCounts(),
   });
 

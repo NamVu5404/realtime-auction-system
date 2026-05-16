@@ -296,10 +296,12 @@ export const AuctionDetailPage = () => {
 
       // Persist to localStorage to prevent re-triggering across sessions
       if (user?.id && auction?.id) {
-        localStorage.setItem(
-          `celebrated_auction_${user.id}_${auction.id}`,
-          "true",
-        );
+        const key = `celebrated_auctions_${user.id}`;
+        const ids: number[] = JSON.parse(localStorage.getItem(key) ?? "[]");
+        if (!ids.includes(auction.id)) {
+          ids.push(auction.id);
+          localStorage.setItem(key, JSON.stringify(ids));
+        }
       }
 
       console.log("🏆 YOU WON! Triggering premium celebration...");
@@ -350,8 +352,9 @@ export const AuctionDetailPage = () => {
   useEffect(() => {
     const token = searchParams.get("token");
     if (token && auctionId) {
-      const storageKey = `auction_token_${auctionId}`;
-      sessionStorage.setItem(storageKey, token);
+      const tokens = JSON.parse(localStorage.getItem("auction_tokens") ?? "{}");
+      tokens[auctionId] = token;
+      localStorage.setItem("auction_tokens", JSON.stringify(tokens));
       searchParams.delete("token");
       setSearchParams(searchParams, { replace: true });
       console.log(`[PrivateMode] Token saved and removed from URL`);
@@ -366,9 +369,10 @@ export const AuctionDetailPage = () => {
       if (!auction || !user?.id) return;
 
       // Check localStorage first for absolute persistence
-      const isAlreadyCelebrated = localStorage.getItem(
-        `celebrated_auction_${user.id}_${auction.id}`,
+      const ids: number[] = JSON.parse(
+        localStorage.getItem(`celebrated_auctions_${user.id}`) ?? "[]",
       );
+      const isAlreadyCelebrated = ids.includes(auction.id);
       if (isAlreadyCelebrated) {
         hasCelebratedRef.current = true;
         return;
@@ -730,6 +734,7 @@ export const AuctionDetailPage = () => {
 
   return (
     <div
+      className="detail-page-wrapper"
       style={{
         background: "var(--color-bg)",
         minHeight: "100vh",
@@ -849,93 +854,74 @@ export const AuctionDetailPage = () => {
         {/* Main Content */}
         <Row gutter={[40, 32]}>
           {/* Left Column - Image & Description */}
-          <Col xs={24} lg={13}>
+          <Col xs={24} lg={13} className="detail-left-col">
             <div
               style={{ display: "flex", flexDirection: "column", gap: "20px" }}
             >
-              {/* Status Badges */}
-              <div
+              {/* Title */}
+              <h1
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  flexWrap: "wrap",
+                  fontSize: "clamp(1.1rem, 2.2vw, 1.5rem)",
+                  fontWeight: 700,
+                  color: "#fff",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.3,
+                  margin: 0,
                 }}
               >
-                {isLive && (
-                  <span className="badge-live">
-                    <span className="live-pulse-dot" />
-                    LIVE
-                  </span>
-                )}
-                {isScheduled && timeTilStart < oneHourMs && (
-                  <span className="badge-soon">STARTING SOON</span>
-                )}
-                {isScheduled && timeTilStart >= oneHourMs && (
-                  <span className="badge-upcoming">UPCOMING</span>
-                )}
-                {isEnded && <span className="badge-ended">ENDED</span>}
-                {hasTimeExtension && (
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      padding: "3px 12px",
-                      borderRadius: "100px",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      letterSpacing: "0.06em",
-                      border: "1px solid rgba(251,191,36,0.4)",
-                      color: "#fbbf24",
-                      background: "rgba(251,191,36,0.08)",
-                    }}
-                    className="animate-pulse"
-                  >
-                    ⏱ Time Extended!
-                  </span>
-                )}
+                {auction.title}
+              </h1>
+
+              {/* Image Carousel + overlaid badges & wishlist */}
+              <div style={{ position: "relative" }}>
+                <AuctionImageCarousel images={auction.images} />
+
+                {/* Badges — top-left overlay */}
+                <div className="carousel-badges-overlay">
+                  {isLive && (
+                    <span className="badge-live">
+                      <span className="live-pulse-dot" />
+                      LIVE
+                    </span>
+                  )}
+                  {isScheduled && timeTilStart < oneHourMs && (
+                    <span className="badge-soon">STARTING SOON</span>
+                  )}
+                  {isScheduled && timeTilStart >= oneHourMs && (
+                    <span className="badge-upcoming">UPCOMING</span>
+                  )}
+                  {isEnded && <span className="badge-ended">ENDED</span>}
+                  {hasTimeExtension && (
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        padding: "3px 12px",
+                        borderRadius: "100px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        letterSpacing: "0.06em",
+                        border: "1px solid rgba(251,191,36,0.4)",
+                        color: "#fbbf24",
+                        background: "rgba(251,191,36,0.08)",
+                      }}
+                      className="animate-pulse"
+                    >
+                      ⏱ Time Extended!
+                    </span>
+                  )}
+                </div>
+
+                {/* Wishlist — top-right overlay */}
+                <div className="carousel-wishlist-overlay">
+                  <WishlistButton
+                    auctionId={auction.id}
+                    isWishListed={wishlistedSet.has(auction.id)}
+                    size="large"
+                    className="wishlist-btn"
+                  />
+                </div>
               </div>
-
-              {/* Title & Actions */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  gap: "16px",
-                }}
-              >
-                <h1
-                  style={{
-                    fontSize: "clamp(1.4rem, 3vw, 2rem)",
-                    fontWeight: 800,
-                    color: "#fff",
-                    letterSpacing: "-0.02em",
-                    lineHeight: 1.2,
-                    margin: 0,
-                    flex: 1,
-                  }}
-                >
-                  {auction.title}
-                </h1>
-
-                <WishlistButton
-                  auctionId={auction.id}
-                  isWishListed={wishlistedSet.has(auction.id)}
-                  size="large"
-                  style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: "12px",
-                    width: "44px",
-                    height: "44px",
-                    flexShrink: 0,
-                  }}
-                />
-              </div>
-
-              {/* Image Carousel */}
-              <AuctionImageCarousel images={auction.images} />
 
               {/* Description */}
               <div
@@ -949,7 +935,7 @@ export const AuctionDetailPage = () => {
           </Col>
 
           {/* Right Column - Auction Info & Bidding */}
-          <Col xs={24} lg={11}>
+          <Col xs={24} lg={11} className="detail-right-col">
             <div
               style={{
                 display: "flex",
@@ -959,6 +945,131 @@ export const AuctionDetailPage = () => {
                 top: "80px",
               }}
             >
+              {/* Price Card */}
+              <div
+                style={{
+                  background: "rgba(33,36,46,0.8)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                  border: "1px solid rgba(255,255,255,0.03)",
+                  borderRadius: "20px",
+                  padding: "20px",
+                }}
+              >
+                {/* Main price */}
+                <div
+                  style={{
+                    background: isLive
+                      ? "var(--color-gold-subtle)"
+                      : "rgba(255,255,255,0.03)",
+                    border: `0.5px solid ${isLive ? "var(--color-gold-border)" : "var(--color-border-md)"}`,
+                    borderRadius: "16px",
+                    padding: "20px 24px",
+                    textAlign: "center",
+                    marginBottom: "20px",
+                  }}
+                >
+                  <div className="price-label" style={{ marginBottom: "6px" }}>
+                    {isLive
+                      ? "Current Price"
+                      : isEnded
+                        ? "Final Price"
+                        : "Current Price"}
+                  </div>
+                  <div
+                    key={auction.currentPrice}
+                    style={{
+                      fontSize: "clamp(2rem, 5vw, 2.8rem)",
+                      fontWeight: 800,
+                      letterSpacing: "-0.03em",
+                      lineHeight: 1.1,
+                      background: isLive
+                        ? "linear-gradient(135deg, var(--color-gold-start), var(--color-gold-end))"
+                        : "var(--color-text-primary)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      filter: isLive
+                        ? "drop-shadow(0 0 15px var(--color-gold-glow))"
+                        : "none",
+                      animation: isLive ? "pricePulse 0.5s ease-out" : "none",
+                      display: "inline-block",
+                    }}
+                  >
+                    {formatCurrency(auction.currentPrice)}
+                  </div>
+                </div>
+
+                {/* Supporting prices */}
+                <Row gutter={[12, 12]}>
+                  <Col xs={12}>
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                        borderRadius: "12px",
+                        padding: "12px 14px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.2em",
+                          color: "rgba(255,255,255,0.4)",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Starting
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          color: "#fafafa",
+                        }}
+                      >
+                        {formatCurrency(auction.startPrice)}
+                      </div>
+                    </div>
+                  </Col>
+                  <Col xs={12}>
+                    <div
+                      style={{
+                        background: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(255,255,255,0.05)",
+                        borderRadius: "12px",
+                        padding: "12px 14px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "10px",
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.2em",
+                          color: "rgba(255,255,255,0.4)",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Min Step
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          fontWeight: 600,
+                          color: "#fafafa",
+                        }}
+                      >
+                        {formatCurrency(auction.minStep)}
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+              </div>
+
               {/* ============================================
                   MODULAR ACTION PANEL
                   - Seller: Gold ghost management controls
@@ -1158,140 +1269,6 @@ export const AuctionDetailPage = () => {
                   ) : null}
                 </div>
               )}
-
-              {/* Price Card */}
-              <div
-                style={{
-                  background: "rgba(33,36,46,0.8)",
-                  backdropFilter: "blur(12px)",
-                  WebkitBackdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,0.03)",
-                  borderRadius: "20px",
-                  padding: "20px",
-                }}
-              >
-                {/* Main price */}
-                <div
-                  style={{
-                    background: isLive
-                      ? "rgba(254,212,105,0.07)"
-                      : "rgba(255,255,255,0.03)",
-                    border: `0.5px solid ${isLive ? "rgba(254,212,105,0.3)" : "rgba(255,255,255,0.06)"}`,
-                    borderRadius: "16px",
-                    padding: "20px 24px",
-                    textAlign: "center",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.2em",
-                      color: "rgba(255,255,255,0.5)",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    {isLive
-                      ? "Current Price"
-                      : isEnded
-                        ? "Final Price"
-                        : "Current Price"}
-                  </div>
-                  <div
-                    key={auction.currentPrice} // Force re-render on price change to trigger animation
-                    style={{
-                      fontSize: "clamp(2.4rem, 6vw, 3.4rem)",
-                      fontWeight: 800,
-                      letterSpacing: "-0.03em",
-                      lineHeight: 1.1,
-                      background: isLive
-                        ? "linear-gradient(135deg, #FED469, #FEECBB)"
-                        : "rgba(255,255,255,0.9)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      filter: isLive
-                        ? "drop-shadow(0 0 15px rgba(254,212,105,0.3))"
-                        : "none",
-                      animation: isLive ? "pricePulse 0.5s ease-out" : "none",
-                      display: "inline-block", // Required for transform animation
-                    }}
-                  >
-                    {formatCurrency(auction.currentPrice)}
-                  </div>
-                </div>
-
-                {/* Supporting prices */}
-                <Row gutter={[12, 12]}>
-                  <Col xs={12}>
-                    <div
-                      style={{
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.05)",
-                        borderRadius: "12px",
-                        padding: "12px 14px",
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "10px",
-                          fontWeight: 600,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.2em",
-                          color: "rgba(255,255,255,0.4)",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        Starting
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: 600,
-                          color: "#fafafa",
-                        }}
-                      >
-                        {formatCurrency(auction.startPrice)}
-                      </div>
-                    </div>
-                  </Col>
-                  <Col xs={12}>
-                    <div
-                      style={{
-                        background: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.05)",
-                        borderRadius: "12px",
-                        padding: "12px 14px",
-                        textAlign: "center",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "10px",
-                          fontWeight: 600,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.2em",
-                          color: "rgba(255,255,255,0.4)",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        Min Step
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: 600,
-                          color: "#fafafa",
-                        }}
-                      >
-                        {formatCurrency(auction.minStep)}
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
 
               {/* Seller & Highest Bidder */}
               <div

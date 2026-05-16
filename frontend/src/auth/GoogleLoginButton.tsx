@@ -60,9 +60,8 @@ export const GoogleLoginButton = () => {
       icon={<GoogleOutlined />}
       onClick={handleGoogleLogin}
       className="bg-red-500 hover:bg-red-600 border-red-500"
-      block={isMobile}
     >
-      Sign in with Google
+      {isMobile ? "Sign in" : "Sign in with Google"}
     </Button>
   );
 };

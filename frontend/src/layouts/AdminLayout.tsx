@@ -10,6 +10,7 @@ import {
   MailOutlined,
   RobotOutlined,
   SafetyCertificateOutlined,
+  PictureOutlined,
 } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -98,6 +99,12 @@ const AdminLayout = () => {
       icon: <RobotOutlined />,
       label: "AI Review Logs",
       onClick: () => navigate("/admin/ai-logs"),
+    },
+    {
+      key: "hero-slides",
+      icon: <PictureOutlined />,
+      label: "Hero Slides",
+      onClick: () => navigate("/admin/hero-slides"),
     },
   ];
 

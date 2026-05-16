@@ -5,6 +5,7 @@ import {
   PageResponse,
   MyBidHistoryResponse,
   MyBidStatsResponse,
+  RecentBidFeedResponse,
 } from "./types";
 
 export const bidApi = {
@@ -95,6 +96,18 @@ export const bidApi = {
         {
           params: { period },
         },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getRecentPublicBids: async (limit = 10): Promise<RecentBidFeedResponse[]> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<RecentBidFeedResponse[]>>(
+        "/bids/public/recent",
+        { params: { limit } },
       );
       return response.data.result!;
     } catch (error) {

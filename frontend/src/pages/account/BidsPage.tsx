@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Button, Empty, Table, Tag, Typography } from "antd";
+import { Button, Empty, Image, Table, Tag, Typography } from "antd";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import bidApi from "../../api/bidApi";
 import {
@@ -8,6 +8,7 @@ import {
   PageResponse,
 } from "../../api/types";
 import { formatCurrency, formatDateTime } from "../../utils/format";
+import { DEFAULT_AUCTION_IMAGE, getImageUrl } from "../../utils/imageUtils";
 const { Title, Text } = Typography;
 
 const BidsPage = () => {
@@ -28,6 +29,24 @@ const BidsPage = () => {
   });
 
   const columns = [
+    {
+      title: "Image",
+      dataIndex: "image",
+      key: "image",
+      render: (image: string) => (
+        <Image
+          src={getImageUrl(image)}
+          fallback={DEFAULT_AUCTION_IMAGE}
+          style={{
+            width: 64,
+            height: 42,
+            objectFit: "cover",
+            borderRadius: 6,
+            flexShrink: 0,
+          }}
+        />
+      ),
+    },
     {
       title: "Item",
       dataIndex: "auctionTitle",

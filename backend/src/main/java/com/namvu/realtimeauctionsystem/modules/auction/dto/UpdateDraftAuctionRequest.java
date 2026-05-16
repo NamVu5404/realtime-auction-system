@@ -14,8 +14,10 @@ import java.time.Instant;
 public class UpdateDraftAuctionRequest {
 
     @NotBlank(message = "Title is required")
+    @Size(min = 10, max = 150, message = "Title must be between 10 and 150 characters")
     private String title;
 
+    @Size(max = 10000, message = "Description must not exceed 10000 characters")
     private String description;
 
     @DecimalMin(value = "0.01", message = "Start price must be at least 0.01")

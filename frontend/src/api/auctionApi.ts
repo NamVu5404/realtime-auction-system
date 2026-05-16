@@ -24,6 +24,31 @@ import { ENV } from "../config/env";
  */
 export const auctionApi = {
   /**
+   * Search auctions by keyword
+   */
+  searchAuctions: async (
+    q: string,
+    page: number = 1,
+    size: number = 5,
+  ): Promise<PaginatedAuctions> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<PaginatedAuctions>>(
+        "/auctions",
+        {
+          params: {
+            q,
+            page,
+            size,
+          },
+        },
+      );
+      return response.data.result!;
+    } catch (error) {
+      console.error("Failed to search auctions:", error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+  /**
    * Fetch paginated auctions by status
    * Backend converts frontend page (1-indexed) to Pageable offset (0-indexed)
    *
@@ -32,6 +57,22 @@ export const auctionApi = {
    * @param size - Items per page (default: 20)
    * @returns Promise with paginated auctions
    */
+  getAuctionsBySeller: async (
+    sellerId: number,
+    page: number = 1,
+    size: number = 20,
+  ): Promise<PaginatedAuctions> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<PaginatedAuctions>>(
+        "/auctions",
+        { params: { sellerId, page, size } },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
   getAuctionsByStatus: async (
     status: AuctionStatus,
     page: number = 1,
@@ -64,7 +105,7 @@ export const auctionApi = {
    */
   getAuctionDetail: async (auctionId: number): Promise<Auction> => {
     try {
-      const token = sessionStorage.getItem(`auction_token_${auctionId}`);
+      const token = JSON.parse(localStorage.getItem("auction_tokens") ?? "{}")[auctionId] ?? null;
       const headers = token ? { "X-Auction-Token": token } : {};
 
       const response = await axiosClient.get<ApiResponse<Auction>>(
@@ -123,7 +164,7 @@ export const auctionApi = {
     amount: number,
   ): Promise<ApiResponse<PlaceBidResponseV2>> => {
     try {
-      const token = sessionStorage.getItem(`auction_token_${auctionId}`);
+      const token = JSON.parse(localStorage.getItem("auction_tokens") ?? "{}")[auctionId] ?? null;
       const headers = token ? { "X-Auction-Token": token } : {};
 
       // NOTE: We manually override baseURL for V2 endpoint
@@ -289,6 +330,57 @@ export const auctionApi = {
       return response.data.result!;
     } catch (error) {
       console.error("Failed to fetch auction token:", error);
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getMyParticipatedAuctions: async (
+    page: number = 1,
+    size: number = 10,
+  ): Promise<PaginatedAuctions> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<PaginatedAuctions>>(
+        "/auctions/my-participated",
+        { params: { page, size } },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getMyRecentBidAuctions: async (limit = 5): Promise<Auction[]> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<Auction[]>>(
+        "/auctions/my-recent-bids",
+        { params: { limit } },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getTrendingAuctions: async (limit = 5): Promise<Auction[]> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<Auction[]>>(
+        "/auctions/trending",
+        { params: { limit } },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getMostWishlistedAuctions: async (limit = 5): Promise<Auction[]> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<Auction[]>>(
+        "/auctions/most-wishlisted",
+        { params: { limit } },
+      );
+      return response.data.result!;
+    } catch (error) {
       throw new Error(extractErrorMessage(error));
     }
   },

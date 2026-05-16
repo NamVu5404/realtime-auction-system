@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 import static com.namvu.realtimeauctionsystem.common.dto.SuccessCode.*;
 
@@ -36,12 +37,14 @@ public class AuctionControllerV1 {
     // UPCOMING = SCHEDULED (startTime - now > 1h)
     @GetMapping
     public ApiResponse<PageResponse<AuctionResponse>> getAuctionsByStatus(
-            @RequestParam AuctionStatus status,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) AuctionStatus status,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "20") int size
     ) {
+        AuctionStatus finalStatus = (status == null) ? AuctionStatus.ALL : status;
         Pageable pageable = PageRequest.of(page - 1, size);
-        return ApiResponse.ok(auctionService.getAuctionsByStatus(status, pageable));
+        return ApiResponse.ok(auctionService.filterAuctionForUser(q, finalStatus, pageable));
     }
 
     @GetMapping("/{id}")
@@ -205,5 +208,35 @@ public class AuctionControllerV1 {
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse<Long> getPendingReviewCount() {
         return ApiResponse.ok(auctionService.countPendingReviewAuctions());
+    }
+
+    @GetMapping("/my-recent-bids")
+    public ApiResponse<List<AuctionResponse>> getMyRecentBidAuctions(
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return ApiResponse.ok(auctionService.getMyRecentBidAuctions(limit));
+    }
+
+    @GetMapping("/my-participated")
+    @PreAuthorize("isAuthenticated()")
+    public ApiResponse<PageResponse<AuctionResponse>> getMyParticipatedAuctions(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return ApiResponse.ok(auctionService.getMyParticipatedAuctions(page, size));
+    }
+
+    @GetMapping("/trending")
+    public ApiResponse<List<AuctionResponse>> getTrendingAuctions(
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return ApiResponse.ok(auctionService.getTrendingAuctions(limit));
+    }
+
+    @GetMapping("/most-wishlisted")
+    public ApiResponse<List<AuctionResponse>> getMostWishlistedAuctions(
+            @RequestParam(defaultValue = "5") int limit
+    ) {
+        return ApiResponse.ok(auctionService.getMostWishlistedAuctions(limit));
     }
 }

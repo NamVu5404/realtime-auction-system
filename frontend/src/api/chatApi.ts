@@ -46,16 +46,16 @@ export const chatApi = {
     auctionId: number,
     senderId: number,
     content: string,
-  ): Promise<ApiResult<LiveChatResponse>> => {
+  ): Promise<ApiResult<LiveChatMessage>> => {
     try {
-      const res = await axiosClient.patch<ApiResponse<LiveChatResponse>>(
+      const res = await axiosClient.patch<ApiResponse<LiveChatMessage>>(
         `/live-chat/hidden`,
         null,
         { params: { auctionId, senderId, content } },
       );
       return {
         message: res.data.message,
-        result: res.data.result as LiveChatResponse,
+        result: res.data.result!,
       };
     } catch (error) {
       throw new Error(extractErrorMessage(error));

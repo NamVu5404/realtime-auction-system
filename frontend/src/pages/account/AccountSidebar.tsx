@@ -122,9 +122,10 @@ const AccountSidebar = () => {
         top: isMobile ? "0" : "84px",
         width: isMobile ? "100%" : "280px",
         flexShrink: 0,
+        overflowX: isMobile ? "auto" : "visible",
       }}
     >
-      <div style={{ padding: isMobile ? "8px" : "16px" }}>
+      <div style={{ padding: isMobile ? "4px 0" : "16px" }}>
         {!isMobile && (
           <h2
             style={{
@@ -145,6 +146,7 @@ const AccountSidebar = () => {
             background: "transparent",
             borderRight: 0,
             borderBottom: 0,
+            minWidth: isMobile ? "max-content" : undefined,
           }}
           items={menuItems}
           inlineIndent={12}

@@ -2,6 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.bid.service;
 
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidProjection;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.MostActiveAuctionData;
+import com.namvu.realtimeauctionsystem.modules.bid.dto.RecentBidFeedResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,4 +26,6 @@ public interface BidQueryService {
     List<BidProjection> getAdminBidChartData(Instant startDate, String timeFormat);
 
     List<MostActiveAuctionData> getMostActiveAuctions(int limit);
+
+    List<RecentBidFeedResponse> getRecentPublicBids(int limit);
 }
