@@ -20,11 +20,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import static com.namvu.realtimeauctionsystem.modules.hero_slide.service.impl.HeroSlideServiceImpl.getImageMap;
 
 @Service
 @RequiredArgsConstructor
@@ -123,17 +123,6 @@ public class WishListServiceImpl implements WishListService {
     }
 
     private Map<Long, String> buildPrimaryImageMap(List<Long> auctionIds) {
-        if (auctionIds.isEmpty()) return Map.of();
-
-        Map<Long, List<FileResponse>> imagesByAuction = auctionImageService.getAuctionImages(auctionIds).stream()
-                .collect(Collectors.groupingBy(FileResponse::ownerId));
-
-        Map<Long, String> result = new HashMap<>();
-        imagesByAuction.forEach((auctionId, images) -> images.stream()
-                .filter(img -> Boolean.TRUE.equals(img.isPrimary()))
-                .findFirst()
-                .or(() -> images.stream().findFirst())
-                .ifPresent(img -> result.put(auctionId, img.filePath() + "/" + img.storageName())));
-        return result;
+        return getImageMap(auctionIds, auctionImageService);
     }
 }

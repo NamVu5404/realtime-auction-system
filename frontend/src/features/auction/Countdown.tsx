@@ -5,12 +5,14 @@ interface CountdownProps {
   targetTime: string;
   onFinish?: () => void;
   isLive?: boolean;
+  compact?: boolean;
 }
 
 export const Countdown = ({
   targetTime,
   onFinish,
   isLive = false,
+  compact = false,
 }: CountdownProps) => {
   const calculateTimeLeft = () => {
     const remainingMs = getTimeRemaining(targetTime);
@@ -74,6 +76,35 @@ export const Countdown = ({
           }}
         >
           Ended
+        </span>
+      </div>
+    );
+  }
+
+  // Compact mode — used in auction cards to keep layout tight
+  if (compact) {
+    const m2 = timeLeft.match(/(\d+)d : (\d+)h : (\d+)m : (\d+)s/);
+    const compactColor = isLive
+      ? getTimeRemaining(targetTime) < 3600000 ? "#f87171" : "#FED469"
+      : "#60a5fa";
+    const display = m2
+      ? `${m2[1]}d ${m2[2]}h ${m2[3]}m ${m2[4]}s`
+      : timeLeft;
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+        <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>
+          {isLive ? "Ends in" : "Starts in"}
+        </span>
+        <span
+          style={{
+            fontSize: "12px",
+            fontWeight: 700,
+            color: compactColor,
+            fontVariantNumeric: "tabular-nums",
+            letterSpacing: "0.02em",
+          }}
+        >
+          {display}
         </span>
       </div>
     );

@@ -369,13 +369,35 @@ export const AuctionForm = ({
       <Form.Item
         name="title"
         label="Title"
-        rules={[{ required: true, message: "Title is required" }]}
+        rules={[
+          { required: true, message: "Title is required" },
+          { min: 10, message: "Title must be at least 10 characters" },
+          { max: 150, message: "Title must not exceed 150 characters" },
+        ]}
       >
-        <Input placeholder="Enter auction title" disabled={isScheduledStatus} />
+        <Input
+          placeholder="Enter auction title"
+          disabled={isScheduledStatus}
+          showCount
+          maxLength={150}
+        />
       </Form.Item>
 
       {/* Description */}
-      <Form.Item name="description" label="Description">
+      <Form.Item
+        name="description"
+        label="Description"
+        rules={[
+          {
+            required: submitMode === "schedule",
+            message: "Description is required when scheduling",
+          },
+          {
+            max: 10000,
+            message: "Description must not exceed 10000 characters",
+          },
+        ]}
+      >
         <TiptapEditor
           placeholder="Enter auction description"
           disabled={isScheduledStatus}

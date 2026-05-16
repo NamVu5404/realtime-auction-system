@@ -2,6 +2,7 @@ package com.namvu.realtimeauctionsystem.modules.bid.service.impl;
 
 import com.namvu.realtimeauctionsystem.modules.bid.dto.BidProjection;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.MostActiveAuctionData;
+import com.namvu.realtimeauctionsystem.modules.bid.dto.RecentBidFeedResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.entity.Bid;
 import com.namvu.realtimeauctionsystem.modules.bid.repository.BidRepository;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidQueryService;
@@ -62,6 +63,20 @@ public class BidQueryServiceImpl implements BidQueryService {
                         .currentPrice(projection.getCurrentPrice())
                         .status(projection.getStatus())
                         .build())
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RecentBidFeedResponse> getRecentPublicBids(int limit) {
+        return bidRepository.findRecentPublicBids(PageRequest.of(0, limit)).stream()
+                .map(b -> new RecentBidFeedResponse(
+                        b.getBidder().getName(),
+                        b.getBidder().getAvatarUrl(),
+                        b.getAuction().getTitle(),
+                        b.getAuction().getId(),
+                        b.getAmount(),
+                        b.getCreatedAt()))
                 .toList();
     }
 }

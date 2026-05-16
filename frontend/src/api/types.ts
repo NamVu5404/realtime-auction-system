@@ -295,6 +295,7 @@ export interface MyBidHistoryResponse {
   auctionId: number;
   auctionTitle: string;
   auctionStatus: AuctionStatus;
+  image: string;
   amount: number;
   currentPrice: number;
   status: BidStatus;
@@ -566,6 +567,17 @@ export interface AdminRevenueChartResponse {
  * Top Performers Types
  */
 
+export interface TopSellerPublicResponse {
+  id: number;
+  name: string;
+  avatarUrl?: string;
+  location?: string;
+  isVerifiedIdentity: boolean;
+  totalAuctions: number;
+  liveAuctions: number;
+  soldAuctions: number;
+}
+
 export interface TopSellerData {
   sellerId: number;
   name: string;
@@ -586,6 +598,25 @@ export interface MostActiveAuctionData {
 export interface TopPerformingResponse {
   topSellers: TopSellerData[];
   mostActiveAuctions: MostActiveAuctionData[];
+}
+
+export interface TopBidderPublicResponse {
+  id: number;
+  name: string;
+  avatarUrl?: string;
+  location?: string;
+  totalBids: number;
+  totalAuctionsParticipated: number;
+  totalWins: number;
+}
+
+export interface RecentBidFeedResponse {
+  bidderName: string;
+  bidderAvatarUrl?: string;
+  auctionTitle: string;
+  auctionId: number;
+  amount: number;
+  createdAt: string;
 }
 
 /**
@@ -624,4 +655,15 @@ export interface WishListResponse {
   sellerName?: string;
   privateMode?: boolean;
   createdAt: string;
+}
+
+
+export interface HeroSlide {
+  id: number;
+  auctionId: number;
+  auctionTitle: string;
+  auctionImage?: string;
+  auctionStatus: AuctionStatus;
+  position: number;
+  active: boolean;
 }

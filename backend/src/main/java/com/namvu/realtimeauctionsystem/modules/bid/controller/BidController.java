@@ -1,14 +1,18 @@
 package com.namvu.realtimeauctionsystem.modules.bid.controller;
 
 import com.namvu.realtimeauctionsystem.modules.bid.dto.MyBidHistoryResponse;
+import com.namvu.realtimeauctionsystem.modules.bid.dto.RecentBidFeedResponse;
 import com.namvu.realtimeauctionsystem.common.dto.ApiResponse;
 import com.namvu.realtimeauctionsystem.common.dto.PageResponse;
 import com.namvu.realtimeauctionsystem.modules.bid.dto.MyBidStatsResponse;
+import com.namvu.realtimeauctionsystem.modules.bid.service.BidQueryService;
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/bids")
@@ -16,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class BidController {
 
     private final BidService bidService;
+    private final BidQueryService bidQueryService;
 
     @GetMapping("/my-history")
     public ApiResponse<PageResponse<MyBidHistoryResponse>> getMyBidHistory(
@@ -49,5 +54,12 @@ public class BidController {
     ) {
         Pageable pageable = PageRequest.of(page - 1, size);
         return ApiResponse.ok(bidService.getBidHistoryForAdmin(userId, pageable));
+    }
+
+    @GetMapping("/public/recent")
+    public ApiResponse<List<RecentBidFeedResponse>> getRecentPublicBids(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        return ApiResponse.ok(bidQueryService.getRecentPublicBids(limit));
     }
 }

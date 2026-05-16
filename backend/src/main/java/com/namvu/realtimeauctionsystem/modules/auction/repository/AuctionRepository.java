@@ -18,10 +18,15 @@ import java.util.Optional;
 @Repository
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
     @Query("SELECT a FROM Auction a WHERE (" +
-            "(:status = 'LIVE' AND (a.status = 'LIVE' OR (a.status = 'SCHEDULED' AND a.startTime <= :oneHourFromNow))) OR " +
-            "(:status = 'SCHEDULED' AND a.status = 'SCHEDULED' AND a.startTime > :oneHourFromNow) OR " +
-            "(:status = 'ENDED' AND (a.status = :status OR a.status = 'ENDED_NO_SALE')) " +
-            ") " +
+            "(:q IS NULL OR " +
+            "  LOWER(a.title) LIKE LOWER(CONCAT('%', :q, '%')) OR " +
+            "  LOWER(a.description) LIKE LOWER(CONCAT('%', :q, '%'))" +
+            ") AND (" +
+            "   (:status = 'ALL' AND a.status IN ('LIVE', 'SCHEDULED', 'ENDED', 'ENDED_NO_SALE')) OR " +
+            "   (:status = 'LIVE' AND (a.status = 'LIVE' OR (a.status = 'SCHEDULED' AND a.startTime <= :oneHourFromNow))) OR " +
+            "   (:status = 'SCHEDULED' AND a.status = 'SCHEDULED' AND a.startTime > :oneHourFromNow) OR " +
+            "   (:status = 'ENDED' AND (a.status = :status OR a.status = 'ENDED_NO_SALE')) " +
+            ")) " +
             "AND a.privateMode = false " +
             "ORDER BY " +
             "CASE WHEN :status = 'LIVE' AND a.status = 'LIVE' THEN 0 " +
@@ -31,6 +36,7 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             "CASE WHEN :status = 'ENDED' THEN a.endTime END DESC, " +
             "CASE WHEN :status = 'SCHEDULED' THEN a.startTime END ASC")
     Page<Auction> findByCustomStatus(
+            @Param("q") String q,
             @Param("status") AuctionStatus status,
             @Param("oneHourFromNow") Instant oneHourFromNow,
             Pageable pageable
@@ -87,6 +93,31 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             @Param("endTime") Instant endTime,
             @Param("extensionCount") Integer extensionCount
     );
+
+    @Query("""
+                SELECT a FROM Auction a
+                WHERE a.id IN (
+                    SELECT b.auction.id FROM Bid b WHERE b.bidder.id = :userId
+                )
+                ORDER BY (
+                    SELECT MAX(b2.createdAt) FROM Bid b2
+                    WHERE b2.auction.id = a.id AND b2.bidder.id = :userId
+                ) DESC
+            """)
+    List<Auction> findRecentlyBidByUser(@Param("userId") Long userId, Pageable pageable);
+
+    @Query(value = """
+                SELECT a FROM Auction a
+                WHERE a.id IN (
+                    SELECT b.auction.id FROM Bid b WHERE b.bidder.id = :userId
+                )
+                ORDER BY (
+                    SELECT MAX(b2.createdAt) FROM Bid b2
+                    WHERE b2.auction.id = a.id AND b2.bidder.id = :userId
+                ) DESC
+            """,
+            countQuery = "SELECT COUNT(DISTINCT b.auction.id) FROM Bid b WHERE b.bidder.id = :userId")
+    Page<Auction> findRecentlyBidByUserPaged(@Param("userId") Long userId, Pageable pageable);
 
     @EntityGraph(attributePaths = {"seller"})
     List<Auction> findByStatus(AuctionStatus status);
@@ -186,4 +217,24 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             @Param("startDate") Instant startDate,
             @Param("timeFormat") String timeFormat
     );
+
+    @Query("""
+            SELECT a FROM Auction a
+            WHERE a.privateMode = false
+            AND a.status IN ('LIVE', 'ENDED', 'ENDED_NO_SALE')
+            AND EXISTS (SELECT b FROM Bid b WHERE b.auction.id = a.id AND b.createdAt >= :since)
+            ORDER BY (
+                SELECT COUNT(b2.id) FROM Bid b2 WHERE b2.auction.id = a.id AND b2.createdAt >= :since
+            ) DESC
+        """)
+    List<Auction> findTrendingAuctions(@Param("since") Instant since, Pageable pageable);
+
+    @Query("""
+            SELECT a FROM Auction a
+            WHERE a.privateMode = false
+            AND a.status IN ('LIVE', 'SCHEDULED', 'ENDED', 'ENDED_NO_SALE')
+            AND EXISTS (SELECT w FROM WishList w WHERE w.auction.id = a.id)
+            ORDER BY (SELECT COUNT(w2.id) FROM WishList w2 WHERE w2.auction.id = a.id) DESC
+        """)
+    List<Auction> findMostWishlisted(Pageable pageable);
 }

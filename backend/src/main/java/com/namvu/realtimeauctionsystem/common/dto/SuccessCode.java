@@ -74,6 +74,12 @@ public enum SuccessCode {
     // Wishlist (21xx)
     WISHLIST_ADDED(2100, "Auction added to wishlist", HttpStatus.CREATED),
     WISHLIST_REMOVED(2101, "Auction removed from wishlist", HttpStatus.OK),
+
+    // Hero Slide (22xx)
+    HERO_SLIDE_ADDED(2200, "Auction added to hero slides", HttpStatus.CREATED),
+    HERO_SLIDE_REMOVED(2201, "Hero slide removed", HttpStatus.OK),
+    HERO_SLIDE_REORDERED(2202, "Hero slides reordered", HttpStatus.OK),
+    HERO_SLIDE_TOGGLED(2203, "Hero slide visibility toggled", HttpStatus.OK),
     ;
 
     private final int code;

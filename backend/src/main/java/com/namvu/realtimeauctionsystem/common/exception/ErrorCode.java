@@ -95,6 +95,10 @@ public enum ErrorCode {
     // Wishlist (51xx)
     WISHLIST_NOT_FOUND(5100, "Wishlist item not found", HttpStatus.NOT_FOUND),
     WISHLIST_ALREADY_EXISTS(5101, "Auction is already in your wishlist", HttpStatus.CONFLICT),
+
+    // Hero Slide (52xx)
+    HERO_SLIDE_NOT_FOUND(5200, "Hero slide not found", HttpStatus.NOT_FOUND),
+    HERO_SLIDE_ALREADY_EXISTS(5201, "Auction is already in hero slides", HttpStatus.CONFLICT),
     ;
 
     private final int code;

@@ -190,7 +190,7 @@ export const AuctionImageCarousel = ({
             </button>
 
             {/* Counter */}
-            <div className="absolute top-4 right-4 z-20 px-3 py-1 bg-[var(--color-surface)]/80 backdrop-blur-md rounded-full text-[var(--color-gold-start)] text-[xs] font-bold border border-[var(--color-gold-border)] shadow-lg">
+            <div className="absolute bottom-4 right-4 z-20 px-3 py-1 bg-[var(--color-surface)]/80 backdrop-blur-md rounded-full text-[var(--color-gold-start)] text-[xs] font-bold border border-[var(--color-gold-border)] shadow-lg">
               {currentIndex + 1} / {urls.length}
             </div>
           </>

@@ -50,7 +50,7 @@ export const useWishlist = (auctionId?: number, isWishListed: boolean = false) =
 
   const toggleWishlist = () => {
     if (!isAuthenticated) {
-      message.warning("Please login to use the wishlist feature");
+      message.warning("Please signin to use the wishlist feature");
       return;
     }
     if (isWishListed) {

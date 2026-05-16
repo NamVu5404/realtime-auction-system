@@ -1,8 +1,7 @@
 import { Row, Col, Empty, Pagination } from "antd";
 import { Auction } from "../../api/types";
 import AuctionCard from "./AuctionCard";
-import { memo, useMemo } from "react";
-import { useWishlistBatch } from "../../hooks/useWishlist";
+import { memo } from "react";
 
 interface AuctionListProps {
   auctions: Auction[];
@@ -40,9 +39,6 @@ export const AuctionList = memo(
     totalElements = 0,
     onPageChange,
   }: AuctionListProps) => {
-    const auctionIds = useMemo(() => auctions.map((a) => a.id), [auctions]);
-    const { wishlistedSet } = useWishlistBatch(auctionIds);
-
     if (!auctions || auctions.length === 0) {
       return <Empty description={emptyMessage} />;
     }
@@ -62,7 +58,6 @@ export const AuctionList = memo(
               <AuctionCard
                 auction={auction}
                 onCountdownComplete={onCountdownComplete}
-                isWishListed={wishlistedSet.has(auction.id)}
               />
             </Col>
           ))}
