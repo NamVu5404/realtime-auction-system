@@ -57,6 +57,22 @@ export const auctionApi = {
    * @param size - Items per page (default: 20)
    * @returns Promise with paginated auctions
    */
+  getAuctionsBySeller: async (
+    sellerId: number,
+    page: number = 1,
+    size: number = 20,
+  ): Promise<PaginatedAuctions> => {
+    try {
+      const response = await axiosClient.get<ApiResponse<PaginatedAuctions>>(
+        "/auctions",
+        { params: { sellerId, page, size } },
+      );
+      return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
   getAuctionsByStatus: async (
     status: AuctionStatus,
     page: number = 1,

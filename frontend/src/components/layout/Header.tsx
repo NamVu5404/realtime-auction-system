@@ -1,17 +1,17 @@
 import {
   DashboardOutlined,
+  HistoryOutlined,
+  HomeOutlined,
+  InfoCircleOutlined,
   LogoutOutlined,
   MenuOutlined,
   SearchOutlined,
   SettingOutlined,
   ShopOutlined,
+  UnorderedListOutlined,
   UserOutlined,
   ClockCircleOutlined,
   CloseOutlined,
-  HomeOutlined,
-  UnorderedListOutlined,
-  HistoryOutlined,
-  InfoCircleOutlined,
 } from "@ant-design/icons";
 import type { InputRef } from "antd";
 import { Avatar, Drawer, Dropdown, Input, Layout, MenuProps, Spin } from "antd";
@@ -34,7 +34,12 @@ const NAV_LINKS = [
   { label: "Home", path: "/", authOnly: false },
   { label: "Auctions", path: "/auctions", authOnly: false },
   { label: "Participated", path: "/participated", authOnly: true },
-  { label: "About Us", path: "https://auctionpro-psi.vercel.app/about-us/", authOnly: false },
+  { label: "Sellers", path: "/sellers", authOnly: false },
+  {
+    label: "About Us",
+    path: "https://auctionpro-psi.vercel.app/about-us/",
+    authOnly: false,
+  },
 ];
 
 export const Header = () => {
@@ -76,7 +81,6 @@ export const Header = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-
   const saveToSearchHistory = (keyword: string) => {
     const q = keyword.trim();
     if (!q) return;
@@ -109,7 +113,6 @@ export const Header = () => {
   };
 
   const closeDropdown = () => {
-    setSearchOpen(false);
     setIsSearchFocused(false);
     setSearchValue("");
   };
@@ -378,10 +381,17 @@ export const Header = () => {
           </div>
 
           {/* Search — mobile inline Input (luôn hiện, gõ thẳng) */}
-          <div className="md:hidden" style={{ position: "relative", flex: 1, minWidth: 0 }}>
+          <div
+            className="md:hidden"
+            style={{ position: "relative", flex: 1, minWidth: 0 }}
+          >
             <Input
               ref={searchRef}
-              prefix={<SearchOutlined style={{ color: "rgba(255,255,255,0.45)", fontSize: "12px" }} />}
+              prefix={
+                <SearchOutlined
+                  style={{ color: "rgba(255,255,255,0.45)", fontSize: "12px" }}
+                />
+              }
               placeholder="Search auctions..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
@@ -408,65 +418,77 @@ export const Header = () => {
             flex: 1,
             justifyContent: "flex-start",
             alignItems: "center",
-            paddingLeft: "32px",
             gap: "2px",
           }}
         >
-          {NAV_LINKS.filter((link) => !link.authOnly || isAuthenticated).map((link) => {
-            const isExternal = link.path.startsWith("http");
+          {NAV_LINKS.filter((link) => !link.authOnly || isAuthenticated).map(
+            (link) => {
+              const isExternal = link.path.startsWith("http");
 
-            const active = isExternal
-              ? true
-              : link.path === "/"
-                ? location.pathname === "/"
-                : location.pathname.startsWith(link.path);
+              const active = isExternal
+                ? true
+                : link.path === "/"
+                  ? location.pathname === "/"
+                  : location.pathname.startsWith(link.path);
 
-            const handleClick = () => {
-              if (isExternal) {
-                window.open(link.path, "_blank", "noreferrer");
-              } else {
-                navigate(link.path);
-              }
-            };
+              const handleClick = () => {
+                if (isExternal) {
+                  window.open(link.path, "_blank", "noreferrer");
+                } else {
+                  navigate(link.path);
+                }
+              };
 
-            return (
-              <span
-                key={link.path}
-                onClick={handleClick}
-                style={{
-                  cursor: "pointer",
-                  padding: "4px 14px",
-                  fontSize: "14px",
-                  fontWeight: active ? 600 : 500,
-                  color: active ? "var(--color-gold-start)" : "#fff",
-                  transition: "color 0.15s",
-                  userSelect: "none",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseEnter={(e) => {
-                  if (!active)
-                    (e.currentTarget as HTMLSpanElement).style.color =
-                      "var(--color-gold-start)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!active)
-                    (e.currentTarget as HTMLSpanElement).style.color = "#fff";
-                }}
-              >
-                {link.label}
-              </span>
-            );
-          })}
+              return (
+                <span
+                  key={link.path}
+                  onClick={handleClick}
+                  style={{
+                    cursor: "pointer",
+                    padding: "4px 14px",
+                    fontSize: "14px",
+                    fontWeight: active ? 600 : 500,
+                    color: active ? "var(--color-gold-start)" : "#fff",
+                    transition: "color 0.15s",
+                    userSelect: "none",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!active)
+                      (e.currentTarget as HTMLSpanElement).style.color =
+                        "var(--color-gold-start)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active)
+                      (e.currentTarget as HTMLSpanElement).style.color = "#fff";
+                  }}
+                >
+                  {link.label}
+                </span>
+              );
+            },
+          )}
         </nav>
 
         {/* Right */}
-        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+        <div
+          style={{
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            minWidth: 0,
+          }}
+        >
           {isAuthenticated && user && <NotificationBell />}
 
           {/* Hamburger — mobile only */}
           <button
             className="md:hidden"
-            onClick={() => { setMobileMenuOpen(true); setDrawerEverOpened(true); }}
+            onClick={() => {
+              setMobileMenuOpen(true);
+              setDrawerEverOpened(true);
+            }}
             style={{
               background: "none",
               border: "none",
@@ -508,10 +530,25 @@ export const Header = () => {
                   }}
                 />
                 <div className="hidden sm:block">
-                  <p style={{ color: "#fff", fontSize: "12.5px", fontWeight: 600, lineHeight: 1.2, margin: 0 }}>
+                  <p
+                    style={{
+                      color: "#fff",
+                      fontSize: "12.5px",
+                      fontWeight: 600,
+                      lineHeight: 1.2,
+                      margin: 0,
+                    }}
+                  >
                     {user.name}
                   </p>
-                  <p style={{ color: "rgba(255,255,255,0.38)", fontSize: "11px", lineHeight: 1.2, margin: 0 }}>
+                  <p
+                    style={{
+                      color: "rgba(255,255,255,0.38)",
+                      fontSize: "11px",
+                      lineHeight: 1.2,
+                      margin: 0,
+                    }}
+                  >
                     {user.email}
                   </p>
                 </div>
@@ -527,63 +564,78 @@ export const Header = () => {
 
       {/* Mobile nav drawer — chỉ mount sau lần mở đầu tiên, tránh panel tồn tại trong DOM khi chưa cần */}
       {drawerEverOpened && (
-      <Drawer
-        open={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-        placement="right"
-        styles={{ wrapper: { width: 280 } }}
-        title={
-          <span style={{ color: "var(--color-text-primary)", fontWeight: 700 }}>
-            Menu
-          </span>
-        }
-        className="mobile-nav-drawer"
-        closeIcon={<CloseOutlined style={{ color: "var(--color-text-secondary)" }} />}
-      >
-        {NAV_LINKS.filter((link) => !link.authOnly || isAuthenticated).map((link) => {
-          const isExternal = link.path.startsWith("http");
-          const active = isExternal
-            ? false
-            : link.path === "/"
-              ? location.pathname === "/"
-              : location.pathname.startsWith(link.path);
-
-          const icon =
-            link.path === "/" ? <HomeOutlined /> :
-            link.path === "/auctions" ? <UnorderedListOutlined /> :
-            link.path === "/participated" ? <HistoryOutlined /> :
-            <InfoCircleOutlined />;
-
-          const handleClick = () => {
-            setMobileMenuOpen(false);
-            if (isExternal) window.open(link.path, "_blank", "noreferrer");
-            else navigate(link.path);
-          };
-
-          return (
-            <div
-              key={link.path}
-              className={`mobile-nav-link${active ? " mobile-nav-link--active" : ""}`}
-              onClick={handleClick}
+        <Drawer
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+          placement="right"
+          styles={{ wrapper: { width: 280 } }}
+          title={
+            <span
+              style={{ color: "var(--color-text-primary)", fontWeight: 700 }}
             >
-              {icon}
-              {link.label}
+              Menu
+            </span>
+          }
+          className="mobile-nav-drawer"
+          closeIcon={
+            <CloseOutlined style={{ color: "var(--color-text-secondary)" }} />
+          }
+        >
+          {NAV_LINKS.filter((link) => !link.authOnly || isAuthenticated).map(
+            (link) => {
+              const isExternal = link.path.startsWith("http");
+              const active = isExternal
+                ? false
+                : link.path === "/"
+                  ? location.pathname === "/"
+                  : location.pathname.startsWith(link.path);
+
+              const icon =
+                link.path === "/" ? (
+                  <HomeOutlined />
+                ) : link.path === "/auctions" ? (
+                  <UnorderedListOutlined />
+                ) : link.path === "/participated" ? (
+                  <HistoryOutlined />
+                ) : link.path === "/sellers" ? (
+                  <ShopOutlined />
+                ) : (
+                  <InfoCircleOutlined />
+                );
+
+              const handleClick = () => {
+                setMobileMenuOpen(false);
+                if (isExternal) window.open(link.path, "_blank", "noreferrer");
+                else navigate(link.path);
+              };
+
+              return (
+                <div
+                  key={link.path}
+                  className={`mobile-nav-link${active ? " mobile-nav-link--active" : ""}`}
+                  onClick={handleClick}
+                >
+                  {icon}
+                  {link.label}
+                </div>
+              );
+            },
+          )}
+
+          {isAuthenticated && (
+            <div
+              className="mobile-nav-link"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                navigate("/account/profile");
+              }}
+            >
+              <SettingOutlined />
+              Account Settings
             </div>
-          );
-        })}
-
-        {isAuthenticated && (
-          <div
-            className="mobile-nav-link"
-            onClick={() => { setMobileMenuOpen(false); navigate("/account/profile"); }}
-          >
-            <SettingOutlined />
-            Account Settings
-          </div>
-        )}
-      </Drawer>
+          )}
+        </Drawer>
       )}
-
     </>
   );
 };

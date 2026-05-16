@@ -191,6 +191,7 @@ const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=2a2d3e&color=fed469&bold=true&size=128";
 
 const SellerAvatar = ({ seller }: { seller: TopSellerPublicResponse }) => {
+  const navigate = useNavigate();
   const [hovered, setHovered] = useState(false);
   const [cardPos, setCardPos] = useState({ x: 0, y: 0 });
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -213,6 +214,8 @@ const SellerAvatar = ({ seller }: { seller: TopSellerPublicResponse }) => {
       className="seller-avatar-wrapper"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => navigate(`/sellers?q=${encodeURIComponent(seller.name)}`)}
+      style={{ cursor: "pointer" }}
     >
       <div className={`seller-avatar-ring${hovered ? " is-hovered" : ""}`}>
         <img
@@ -1896,7 +1899,7 @@ const HomePage = () => {
         {topSellersLoading || topSellers.length > 0 ? (
           <LazySection minHeight={140}>
             <section className="home-section" style={{ marginBottom: "52px" }}>
-              <SectionHeader title="Top Sellers" />
+              <SectionHeader title="Top Sellers" linkTo="/sellers" />
               <TopSellersSection
                 sellers={topSellers}
                 loading={topSellersLoading}

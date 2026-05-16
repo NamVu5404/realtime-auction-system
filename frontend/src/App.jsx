@@ -32,6 +32,7 @@ import AuctionDetailPage from './pages/home/AuctionDetailPage';
 import AuctionsPage from './pages/home/AuctionsPage';
 import HomePage from './pages/home/HomePage';
 import ParticipatedAuctionsPage from './pages/home/ParticipatedAuctionsPage';
+import SellersPage from './pages/home/SellersPage';
 import NotFound from './pages/NotFound';
 import SellerAuctionPage from './pages/seller/SellerAuctionPage';
 import SellerDashboard from './pages/seller/SellerDashboard';
@@ -127,6 +128,7 @@ function App() {
                 <Route path="/auctions" element={<AuctionsPage />} />
                 <Route path="/auction/:id" element={<AuctionDetailPage />} />
                 <Route path="/participated" element={<ParticipatedAuctionsPage />} />
+                <Route path="/sellers" element={<SellersPage />} />
                 <Route
                   path="/my-bids"
                   element={<Navigate to="/account/bids" replace />}

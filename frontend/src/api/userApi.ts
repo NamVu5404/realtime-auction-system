@@ -66,11 +66,11 @@ const userApi = {
     }
   },
 
-  getPublicTopSellers: async (limit = 10): Promise<TopSellerPublicResponse[]> => {
+  getPublicTopSellers: async (limit = 10, q?: string): Promise<TopSellerPublicResponse[]> => {
     try {
       const response = await axiosClient.get<ApiResponse<TopSellerPublicResponse[]>>(
         "/users/public/top-sellers",
-        { params: { limit } },
+        { params: { limit, ...(q ? { q } : {}) } },
       );
       return response.data.result!;
     } catch (error) {

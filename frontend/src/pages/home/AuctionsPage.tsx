@@ -186,25 +186,32 @@ const AuctionsPage = () => {
               gap: "12px",
             }}
           >
-            <h2
-              style={{
-                fontSize: "24px",
-                fontWeight: 700,
-                color: "#fff",
-                margin: 0,
-              }}
-            >
-              {searchQuery ? (
-                <>
-                  Results for{" "}
-                  <span style={{ color: "var(--color-gold-start)" }}>
-                    &#34;{searchQuery}&#34;
-                  </span>
-                </>
-              ) : (
-                "All Auctions"
-              )}
-            </h2>
+            <div>
+              <h2
+                style={{
+                  fontSize: "24px",
+                  fontWeight: 700,
+                  color: "#fff",
+                  margin: "0 0 4px",
+                }}
+              >
+                {searchQuery ? (
+                  <>
+                    Results for{" "}
+                    <span style={{ color: "var(--color-gold-start)" }}>
+                      &#34;{searchQuery}&#34;
+                    </span>
+                  </>
+                ) : (
+                  "All Auctions"
+                )}
+              </h2>
+              <p style={{ margin: 0, fontSize: "13px", color: "var(--color-text-muted)" }}>
+                {searchQuery
+                  ? "Showing auctions matching your search"
+                  : "Browse and bid on live, upcoming and ended auctions"}
+              </p>
+            </div>
             {isConnected ? (
               <span className="status-pill status-pill-connected">
                 <WifiOutlined style={{ fontSize: "11px" }} />
