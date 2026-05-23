@@ -30,9 +30,11 @@ public class AuctionControllerV2 {
             @RequestHeader(value = "X-Auction-Token", required = false) String token,
             @RequestBody @Valid PlaceBidRequestV2 request
     ) throws JsonProcessingException {
-        Auction auction = auctionService.getAuctionDetailById(auctionId);
-        if (auction.isPrivateMode() && !auction.getToken().equals(token)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+        if (token != null) {
+            Auction auction = auctionService.getAuctionDetailById(auctionId);
+            if (auction.isPrivateMode() && !auction.getToken().equals(token)) {
+                throw new AppException(ErrorCode.UNAUTHORIZED_ACTION);
+            }
         }
 
         Long bidderId = SecurityUtils.getCurrentUserId();
