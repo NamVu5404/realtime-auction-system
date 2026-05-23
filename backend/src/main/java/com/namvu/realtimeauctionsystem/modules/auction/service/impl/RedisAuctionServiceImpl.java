@@ -295,13 +295,16 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         }
 
         Long highestBidderId = parseLong(data.get(HIGHEST_BIDDER_ID));
-        User user = userService.getActiveUserById(highestBidderId);
+        User user = null;
+        if (highestBidderId > 0) {
+            user = userService.getActiveUserById(highestBidderId);
+        }
 
         return AuctionStateSnapshot.builder()
                 .currentPrice(parseBigDecimal(data.get(CURRENT_PRICE)))
-                .highestBidderId(highestBidderId)
-                .highestBidderName(user.getName())
-                .highestBidderEmail(user.getEmail())
+                .highestBidderId(highestBidderId > 0 ? highestBidderId : null)
+                .highestBidderName(user != null ? user.getName() : null)
+                .highestBidderEmail(user != null ? user.getEmail() : null)
                 .endTime(parseInstant(data.get(END_TIME)))
                 .build();
     }
