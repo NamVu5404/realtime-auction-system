@@ -85,7 +85,8 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             "a.endTime = :endTime, " +
             "a.extensionCount = :extensionCount, " +
             "a.version = a.version + 1 " +
-            "WHERE a.id = :auctionId")
+            "WHERE a.id = :auctionId " +
+            "AND a.currentPrice < :newPrice")
     int updateAuctionPriceAndEndTime(
             @Param("auctionId") Long auctionId,
             @Param("newPrice") BigDecimal newPrice,

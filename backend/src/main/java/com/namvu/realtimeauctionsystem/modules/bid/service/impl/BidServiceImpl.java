@@ -20,6 +20,7 @@ import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,18 +46,23 @@ public class BidServiceImpl implements BidService {
     private final OutboxService outboxService;
     private final AuctionService auctionService;
     private final AuctionImageService auctionImageService;
+    private final ApplicationContext applicationContext;
+
+    private BidService self() {
+        return applicationContext.getBean(BidService.class);
+    }
 
     /**
      * Place bid V2: Lua Script + Outbox Pattern
+     * Redis Lua chạy NGOÀI @Transactional — HikariCP connection chỉ được check out
+     * khi Lua đã xác nhận bid hợp lệ, tránh giữ connection trong lúc chờ Redis I/O.
      */
     @Override
-    @Transactional
     public BidUpdateResult placeBidV2(Long auctionId, Long bidderId, BigDecimal newPrice) throws JsonProcessingException {
         Instant now = Instant.now();
 
-        // Execute Lua Script (atomic)
+        // Redis Lua — NGOÀI transaction, chưa dùng DB connection
         List<?> result;
-
         try {
             result = redisLuaService.executePlaceBid(
                     auctionId,
@@ -71,7 +77,7 @@ public class BidServiceImpl implements BidService {
         Long status = (Long) result.get(0);
         String message = (String) result.get(1);
 
-        // Lua reject
+        // Lua reject — không cần DB connection
         if (status == 0L) {
             return BidUpdateResult.failure(message, now);
         }
@@ -90,24 +96,37 @@ public class BidServiceImpl implements BidService {
         String sellerIdStr = (String) result.get(6);
         Long sellerId = (sellerIdStr != null && !sellerIdStr.isEmpty()) ? Long.parseLong(sellerIdStr) : null;
 
-        // Ghi MySQL + Outbox (trong 1 transaction)
+        // DB writes
+        return self().persistBid(auctionId, bidderId, newPrice, extended, finalEndTime,
+                nextExtensionCount, previousBidderId, sellerId, now);
+    }
+
+    /**
+     * Ghi Bid + Outbox + cập nhật Auction trong 1 transaction.
+     * Thứ tự lock: UPDATE auction (X lock) trước → INSERT bid (S lock FK check) sau.
+     * Tránh deadlock S→X upgrade khi nhiều transaction đồng thời.
+     */
+    @Override
+    @Transactional
+    public BidUpdateResult persistBid(Long auctionId, Long bidderId, BigDecimal newPrice,
+                                      boolean extended, Instant finalEndTime, Integer nextExtensionCount,
+                                      Long previousBidderId, Long sellerId, Instant now) throws JsonProcessingException {
+        int updatedRows = auctionService.applyBid(auctionId, newPrice, bidderId, finalEndTime, nextExtensionCount);
+        if (updatedRows == 0) {
+            log.warn("applyBid skipped for auction={} amount={}: superseded by concurrent higher bid",
+                    auctionId, newPrice);
+        }
+
         Bid bid = Bid.builder()
                 .auction(auctionService.getAuctionReference(auctionId))
                 .bidder(userService.getUserReference(bidderId))
                 .amount(newPrice)
                 .status(BidStatus.ACCEPTED)
                 .build();
-
         bidRepository.save(bid);
+
         outboxService.save(auctionId, bid, extended, finalEndTime, previousBidderId, sellerId);
 
-        // Update auction
-        int updatedRows = auctionService.applyBid(auctionId, newPrice, bidderId, finalEndTime, nextExtensionCount);
-        if (updatedRows == 0) {
-            throw new AppException(ErrorCode.AUCTION_NOT_FOUND);
-        }
-
-        // Return success
         return BidUpdateResult.success(newPrice, bidderId, now, extended, finalEndTime);
     }
 

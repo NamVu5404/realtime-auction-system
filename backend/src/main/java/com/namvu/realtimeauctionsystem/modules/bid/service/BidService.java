@@ -17,6 +17,10 @@ import java.util.Set;
 public interface BidService {
     BidUpdateResult placeBidV2(Long auctionId, Long bidderId, BigDecimal newPrice) throws JsonProcessingException;
 
+    BidUpdateResult persistBid(Long auctionId, Long bidderId, BigDecimal newPrice,
+                               boolean extended, Instant finalEndTime, Integer nextExtensionCount,
+                               Long previousBidderId, Long sellerId, Instant now) throws JsonProcessingException;
+
     void createRejectedBidRecord(BidPlacedEvent event);
 
     PageResponse<MyBidHistoryResponse> getMyBidHistory(Pageable pageable);
