@@ -27,6 +27,7 @@ import { useNotificationWebSocket } from "../../hooks/useNotificationWebSocket";
 import { getAvatarUrl, getImageUrl } from "../../utils/imageUtils";
 import { formatCurrency } from "../../utils/format";
 import NotificationBell from "../common/NotificationBell";
+import { buildPublicSiteUrl } from "../../config/env";
 
 const { Header: AntHeader } = Layout;
 
@@ -37,7 +38,7 @@ const NAV_LINKS = [
   { label: "Sellers", path: "/sellers", authOnly: false },
   {
     label: "About Us",
-    path: "https://auctionpro-psi.vercel.app/about-us/",
+    path: buildPublicSiteUrl("about-us"),
     authOnly: false,
   },
 ];
