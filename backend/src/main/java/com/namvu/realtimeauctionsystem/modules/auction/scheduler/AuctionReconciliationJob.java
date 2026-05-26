@@ -29,10 +29,8 @@ public class AuctionReconciliationJob {
             BigDecimal redisPrice = redisAuctionService.getCurrentPrice(auction.getId());
             BigDecimal mysqlPrice = auction.getCurrentPrice();
 
-            if (redisPrice.compareTo(mysqlPrice) != 0) {
+            if (redisPrice == null || redisPrice.compareTo(mysqlPrice) != 0) {
                 log.warn("Mismatch auction {}: Redis={}, MySQL={}", auction.getId(), redisPrice, mysqlPrice);
-
-                // Fix Redis = MySQL (source of truth)
                 redisAuctionService.syncFromDatabase(auction);
             }
         }
