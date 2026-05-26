@@ -34,7 +34,7 @@ services:
       - backend
 
   kafka:
-    image: bitnami/kafka:3.7
+    image: bitnami/kafka:3.9
     restart: unless-stopped
     environment:
       KAFKA_CFG_NODE_ID: 0
@@ -64,6 +64,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      JAVA_OPTS: "-Xms256m -Xmx512m"
       # Database
       DB_URL: jdbc:mysql://mysql:3306/${DB_NAME:-auction}
       DB_USERNAME: ${DB_USERNAME}
