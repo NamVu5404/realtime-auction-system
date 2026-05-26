@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { App as AppAntd, ConfigProvider, Spin, theme } from 'antd';
+import { App as AppAntd, ConfigProvider, theme } from 'antd';
+import NProgress from 'nprogress';
 import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import './App.css';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { AntdStaticSetter } from './components/AntdStaticSetter';
+import { NavigationProgress } from './components/NavigationProgress';
 import { useHeartbeat } from './hooks/useHeartbeat';
 import AdminLayout from './layouts/AdminLayout';
 import MainLayout from './layouts/MainLayout';
@@ -42,11 +44,13 @@ const SellerAuctionPage = lazy(() => import('./pages/seller/SellerAuctionPage'))
 const SellerDashboard = lazy(() => import('./pages/seller/SellerDashboard'));
 const SellerNotificationPage = lazy(() => import('./pages/seller/SellerNotificationPage'));
 
-const PageLoader = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-    <Spin size="large" />
-  </div>
-);
+const PageLoader = () => {
+  useEffect(() => {
+    NProgress.start();
+    return () => { NProgress.done(); };
+  }, []);
+  return null;
+};
 
 // Prefetch public routes in background after initial load — eliminates spinner on first navigation
 const prefetchPublicRoutes = () => {
@@ -80,11 +84,7 @@ function App() {
   useHeartbeat();
 
   useEffect(() => {
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(prefetchPublicRoutes);
-    } else {
-      setTimeout(prefetchPublicRoutes, 2000);
-    }
+    prefetchPublicRoutes();
   }, []);
 
   return (
@@ -148,6 +148,7 @@ function App() {
           <AntdStaticSetter />
           <Router>
             <ScrollToTop />
+            <NavigationProgress />
             <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public Routes with MainLayout (Header + Footer) */}
