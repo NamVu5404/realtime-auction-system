@@ -21,7 +21,7 @@ import {
 import React from "react";
 import sellerApi from "../../api/sellerApi";
 import { RequestStatus, UserRole } from "../../api/types";
-import sellerBg from "../../assets/images/seller-reg-bg.png";
+import sellerBg from "../../assets/images/seller-reg-bg.webp";
 import { useAuthStore } from "../../store/useAuthStore";
 import { ENV } from "../../config/env";
 

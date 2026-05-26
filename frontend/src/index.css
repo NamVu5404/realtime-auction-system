@@ -1,3 +1,7 @@
+/* NProgress bar — gold theme */
+#nprogress .bar { background: #FED469 !important; height: 2.5px !important; }
+#nprogress .peg { box-shadow: 0 0 10px #FED469, 0 0 5px #FED469 !important; }
+
 /* ===================================================
    PREMIUM DARK UI — GLOBAL & ANT DESIGN OVERRIDES
    RoPhim Exact Palette Edition (#191B24)

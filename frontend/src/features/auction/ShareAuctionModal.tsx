@@ -14,6 +14,7 @@ import {
   Tooltip,
   Spin,
 } from "antd";
+import logoUrl from "../../assets/images/logo.webp";
 import { auctionApi } from "../../api/auctionApi";
 import { Auction } from "../../api/types";
 
@@ -113,7 +114,7 @@ export const ShareAuctionModal = ({
                 errorLevel="H"
                 color="#000000"
                 bgColor="#FFFFFF"
-                icon="/logo.png"
+                icon={logoUrl}
               />
             </div>
 

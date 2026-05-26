@@ -120,9 +120,9 @@ jwt:
 
 app:
   cors:
-    allowed-origin-patterns: http://localhost:5173,https://auctionpro-psi.vercel.app/
+    allowed-origin-patterns: http://localhost:5173,https://auctionpro-psi.vercel.app/,http://localhost:4173
   file:
-    upload-dir: ${FILE_UPLOAD_DIR:/app/uploads}
+    upload-dir: ${FILE_UPLOAD_DIR:F:\bidding-platform\upload}
     max-size: 5242880 # 5MB
     allowed-types: image/jpeg,image/png,image/webp,image/gif
   fpt:
