@@ -10,10 +10,10 @@ COPY src ./src
 RUN mvn package -DskipTests -q
 
 # Stage 3: runtime
-FROM amazoncorretto:21-alpine
+FROM amazoncorretto:21
 WORKDIR /app
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 USER appuser
 
 COPY --from=build /app/target/*.jar app.jar
