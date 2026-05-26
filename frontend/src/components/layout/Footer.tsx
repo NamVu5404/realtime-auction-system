@@ -9,7 +9,7 @@ import {
   YoutubeFilled,
 } from "@ant-design/icons";
 import { Col, Layout, Row, Space } from "antd";
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/logo.webp";
 import { ENV, buildPublicSiteUrl } from "../../config/env";
 import { useNavigate } from "react-router-dom";
 
@@ -126,31 +126,31 @@ export const Footer = () => {
             </h4>
             <div className="flex flex-col space-y-3">
               <a
-                href="#"
+                href="/auctions"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 Fine Art & Paintings
               </a>
               <a
-                href="#"
+                href="/auctions"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 Luxury Watches
               </a>
               <a
-                href="#"
+                href="/auctions"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 Classic Cars
               </a>
               <a
-                href="#"
+                href="/auctions"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 Real Estate
               </a>
               <a
-                href="#"
+                href="/auctions"
                 className="text-white/55 hover:text-[#FED469] transition-colors duration-300 text-[13px]"
               >
                 Rare Antiques

@@ -18,7 +18,7 @@ import { Avatar, Drawer, Dropdown, Input, Layout, MenuProps, Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/logo.webp";
 import GoogleLoginButton from "../../auth/GoogleLoginButton";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";

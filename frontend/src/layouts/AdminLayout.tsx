@@ -21,7 +21,7 @@ import { useNotificationStore } from "../store/useNotificationStore";
 import NotificationBell from "../components/common/NotificationBell";
 import { useNotificationWebSocket } from "../hooks/useNotificationWebSocket";
 import { getAvatarUrl } from "../utils/imageUtils";
-import logo from "../assets/images/logo.png";
+import logo from "../assets/images/logo.webp";
 import adminApi from "../api/adminApi";
 
 const { Sider, Header, Content } = Layout;
