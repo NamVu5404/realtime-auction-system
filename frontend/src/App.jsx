@@ -1,42 +1,65 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App as AppAntd, ConfigProvider, theme } from 'antd';
-import { useEffect } from 'react';
+import NProgress from 'nprogress';
+import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes, useLocation, useNavigationType } from 'react-router-dom';
 import './App.css';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { AntdStaticSetter } from './components/AntdStaticSetter';
+import { NavigationProgress } from './components/NavigationProgress';
 import { useHeartbeat } from './hooks/useHeartbeat';
 import AdminLayout from './layouts/AdminLayout';
 import MainLayout from './layouts/MainLayout';
 import SellerLayout from './layouts/SellerLayout';
-import AccountLayout from './pages/account/AccountLayout';
-import BidsPage from './pages/account/BidsPage';
-import BidStatisticsPage from './pages/account/BidStatisticsPage';
-import IdentityVerificationPage from './pages/account/IdentityVerificationPage';
-import NotificationsPage from './pages/account/NotificationsPage';
-import ProfilePage from './pages/account/ProfilePage';
-import SecurityLogsPage from './pages/account/SecurityLogsPage';
-import SellerRegPage from './pages/account/SellerRegPage';
-import WishlistPage from './pages/account/WishlistPage';
-import AdminAuctionPage from './pages/admin/AdminAuctionPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminNotificationPage from './pages/admin/AdminNotificationPage';
-import AdminUserPage from './pages/admin/AdminUserPage';
-import AILogsPage from './pages/admin/AILogsPage';
-import AuctionReviewPage from './pages/admin/AuctionReviewPage';
-import AdminHeroSlidePage from './pages/admin/AdminHeroSlidePage';
-import ContactManagementPage from './pages/admin/ContactManagementPage';
-import SellerManagementPage from './pages/admin/SellerManagementPage';
-import AuthCallbackPage from './pages/AuthCallbackPage';
-import AuctionDetailPage from './pages/home/AuctionDetailPage';
-import AuctionsPage from './pages/home/AuctionsPage';
-import HomePage from './pages/home/HomePage';
-import ParticipatedAuctionsPage from './pages/home/ParticipatedAuctionsPage';
-import SellersPage from './pages/home/SellersPage';
-import NotFound from './pages/NotFound';
-import SellerAuctionPage from './pages/seller/SellerAuctionPage';
-import SellerDashboard from './pages/seller/SellerDashboard';
-import SellerNotificationPage from './pages/seller/SellerNotificationPage';
+
+const AccountLayout = lazy(() => import('./pages/account/AccountLayout'));
+const BidsPage = lazy(() => import('./pages/account/BidsPage'));
+const BidStatisticsPage = lazy(() => import('./pages/account/BidStatisticsPage'));
+const IdentityVerificationPage = lazy(() => import('./pages/account/IdentityVerificationPage'));
+const NotificationsPage = lazy(() => import('./pages/account/NotificationsPage'));
+const ProfilePage = lazy(() => import('./pages/account/ProfilePage'));
+const SecurityLogsPage = lazy(() => import('./pages/account/SecurityLogsPage'));
+const SellerRegPage = lazy(() => import('./pages/account/SellerRegPage'));
+const WishlistPage = lazy(() => import('./pages/account/WishlistPage'));
+
+const AdminAuctionPage = lazy(() => import('./pages/admin/AdminAuctionPage'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminNotificationPage = lazy(() => import('./pages/admin/AdminNotificationPage'));
+const AdminUserPage = lazy(() => import('./pages/admin/AdminUserPage'));
+const AILogsPage = lazy(() => import('./pages/admin/AILogsPage'));
+const AuctionReviewPage = lazy(() => import('./pages/admin/AuctionReviewPage'));
+const AdminHeroSlidePage = lazy(() => import('./pages/admin/AdminHeroSlidePage'));
+const ContactManagementPage = lazy(() => import('./pages/admin/ContactManagementPage'));
+const SellerManagementPage = lazy(() => import('./pages/admin/SellerManagementPage'));
+
+const AuthCallbackPage = lazy(() => import('./pages/AuthCallbackPage'));
+const AuctionDetailPage = lazy(() => import('./pages/home/AuctionDetailPage'));
+const AuctionsPage = lazy(() => import('./pages/home/AuctionsPage'));
+const HomePage = lazy(() => import('./pages/home/HomePage'));
+const ParticipatedAuctionsPage = lazy(() => import('./pages/home/ParticipatedAuctionsPage'));
+const SellersPage = lazy(() => import('./pages/home/SellersPage'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+const SellerAuctionPage = lazy(() => import('./pages/seller/SellerAuctionPage'));
+const SellerDashboard = lazy(() => import('./pages/seller/SellerDashboard'));
+const SellerNotificationPage = lazy(() => import('./pages/seller/SellerNotificationPage'));
+
+const PageLoader = () => {
+  useEffect(() => {
+    NProgress.start();
+    return () => { NProgress.done(); };
+  }, []);
+  return null;
+};
+
+// Prefetch public routes in background after initial load — eliminates spinner on first navigation
+const prefetchPublicRoutes = () => {
+  import('./pages/home/AuctionsPage');
+  import('./pages/home/AuctionDetailPage');
+  import('./pages/home/SellersPage');
+  import('./pages/home/ParticipatedAuctionsPage');
+};
+
 // Create a client for React Query
 const queryClient = new QueryClient();
 
@@ -59,6 +82,10 @@ function App() {
   // Mount once globally — writes Kafka health to useUIStore
   // All components read isKafkaAlive from useUIStore, no extra connections
   useHeartbeat();
+
+  useEffect(() => {
+    prefetchPublicRoutes();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -121,6 +148,8 @@ function App() {
           <AntdStaticSetter />
           <Router>
             <ScrollToTop />
+            <NavigationProgress />
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public Routes with MainLayout (Header + Footer) */}
               <Route element={<MainLayout />}>
@@ -196,6 +225,7 @@ function App() {
               {/* Catch-all for not found pages */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </Router>
         </AppAntd>
       </ConfigProvider>

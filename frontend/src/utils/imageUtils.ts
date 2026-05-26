@@ -1,4 +1,4 @@
-import DEFAULT_IMAGE_LOCAL from "../assets/images/default-auction-image.jpg";
+import DEFAULT_IMAGE_LOCAL from "../assets/images/default-auction-image.webp";
 import { ENV } from "../config/env";
 
 /**
