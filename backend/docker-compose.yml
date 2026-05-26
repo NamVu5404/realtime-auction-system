@@ -35,7 +35,7 @@ services:
       - backend
 
   kafka:
-    image: bitnami/kafka:3.9
+    image: bitnami/kafka:latest
     restart: unless-stopped
     environment:
       KAFKA_CFG_NODE_ID: 0
