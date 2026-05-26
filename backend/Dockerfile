@@ -13,9 +13,6 @@ RUN mvn package -DskipTests -q
 FROM amazoncorretto:21
 WORKDIR /app
 
-RUN groupadd -r appgroup && useradd -r -g appgroup appuser
-USER appuser
-
 COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
