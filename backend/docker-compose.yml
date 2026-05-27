@@ -36,6 +36,7 @@ services:
     image: apache/kafka:latest
     restart: unless-stopped
     environment:
+      KAFKA_HEAP_OPTS: "-Xmx256m -Xms128m"
       KAFKA_NODE_ID: 0
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
@@ -65,7 +66,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      JAVA_OPTS: "-Xms256m -Xmx512m"
+      JAVA_OPTS: "-Xms128m -Xmx384m"
       # Database
       DB_URL: jdbc:mysql://mysql:3306/${DB_NAME:-auction}
       DB_USERNAME: ${DB_USERNAME}
