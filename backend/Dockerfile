@@ -1,4 +1,4 @@
-# Stage 1: resolve dependencies (cached layer — only re-runs when pom.xml changes)
+# Stage 1: resolve dependencies
 FROM maven:3.9.8-amazoncorretto-21 AS deps
 WORKDIR /app
 COPY pom.xml .
