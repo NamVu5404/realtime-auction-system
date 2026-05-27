@@ -11,6 +11,7 @@ import { useHeartbeat } from './hooks/useHeartbeat';
 import AdminLayout from './layouts/AdminLayout';
 import MainLayout from './layouts/MainLayout';
 import SellerLayout from './layouts/SellerLayout';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const AccountLayout = lazy(() => import('./pages/account/AccountLayout'));
 const BidsPage = lazy(() => import('./pages/account/BidsPage'));
@@ -227,6 +228,7 @@ function App() {
             </Routes>
             </Suspense>
           </Router>
+          <SpeedInsights />
         </AppAntd>
       </ConfigProvider>
     </QueryClientProvider>
