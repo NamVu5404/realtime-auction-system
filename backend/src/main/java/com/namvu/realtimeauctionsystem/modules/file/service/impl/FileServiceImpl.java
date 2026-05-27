@@ -17,12 +17,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,13 +34,17 @@ public class FileServiceImpl implements FileService {
     private final FileRepository fileRepository;
     private final EntityManager entityManager;
     private final ApplicationContext applicationContext;
+    private final S3Client s3Client;
 
     private FileService self() {
         return applicationContext.getBean(FileService.class);
     }
 
-    @Value("${app.file.upload-dir}")
-    private String uploadDir;
+    @Value("${r2.bucket}")
+    private String bucket;
+
+    @Value("${r2.public-url}")
+    private String publicUrl;
 
     @Value("${app.file.max-size}")
     private long maxSize;
@@ -60,17 +64,26 @@ public class FileServiceImpl implements FileService {
         try {
             String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
             String storageName = UUID.randomUUID() + "_" + ownerType + "_" + ownerId + "." + extension;
-            String relativePath = ownerType.getFolderName();
+            String folderName = ownerType.getFolderName();
+            String objectKey = folderName + "/" + storageName;
 
-            Path targetDir = Paths.get(uploadDir).resolve(relativePath);
-            if (!Files.exists(targetDir)) Files.createDirectories(targetDir);
+            // Upload lên R2
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucket)
+                            .key(objectKey)
+                            .contentType(file.getContentType())
+                            .contentLength(file.getSize())
+                            .build(),
+                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+            );
 
-            Files.copy(file.getInputStream(), targetDir.resolve(storageName), StandardCopyOption.REPLACE_EXISTING);
+            log.info("Uploaded file to R2: {}", objectKey);
 
             File entity = File.builder()
                     .fileName(file.getOriginalFilename())
                     .storageName(storageName)
-                    .filePath(relativePath)
+                    .filePath(folderName)
                     .fileSize(file.getSize())
                     .contentType(file.getContentType())
                     .ownerType(ownerType)
@@ -83,7 +96,7 @@ public class FileServiceImpl implements FileService {
             return mapToResponse(entity);
 
         } catch (IOException e) {
-            log.error("Failed to store file", e);
+            log.error("Failed to upload file to R2", e);
             throw new AppException(ErrorCode.FILE_UPLOAD_ERROR);
         }
     }
@@ -125,14 +138,19 @@ public class FileServiceImpl implements FileService {
         File file = fileRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.FILE_NOT_FOUND));
 
-        try {
-            Path filePath = Paths.get(uploadDir).resolve(file.getFilePath()).resolve(file.getStorageName());
-            Files.deleteIfExists(filePath);
-            fileRepository.delete(file);
+        String objectKey = file.getFilePath() + "/" + file.getStorageName();
 
-            log.info("Deleted file id: {}, storageName: {}", id, file.getStorageName());
-        } catch (IOException e) {
-            log.error("Failed to delete physical file: {}", file.getStorageName(), e);
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(objectKey)
+                    .build());
+
+            fileRepository.delete(file);
+            log.info("Deleted file from R2: {}", objectKey);
+
+        } catch (Exception e) {
+            log.error("Failed to delete file from R2: {}", objectKey, e);
             throw new AppException(ErrorCode.FILE_DELETE_ERROR);
         }
     }
@@ -155,11 +173,9 @@ public class FileServiceImpl implements FileService {
         if (file == null || file.isEmpty()) {
             throw new AppException(ErrorCode.FILE_EMPTY);
         }
-
         if (file.getSize() > maxSize) {
             throw new AppException(ErrorCode.FILE_TOO_LARGE);
         }
-
         if (!allowedTypes.contains(file.getContentType())) {
             throw new AppException(ErrorCode.INVALID_FILE_TYPE);
         }
