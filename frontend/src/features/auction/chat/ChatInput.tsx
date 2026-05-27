@@ -1,7 +1,12 @@
 import { SendOutlined, SmileOutlined } from "@ant-design/icons";
 import { Input, Button, Tooltip, Popover, InputRef } from "antd";
-import EmojiPicker, { Theme, EmojiClickData } from "emoji-picker-react";
-import { useState, useRef, KeyboardEvent } from "react";
+import { lazy, Suspense, useState, useRef, KeyboardEvent } from "react";
+// Types/enums are tiny — import directly (not part of lazy chunk)
+import type { EmojiClickData } from "emoji-picker-react";
+import { Theme } from "emoji-picker-react";
+
+// Lazy load component — ~300KB chunk chỉ download khi user click emoji lần đầu
+const EmojiPicker = lazy(() => import("emoji-picker-react"));
 
 const MAX_LENGTH = 200;
 const RATE_LIMIT_MS = 2000;
@@ -129,15 +134,17 @@ const ChatInput = ({ onSend, disabled, isAuthenticated }: ChatInputProps) => {
       >
         <Popover
           content={
-            <EmojiPicker
-              theme={Theme.DARK}
-              onEmojiClick={onEmojiClick}
-              lazyLoadEmojis={true}
-              skinTonesDisabled
-              searchPlaceHolder="Search emojis..."
-              width={300}
-              height={400}
-            />
+            <Suspense fallback={<div style={{ width: 300, height: 400, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-muted)" }}>Loading...</div>}>
+              <EmojiPicker
+                theme={Theme.DARK}
+                onEmojiClick={onEmojiClick}
+                lazyLoadEmojis={true}
+                skinTonesDisabled
+                searchPlaceHolder="Search emojis..."
+                width={300}
+                height={400}
+              />
+            </Suspense>
           }
           trigger="click"
           open={showEmojiPicker}
