@@ -1494,7 +1494,7 @@ const HomePage = () => {
   const { data: liveData, isLoading: liveLoading } = useAuctions(
     AuctionStatus.LIVE,
     1,
-    20,
+    10,
   );
   const { data: scheduledData, isLoading: scheduledLoading } = useAuctions(
     AuctionStatus.SCHEDULED,
