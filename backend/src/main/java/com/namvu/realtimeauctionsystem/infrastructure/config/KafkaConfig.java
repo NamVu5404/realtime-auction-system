@@ -33,7 +33,7 @@ public class KafkaConfig {
     public NewTopic bidEventsTopic() {
         return TopicBuilder.name(BID_EVENTS_TOPIC)
                 .partitions(6)
-                .replicas(3)
+                .replicas(1)
                 .build();
     }
 }
