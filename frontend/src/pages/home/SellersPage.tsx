@@ -266,9 +266,20 @@ export const SellersPage = () => {
                 {auctionsLoading ? (
                   <div className="auctions-grid-4">
                     {Array.from({ length: 8 }).map((_, i) => (
-                      <div key={i}>
-                        <Skeleton.Image active style={{ width: "100%", height: 160, borderRadius: 12 }} />
-                        <Skeleton active paragraph={{ rows: 2 }} style={{ marginTop: 8 }} />
+                      <div key={i} style={{
+                        background: "var(--color-card)",
+                        border: "1px solid rgba(255,255,255,0.07)",
+                        borderRadius: 16,
+                        overflow: "hidden",
+                      }}>
+                        <div style={{
+                          width: "100%",
+                          aspectRatio: "3/2",
+                          background: "rgba(255,255,255,0.06)",
+                        }} className="ant-skeleton-active" />
+                        <div style={{ padding: "14px 16px 16px" }}>
+                          <Skeleton active title={{ width: "40%" }} paragraph={{ rows: 2 }} />
+                        </div>
                       </div>
                     ))}
                   </div>
