@@ -2,13 +2,7 @@
 
 A full-stack real-time bidding platform built for high-concurrency live auctions. Every architectural decision is optimized around one question: **who placed the highest valid bid, and what is the current price?**
 
-**Live Demo:** <!-- Add your deployed URL here -->
-
----
-
-## Screenshots
-
-<!-- Add screenshots here -->
+**Live Demo:** [auctionpro.online](https://www.auctionpro.online)
 
 ---
 
@@ -73,22 +67,6 @@ DRAFT ──submit──► PENDING_REVIEW ──approved──► SCHEDULED ─
 
 ---
 
-## Anti-Fraud Rules
-
-Evaluated before every bid reaches Redis:
-
-| Rule | Condition | Outcome |
-|---|---|---|
-| SELF_BIDDING | Seller bids on own auction | REJECTED |
-| RATE_LIMIT | > 10 bids in 60 seconds | FLAGGED |
-| PRICE_SPIKE | Bid > 1.5× current price | FLAGGED |
-| LAST_SECOND_SNIPING | Bid within anti-snipe window | FLAGGED |
-| BOT_BEHAVIOR | Interval ±2s, ≤ 10s between bids | FLAGGED |
-
-`FLAGGED` bids are stored for admin audit. `REJECTED` bids never reach Redis.
-
----
-
 ## Architecture
 
 ```
@@ -148,6 +126,7 @@ Redis is the **only** source of truth for `currentPrice` on a LIVE auction. The 
 | Cache / Atomic ops | Redis 7 (Redisson + Spring Data Redis) |
 | Database | MySQL 8, Spring Data JPA, HikariCP |
 | Auth | Spring Security, JWT |
+| File storage | Cloudflare R2 (S3-compatible) |
 | Mapping | MapStruct |
 | Architecture tests | ArchUnit (JUnit 5) |
 
@@ -200,7 +179,7 @@ realtime-auction-system/
 │       │   ├── auction/
 │       │   ├── bid/
 │       │   ├── ai/
-│       │   ├── fraud/
+│       │   ├── user/
 │       │   ├── notification/
 │       │   ├── live_chat/
 │       │   ├── wishlist/
