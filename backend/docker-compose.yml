@@ -59,9 +59,7 @@ services:
 
   # Application
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: vungocnam/auction-backend:latest
     restart: unless-stopped
     ports:
       - "8080:8080"
