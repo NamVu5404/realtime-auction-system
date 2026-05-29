@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.namvu.realtimeauctionsystem.modules.hero_slide.service.impl.HeroSlideServiceImpl.getImageMap;
 
 @Service
 @RequiredArgsConstructor
@@ -123,6 +122,6 @@ public class WishListServiceImpl implements WishListService {
     }
 
     private Map<Long, String> buildPrimaryImageMap(List<Long> auctionIds) {
-        return getImageMap(auctionIds, auctionImageService);
+        return auctionImageService.getPrimaryImageMap(auctionIds);
     }
 }

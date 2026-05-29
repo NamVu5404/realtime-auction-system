@@ -1,14 +1,11 @@
-JWT_ACCESS_KEY: test-secret-key-for-testing-only-min-256-bits-long
-JWT_REFRESH_KEY: test-secret-key-for-testing-only-min-256-bits-long
-GOOGLE_CLIENT_ID: test-secret-key-for-testing-only-min-256-bits-long
-GOOGLE_CLIENT_SECRET: test-secret-key-for-testing-only-min-256-bits-long
-
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:mem:testdb;MODE=MySQL
     driver-class-name: org.h2.Driver
     username: sa
     password:
+    hikari:
+      connection-init-sql: ""
 
   jpa:
     hibernate:
@@ -16,6 +13,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
   data:
     redis:
       host: localhost
@@ -23,7 +22,40 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+    admin:
+      operation-timeout: 1
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
+
+  ai:
+    openai:
+      api-key: test-groq-api-key
+
+  mail:
+    host: localhost
+    port: 25
+    username: test@test.com
+    password: test
 
 jwt:
-  access-key: ${JWT_ACCESS_KEY}
-  refresh-key: ${JWT_REFRESH_KEY}
+  access-key: test-secret-key-for-testing-only-must-be-at-least-256-bits-long-abcdef
+  refresh-key: test-secret-key-for-testing-only-must-be-at-least-256-bits-long-abcdef
+  valid-duration: 300
+  refreshable-duration: 604800
+
+r2:
+  account-id: test-account-id
+  access-key-id: test-access-key
+  secret-access-key: test-secret-key
+  bucket: test-bucket
+  public-url: https://test.r2.dev
+
+app:
+  fpt:
+    api-key: test-fpt-api-key

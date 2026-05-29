@@ -6,17 +6,14 @@ import com.namvu.realtimeauctionsystem.modules.auction.dto.AuctionResponse;
 import com.namvu.realtimeauctionsystem.modules.auction.entity.Auction;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionImageService;
 import com.namvu.realtimeauctionsystem.modules.auction.service.AuctionService;
-import com.namvu.realtimeauctionsystem.modules.file.dto.FileResponse;
 import com.namvu.realtimeauctionsystem.modules.hero_slide.dto.HeroSlideResponse;
 import com.namvu.realtimeauctionsystem.modules.hero_slide.entity.HeroSlide;
 import com.namvu.realtimeauctionsystem.modules.hero_slide.repository.HeroSlideRepository;
 import com.namvu.realtimeauctionsystem.modules.hero_slide.service.HeroSlideService;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -116,21 +113,7 @@ public class HeroSlideServiceImpl implements HeroSlideService {
     }
 
     private Map<Long, String> buildImageMap(List<Long> auctionIds) {
-        return getImageMap(auctionIds, auctionImageService);
-    }
-
-    @NotNull
-    public static Map<Long, String> getImageMap(List<Long> auctionIds, AuctionImageService auctionImageService) {
-        if (auctionIds.isEmpty()) return Map.of();
-        Map<Long, List<FileResponse>> byAuction = auctionImageService.getAuctionImages(auctionIds).stream()
-                .collect(Collectors.groupingBy(FileResponse::ownerId));
-        Map<Long, String> result = new HashMap<>();
-        byAuction.forEach((auctionId, images) -> images.stream()
-                .filter(img -> Boolean.TRUE.equals(img.isPrimary()))
-                .findFirst()
-                .or(() -> images.stream().findFirst())
-                .ifPresent(img -> result.put(auctionId, img.filePath() + "/" + img.storageName())));
-        return result;
+        return auctionImageService.getPrimaryImageMap(auctionIds);
     }
 
     private HeroSlideResponse toAdminResponse(HeroSlide slide, Map<Long, String> imageMap) {
