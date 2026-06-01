@@ -33,5 +33,6 @@ jobs:
           port: 22
           script: |
             cd ${{ secrets.VPS_BACKEND_PATH }}
+            git pull origin main
             docker compose pull app
             docker compose up -d app
