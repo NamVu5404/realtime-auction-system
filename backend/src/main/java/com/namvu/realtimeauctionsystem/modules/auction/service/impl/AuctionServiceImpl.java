@@ -159,6 +159,10 @@ public class AuctionServiceImpl implements AuctionService {
             auction = auctionMapper.mapToEntity(request);
         }
 
+        if (request.isDepositRequired() && request.getDepositRate() == null && auction.getDepositRate() == null) {
+            throw new AppException(ErrorCode.DEPOSIT_RATE_REQUIRED);
+        }
+
         auction.setStatus(AuctionStatus.PENDING_REVIEW);
         auction.setCurrentPrice(auction.getStartPrice());
 
@@ -194,6 +198,12 @@ public class AuctionServiceImpl implements AuctionService {
         }
 
         checkAuctionOwnership(auction);
+
+        // Validate deposit config: nếu bật depositRequired thì phải có depositRate
+        if (Boolean.TRUE.equals(request.getDepositRequired()) && request.getDepositRate() == null
+                && auction.getDepositRate() == null) {
+            throw new AppException(ErrorCode.DEPOSIT_RATE_REQUIRED);
+        }
 
         auctionMapper.updateEntity(request, auction);
         handlePrivateAuction(auction);

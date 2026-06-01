@@ -36,7 +36,11 @@ public class RedisLuaServiceImpl implements RedisLuaService {
 
     @Override
     public List<?> executePlaceBid(Long auctionId, BigDecimal newPrice, Long bidderId, long nowEpoch, int maxExtension) {
-        List<String> keys = List.of(AUCTION_KEY_PREFIX + auctionId);
+        // KEYS[1] = auction hash, KEYS[2] = depositors Set (dùng cho deposit check trong Lua)
+        List<String> keys = List.of(
+                AUCTION_KEY_PREFIX + auctionId,
+                AUCTION_KEY_PREFIX + auctionId + ":depositors"
+        );
 
         return stringRedisTemplate.execute(
                 placeBidScript,

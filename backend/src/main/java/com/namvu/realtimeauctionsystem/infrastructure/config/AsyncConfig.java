@@ -70,4 +70,19 @@ public class AsyncConfig {
         executor.initialize();
         return executor;
     }
+
+    @Bean(DEPOSIT_EXECUTOR)
+    public Executor depositExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(200);
+        executor.setKeepAliveSeconds(60);
+        executor.setThreadNamePrefix("deposit-async-");
+        executor.setRejectedExecutionHandler((r, exec) ->
+                log.warn("[depositExecutor] Queue full — deposit task dropped")
+        );
+        executor.initialize();
+        return executor;
+    }
 }

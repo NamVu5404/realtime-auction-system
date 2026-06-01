@@ -8,6 +8,7 @@ import {
   SettingOutlined,
   ShopOutlined,
   UserOutlined,
+  WalletOutlined,
 } from "@ant-design/icons";
 import { Badge, Grid, Menu } from "antd";
 import { useEffect, useState } from "react";
@@ -84,6 +85,12 @@ const AccountSidebar = () => {
           icon: <HistoryOutlined />,
           label: "My Bids",
           onClick: () => navigate("/account/bids"),
+        },
+        {
+          key: "/account/wallet",
+          icon: <WalletOutlined />,
+          label: "Wallet",
+          onClick: () => navigate("/account/wallet"),
         },
         !user?.roles.includes("SELLER")
           ? {
