@@ -42,4 +42,14 @@ public class UpdateDraftAuctionRequest {
 
     private BigDecimal reservePrice;
     private boolean privateMode;
+
+    private Boolean depositRequired;
+
+    @DecimalMin(value = "0.05", message = "Deposit rate must be at least 5%")
+    @DecimalMax(value = "0.30", message = "Deposit rate must not exceed 30%")
+    private BigDecimal depositRate;
+
+    @Min(value = 1, message = "Deposit cutoff must be at least 1 minute")
+    @Max(value = 60, message = "Deposit cutoff must not exceed 60 minutes")
+    private Integer depositCutoffMinutes;
 }

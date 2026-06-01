@@ -42,4 +42,10 @@ public class AuctionResponse {
     private String updatedBy;
 
     private List<FileResponse> images;
+
+    // Deposit config
+    private boolean depositRequired;
+    private BigDecimal depositRate;
+    private Integer depositCutoffMinutes;
+    private BigDecimal depositAmount; // computed: startPrice * depositRate
 }

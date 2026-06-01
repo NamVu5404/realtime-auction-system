@@ -77,6 +77,11 @@ public class BidServiceImpl implements BidService {
         Long status = (Long) result.get(0);
         String message = (String) result.get(1);
 
+        // Deposit required — user chưa đặt cọc
+        if (status == -3L) {
+            throw new AppException(ErrorCode.DEPOSIT_REQUIRED);
+        }
+
         // Lua reject — không cần DB connection
         if (status == 0L) {
             return BidUpdateResult.failure(message, now);

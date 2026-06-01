@@ -9,6 +9,8 @@ import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")
 public interface AuctionMapper {
+    @Mapping(target = "depositAmount",
+             expression = "java(auction.isDepositRequired() && auction.getDepositRate() != null ? auction.getStartPrice().multiply(auction.getDepositRate()) : null)")
     AuctionResponse mapToResponse(Auction auction);
 
     @Mapping(target = "id", ignore = true)

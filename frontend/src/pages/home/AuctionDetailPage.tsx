@@ -23,10 +23,12 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { extractErrorMessage } from "../../api/apiUtils";
 import { auctionApi } from "../../api/auctionApi";
+import { depositApi } from "../../api/depositApi";
 import {
   Auction,
   AuctionStatus,
   BidUpdateMessage,
+  DepositStatusResponse,
   UserRole,
 } from "../../api/types";
 import { AuctionImageCarousel } from "../../components/common/AuctionImageCarousel";
@@ -36,7 +38,7 @@ import Countdown from "../../features/auction/Countdown";
 import { useAuctionWebsocket } from "../../hooks/useAuctionWebsocket";
 import { useAuth } from "../../hooks/useAuth";
 import { useUIStore } from "../../store/useUIStore";
-import { message, notification } from "../../utils/antdStatic";
+import { message, modal, notification } from "../../utils/antdStatic";
 import { formatAuctionTime, getTimeRemaining } from "../../utils/dateUtils";
 import { formatCurrency } from "../../utils/format";
 import { getAvatarUrl } from "../../utils/imageUtils";
@@ -59,6 +61,11 @@ const BiddingSection = memo(
     bidLoading,
     isEnded,
     onPlaceBid,
+    depositRequired,
+    depositAmount,
+    depositStatus,
+    depositLoading,
+    onPlaceDeposit,
   }: {
     isLive: boolean;
     isCountdownStarted: boolean;
@@ -72,31 +79,102 @@ const BiddingSection = memo(
     bidLoading: boolean;
     isEnded: boolean;
     onPlaceBid: (amount: string) => void;
+    depositRequired: boolean;
+    depositAmount: number | null | undefined;
+    depositStatus: DepositStatusResponse | null;
+    depositLoading: boolean;
+    onPlaceDeposit: () => void;
   }) => {
     // State nội bộ - KHÔNG nhận từ props để tránh re-render
     const [localBidAmount, setLocalBidAmount] = useState<string>("");
 
-    if (!((isLive || isCountdownStarted) && !isCountdownFinished && !isEnded)) {
+    const isBiddingPhase = (isLive || isCountdownStarted) && !isCountdownFinished && !isEnded;
+
+    if (!isBiddingPhase) {
       return (
-        <div
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            borderRadius: "16px",
-            padding: "24px",
-          }}
-        >
-          <p
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* Deposit banner: chỉ hiện ở SCHEDULED phase, ẩn khi đã kết thúc */}
+          {depositRequired && isAuthenticated && !depositStatus?.hasDeposit && !isEnded && !isCountdownFinished && (
+            <div
+              style={{
+                padding: "14px 16px",
+                background: "rgba(251,191,36,0.08)",
+                border: "1px solid rgba(251,191,36,0.35)",
+                borderRadius: "10px",
+              }}
+            >
+              <p style={{ color: "#fbbf24", fontSize: "13px", margin: "0 0 6px 0", fontWeight: 600 }}>
+                Deposit required to bid
+              </p>
+              {depositAmount != null && (
+                <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "12px", margin: "0 0 12px 0" }}>
+                  Deposit amount:{" "}
+                  <strong style={{ color: "#fbbf24" }}>{formatCurrency(depositAmount)}</strong>
+                </p>
+              )}
+              <button
+                type="button"
+                disabled={depositLoading}
+                onClick={onPlaceDeposit}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "7px 16px",
+                  background: depositLoading ? "rgba(0,0,0,0.3)" : "#191B24",
+                  border: "1px solid rgba(251,191,36,0.7)",
+                  color: "#fbbf24",
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  borderRadius: "8px",
+                  cursor: depositLoading ? "not-allowed" : "pointer",
+                  opacity: depositLoading ? 0.6 : 1,
+                  fontFamily: "inherit",
+                  letterSpacing: "0.02em",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {depositLoading ? "Processing..." : "Deposit Now →"}
+              </button>
+            </div>
+          )}
+
+          {depositRequired && depositStatus?.hasDeposit && (
+            <div
+              style={{
+                padding: "10px 14px",
+                background: "rgba(74,222,128,0.08)",
+                border: "1px solid rgba(74,222,128,0.3)",
+                borderRadius: "10px",
+                color: "#4ade80",
+                fontSize: "12px",
+              }}
+            >
+              ✓ Deposited{" "}
+              {depositStatus.depositAmount != null ? formatCurrency(depositStatus.depositAmount) : ""}
+            </div>
+          )}
+
+          <div
             style={{
-              color: "rgba(255,255,255,0.45)",
-              margin: 0,
-              fontSize: "14px",
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: "16px",
+              padding: "24px",
             }}
           >
-            {isEnded || isCountdownFinished
-              ? "This auction has ended — no further bids accepted."
-              : "Bidding opens when the auction goes live."}
-          </p>
+            <p
+              style={{
+                color: "rgba(255,255,255,0.45)",
+                margin: 0,
+                fontSize: "14px",
+              }}
+            >
+              {isEnded || isCountdownFinished
+                ? "This auction has ended — no further bids accepted."
+                : "Bidding opens when the auction goes live."}
+            </p>
+          </div>
         </div>
       );
     }
@@ -158,6 +236,69 @@ const BiddingSection = memo(
             }}
           >
             Connecting to real-time updates... Please wait.
+          </div>
+        )}
+
+        {/* Deposit banner: yêu cầu đặt cọc trước khi bid */}
+        {depositRequired && isAuthenticated && !depositStatus?.hasDeposit && (
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "14px 16px",
+              background: "rgba(251,191,36,0.08)",
+              border: "1px solid rgba(251,191,36,0.35)",
+              borderRadius: "10px",
+            }}
+          >
+            <p style={{ color: "#fbbf24", fontSize: "13px", margin: "0 0 10px 0", fontWeight: 600 }}>
+              Deposit required to bid
+            </p>
+            {depositAmount != null && (
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", margin: "0 0 10px 0" }}>
+                Deposit amount: <strong style={{ color: "#fbbf24" }}>{formatCurrency(depositAmount)}</strong>
+              </p>
+            )}
+            <button
+              type="button"
+              disabled={depositLoading}
+              onClick={onPlaceDeposit}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "7px 16px",
+                background: depositLoading ? "rgba(0,0,0,0.3)" : "#191B24",
+                border: "1px solid rgba(251,191,36,0.7)",
+                color: "#fbbf24",
+                fontWeight: 700,
+                fontSize: "13px",
+                borderRadius: "8px",
+                cursor: depositLoading ? "not-allowed" : "pointer",
+                opacity: depositLoading ? 0.6 : 1,
+                fontFamily: "inherit",
+                letterSpacing: "0.02em",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {depositLoading ? "Processing..." : "Deposit Now →"}
+            </button>
+          </div>
+        )}
+
+        {/* Đã đặt cọc thành công */}
+        {depositRequired && depositStatus?.hasDeposit && (
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "10px 14px",
+              background: "rgba(74,222,128,0.08)",
+              border: "1px solid rgba(74,222,128,0.3)",
+              borderRadius: "10px",
+              color: "#4ade80",
+              fontSize: "12px",
+            }}
+          >
+            ✓ Deposited {depositStatus.depositAmount != null ? formatCurrency(depositStatus.depositAmount) : ""}
           </div>
         )}
 
@@ -282,6 +423,8 @@ export const AuctionDetailPage = () => {
   const [isCountdownFinished, setIsCountdownFinished] = useState(false);
   const [isCountdownStarted, setIsCountdownStarted] = useState(false);
   const [hasTimeExtension, setHasTimeExtension] = useState(false);
+  const [depositStatus, setDepositStatus] = useState<DepositStatusResponse | null>(null);
+  const [depositLoading, setDepositLoading] = useState(false);
 
   const auctionId = id ? parseInt(id, 10) : null;
   const hasCelebratedRef = useRef(false);
@@ -473,6 +616,12 @@ export const AuctionDetailPage = () => {
   // Read Kafka health from global store (set by useHeartbeat mounted in App.jsx)
   const isKafkaAlive = useUIStore((state) => state.isKafkaAlive);
 
+  // Fetch deposit status khi auction yêu cầu cọc và user đã đăng nhập
+  useEffect(() => {
+    if (!auction?.depositRequired || !isAuthenticated || !auctionId) return;
+    depositApi.getDepositStatus(auctionId).then(setDepositStatus).catch(() => {});
+  }, [auction?.id, auction?.depositRequired, isAuthenticated, auctionId]);
+
   // --- Kafka Fallback Polling ---
   // Only activates when useHeartbeat detects the Kafka pipeline is down
   // Polls /state endpoint (Redis snapshot) to keep price, bidder, and endTime in sync
@@ -577,6 +726,9 @@ export const AuctionDetailPage = () => {
 
   const minimumBid = auction.currentPrice + auction.minStep;
 
+  // Deposit còn thiếu: auction yêu cầu cọc nhưng user chưa cọc
+  const needsDeposit = !!auction?.depositRequired && isAuthenticated && !depositStatus?.hasDeposit;
+
   // Determine if bid button should be disabled
   const isBidDisabled =
     bidLoading ||
@@ -585,7 +737,42 @@ export const AuctionDetailPage = () => {
     isCountdownFinished ||
     !isAuthenticated ||
     isMaintenanceMode ||
+    needsDeposit ||
     (!isLive && !isCountdownStarted);
+
+  const handlePlaceDeposit = () => {
+    if (!auctionId || !auction) return;
+    const depositAmt = auction.depositAmount != null ? formatCurrency(auction.depositAmount) : "the required amount";
+    modal.confirm({
+      title: "Confirm Deposit",
+      content: (
+        <div className="pt-1">
+          <p className="mb-2">
+            You are about to lock <strong>{depositAmt}</strong> from your wallet as a bid bond for this auction.
+          </p>
+          <p className="m-0 text-[13px] text-[var(--color-text-muted)]">
+            The amount will be refunded automatically if you don't win. If you win and don't pay, it may be forfeited.
+          </p>
+        </div>
+      ),
+      okText: "Confirm Deposit",
+      cancelText: "Cancel",
+      maskClosable: true,
+      onOk: async () => {
+        setDepositLoading(true);
+        try {
+          const result = await depositApi.placeDeposit(auctionId);
+          setDepositStatus(result);
+          queryClient.invalidateQueries({ queryKey: ["wallet-header"] });
+          message.success("Deposit placed successfully!");
+        } catch (err) {
+          message.error(extractErrorMessage(err));
+        } finally {
+          setDepositLoading(false);
+        }
+      },
+    });
+  };
 
   // Handle bid placement with improved error handling and state management
   const handlePlaceBid = async (amount: string) => {
@@ -1237,6 +1424,11 @@ export const AuctionDetailPage = () => {
                   bidLoading={bidLoading}
                   isEnded={isEnded}
                   onPlaceBid={handlePlaceBid}
+                  depositRequired={auction.depositRequired ?? false}
+                  depositAmount={auction.depositAmount}
+                  depositStatus={depositStatus}
+                  depositLoading={depositLoading}
+                  onPlaceDeposit={handlePlaceDeposit}
                 />
               )}
 

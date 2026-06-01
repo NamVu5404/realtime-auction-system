@@ -99,6 +99,18 @@ public enum ErrorCode {
     // Hero Slide (52xx)
     HERO_SLIDE_NOT_FOUND(5200, "Hero slide not found", HttpStatus.NOT_FOUND),
     HERO_SLIDE_ALREADY_EXISTS(5201, "Auction is already in hero slides", HttpStatus.CONFLICT),
+
+    // Wallet (53xx)
+    WALLET_NOT_FOUND(5300, "Wallet not found", HttpStatus.NOT_FOUND),
+    INSUFFICIENT_BALANCE(5301, "Insufficient wallet balance", HttpStatus.BAD_REQUEST),
+
+    // Deposit (54xx)
+    DEPOSIT_REQUIRED(5400, "You must place a deposit before bidding on this auction", HttpStatus.FORBIDDEN),
+    DEPOSIT_ALREADY_EXISTS(5401, "You have already placed a deposit for this auction", HttpStatus.CONFLICT),
+    DEPOSIT_NOT_ALLOWED(5402, "Deposit is not allowed for this auction at this time", HttpStatus.BAD_REQUEST),
+    DEPOSIT_CUTOFF_REACHED(5403, "Deposit window has closed - auction ends soon", HttpStatus.BAD_REQUEST),
+    DEPOSIT_NOT_FOUND(5404, "Deposit record not found", HttpStatus.NOT_FOUND),
+    DEPOSIT_RATE_REQUIRED(5405, "Deposit rate is required when deposit is enabled", HttpStatus.BAD_REQUEST),
     ;
 
     private final int code;

@@ -22,4 +22,5 @@ public class AuctionInitRequest {
     private Integer antiSnipeSeconds;
     private Integer extensionSeconds;
     private Integer extensionCount;
+    private boolean depositRequired;
 }

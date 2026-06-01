@@ -5,9 +5,10 @@
 ---
 
 -- place_bid.lua
--- Xử lý toàn bộ bid logic: validate → anti-snipe → update
+-- Xử lý toàn bộ bid logic: validate → deposit check → anti-snipe → update
 --
 -- KEYS[1] = auction:{auctionId} (hash)
+-- KEYS[2] = auction:{auctionId}:depositors (Set)
 --
 -- ARGV[1] = newPrice
 -- ARGV[2] = bidderId
@@ -16,6 +17,7 @@
 --
 -- Returns:
 --   { 0, errorMessage }                          → Bid rejected
+--   { -3, 'DEPOSIT_REQUIRED' }                   → Deposit required but missing
 --   { 1, 'Success', 'normal', endTime }          → Bid success, no extension
 --   { 1, 'Success', 'extended', newEndTime }     → Bid success, extended
 
@@ -34,6 +36,15 @@ if status ~= 'LIVE' then return { 0, 'Auction is not live' } end
 
 local sellerId = data[2]
 if sellerId == bidderId then return { 0, 'Cannot bid on your own auction' } end
+
+-- Kiểm tra deposit: nếu auction yêu cầu cọc, user phải có trong depositors Set
+local depositRequired = redis.call('HGET', key, 'depositRequired')
+if depositRequired == '1' then
+    local hasDeposit = redis.call('SISMEMBER', KEYS[2], bidderId)
+    if hasDeposit == 0 then
+        return { -3, 'DEPOSIT_REQUIRED' }
+    end
+end
 
 local currentPrice = tonumber(data[3] or '0')
 local minStep = tonumber(data[4] or '0')

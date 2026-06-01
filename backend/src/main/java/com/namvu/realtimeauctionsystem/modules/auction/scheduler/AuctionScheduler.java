@@ -12,6 +12,7 @@ import com.namvu.realtimeauctionsystem.modules.auction.service.RedisAuctionServi
 import com.namvu.realtimeauctionsystem.modules.bid.service.BidService;
 import com.namvu.realtimeauctionsystem.modules.mail.service.MailService;
 import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
+import com.namvu.realtimeauctionsystem.modules.deposit.service.DepositService;
 import com.namvu.realtimeauctionsystem.modules.wishlist.service.WishListService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class AuctionScheduler {
     private final NotificationService notificationService;
     private final MailService mailService;
     private final WishListService wishListService;
+    private final DepositService depositService;
 
     /**
      * Chạy mỗi 1 giây, tìm auctions cần start
@@ -78,9 +80,15 @@ public class AuctionScheduler {
                         .antiSnipeSeconds(auction.getAntiSnipeSeconds())
                         .extensionSeconds(auction.getExtensionSeconds())
                         .extensionCount(auction.getExtensionCount())
+                        .depositRequired(auction.isDepositRequired())
                         .build();
 
                 redisAuctionService.initAuction(request);
+
+                // Sync depositors đã đặt cọc từ phase SCHEDULED vào Redis Set
+                if (auction.isDepositRequired()) {
+                    depositService.syncDepositorsToRedis(auction.getId());
+                }
 
                 log.info("Auction {} started and initialized in Redis", auction.getId());
 
@@ -136,6 +144,11 @@ public class AuctionScheduler {
                     auction.setStatus(AuctionStatus.ENDED_NO_SALE);
                     auctionRepository.save(auction);
 
+                    // Hoàn cọc cho tất cả (no-sale)
+                    if (auction.isDepositRequired()) {
+                        depositService.releaseAllDeposits(auction.getId());
+                    }
+
                     // Ghi audit
                     auctionAuditRepository.save(AuctionAudit.builder()
                             .auction(auction)
@@ -173,6 +186,11 @@ public class AuctionScheduler {
                 details.put("title", auction.getTitle());
 
                 if (auction.getHighestBidder() != null) {
+                    // Trừ cọc của winner, hoàn cọc cho người thua
+                    if (auction.isDepositRequired()) {
+                        depositService.applyWinnerDeposit(auction.getId(), auction.getHighestBidder().getId());
+                    }
+
                     details.put("winner", auction.getHighestBidder().getEmail());
                     details.put("highest price", auction.getCurrentPrice());
 
@@ -214,6 +232,11 @@ public class AuctionScheduler {
                     );
 
                 } else {
+                    // Không có bidder → hoàn toàn bộ cọc (nếu có ai đặt cọc mà không đặt giá)
+                    if (auction.isDepositRequired()) {
+                        depositService.releaseAllDeposits(auction.getId());
+                    }
+
                     details.put("winner", "NO BIDDER");
 
                     // AUCTION_ENDED_NO_BIDS

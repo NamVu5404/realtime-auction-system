@@ -50,6 +50,16 @@ public class CreateAuctionRequest {
     private BigDecimal reservePrice;
     private boolean privateMode;
 
+    private boolean depositRequired = false;
+
+    @DecimalMin(value = "0.05", groups = {Draft.class, Scheduler.class}, message = "Deposit rate must be at least 5%")
+    @DecimalMax(value = "0.30", groups = {Draft.class, Scheduler.class}, message = "Deposit rate must be at most 30%")
+    private BigDecimal depositRate;
+
+    @Min(value = 1, groups = {Draft.class, Scheduler.class}, message = "Deposit cutoff must be at least 1 minute")
+    @Max(value = 60, groups = {Draft.class, Scheduler.class}, message = "Deposit cutoff must be at most 60 minutes")
+    private Integer depositCutoffMinutes;
+
     public interface Draft {}
     public interface Scheduler {}
 }
