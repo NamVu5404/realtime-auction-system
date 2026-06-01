@@ -78,6 +78,16 @@ public class Auction extends Auditable {
     @Builder.Default
     private Integer extensionCount = 0;
 
+    @Column(name = "deposit_required", nullable = false)
+    private boolean depositRequired = false;
+
+    @Column(name = "deposit_rate", precision = 5, scale = 4)
+    private BigDecimal depositRate;
+
+    @Column(name = "deposit_cutoff_minutes")
+    @Builder.Default
+    private Integer depositCutoffMinutes = 5;
+
     @Column(name = "notified_ending_soon", nullable = false)
     private boolean notifiedEndingSoon = false;
 

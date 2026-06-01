@@ -80,6 +80,15 @@ public enum SuccessCode {
     HERO_SLIDE_REMOVED(2201, "Hero slide removed", HttpStatus.OK),
     HERO_SLIDE_REORDERED(2202, "Hero slides reordered", HttpStatus.OK),
     HERO_SLIDE_TOGGLED(2203, "Hero slide visibility toggled", HttpStatus.OK),
+
+    // Wallet (23xx)
+    WALLET_FETCHED(2300, "Wallet info retrieved", HttpStatus.OK),
+    WALLET_TOPPED_UP(2301, "Top-up recorded successfully", HttpStatus.OK),
+
+    // Deposit (24xx)
+    DEPOSIT_PLACED(2400, "Deposit placed successfully", HttpStatus.CREATED),
+    DEPOSIT_STATUS_FETCHED(2401, "Deposit status retrieved", HttpStatus.OK),
+    DEPOSIT_LIST_FETCHED(2402, "Deposit list retrieved", HttpStatus.OK),
     ;
 
     private final int code;

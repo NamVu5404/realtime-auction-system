@@ -22,6 +22,7 @@ const ProfilePage = lazy(() => import('./pages/account/ProfilePage'));
 const SecurityLogsPage = lazy(() => import('./pages/account/SecurityLogsPage'));
 const SellerRegPage = lazy(() => import('./pages/account/SellerRegPage'));
 const WishlistPage = lazy(() => import('./pages/account/WishlistPage'));
+const WalletPage = lazy(() => import('./pages/account/WalletPage'));
 
 const AdminAuctionPage = lazy(() => import('./pages/admin/AdminAuctionPage'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -220,6 +221,7 @@ function App() {
                   <Route path="seller-reg" element={<SellerRegPage />} />
                   <Route path="identity-verification" element={<IdentityVerificationPage />} />
                   <Route path="security-logs" element={<SecurityLogsPage />} />
+                  <Route path="wallet" element={<WalletPage />} />
                 </Route>
               </Route>
 

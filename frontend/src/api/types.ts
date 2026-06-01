@@ -149,6 +149,34 @@ export interface Auction {
   seller: User;
   highestBidder?: User | null;
   createdAt: string;
+  // Deposit config
+  depositRequired: boolean;
+  depositRate?: number | null;
+  depositCutoffMinutes?: number | null;
+  depositAmount?: number | null; // computed: startPrice * depositRate
+}
+
+export enum DepositStatus {
+  LOCKED = "LOCKED",
+  RELEASED = "RELEASED",
+  FORFEITED = "FORFEITED",
+}
+
+export interface DepositStatusResponse {
+  hasDeposit: boolean;
+  auctionId: number;
+  depositAmount: number | null;
+  status: DepositStatus | null;
+  createdAt: string | null;
+  releasedAt: string | null;
+}
+
+export interface WalletResponse {
+  userId: number;
+  availableBalance: number;
+  lockedBalance: number;
+  totalBalance: number;
+  updatedAt: string;
 }
 
 /**
@@ -217,6 +245,9 @@ export interface CreateAuctionRequest {
   extensionSeconds?: number;
   reservePrice?: number;
   privateMode?: boolean;
+  depositRequired?: boolean;
+  depositRate?: number | null;
+  depositCutoffMinutes?: number | null;
 }
 
 export interface UpdateDraftAuctionRequest {
@@ -231,6 +262,9 @@ export interface UpdateDraftAuctionRequest {
   privateMode?: boolean;
   antiSnipeSeconds?: number;
   extensionSeconds?: number;
+  depositRequired?: boolean;
+  depositRate?: number | null;
+  depositCutoffMinutes?: number | null;
 }
 
 export interface UpdateScheduledAuctionRequest {

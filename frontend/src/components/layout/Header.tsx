@@ -1,5 +1,6 @@
 import {
   DashboardOutlined,
+  DownOutlined,
   HistoryOutlined,
   HomeOutlined,
   InfoCircleOutlined,
@@ -14,7 +15,7 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import type { InputRef } from "antd";
-import { Avatar, Drawer, Dropdown, Input, Layout, MenuProps, Spin } from "antd";
+import { Avatar, Drawer, Dropdown, Input, Layout, MenuProps, Spin, Tooltip } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -23,6 +24,7 @@ import GoogleLoginButton from "../../auth/GoogleLoginButton";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";
 import { auctionApi } from "../../api/auctionApi";
+import { depositApi } from "../../api/depositApi";
 import { useNotificationWebSocket } from "../../hooks/useNotificationWebSocket";
 import { getAvatarUrl, getImageUrl } from "../../utils/imageUtils";
 import { formatCurrency } from "../../utils/format";
@@ -65,6 +67,13 @@ export const Header = () => {
   });
 
   const debouncedSearch = useDebounce(searchValue, 300);
+
+  const { data: walletData } = useQuery({
+    queryKey: ["wallet-header"],
+    queryFn: () => depositApi.getMyWallet(),
+    enabled: isAuthenticated,
+    staleTime: 60_000,
+  });
 
   const { data: searchResults, isFetching: isSearching } = useQuery({
     queryKey: ["searchAuctions", debouncedSearch],
@@ -481,6 +490,78 @@ export const Header = () => {
             minWidth: 0,
           }}
         >
+          {/* Wallet chip — desktop only, dropdown for quick actions */}
+          {isAuthenticated && walletData !== undefined && (
+            <Dropdown
+              trigger={["click"]}
+              placement="bottomRight"
+              align={{ offset: [0, -6] }}
+              dropdownRender={() => (
+                <div className="glass-card p-4 shadow-2xl" style={{ width: 220 }}>
+                  {/* Label */}
+                  <p className="text-[10px] font-semibold uppercase tracking-widest mb-2.5">
+                    Balance
+                  </p>
+
+                  {/* Available */}
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[13px] text-[var(--color-text-secondary)]">Available</span>
+                    <span className="text-[13px] font-bold tabular-nums text-[var(--color-accent-green)]">
+                      {formatCurrency(walletData.availableBalance)}
+                    </span>
+                  </div>
+
+                  {/* Locked */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-[13px] text-[var(--color-text-secondary)]">Locked</span>
+                    <span className="text-[13px] font-bold tabular-nums" style={{ color: "var(--color-gold-start)" }}>
+                      {formatCurrency(walletData.lockedBalance)}
+                    </span>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-[var(--color-border-md)] my-3" />
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <Tooltip title="Coming soon">
+                      <button
+                        disabled
+                        className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold font-[inherit] cursor-not-allowed"
+                        style={{
+                          background: "rgba(255,255,255,0.04)",
+                          border: "1px solid var(--color-border-md)",
+                          color: "var(--color-text-muted)",
+                        }}
+                      >
+                        Top Up
+                      </button>
+                    </Tooltip>
+                    <button
+                      onClick={() => navigate("/account/wallet")}
+                      className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold font-[inherit] cursor-pointer transition-colors hover:text-white"
+                      style={{
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        color: "var(--color-text-secondary)",
+                      }}
+                    >
+                      Wallet →
+                    </button>
+                  </div>
+                </div>
+              )}
+            >
+              {/* Trigger — chỉ số tiền + chevron, không khung */}
+              <div className="hidden sm:flex items-center gap-1 cursor-pointer shrink-0 select-none py-1">
+                <span className="text-[var(--color-accent-green)] text-[15px] font-bold tabular-nums tracking-tight">
+                  {formatCurrency(walletData.availableBalance)}
+                </span>
+                <DownOutlined style={{ fontSize: "9px", color: "var(--color-gold-border)" }} />
+              </div>
+            </Dropdown>
+          )}
+
           {isAuthenticated && user && <NotificationBell />}
 
           {/* Hamburger — mobile only */}

@@ -65,6 +65,7 @@ public class RedisAuctionServiceImpl implements RedisAuctionService {
         data.put(EXTENSION_SECONDS, request.getExtensionSeconds().toString());
         data.put(EXTENSION_COUNT, request.getExtensionCount().toString());
         data.put(VERSION, "0");
+        data.put(DEPOSIT_REQUIRED, request.isDepositRequired() ? "1" : "0");
 
         stringRedisTemplate.opsForHash().putAll(key, data);
 

@@ -32,5 +32,6 @@ public final class CacheNameConstant {
         public static final String EXTENSION_SECONDS = "extensionSeconds";
         public static final String EXTENSION_COUNT = "extensionCount";
         public static final String VERSION = "version";
+        public static final String DEPOSIT_REQUIRED = "depositRequired";
     }
 }

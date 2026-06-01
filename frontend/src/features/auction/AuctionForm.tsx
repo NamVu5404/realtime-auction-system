@@ -51,6 +51,7 @@ export const AuctionForm = ({
   const [submitMode, setSubmitMode] = useState<"draft" | "schedule">("draft");
   const [isFormChanged, setIsFormChanged] = useState(false);
   const [localAuction, setLocalAuction] = useState<Auction | null>(null);
+  const [depositRequired, setDepositRequired] = useState(false);
   const queryClient = useQueryClient();
 
   // Helper function to check if data has changed
@@ -80,6 +81,15 @@ export const AuctionForm = ({
     if (!!values.privateMode !== !!auction.privateMode) return true;
     if (values.antiSnipeSeconds !== auction.antiSnipeSeconds) return true;
     if (values.extensionSeconds !== auction.extensionSeconds) return true;
+    if (!!values.depositRequired !== !!auction.depositRequired) return true;
+    if (values.depositRequired) {
+      const formRate = values.depositRate ?? null;
+      const auctionRate =
+        auction.depositRate != null ? Math.round(auction.depositRate * 100) : null;
+      if (formRate !== auctionRate) return true;
+      if ((values.depositCutoffMinutes ?? 5) !== (auction.depositCutoffMinutes ?? 5))
+        return true;
+    }
 
     // Compare times using Unix timestamps (milliseconds) to avoid ISO string precision issues
     // Form values are dayjs objects (in local timezone from convertUTCToLocal)
@@ -106,6 +116,13 @@ export const AuctionForm = ({
     }
   }, [auction]);
 
+  // Sync depositRequired state when auction prop changes (edit mode)
+  useEffect(() => {
+    if (auction) {
+      setDepositRequired(!!auction.depositRequired);
+    }
+  }, [auction?.id]);
+
   // Initialize form with auction data if in edit mode
   useEffect(() => {
     if (mode === "edit" && auction) {
@@ -128,6 +145,12 @@ export const AuctionForm = ({
         privateMode: auction.privateMode ?? false,
         antiSnipeSeconds: auction.antiSnipeSeconds ?? 0,
         extensionSeconds: auction.extensionSeconds ?? 0,
+        depositRequired: auction.depositRequired ?? false,
+        depositRate:
+          auction.depositRate != null
+            ? Math.round(auction.depositRate * 100)
+            : undefined,
+        depositCutoffMinutes: auction.depositCutoffMinutes ?? 5,
       });
 
       // Reset form changed state after initialization
@@ -200,6 +223,14 @@ export const AuctionForm = ({
             extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
+            depositRequired: !!values.depositRequired,
+            depositRate:
+              values.depositRequired && values.depositRate != null
+                ? values.depositRate / 100
+                : null,
+            depositCutoffMinutes: values.depositRequired
+              ? (values.depositCutoffMinutes ?? 5)
+              : null,
           };
 
           if (submitMode === "draft") {
@@ -228,6 +259,14 @@ export const AuctionForm = ({
             extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
+            depositRequired: !!values.depositRequired,
+            depositRate:
+              values.depositRequired && values.depositRate != null
+                ? values.depositRate / 100
+                : null,
+            depositCutoffMinutes: values.depositRequired
+              ? (values.depositCutoffMinutes ?? 5)
+              : null,
           };
 
           if (submitMode === "schedule") {
@@ -268,46 +307,22 @@ export const AuctionForm = ({
             extensionSeconds: values.extensionSeconds ?? 0,
             startTime: values.startTime?.toISOString(),
             endTime: values.endTime?.toISOString(),
+            depositRequired: !!values.depositRequired,
+            depositRate:
+              values.depositRequired && values.depositRate != null
+                ? values.depositRate / 100
+                : null,
+            depositCutoffMinutes: values.depositRequired
+              ? (values.depositCutoffMinutes ?? 5)
+              : null,
           };
 
           if (submitMode === "schedule") {
-            // Schedule: Convert DRAFT to SCHEDULED
-            const scheduleData = new FormData();
-            scheduleData.append("id", auction.id.toString());
-            scheduleData.append("title", updateData.title);
-            scheduleData.append("description", updateData.description);
-            // scheduleData.append("image", ...) is NOT needed as images are auto-uploaded
-            scheduleData.append("startPrice", updateData.startPrice.toString());
-            scheduleData.append("minStep", updateData.minStep.toString());
-            if (
-              updateData.reservePrice !== undefined &&
-              updateData.reservePrice !== null
-            ) {
-              scheduleData.append(
-                "reservePrice",
-                updateData.reservePrice.toString(),
-              );
-            }
-            scheduleData.append(
-              "privateMode",
-              updateData.privateMode.toString(),
-            );
-            if (updateData.antiSnipeSeconds !== undefined) {
-              scheduleData.append(
-                "antiSnipeSeconds",
-                updateData.antiSnipeSeconds.toString(),
-              );
-            }
-            if (updateData.extensionSeconds !== undefined) {
-              scheduleData.append(
-                "extensionSeconds",
-                updateData.extensionSeconds.toString(),
-              );
-            }
-            scheduleData.append("startTime", updateData.startTime!);
-            scheduleData.append("endTime", updateData.endTime!);
-
-            const res = await adminApi.scheduleAuction(scheduleData);
+            // Schedule: Convert DRAFT to SCHEDULED (send as JSON, backend uses @RequestBody)
+            const res = await adminApi.scheduleAuction({
+              ...updateData,
+              id: auction.id,
+            });
             message.success(res.message);
           } else {
             // Update Draft
@@ -538,6 +553,77 @@ export const AuctionForm = ({
           <InputNumber min={0} max={300} className="w-full" defaultValue={0} />
         </Form.Item>
       </div>
+
+      {/* Deposit / Bid Bond - only for DRAFT */}
+      {!isScheduledStatus && (
+        <div className="border border-solid border-[var(--color-border-md)] rounded-xl p-4 mb-4 bg-[var(--color-card)]">
+          <p className="text-sm font-semibold mb-3 m-0">Deposit / Bid Bond</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+            <Form.Item
+              name="depositRequired"
+              label="Require Deposit"
+              valuePropName="checked"
+              tooltip="Bidders must lock a percentage of the starting price before they can bid."
+            >
+              <Switch
+                onChange={(checked) => {
+                  setDepositRequired(checked);
+                  if (!checked) {
+                    form.setFieldValue("depositRate", undefined);
+                    form.setFieldValue("depositCutoffMinutes", 5);
+                  }
+                }}
+              />
+            </Form.Item>
+
+            {depositRequired && (
+              <>
+                <Form.Item
+                  name="depositRate"
+                  label="Deposit Rate (%)"
+                  tooltip="Percentage of starting price bidders must deposit (5–30%)"
+                  rules={[
+                    {
+                      required: true,
+                      message: "Deposit rate is required",
+                    },
+                    {
+                      type: "number",
+                      min: 5,
+                      max: 30,
+                      message: "Must be between 5% and 30%",
+                    },
+                  ]}
+                >
+                  <InputNumber
+                    min={5}
+                    max={30}
+                    step={1}
+                    precision={0}
+                    suffix="%"
+                    placeholder="e.g. 10"
+                    className="w-full"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="depositCutoffMinutes"
+                  label="Cutoff (Minutes Before End)"
+                  tooltip="Block new deposits when fewer than this many minutes remain. Default: 5."
+                >
+                  <InputNumber
+                    min={1}
+                    max={60}
+                    step={1}
+                    defaultValue={5}
+                    className="w-full"
+                  />
+                </Form.Item>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Start Time */}

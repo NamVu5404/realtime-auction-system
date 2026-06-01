@@ -17,6 +17,8 @@ AuctionPro is a real-time auction platform supporting three roles — **Buyer**,
 ### For Buyers
 - **Real-time bidding** — live price updates via WebSocket (STOMP over SockJS) across all connected clients simultaneously
 - **Anti-snipe protection** — auctions automatically extend when a bid lands within the configured window before end time
+- **Bid bond (đặt cọc)** — deposit a percentage of the starting price to participate; funds locked in wallet, auto-refunded to losers when auction ends
+- **Wallet** — in-app balance with available and locked funds; top-up via payment gateway (coming soon)
 - **Kafka fallback** — client switches to polling `/auctions/{id}/state` every 5 seconds when Kafka pipeline is detected as down
 - **Auction discovery** — browse by status (Live, Upcoming, Ended), search by keyword, filter by seller
 - **Wishlist** — save auctions and receive notifications on activity
@@ -27,6 +29,7 @@ AuctionPro is a real-time auction platform supporting three roles — **Buyer**,
 ### For Sellers
 - **Listing lifecycle** — create Draft → submit for review → AI/Admin approval → auto-scheduled → live
 - **AI content moderation** — listings auto-approved or rejected based on confidence score; falls back to manual admin review when confidence is between 0.70–0.84
+- **Deposit configuration** — optionally require a bid bond (5–30% of starting price); configurable per listing while in Draft status
 - **Auction management dashboard** — edit, cancel, or relist ended auctions
 - **Reserve price** — set a minimum threshold; auction ends as `ENDED_NO_SALE` if not met
 - **Private mode** — restrict auction access by token
@@ -77,6 +80,7 @@ Spring Boot 3 / Java 21 — Port 8080
     │     auction · bid · auth · user · ekyc
     │     notification · live_chat · seller_registration
     │     contact · file · analytics · fraud · mail · wishlist · ai · hero_slide
+    │     deposit · wallet
     ├── Infrastructure
     │     Spring Security · AOP Audit · Kafka · Redis
     └── Common
@@ -94,13 +98,15 @@ Spring Boot 3 / Java 21 — Port 8080
 POST /api/v2/auctions/{id}/bids
   → FraudDetectionService      (5 pre-checks)
   → RedisLuaService.atomicBid  (compare-and-swap, single Lua operation)
+      ├── deposit check: SISMEMBER auction:{id}:depositors bidderId (O(1), no extra round trip)
+      └── price validation + anti-snipe extension
   → AuctionService.applyBid    (MySQL write + Outbox row, same transaction)
   → OutboxPoller (500ms)       → Kafka publish → WebSocket → all clients
                                                ↓ (@Async notificationExecutor)
                                         NotificationService
 ```
 
-Redis is the **only** source of truth for `currentPrice` on a LIVE auction. The Lua script handles anti-snipe time extension atomically alongside the bid.
+Redis is the **only** source of truth for `currentPrice` on a LIVE auction. The Lua script handles deposit check, price validation, and anti-snipe time extension atomically in a single operation.
 
 ---
 
@@ -153,7 +159,10 @@ A heartbeat WebSocket topic updates `isKafkaAlive` in the Zustand UI store. When
 Auction submissions trigger an async review on a dedicated `aiReviewExecutor` thread pool. Confidence ≥ 0.85 is a final decision; 0.70–0.84 routes to admin; below 0.70 auto-rejects. All decisions are persisted to `AiReviewLog` and `AuctionAudit`.
 
 **Named async executors**
-Notification work runs on `notificationExecutor`, AI review on `aiReviewExecutor` — isolated from the Kafka consumer thread to prevent consumer lag.
+Notification work runs on `notificationExecutor`, AI review on `aiReviewExecutor`, deposit refund notifications on `depositExecutor` — isolated from the Kafka consumer thread to prevent consumer lag.
+
+**Bid bond (deposit) with zero hot-path overhead**
+When an auction requires a deposit, the eligibility check (`SISMEMBER auction:{id}:depositors`) is embedded directly in the Lua bid script — no extra Redis round trip, no DB query. Depositing moves funds from `availableBalance` to `lockedBalance` in the Wallet entity (optimistic locking via `@Version`). On auction end, the scheduler auto-refunds losers and deducts the winner's locked amount, all in a single `@Transactional` call.
 
 ---
 
@@ -178,6 +187,8 @@ realtime-auction-system/
 │       ├── modules/                # Feature modules (package-by-feature)
 │       │   ├── auction/
 │       │   ├── bid/
+│       │   ├── deposit/            # Bid bond: place/refund/forfeit deposits
+│       │   ├── wallet/             # User balance (available + locked funds)
 │       │   ├── ai/
 │       │   ├── user/
 │       │   ├── notification/
