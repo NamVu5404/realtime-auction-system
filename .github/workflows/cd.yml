@@ -32,6 +32,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           script: |
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
             cd ${{ secrets.VPS_BACKEND_PATH }}
             git pull origin main
             docker compose pull app
