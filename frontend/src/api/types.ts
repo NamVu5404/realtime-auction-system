@@ -159,12 +159,14 @@ export interface Auction {
 export enum DepositStatus {
   LOCKED = "LOCKED",
   RELEASED = "RELEASED",
+  APPLIED = "APPLIED",
   FORFEITED = "FORFEITED",
 }
 
 export interface DepositStatusResponse {
   hasDeposit: boolean;
   auctionId: number;
+  auctionTitle: string | null;
   depositAmount: number | null;
   status: DepositStatus | null;
   createdAt: string | null;

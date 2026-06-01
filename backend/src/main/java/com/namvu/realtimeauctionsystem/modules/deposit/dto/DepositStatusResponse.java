@@ -12,6 +12,7 @@ import java.time.Instant;
 public class DepositStatusResponse {
     private boolean hasDeposit;
     private Long auctionId;
+    private String auctionTitle;
     private BigDecimal depositAmount;
     private DepositStatus status;
     private Instant createdAt;

@@ -38,7 +38,7 @@ import Countdown from "../../features/auction/Countdown";
 import { useAuctionWebsocket } from "../../hooks/useAuctionWebsocket";
 import { useAuth } from "../../hooks/useAuth";
 import { useUIStore } from "../../store/useUIStore";
-import { message, notification } from "../../utils/antdStatic";
+import { message, modal, notification } from "../../utils/antdStatic";
 import { formatAuctionTime, getTimeRemaining } from "../../utils/dateUtils";
 import { formatCurrency } from "../../utils/format";
 import { getAvatarUrl } from "../../utils/imageUtils";
@@ -150,7 +150,7 @@ const BiddingSection = memo(
                 fontSize: "12px",
               }}
             >
-              ✓ Đã đặt cọc{" "}
+              ✓ Deposited{" "}
               {depositStatus.depositAmount != null ? formatCurrency(depositStatus.depositAmount) : ""}
             </div>
           )}
@@ -298,7 +298,7 @@ const BiddingSection = memo(
               fontSize: "12px",
             }}
           >
-            ✓ Đã đặt cọc {depositStatus.depositAmount != null ? formatCurrency(depositStatus.depositAmount) : ""}
+            ✓ Deposited {depositStatus.depositAmount != null ? formatCurrency(depositStatus.depositAmount) : ""}
           </div>
         )}
 
@@ -740,18 +740,38 @@ export const AuctionDetailPage = () => {
     needsDeposit ||
     (!isLive && !isCountdownStarted);
 
-  const handlePlaceDeposit = async () => {
-    if (!auctionId) return;
-    setDepositLoading(true);
-    try {
-      const result = await depositApi.placeDeposit(auctionId);
-      setDepositStatus(result);
-      message.success("Đặt cọc thành công!");
-    } catch (err) {
-      message.error(extractErrorMessage(err));
-    } finally {
-      setDepositLoading(false);
-    }
+  const handlePlaceDeposit = () => {
+    if (!auctionId || !auction) return;
+    const depositAmt = auction.depositAmount != null ? formatCurrency(auction.depositAmount) : "the required amount";
+    modal.confirm({
+      title: "Confirm Deposit",
+      content: (
+        <div className="pt-1">
+          <p className="mb-2">
+            You are about to lock <strong>{depositAmt}</strong> from your wallet as a bid bond for this auction.
+          </p>
+          <p className="m-0 text-[13px] text-[var(--color-text-muted)]">
+            The amount will be refunded automatically if you don't win. If you win and don't pay, it may be forfeited.
+          </p>
+        </div>
+      ),
+      okText: "Confirm Deposit",
+      cancelText: "Cancel",
+      maskClosable: true,
+      onOk: async () => {
+        setDepositLoading(true);
+        try {
+          const result = await depositApi.placeDeposit(auctionId);
+          setDepositStatus(result);
+          queryClient.invalidateQueries({ queryKey: ["wallet-header"] });
+          message.success("Deposit placed successfully!");
+        } catch (err) {
+          message.error(extractErrorMessage(err));
+        } finally {
+          setDepositLoading(false);
+        }
+      },
+    });
   };
 
   // Handle bid placement with improved error handling and state management

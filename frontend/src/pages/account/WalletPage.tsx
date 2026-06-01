@@ -1,8 +1,4 @@
-import {
-  ArrowRightOutlined,
-  LockOutlined,
-  WalletOutlined,
-} from "@ant-design/icons";
+import { ArrowRightOutlined, WalletOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Empty, Skeleton, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +11,7 @@ const { Title, Text } = Typography;
 const STATUS_CONFIG = {
   [DepositStatus.LOCKED]: {
     label: "Active",
-    color: "#fbbf24",
+    color: "#fed469",
     bg: "rgba(251,191,36,0.08)",
     border: "rgba(251,191,36,0.28)",
   },
@@ -24,6 +20,12 @@ const STATUS_CONFIG = {
     color: "#4ade80",
     bg: "rgba(74,222,128,0.08)",
     border: "rgba(74,222,128,0.28)",
+  },
+  [DepositStatus.APPLIED]: {
+    label: "Applied to Payment",
+    color: "#60a5fa",
+    bg: "rgba(96,165,250,0.08)",
+    border: "rgba(96,165,250,0.28)",
   },
   [DepositStatus.FORFEITED]: {
     label: "Forfeited",
@@ -35,10 +37,12 @@ const STATUS_CONFIG = {
 
 const fmtDate = (iso: string | null) =>
   iso
-    ? new Date(iso).toLocaleDateString("en-US", {
+    ? new Date(iso).toLocaleString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       })
     : null;
 
@@ -61,12 +65,12 @@ const WalletPage = () => {
     <div>
       {/* Page header */}
       <div style={{ marginBottom: "28px" }}>
-        <Title level={4} style={{ color: "#fff", margin: "0 0 4px", fontWeight: 700 }}>
+        <Title
+          level={2}
+          style={{ color: "#fff", marginBottom: "24px", fontSize: "24px" }}
+        >
           Wallet
         </Title>
-        <Text style={{ color: "var(--color-text-secondary)", fontSize: "14px" }}>
-          Manage your balance and deposit history
-        </Text>
       </div>
 
       {/* ── Balance card ─────────────────────────────── */}
@@ -137,7 +141,7 @@ const WalletPage = () => {
                 <span className="info-label">Locked in Deposits</span>
               </div>
               <div
-                style={{ fontSize: "22px", fontWeight: 800, color: "#fbbf24" }}
+                style={{ fontSize: "22px", fontWeight: 800, color: "#fed469" }}
               >
                 {formatCurrency(wallet?.lockedBalance ?? 0)}
               </div>
@@ -155,9 +159,7 @@ const WalletPage = () => {
               <div className="info-label" style={{ marginBottom: "6px" }}>
                 Total
               </div>
-              <div
-                style={{ fontSize: "22px", fontWeight: 800, color: "#fff" }}
-              >
+              <div style={{ fontSize: "22px", fontWeight: 800, color: "#fff" }}>
                 {formatCurrency(wallet?.totalBalance ?? 0)}
               </div>
             </div>
@@ -235,9 +237,7 @@ const WalletPage = () => {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {deposits.map((deposit, idx) => {
-              const cfg = deposit.status
-                ? STATUS_CONFIG[deposit.status]
-                : null;
+              const cfg = deposit.status ? STATUS_CONFIG[deposit.status] : null;
               const createdStr = fmtDate(deposit.createdAt);
               const releasedStr = fmtDate(deposit.releasedAt);
 
@@ -300,7 +300,7 @@ const WalletPage = () => {
                         }}
                         className="hover:text-[#FED469]"
                       >
-                        Auction #{deposit.auctionId}
+                        {deposit.auctionTitle ?? `Auction #${deposit.auctionId}`}
                       </span>
                     </div>
 
@@ -313,11 +313,12 @@ const WalletPage = () => {
                       {createdStr && <>Deposited {createdStr}</>}
                       {releasedStr && (
                         <>
-                          {" "}
-                          ·{" "}
+                          {" · "}
                           {deposit.status === DepositStatus.RELEASED
                             ? "Refunded"
-                            : "Settled"}{" "}
+                            : deposit.status === DepositStatus.APPLIED
+                              ? "Applied"
+                              : "Settled"}{" "}
                           {releasedStr}
                         </>
                       )}
@@ -347,9 +348,7 @@ const WalletPage = () => {
                     </div>
 
                     <button
-                      onClick={() =>
-                        navigate(`/auction/${deposit.auctionId}`)
-                      }
+                      onClick={() => navigate(`/auction/${deposit.auctionId}`)}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -367,8 +366,7 @@ const WalletPage = () => {
                       }}
                       className="hover:border-[rgba(255,255,255,0.25)] hover:text-white"
                     >
-                      View{" "}
-                      <ArrowRightOutlined style={{ fontSize: "10px" }} />
+                      View <ArrowRightOutlined style={{ fontSize: "10px" }} />
                     </button>
                   </div>
                 </div>

@@ -557,7 +557,7 @@ export const Header = () => {
                 <span className="text-[var(--color-accent-green)] text-[15px] font-bold tabular-nums tracking-tight">
                   {formatCurrency(walletData.availableBalance)}
                 </span>
-                <DownOutlined style={{ fontSize: "9px", color: "var(--color-gold-border)" }} />
+                <DownOutlined style={{ fontSize: "10px" }} />
               </div>
             </Dropdown>
           )}

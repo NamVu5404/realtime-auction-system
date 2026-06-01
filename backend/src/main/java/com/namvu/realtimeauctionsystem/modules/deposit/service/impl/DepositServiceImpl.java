@@ -111,7 +111,7 @@ public class DepositServiceImpl implements DepositService {
                 .orElse(null);
         if (winnerDeposit != null && winnerDeposit.getStatus() == DepositStatus.LOCKED) {
             walletService.deductLockedFunds(winnerId, winnerDeposit.getDepositAmount());
-            winnerDeposit.setStatus(DepositStatus.RELEASED);
+            winnerDeposit.setStatus(DepositStatus.APPLIED);
             winnerDeposit.setReleasedAt(Instant.now());
             depositRepository.save(winnerDeposit);
         }
@@ -246,6 +246,7 @@ public class DepositServiceImpl implements DepositService {
         return DepositStatusResponse.builder()
                 .hasDeposit(hasDeposit)
                 .auctionId(deposit.getAuction().getId())
+                .auctionTitle(deposit.getAuction().getTitle())
                 .depositAmount(deposit.getDepositAmount())
                 .status(deposit.getStatus())
                 .createdAt(deposit.getCreatedAt())
