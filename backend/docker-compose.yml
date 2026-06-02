@@ -75,8 +75,6 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       # Kafka
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      # File upload
-      FILE_UPLOAD_DIR: /app/uploads
       # JWT
       JWT_ACCESS_KEY: ${JWT_ACCESS_KEY}
       JWT_REFRESH_KEY: ${JWT_REFRESH_KEY}
@@ -97,8 +95,9 @@ services:
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
       R2_BUCKET: ${R2_BUCKET:-auction-uploads}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL}
+      GEOIP_DB_PATH: /app/geoip/GeoLite2-City.mmdb
     volumes:
-      - uploads_data:/app/uploads
+      - /opt/geoip:/app/geoip:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -113,7 +112,6 @@ volumes:
   mysql_data:
   redis_data:
   kafka_data:
-  uploads_data:
 
 networks:
   backend:
