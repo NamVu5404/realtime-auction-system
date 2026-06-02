@@ -7,9 +7,11 @@ import com.namvu.realtimeauctionsystem.modules.auth.service.IpLocationService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -21,10 +23,19 @@ public class IpLocationServiceImpl implements IpLocationService {
     private DatabaseReader dbReader;
     private static final String UNKNOWN_LOCATION = "Unknown";
 
+    @Value("${geoip.db-path:}")
+    private String geoIpDbPath;
+
     @PostConstruct
     public void init() {
         try {
-            InputStream database = new ClassPathResource("GeoLite2-City.mmdb").getInputStream();
+            InputStream database;
+            File externalFile = new File(geoIpDbPath);
+            if (!geoIpDbPath.isEmpty() && externalFile.exists()) {
+                database = externalFile.toURI().toURL().openStream();
+            } else {
+                database = new ClassPathResource("GeoLite2-City.mmdb").getInputStream();
+            }
             dbReader = new DatabaseReader.Builder(database).build();
         } catch (Exception e) {
             log.error("GeoLite2 Database load failed: {}", e.getMessage());

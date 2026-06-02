@@ -24,8 +24,8 @@ import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileCopyUtils;
@@ -35,8 +35,8 @@ import reactor.util.annotation.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Service
@@ -47,8 +47,8 @@ public class KycServiceImpl implements KycService {
     @Value("${app.fpt.api-key}")
     private String apiKey;
 
-    @Value("${app.file.upload-dir}")
-    private String uploadDir;
+    @Value("${r2.public-url}")
+    private String r2PublicUrl;
 
     private final FptIdRecognitionClient fptIdRecognitionClient;
     private final FptFaceMatchClient fptFaceMatchClient;
@@ -118,12 +118,13 @@ public class KycServiceImpl implements KycService {
                 .orElseThrow(() -> new AppException(ErrorCode.KYC_NOT_FOUND));
 
         String relativePath = OwnerType.KYC_FRONT.getFolderName();
-        Path frontImagePath = Paths.get(uploadDir).resolve(relativePath).resolve(kyc.getFrontImageUrl());
-
-        if (!Files.exists(frontImagePath)) {
+        String frontImageUrl = r2PublicUrl + "/" + relativePath + "/" + kyc.getFrontImageUrl();
+        Resource frontImageResource;
+        try {
+            frontImageResource = new UrlResource(frontImageUrl);
+        } catch (MalformedURLException e) {
             throw new AppException(ErrorCode.FILE_NOT_FOUND);
         }
-        Resource frontImageResource = new FileSystemResource(frontImagePath);
 
         FptFaceMatchResponse response;
         try {

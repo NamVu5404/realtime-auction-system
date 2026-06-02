@@ -43,9 +43,6 @@ public class FileServiceImpl implements FileService {
     @Value("${r2.bucket}")
     private String bucket;
 
-    @Value("${r2.public-url}")
-    private String publicUrl;
-
     @Value("${app.file.max-size}")
     private long maxSize;
 
