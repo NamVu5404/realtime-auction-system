@@ -18,7 +18,7 @@ AuctionPro is a real-time auction platform supporting three roles — **Buyer**,
 - **Real-time bidding** — live price updates via WebSocket (STOMP over SockJS) across all connected clients simultaneously
 - **Anti-snipe protection** — auctions automatically extend when a bid lands within the configured window before end time
 - **Bid bond (đặt cọc)** — deposit a percentage of the starting price to participate; funds locked in wallet, auto-refunded to losers when auction ends
-- **Wallet** — in-app balance with available and locked funds; top-up via payment gateway (coming soon)
+- **Wallet** — in-app balance with available and locked funds; top-up via SePay payment gateway (QR / bank transfer)
 - **Kafka fallback** — client switches to polling `/auctions/{id}/state` every 5 seconds when Kafka pipeline is detected as down
 - **Auction discovery** — browse by status (Live, Upcoming, Ended), search by keyword, filter by seller
 - **Wishlist** — save auctions and receive notifications on activity
@@ -80,7 +80,7 @@ Spring Boot 3 / Java 21 — Port 8080
     │     auction · bid · auth · user · ekyc
     │     notification · live_chat · seller_registration
     │     contact · file · analytics · fraud · mail · wishlist · ai · hero_slide
-    │     deposit · wallet
+    │     deposit · wallet · payment
     ├── Infrastructure
     │     Spring Security · AOP Audit · Kafka · Redis
     └── Common
@@ -155,6 +155,9 @@ ArchUnit tests verify at build time that cross-module calls only go through serv
 **Kafka resilience on the client**
 A heartbeat WebSocket topic updates `isKafkaAlive` in the Zustand UI store. When `false`, `AuctionDetailPage` automatically switches from WebSocket updates to polling `/auctions/{id}/state` every 5 seconds.
 
+**SePay payment integration**
+Wallet top-up supports two flows. Checkout flow: user requests a top-up amount → backend creates a `TopUpOrder`, generates an HMAC-SHA256 signature, and returns form params to the frontend → frontend POSTs the form to SePay's checkout page → SePay fires a webhook → backend matches by `invoiceNumber`, credits the wallet, and marks the order completed. Manual transfer flow: user transfers directly with their personal code (`AP{userId}`) in the description → SePay fires a webhook → backend matches by code pattern and credits. Both flows share the same webhook handler with dedup via a `UNIQUE` constraint on `sePayId`.
+
 **AI review pipeline**
 Auction submissions trigger an async review on a dedicated `aiReviewExecutor` thread pool. Confidence ≥ 0.85 is a final decision; 0.70–0.84 routes to admin; below 0.70 auto-rejects. All decisions are persisted to `AiReviewLog` and `AuctionAudit`.
 
@@ -189,6 +192,7 @@ realtime-auction-system/
 │       │   ├── bid/
 │       │   ├── deposit/            # Bid bond: place/refund/forfeit deposits
 │       │   ├── wallet/             # User balance (available + locked funds)
+│       │   ├── payment/            # SePay integration: checkout orders + webhook handler
 │       │   ├── ai/
 │       │   ├── user/
 │       │   ├── notification/
