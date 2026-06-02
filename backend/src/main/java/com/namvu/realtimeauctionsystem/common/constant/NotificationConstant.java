@@ -130,6 +130,14 @@ public enum NotificationConstant {
             ACCOUNT_SECURITY_URL
     ),
 
+    // ==================== WALLET ====================
+
+    WALLET_TOP_UP(
+            "Nạp tiền thành công",
+            "Ví của bạn vừa được nạp $%s thành công.",
+            WALLET_URL
+    ),
+
     // ==================== SYSTEM ====================
 
     FRAUD_DETECTION_ALERT( // Pending + mail
@@ -173,6 +181,7 @@ public enum NotificationConstant {
         }
 
         public static final String HOME_URL = "/";
+        public static final String WALLET_URL = "/account/wallet";
         public static final String AUCTION_DETAIL_URL = "/auction/%d";
         public static final String SELLER_AUCTION_DETAIL_URL = "/seller/auctions/%d";
         public static final String SELLER_DASHBOARD_URL = "/seller";
