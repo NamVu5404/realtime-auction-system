@@ -137,3 +137,10 @@ app:
     face-match-url: https://api.fpt.ai/dmp/checkface/v1/
 geoip:
   db-path: ${GEOIP_DB_PATH:}
+
+sepay:
+  merchant-id: ${SEPAY_MERCHANT_ID:}
+  secret-key: ${SEPAY_SECRET_KEY:}
+  base-url: ${SEPAY_BASE_URL:https://pgapi-sandbox.sepay.vn}
+  checkout-url: ${SEPAY_CHECKOUT_URL:https://pay-sandbox.sepay.vn/v1/checkout/init}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}

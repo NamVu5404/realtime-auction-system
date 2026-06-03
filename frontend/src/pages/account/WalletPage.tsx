@@ -1,12 +1,34 @@
 import { ArrowRightOutlined, WalletOutlined } from "@ant-design/icons";
-import { useQuery } from "@tanstack/react-query";
-import { Empty, Skeleton, Typography } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  DatePicker,
+  Empty,
+  InputNumber,
+  message,
+  Modal,
+  Pagination,
+  Select,
+  Skeleton,
+  Tabs,
+  Typography,
+} from "antd";
+import dayjs, { Dayjs } from "dayjs";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { depositApi } from "../../api/depositApi";
-import { DepositStatus } from "../../api/types";
+import { paymentApi } from "../../api/paymentApi";
+import { CheckoutFormResponse, DepositStatus, TopUpHistoryItem, TopUpOrderStatus } from "../../api/types";
 import { formatCurrency } from "../../utils/format";
 
-const { Title, Text } = Typography;
+const TOPUP_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  COMPLETED: { label: "Completed", color: "#4ade80", bg: "rgba(74,222,128,0.08)", border: "rgba(74,222,128,0.28)" },
+  FAILED:    { label: "Failed",    color: "#f87171", bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.28)" },
+  CANCELLED: { label: "Cancelled", color: "rgba(255,255,255,0.4)", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.1)" },
+  EXPIRED:   { label: "Expired",   color: "rgba(255,255,255,0.25)", bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)" },
+  PENDING:   { label: "Pending",   color: "#fed469", bg: "rgba(254,212,105,0.08)", border: "rgba(254,212,105,0.28)" },
+};
+
+const { Title } = Typography;
 
 const STATUS_CONFIG = {
   [DepositStatus.LOCKED]: {
@@ -37,17 +59,90 @@ const STATUS_CONFIG = {
 
 const fmtDate = (iso: string | null) =>
   iso
-    ? new Date(iso).toLocaleString("en-US", {
+    ? new Date(iso).toLocaleString("en-GB", {
+        day: "2-digit",
         month: "short",
-        day: "numeric",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false,
       })
     : null;
 
+// POST form to SePay — exactly 12 inputs (11 signed fields + signature) in signed order
+function submitSePayForm(data: CheckoutFormResponse) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = data.checkoutUrl;
+
+  const fields: [string, string][] = [
+    ["merchant", data.merchant],
+    ["operation", data.operation],
+    ["payment_method", data.paymentMethod],
+    ["order_amount", data.orderAmount],
+    ["currency", data.currency],
+    ["order_invoice_number", data.orderInvoiceNumber],
+    ["order_description", data.orderDescription],
+    ["customer_id", data.customerId],
+    ["success_url", data.successUrl],
+    ["error_url", data.errorUrl],
+    ["cancel_url", data.cancelUrl],
+    ["signature", data.signature],
+  ];
+
+  fields.forEach(([name, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
 const WalletPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const [amount, setAmount] = useState<number | null>(null);
+
+  // Top-up history filters
+  const [historyStatus, setHistoryStatus] = useState<TopUpOrderStatus | undefined>(undefined);
+  const [historyDateRange, setHistoryDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
+  const [historyPage, setHistoryPage] = useState(1);
+
+  const { data: topUpHistory, isLoading: historyLoading } = useQuery({
+    queryKey: ["top-up-history", { historyStatus, historyDateRange, historyPage }],
+    queryFn: () => paymentApi.getTopUpHistory({
+      status: historyStatus,
+      from: historyDateRange?.[0]?.startOf("day").valueOf(),
+      to: historyDateRange?.[1]?.endOf("day").valueOf(),
+      page: historyPage - 1,
+      size: 10,
+    }),
+    staleTime: 30_000,
+  });
+
+  // Handle SePay redirect callbacks
+  useEffect(() => {
+    const status = searchParams.get("topup");
+    if (!status) return;
+    if (status === "success") {
+      message.success("Top-up successful! Your balance has been updated.");
+      queryClient.invalidateQueries({ queryKey: ["my-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-header"] });
+      queryClient.invalidateQueries({ queryKey: ["top-up-history"] });
+    } else if (status === "error") {
+      message.error("Top-up failed. Please try again.");
+    } else if (status === "cancelled") {
+      message.warning("Top-up cancelled.");
+    }
+    setSearchParams({}, { replace: true });
+  }, []);
 
   const { data: wallet, isLoading: walletLoading } = useQuery({
     queryKey: ["my-wallet"],
@@ -61,9 +156,26 @@ const WalletPage = () => {
     staleTime: 30_000,
   });
 
+  const checkoutMutation = useMutation({
+    mutationFn: (amt: number) => paymentApi.createTopUpOrder(amt),
+    onSuccess: (data) => {
+      submitSePayForm(data);
+    },
+    onError: (err: Error) => {
+      message.error(err.message);
+    },
+  });
+
+  const handleProceedToCheckout = () => {
+    if (!amount || amount < 10000) {
+      message.error("Minimum top-up amount is 10,000 VND");
+      return;
+    }
+    checkoutMutation.mutate(amount);
+  };
+
   return (
     <div>
-      {/* Page header */}
       <div style={{ marginBottom: "28px" }}>
         <Title
           level={2}
@@ -83,7 +195,7 @@ const WalletPage = () => {
             border: "1px solid var(--color-border-md)",
             borderRadius: "var(--radius-lg)",
             padding: "24px",
-            marginBottom: "28px",
+            marginBottom: "16px",
           }}
         >
           <div
@@ -94,15 +206,12 @@ const WalletPage = () => {
               marginBottom: "20px",
             }}
           >
-            <WalletOutlined style={{ color: "#FED469", fontSize: "17px" }} />
             <span style={{ color: "#fff", fontWeight: 700, fontSize: "15px" }}>
               Balance
             </span>
           </div>
 
-          {/* 3-col balance stats — stack on mobile */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Available */}
             <div
               style={{
                 background: "rgba(74,222,128,0.06)",
@@ -121,7 +230,6 @@ const WalletPage = () => {
               </div>
             </div>
 
-            {/* Locked */}
             <div
               style={{
                 background: "rgba(251,191,36,0.06)",
@@ -130,15 +238,8 @@ const WalletPage = () => {
                 padding: "16px 20px",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  marginBottom: "6px",
-                }}
-              >
-                <span className="info-label">Locked in Deposits</span>
+              <div className="info-label" style={{ marginBottom: "6px" }}>
+                Locked in Deposits
               </div>
               <div
                 style={{ fontSize: "22px", fontWeight: 800, color: "#fed469" }}
@@ -147,7 +248,6 @@ const WalletPage = () => {
               </div>
             </div>
 
-            {/* Total */}
             <div
               style={{
                 background: "rgba(255,255,255,0.03)",
@@ -165,56 +265,114 @@ const WalletPage = () => {
             </div>
           </div>
 
-          {/* Top Up — coming soon */}
           <div style={{ marginTop: "20px" }}>
             <button
-              disabled
+              onClick={() => setTopUpOpen(true)}
               style={{
                 padding: "7px 18px",
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(254,212,105,0.1)",
+                border: "1px solid rgba(254,212,105,0.4)",
                 borderRadius: "var(--radius-sm)",
-                color: "rgba(255,255,255,0.25)",
+                color: "#FED469",
                 fontSize: "13px",
                 fontWeight: 600,
-                cursor: "not-allowed",
+                cursor: "pointer",
                 fontFamily: "inherit",
               }}
             >
-              Top Up — Coming Soon
+              Top Up
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Deposit history ───────────────────────────── */}
-      <div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: "8px",
-            marginBottom: "16px",
-          }}
-        >
-          <Title
-            level={5}
-            style={{ color: "#fff", margin: 0, fontWeight: 700 }}
+      {/* ── Top Up Modal ─────────────────────────────── */}
+      <Modal
+        open={topUpOpen}
+        onCancel={() => {
+          setTopUpOpen(false);
+          setAmount(null);
+        }}
+        footer={null}
+        title={
+          <span style={{ color: "#fff", fontWeight: 700 }}>Top Up Wallet</span>
+        }
+        maskClosable
+      >
+        <div style={{ paddingTop: "12px" }}>
+          <div
+            style={{
+              color: "var(--color-text-muted)",
+              fontSize: "13px",
+              marginBottom: "12px",
+            }}
           >
-            Deposit History
-          </Title>
-          {!depositsLoading && deposits.length > 0 && (
-            <span
+            Enter amount and you will be redirected to SePay's secure checkout
+            page.
+          </div>
+          <div style={{ marginBottom: "16px" }}>
+            <div
               style={{
-                color: "var(--color-text-muted)",
+                color: "rgba(255,255,255,0.7)",
                 fontSize: "13px",
+                marginBottom: "6px",
               }}
             >
-              ({deposits.length})
-            </span>
-          )}
+              Amount (VND)
+            </div>
+            <InputNumber
+              value={amount}
+              onChange={(val) => setAmount(val)}
+              min={10000}
+              step={10000}
+              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(v) =>
+                Number(v?.replace(/,/g, "") ?? 0) as unknown as 10000
+              }
+              style={{ width: "100%" }}
+              placeholder="Minimum 10,000 VND"
+            />
+          </div>
+          <button
+            onClick={handleProceedToCheckout}
+            disabled={checkoutMutation.isPending}
+            style={{
+              width: "100%",
+              padding: "9px 0",
+              background: "rgba(254,212,105,0.15)",
+              border: "1px solid rgba(254,212,105,0.5)",
+              borderRadius: "var(--radius-sm)",
+              color: "#FED469",
+              fontSize: "14px",
+              fontWeight: 700,
+              cursor: checkoutMutation.isPending ? "not-allowed" : "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            {checkoutMutation.isPending ? "Redirecting..." : "Proceed to Checkout"}
+          </button>
         </div>
+      </Modal>
 
+      {/* ── History tabs ─────────────────────────────── */}
+      <Tabs
+        defaultActiveKey="deposits"
+        style={{ color: "#fff" }}
+        items={[
+          {
+            key: "deposits",
+            label: (
+              <span>
+                Deposit History
+                {!depositsLoading && deposits.length > 0 && (
+                  <span style={{ color: "var(--color-text-muted)", fontSize: "12px", marginLeft: "6px" }}>
+                    ({deposits.length})
+                  </span>
+                )}
+              </span>
+            ),
+            children: (
+              <div>
         {depositsLoading ? (
           <Skeleton active paragraph={{ rows: 5 }} />
         ) : deposits.length === 0 ? (
@@ -258,7 +416,6 @@ const WalletPage = () => {
                   }}
                   className="hover:border-[rgba(255,255,255,0.15)]"
                 >
-                  {/* Left — status badge + auction link + date */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
@@ -325,7 +482,6 @@ const WalletPage = () => {
                     </div>
                   </div>
 
-                  {/* Right — amount + view button */}
                   <div
                     style={{
                       display: "flex",
@@ -374,7 +530,109 @@ const WalletPage = () => {
             })}
           </div>
         )}
-      </div>
+              </div>
+            ),
+          },
+          {
+            key: "topup",
+            label: "Top-up History",
+            children: (
+              <div>
+                {/* Filter bar */}
+                <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" }}>
+                  <Select
+                    allowClear
+                    placeholder="All statuses"
+                    style={{ width: 160 }}
+                    value={historyStatus}
+                    onChange={(val) => { setHistoryStatus(val); setHistoryPage(1); }}
+                    options={[
+                      { value: "COMPLETED", label: "Completed" },
+                      { value: "FAILED",    label: "Failed" },
+                      { value: "CANCELLED", label: "Cancelled" },
+                      { value: "EXPIRED",   label: "Expired" },
+                    ]}
+                  />
+                  <DatePicker.RangePicker
+                    value={historyDateRange}
+                    onChange={(range) => { setHistoryDateRange(range as [Dayjs, Dayjs] | null); setHistoryPage(1); }}
+                    style={{ flex: 1, minWidth: 220 }}
+                    disabledDate={(d) => d.isAfter(dayjs())}
+                  />
+                </div>
+
+                {/* List */}
+                {historyLoading ? (
+                  <Skeleton active paragraph={{ rows: 5 }} />
+                ) : !topUpHistory || topUpHistory.content.length === 0 ? (
+                  <div style={{ background: "var(--color-card-high)", border: "1px solid var(--color-border-md)", borderRadius: "var(--radius-md)", padding: "48px 24px" }}>
+                    <Empty description={<span style={{ color: "var(--color-text-muted)" }}>No top-up history</span>} />
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {topUpHistory.content.map((item: TopUpHistoryItem) => {
+                        const cfg = TOPUP_STATUS_CONFIG[item.status];
+                        return (
+                          <div
+                            key={item.id}
+                            style={{
+                              background: "var(--color-card-high)",
+                              border: "1px solid var(--color-border-md)",
+                              borderRadius: "var(--radius-md)",
+                              padding: "14px 18px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: "12px",
+                              flexWrap: "wrap",
+                            }}
+                            className="hover:border-[rgba(255,255,255,0.15)]"
+                          >
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                                <span style={{
+                                  display: "inline-flex", alignItems: "center",
+                                  padding: "2px 8px", borderRadius: "100px",
+                                  fontSize: "11px", fontWeight: 700,
+                                  background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color,
+                                  flexShrink: 0,
+                                }}>
+                                  {cfg.label}
+                                </span>
+                                <span style={{ color: "#fff", fontWeight: 600, fontSize: "14px" }}>
+                                  {formatCurrency(item.amount)}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: "12px", color: "var(--color-text-muted)" }}>
+                                {fmtDate(item.createdAt)}
+                                <span style={{ marginLeft: "8px", fontFamily: "monospace", fontSize: "11px" }}>
+                                  {item.invoiceNumber}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+                      <Pagination
+                        current={historyPage}
+                        pageSize={10}
+                        total={topUpHistory.totalElements}
+                        onChange={(p) => setHistoryPage(p)}
+                        showSizeChanger={false}
+                        showTotal={(total) => `${total} records`}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 };

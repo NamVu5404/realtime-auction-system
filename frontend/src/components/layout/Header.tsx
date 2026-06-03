@@ -15,16 +15,18 @@ import {
   CloseOutlined,
 } from "@ant-design/icons";
 import type { InputRef } from "antd";
-import { Avatar, Drawer, Dropdown, Input, Layout, MenuProps, Spin, Tooltip } from "antd";
+import { Avatar, Drawer, Dropdown, Input, InputNumber, Layout, MenuProps, Modal, Spin, Tooltip, message } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import logo from "../../assets/images/logo.webp";
 import GoogleLoginButton from "../../auth/GoogleLoginButton";
 import { useAuth } from "../../hooks/useAuth";
 import { useDebounce } from "../../hooks/useDebounce";
 import { auctionApi } from "../../api/auctionApi";
 import { depositApi } from "../../api/depositApi";
+import { paymentApi } from "../../api/paymentApi";
+import { CheckoutFormResponse } from "../../api/types";
 import { useNotificationWebSocket } from "../../hooks/useNotificationWebSocket";
 import { getAvatarUrl, getImageUrl } from "../../utils/imageUtils";
 import { formatCurrency } from "../../utils/format";
@@ -32,6 +34,35 @@ import NotificationBell from "../common/NotificationBell";
 import { buildPublicSiteUrl } from "../../config/env";
 
 const { Header: AntHeader } = Layout;
+
+function submitSePayForm(data: CheckoutFormResponse) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = data.checkoutUrl;
+  const fields: [string, string][] = [
+    ["merchant", data.merchant],
+    ["operation", data.operation],
+    ["payment_method", data.paymentMethod],
+    ["order_amount", data.orderAmount],
+    ["currency", data.currency],
+    ["order_invoice_number", data.orderInvoiceNumber],
+    ["order_description", data.orderDescription],
+    ["customer_id", data.customerId],
+    ["success_url", data.successUrl],
+    ["error_url", data.errorUrl],
+    ["cancel_url", data.cancelUrl],
+    ["signature", data.signature],
+  ];
+  fields.forEach(([name, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
+}
 
 const NAV_LINKS = [
   { label: "Home", path: "/", authOnly: false },
@@ -50,6 +81,22 @@ export const Header = () => {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const [topUpAmount, setTopUpAmount] = useState<number | null>(null);
+
+  const checkoutMutation = useMutation({
+    mutationFn: (amt: number) => paymentApi.createTopUpOrder(amt),
+    onSuccess: (data) => submitSePayForm(data),
+    onError: (err: Error) => message.error(err.message),
+  });
+
+  const handleTopUp = () => {
+    if (!topUpAmount || topUpAmount < 10000) {
+      message.error("Minimum top-up amount is 10,000 VND");
+      return;
+    }
+    checkoutMutation.mutate(topUpAmount);
+  };
   const [searchValue, setSearchValue] = useState("");
   const searchRef = useRef<InputRef>(null);
 
@@ -524,19 +571,17 @@ export const Header = () => {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <Tooltip title="Coming soon">
-                      <button
-                        disabled
-                        className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold font-[inherit] cursor-not-allowed"
-                        style={{
-                          background: "rgba(255,255,255,0.04)",
-                          border: "1px solid var(--color-border-md)",
-                          color: "var(--color-text-muted)",
-                        }}
-                      >
-                        Top Up
-                      </button>
-                    </Tooltip>
+                    <button
+                      onClick={() => setTopUpOpen(true)}
+                      className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold font-[inherit] cursor-pointer transition-colors"
+                      style={{
+                        background: "rgba(254,212,105,0.1)",
+                        border: "1px solid rgba(254,212,105,0.35)",
+                        color: "#FED469",
+                      }}
+                    >
+                      Top Up
+                    </button>
                     <button
                       onClick={() => navigate("/account/wallet")}
                       className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold font-[inherit] cursor-pointer transition-colors hover:text-white"
@@ -643,6 +688,53 @@ export const Header = () => {
           )}
         </div>
       </AntHeader>
+
+      <Modal
+        open={topUpOpen}
+        onCancel={() => { setTopUpOpen(false); setTopUpAmount(null); }}
+        footer={null}
+        title={<span style={{ color: "#fff", fontWeight: 700 }}>Top Up Wallet</span>}
+        maskClosable
+      >
+        <div style={{ paddingTop: "12px" }}>
+          <div style={{ color: "var(--color-text-muted)", fontSize: "13px", marginBottom: "12px" }}>
+            Enter amount and you will be redirected to SePay's secure checkout page.
+          </div>
+          <div style={{ marginBottom: "16px" }}>
+            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "13px", marginBottom: "6px" }}>
+              Amount (VND)
+            </div>
+            <InputNumber
+              value={topUpAmount}
+              onChange={(val) => setTopUpAmount(val)}
+              min={10000}
+              step={10000}
+              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(v) => Number(v?.replace(/,/g, "") ?? 0) as unknown as 10000}
+              style={{ width: "100%" }}
+              placeholder="Minimum 10,000 VND"
+            />
+          </div>
+          <button
+            onClick={handleTopUp}
+            disabled={checkoutMutation.isPending}
+            style={{
+              width: "100%",
+              padding: "9px 0",
+              background: "rgba(254,212,105,0.15)",
+              border: "1px solid rgba(254,212,105,0.5)",
+              borderRadius: "var(--radius-sm)",
+              color: "#FED469",
+              fontSize: "14px",
+              fontWeight: 700,
+              cursor: checkoutMutation.isPending ? "not-allowed" : "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            {checkoutMutation.isPending ? "Redirecting..." : "Proceed to Checkout"}
+          </button>
+        </div>
+      </Modal>
 
       {/* Mobile nav drawer — chỉ mount sau lần mở đầu tiên, tránh panel tồn tại trong DOM khi chưa cần */}
       {drawerEverOpened && (

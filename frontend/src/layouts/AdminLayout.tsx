@@ -2,6 +2,7 @@ import { Avatar, Badge, Breadcrumb, Dropdown, Layout, Menu, Space } from "antd";
 import {
   AuditOutlined,
   BellOutlined,
+  CreditCardOutlined,
   DashboardOutlined,
   HomeOutlined,
   LogoutOutlined,
@@ -105,6 +106,12 @@ const AdminLayout = () => {
       icon: <PictureOutlined />,
       label: "Hero Slides",
       onClick: () => navigate("/admin/hero-slides"),
+    },
+    {
+      key: "topup-history",
+      icon: <CreditCardOutlined />,
+      label: "Top-up History",
+      onClick: () => navigate("/admin/topup-history"),
     },
   ];
 
