@@ -704,6 +704,29 @@ export interface HeroSlide {
   active: boolean;
 }
 
+export type TopUpOrderStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'EXPIRED';
+
+export interface TopUpHistoryItem {
+  id: number;
+  invoiceNumber: string;
+  amount: number;
+  status: TopUpOrderStatus;
+  createdAt: string;
+}
+
+export interface AdminTopUpHistoryItem extends TopUpHistoryItem {
+  userId: number;
+  userEmail: string;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
 export interface CheckoutFormResponse {
   checkoutUrl: string;
   merchant: string;

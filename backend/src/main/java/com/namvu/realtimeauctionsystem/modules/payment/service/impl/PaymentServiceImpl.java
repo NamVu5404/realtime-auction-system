@@ -7,9 +7,11 @@ import com.namvu.realtimeauctionsystem.common.constant.TopUpOrderStatus;
 import com.namvu.realtimeauctionsystem.common.utils.MoneyUtils;
 import com.namvu.realtimeauctionsystem.infrastructure.config.SePayProperties;
 import com.namvu.realtimeauctionsystem.modules.notification.service.NotificationService;
+import com.namvu.realtimeauctionsystem.modules.payment.dto.AdminTopUpHistoryResponse;
 import com.namvu.realtimeauctionsystem.modules.payment.dto.CheckoutFormResponse;
 import com.namvu.realtimeauctionsystem.modules.payment.dto.CreateTopUpOrderRequest;
 import com.namvu.realtimeauctionsystem.modules.payment.dto.SePayWebhookRequest;
+import com.namvu.realtimeauctionsystem.modules.payment.dto.TopUpHistoryResponse;
 import com.namvu.realtimeauctionsystem.modules.payment.entity.SePayTransaction;
 import com.namvu.realtimeauctionsystem.modules.payment.entity.TopUpOrder;
 import com.namvu.realtimeauctionsystem.modules.payment.repository.SePayTransactionRepository;
@@ -26,10 +28,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -174,6 +181,36 @@ public class PaymentServiceImpl implements PaymentService {
                 .status(status)
                 .build();
         sePayTransactionRepository.save(tx);
+    }
+
+    @Override
+    public Page<AdminTopUpHistoryResponse> getAdminTopUpHistory(String keyword, TopUpOrderStatus status, Instant from, Instant to, Pageable pageable) {
+        return topUpOrderRepository.findAdminHistory(keyword, status, from, to, pageable)
+                .map(o -> AdminTopUpHistoryResponse.builder()
+                        .id(o.getId())
+                        .invoiceNumber(o.getInvoiceNumber())
+                        .amount(o.getAmount())
+                        .status(o.getStatus())
+                        .createdAt(o.getCreatedAt())
+                        .userId(o.getUser().getId())
+                        .userEmail(o.getUser().getEmail())
+                        .build());
+    }
+
+    @Override
+    public Page<TopUpHistoryResponse> getTopUpHistory(Long userId, TopUpOrderStatus status, Instant from, Instant to, Pageable pageable) {
+        List<TopUpOrderStatus> statuses = status != null
+                ? List.of(status)
+                : List.of(TopUpOrderStatus.COMPLETED, TopUpOrderStatus.FAILED, TopUpOrderStatus.CANCELLED, TopUpOrderStatus.EXPIRED);
+
+        return topUpOrderRepository.findHistory(userId, statuses, from, to, pageable)
+                .map(o -> TopUpHistoryResponse.builder()
+                        .id(o.getId())
+                        .invoiceNumber(o.getInvoiceNumber())
+                        .amount(o.getAmount())
+                        .status(o.getStatus())
+                        .createdAt(o.getCreatedAt())
+                        .build());
     }
 
     private String buildSignature(Map<String, String> fields) {

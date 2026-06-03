@@ -1,20 +1,32 @@
 import { ArrowRightOutlined, WalletOutlined } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  DatePicker,
   Empty,
   InputNumber,
   message,
   Modal,
+  Pagination,
+  Select,
   Skeleton,
+  Tabs,
   Typography,
 } from "antd";
+import dayjs, { Dayjs } from "dayjs";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { depositApi } from "../../api/depositApi";
 import { paymentApi } from "../../api/paymentApi";
-import { CheckoutFormResponse, DepositStatus } from "../../api/types";
-
+import { CheckoutFormResponse, DepositStatus, TopUpHistoryItem, TopUpOrderStatus } from "../../api/types";
 import { formatCurrency } from "../../utils/format";
+
+const TOPUP_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  COMPLETED: { label: "Completed", color: "#4ade80", bg: "rgba(74,222,128,0.08)", border: "rgba(74,222,128,0.28)" },
+  FAILED:    { label: "Failed",    color: "#f87171", bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.28)" },
+  CANCELLED: { label: "Cancelled", color: "rgba(255,255,255,0.4)", bg: "rgba(255,255,255,0.03)", border: "rgba(255,255,255,0.1)" },
+  EXPIRED:   { label: "Expired",   color: "rgba(255,255,255,0.25)", bg: "rgba(255,255,255,0.02)", border: "rgba(255,255,255,0.07)" },
+  PENDING:   { label: "Pending",   color: "#fed469", bg: "rgba(254,212,105,0.08)", border: "rgba(254,212,105,0.28)" },
+};
 
 const { Title } = Typography;
 
@@ -47,12 +59,13 @@ const STATUS_CONFIG = {
 
 const fmtDate = (iso: string | null) =>
   iso
-    ? new Date(iso).toLocaleString("en-US", {
+    ? new Date(iso).toLocaleString("en-GB", {
+        day: "2-digit",
         month: "short",
-        day: "numeric",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false,
       })
     : null;
 
@@ -97,6 +110,23 @@ const WalletPage = () => {
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [amount, setAmount] = useState<number | null>(null);
 
+  // Top-up history filters
+  const [historyStatus, setHistoryStatus] = useState<TopUpOrderStatus | undefined>(undefined);
+  const [historyDateRange, setHistoryDateRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
+  const [historyPage, setHistoryPage] = useState(1);
+
+  const { data: topUpHistory, isLoading: historyLoading } = useQuery({
+    queryKey: ["top-up-history", { historyStatus, historyDateRange, historyPage }],
+    queryFn: () => paymentApi.getTopUpHistory({
+      status: historyStatus,
+      from: historyDateRange?.[0]?.startOf("day").valueOf(),
+      to: historyDateRange?.[1]?.endOf("day").valueOf(),
+      page: historyPage - 1,
+      size: 10,
+    }),
+    staleTime: 30_000,
+  });
+
   // Handle SePay redirect callbacks
   useEffect(() => {
     const status = searchParams.get("topup");
@@ -105,6 +135,7 @@ const WalletPage = () => {
       message.success("Top-up successful! Your balance has been updated.");
       queryClient.invalidateQueries({ queryKey: ["my-wallet"] });
       queryClient.invalidateQueries({ queryKey: ["wallet-header"] });
+      queryClient.invalidateQueries({ queryKey: ["top-up-history"] });
     } else if (status === "error") {
       message.error("Top-up failed. Please try again.");
     } else if (status === "cancelled") {
@@ -164,7 +195,7 @@ const WalletPage = () => {
             border: "1px solid var(--color-border-md)",
             borderRadius: "var(--radius-lg)",
             padding: "24px",
-            marginBottom: "28px",
+            marginBottom: "16px",
           }}
         >
           <div
@@ -175,7 +206,6 @@ const WalletPage = () => {
               marginBottom: "20px",
             }}
           >
-            <WalletOutlined style={{ color: "#FED469", fontSize: "17px" }} />
             <span style={{ color: "#fff", fontWeight: 700, fontSize: "15px" }}>
               Balance
             </span>
@@ -324,34 +354,25 @@ const WalletPage = () => {
         </div>
       </Modal>
 
-      {/* ── Deposit history ───────────────────────────── */}
-      <div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            gap: "8px",
-            marginBottom: "16px",
-          }}
-        >
-          <Title
-            level={5}
-            style={{ color: "#fff", margin: 0, fontWeight: 700 }}
-          >
-            Deposit History
-          </Title>
-          {!depositsLoading && deposits.length > 0 && (
-            <span
-              style={{
-                color: "var(--color-text-muted)",
-                fontSize: "13px",
-              }}
-            >
-              ({deposits.length})
-            </span>
-          )}
-        </div>
-
+      {/* ── History tabs ─────────────────────────────── */}
+      <Tabs
+        defaultActiveKey="deposits"
+        style={{ color: "#fff" }}
+        items={[
+          {
+            key: "deposits",
+            label: (
+              <span>
+                Deposit History
+                {!depositsLoading && deposits.length > 0 && (
+                  <span style={{ color: "var(--color-text-muted)", fontSize: "12px", marginLeft: "6px" }}>
+                    ({deposits.length})
+                  </span>
+                )}
+              </span>
+            ),
+            children: (
+              <div>
         {depositsLoading ? (
           <Skeleton active paragraph={{ rows: 5 }} />
         ) : deposits.length === 0 ? (
@@ -509,7 +530,109 @@ const WalletPage = () => {
             })}
           </div>
         )}
-      </div>
+              </div>
+            ),
+          },
+          {
+            key: "topup",
+            label: "Top-up History",
+            children: (
+              <div>
+                {/* Filter bar */}
+                <div style={{ display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" }}>
+                  <Select
+                    allowClear
+                    placeholder="All statuses"
+                    style={{ width: 160 }}
+                    value={historyStatus}
+                    onChange={(val) => { setHistoryStatus(val); setHistoryPage(1); }}
+                    options={[
+                      { value: "COMPLETED", label: "Completed" },
+                      { value: "FAILED",    label: "Failed" },
+                      { value: "CANCELLED", label: "Cancelled" },
+                      { value: "EXPIRED",   label: "Expired" },
+                    ]}
+                  />
+                  <DatePicker.RangePicker
+                    value={historyDateRange}
+                    onChange={(range) => { setHistoryDateRange(range as [Dayjs, Dayjs] | null); setHistoryPage(1); }}
+                    style={{ flex: 1, minWidth: 220 }}
+                    disabledDate={(d) => d.isAfter(dayjs())}
+                  />
+                </div>
+
+                {/* List */}
+                {historyLoading ? (
+                  <Skeleton active paragraph={{ rows: 5 }} />
+                ) : !topUpHistory || topUpHistory.content.length === 0 ? (
+                  <div style={{ background: "var(--color-card-high)", border: "1px solid var(--color-border-md)", borderRadius: "var(--radius-md)", padding: "48px 24px" }}>
+                    <Empty description={<span style={{ color: "var(--color-text-muted)" }}>No top-up history</span>} />
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {topUpHistory.content.map((item: TopUpHistoryItem) => {
+                        const cfg = TOPUP_STATUS_CONFIG[item.status];
+                        return (
+                          <div
+                            key={item.id}
+                            style={{
+                              background: "var(--color-card-high)",
+                              border: "1px solid var(--color-border-md)",
+                              borderRadius: "var(--radius-md)",
+                              padding: "14px 18px",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: "12px",
+                              flexWrap: "wrap",
+                            }}
+                            className="hover:border-[rgba(255,255,255,0.15)]"
+                          >
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                                <span style={{
+                                  display: "inline-flex", alignItems: "center",
+                                  padding: "2px 8px", borderRadius: "100px",
+                                  fontSize: "11px", fontWeight: 700,
+                                  background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color,
+                                  flexShrink: 0,
+                                }}>
+                                  {cfg.label}
+                                </span>
+                                <span style={{ color: "#fff", fontWeight: 600, fontSize: "14px" }}>
+                                  {formatCurrency(item.amount)}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: "12px", color: "var(--color-text-muted)" }}>
+                                {fmtDate(item.createdAt)}
+                                <span style={{ marginLeft: "8px", fontFamily: "monospace", fontSize: "11px" }}>
+                                  {item.invoiceNumber}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+                      <Pagination
+                        current={historyPage}
+                        pageSize={10}
+                        total={topUpHistory.totalElements}
+                        onChange={(p) => setHistoryPage(p)}
+                        showSizeChanger={false}
+                        showTotal={(total) => `${total} records`}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 };
