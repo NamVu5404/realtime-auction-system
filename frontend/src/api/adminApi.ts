@@ -1,6 +1,7 @@
 import axiosClient from "./axiosClient";
 import { extractErrorMessage } from "./apiUtils";
 import {
+  AdminTopUpHistoryItem,
   ApiResponse,
   ApiResult,
   AiLogCountResponse,
@@ -12,6 +13,7 @@ import {
   CancelAuctionRequest,
   CancelAuctionResponse,
   PageResponse,
+  TopUpOrderStatus,
   User,
   UserAuditResponse,
   UserRole,
@@ -451,6 +453,25 @@ export const adminApi = {
           "/ai/logs/counts",
         );
       return response.data.result!;
+    } catch (error) {
+      throw new Error(extractErrorMessage(error));
+    }
+  },
+
+  getTopUpHistory: async (params: {
+    keyword?: string;
+    status?: TopUpOrderStatus;
+    from?: number;
+    to?: number;
+    page?: number;
+    size?: number;
+  }): Promise<PageResponse<AdminTopUpHistoryItem>> => {
+    try {
+      const res = await axiosClient.get<ApiResponse<PageResponse<AdminTopUpHistoryItem>>>(
+        "/admin/payments/top-up/history",
+        { params }
+      );
+      return res.data.result!;
     } catch (error) {
       throw new Error(extractErrorMessage(error));
     }

@@ -31,6 +31,7 @@ const AdminUserPage = lazy(() => import('./pages/admin/AdminUserPage'));
 const AILogsPage = lazy(() => import('./pages/admin/AILogsPage'));
 const AuctionReviewPage = lazy(() => import('./pages/admin/AuctionReviewPage'));
 const AdminHeroSlidePage = lazy(() => import('./pages/admin/AdminHeroSlidePage'));
+const AdminTopUpHistoryPage = lazy(() => import('./pages/admin/AdminTopUpHistoryPage'));
 const ContactManagementPage = lazy(() => import('./pages/admin/ContactManagementPage'));
 const SellerManagementPage = lazy(() => import('./pages/admin/SellerManagementPage'));
 
@@ -185,6 +186,7 @@ function App() {
                 <Route path="notifications" element={<AdminNotificationPage />} />
                 <Route path="ai-logs" element={<AILogsPage />} />
                 <Route path="hero-slides" element={<AdminHeroSlidePage />} />
+                <Route path="topup-history" element={<AdminTopUpHistoryPage />} />
               </Route>
 
               {/* Seller Routes with SellerLayout (Sidebar + Seller Header) */}
