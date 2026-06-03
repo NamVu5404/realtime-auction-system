@@ -89,6 +89,12 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD}
       # FPT eKYC
       FPT_API_KEY: ${FPT_API_KEY}
+      # SePay
+      SEPAY_MERCHANT_ID: ${SEPAY_MERCHANT_ID}
+      SEPAY_SECRET_KEY: ${SEPAY_SECRET_KEY}
+      SEPAY_BASE_URL: ${SEPAY_BASE_URL:-https://pgapi-sandbox.sepay.vn}
+      SEPAY_CHECKOUT_URL: ${SEPAY_CHECKOUT_URL:-https://pay-sandbox.sepay.vn/v1/checkout/init}
+      FRONTEND_URL: ${FRONTEND_URL}
       # Cloudflare R2
       R2_ACCOUNT_ID: ${R2_ACCOUNT_ID}
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID}
