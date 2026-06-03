@@ -134,7 +134,7 @@ public enum NotificationConstant {
 
     WALLET_TOP_UP(
             "Nạp tiền thành công",
-            "Ví của bạn vừa được nạp $%s thành công.",
+            "Ví của bạn vừa được nạp %s thành công.",
             WALLET_URL
     ),
 

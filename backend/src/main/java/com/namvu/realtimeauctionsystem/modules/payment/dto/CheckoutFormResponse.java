@@ -6,13 +6,15 @@ import lombok.Data;
 @Data
 @Builder
 public class CheckoutFormResponse {
-    private String checkoutUrl;        // action URL để frontend submit form
-    private String orderAmount;
+    private String checkoutUrl;
+    // 11 signed fields — theo đúng thứ tự ký
     private String merchant;
-    private String currency;
     private String operation;
-    private String orderDescription;
+    private String paymentMethod;
+    private String orderAmount;
+    private String currency;
     private String orderInvoiceNumber;
+    private String orderDescription;
     private String customerId;
     private String successUrl;
     private String errorUrl;

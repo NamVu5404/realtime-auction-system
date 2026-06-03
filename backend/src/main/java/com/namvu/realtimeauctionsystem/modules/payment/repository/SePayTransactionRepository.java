@@ -6,5 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SePayTransactionRepository extends JpaRepository<SePayTransaction, Long> {
-    boolean existsBySePayId(Long sePayId);
 }

@@ -143,7 +143,4 @@ sepay:
   secret-key: ${SEPAY_SECRET_KEY:}
   base-url: ${SEPAY_BASE_URL:https://pgapi-sandbox.sepay.vn}
   checkout-url: ${SEPAY_CHECKOUT_URL:https://pay-sandbox.sepay.vn/v1/checkout/init}
-  bank-name: ${SEPAY_BANK_NAME:MBBank}
-  account-number: ${SEPAY_ACCOUNT_NUMBER:02508808888}
-  account-holder: ${SEPAY_ACCOUNT_HOLDER:AuctionPro}
   frontend-url: ${FRONTEND_URL:http://localhost:5173}

@@ -14,8 +14,5 @@ public class SePayProperties {
     private String secretKey = "";
     private String baseUrl = "https://pgapi-sandbox.sepay.vn";
     private String checkoutUrl = "https://pay-sandbox.sepay.vn/v1/checkout/init";
-    private String bankName = "";
-    private String accountNumber = "";
-    private String accountHolder = "AuctionPro";
     private String frontendUrl = "http://localhost:5173";
 }

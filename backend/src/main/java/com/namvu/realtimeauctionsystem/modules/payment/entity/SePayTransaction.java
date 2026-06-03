@@ -10,7 +10,6 @@ import lombok.experimental.SuperBuilder;
 @Entity
 @Table(
     name = "sepay_transactions",
-    uniqueConstraints = @UniqueConstraint(name = "uk_sepay_id", columnNames = "sepay_id"),
     indexes = @Index(name = "idx_sepay_user", columnList = "user_id")
 )
 @Getter
@@ -19,9 +18,6 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SePayTransaction extends Auditable {
-
-    @Column(name = "sepay_id", nullable = false)
-    private Long sePayId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -37,9 +33,6 @@ public class SePayTransaction extends Auditable {
     private String transferType;
 
     private String code;
-
-    @Column(columnDefinition = "TEXT")
-    private String content;
 
     @Column(name = "reference_code")
     private String referenceCode;

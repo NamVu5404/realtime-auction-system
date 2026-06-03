@@ -1,12 +1,22 @@
 import { ArrowRightOutlined, WalletOutlined } from "@ant-design/icons";
-import { useQuery } from "@tanstack/react-query";
-import { Empty, Skeleton, Typography } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Empty,
+  InputNumber,
+  message,
+  Modal,
+  Skeleton,
+  Typography,
+} from "antd";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { depositApi } from "../../api/depositApi";
-import { DepositStatus } from "../../api/types";
+import { paymentApi } from "../../api/paymentApi";
+import { CheckoutFormResponse, DepositStatus } from "../../api/types";
+
 import { formatCurrency } from "../../utils/format";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 const STATUS_CONFIG = {
   [DepositStatus.LOCKED]: {
@@ -46,8 +56,62 @@ const fmtDate = (iso: string | null) =>
       })
     : null;
 
+// POST form to SePay — exactly 12 inputs (11 signed fields + signature) in signed order
+function submitSePayForm(data: CheckoutFormResponse) {
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = data.checkoutUrl;
+
+  const fields: [string, string][] = [
+    ["merchant", data.merchant],
+    ["operation", data.operation],
+    ["payment_method", data.paymentMethod],
+    ["order_amount", data.orderAmount],
+    ["currency", data.currency],
+    ["order_invoice_number", data.orderInvoiceNumber],
+    ["order_description", data.orderDescription],
+    ["customer_id", data.customerId],
+    ["success_url", data.successUrl],
+    ["error_url", data.errorUrl],
+    ["cancel_url", data.cancelUrl],
+    ["signature", data.signature],
+  ];
+
+  fields.forEach(([name, value]) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value;
+    form.appendChild(input);
+  });
+
+  document.body.appendChild(form);
+  form.submit();
+}
+
 const WalletPage = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const queryClient = useQueryClient();
+
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const [amount, setAmount] = useState<number | null>(null);
+
+  // Handle SePay redirect callbacks
+  useEffect(() => {
+    const status = searchParams.get("topup");
+    if (!status) return;
+    if (status === "success") {
+      message.success("Top-up successful! Your balance has been updated.");
+      queryClient.invalidateQueries({ queryKey: ["my-wallet"] });
+      queryClient.invalidateQueries({ queryKey: ["wallet-header"] });
+    } else if (status === "error") {
+      message.error("Top-up failed. Please try again.");
+    } else if (status === "cancelled") {
+      message.warning("Top-up cancelled.");
+    }
+    setSearchParams({}, { replace: true });
+  }, []);
 
   const { data: wallet, isLoading: walletLoading } = useQuery({
     queryKey: ["my-wallet"],
@@ -61,9 +125,26 @@ const WalletPage = () => {
     staleTime: 30_000,
   });
 
+  const checkoutMutation = useMutation({
+    mutationFn: (amt: number) => paymentApi.createTopUpOrder(amt),
+    onSuccess: (data) => {
+      submitSePayForm(data);
+    },
+    onError: (err: Error) => {
+      message.error(err.message);
+    },
+  });
+
+  const handleProceedToCheckout = () => {
+    if (!amount || amount < 10000) {
+      message.error("Minimum top-up amount is 10,000 VND");
+      return;
+    }
+    checkoutMutation.mutate(amount);
+  };
+
   return (
     <div>
-      {/* Page header */}
       <div style={{ marginBottom: "28px" }}>
         <Title
           level={2}
@@ -100,9 +181,7 @@ const WalletPage = () => {
             </span>
           </div>
 
-          {/* 3-col balance stats — stack on mobile */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* Available */}
             <div
               style={{
                 background: "rgba(74,222,128,0.06)",
@@ -121,7 +200,6 @@ const WalletPage = () => {
               </div>
             </div>
 
-            {/* Locked */}
             <div
               style={{
                 background: "rgba(251,191,36,0.06)",
@@ -130,15 +208,8 @@ const WalletPage = () => {
                 padding: "16px 20px",
               }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "5px",
-                  marginBottom: "6px",
-                }}
-              >
-                <span className="info-label">Locked in Deposits</span>
+              <div className="info-label" style={{ marginBottom: "6px" }}>
+                Locked in Deposits
               </div>
               <div
                 style={{ fontSize: "22px", fontWeight: 800, color: "#fed469" }}
@@ -147,7 +218,6 @@ const WalletPage = () => {
               </div>
             </div>
 
-            {/* Total */}
             <div
               style={{
                 background: "rgba(255,255,255,0.03)",
@@ -165,27 +235,94 @@ const WalletPage = () => {
             </div>
           </div>
 
-          {/* Top Up — coming soon */}
           <div style={{ marginTop: "20px" }}>
             <button
-              disabled
+              onClick={() => setTopUpOpen(true)}
               style={{
                 padding: "7px 18px",
-                background: "transparent",
-                border: "1px solid rgba(255,255,255,0.08)",
+                background: "rgba(254,212,105,0.1)",
+                border: "1px solid rgba(254,212,105,0.4)",
                 borderRadius: "var(--radius-sm)",
-                color: "rgba(255,255,255,0.25)",
+                color: "#FED469",
                 fontSize: "13px",
                 fontWeight: 600,
-                cursor: "not-allowed",
+                cursor: "pointer",
                 fontFamily: "inherit",
               }}
             >
-              Top Up — Coming Soon
+              Top Up
             </button>
           </div>
         </div>
       )}
+
+      {/* ── Top Up Modal ─────────────────────────────── */}
+      <Modal
+        open={topUpOpen}
+        onCancel={() => {
+          setTopUpOpen(false);
+          setAmount(null);
+        }}
+        footer={null}
+        title={
+          <span style={{ color: "#fff", fontWeight: 700 }}>Top Up Wallet</span>
+        }
+        maskClosable
+      >
+        <div style={{ paddingTop: "12px" }}>
+          <div
+            style={{
+              color: "var(--color-text-muted)",
+              fontSize: "13px",
+              marginBottom: "12px",
+            }}
+          >
+            Enter amount and you will be redirected to SePay's secure checkout
+            page.
+          </div>
+          <div style={{ marginBottom: "16px" }}>
+            <div
+              style={{
+                color: "rgba(255,255,255,0.7)",
+                fontSize: "13px",
+                marginBottom: "6px",
+              }}
+            >
+              Amount (VND)
+            </div>
+            <InputNumber
+              value={amount}
+              onChange={(val) => setAmount(val)}
+              min={10000}
+              step={10000}
+              formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(v) =>
+                Number(v?.replace(/,/g, "") ?? 0) as unknown as 10000
+              }
+              style={{ width: "100%" }}
+              placeholder="Minimum 10,000 VND"
+            />
+          </div>
+          <button
+            onClick={handleProceedToCheckout}
+            disabled={checkoutMutation.isPending}
+            style={{
+              width: "100%",
+              padding: "9px 0",
+              background: "rgba(254,212,105,0.15)",
+              border: "1px solid rgba(254,212,105,0.5)",
+              borderRadius: "var(--radius-sm)",
+              color: "#FED469",
+              fontSize: "14px",
+              fontWeight: 700,
+              cursor: checkoutMutation.isPending ? "not-allowed" : "pointer",
+              fontFamily: "inherit",
+            }}
+          >
+            {checkoutMutation.isPending ? "Redirecting..." : "Proceed to Checkout"}
+          </button>
+        </div>
+      </Modal>
 
       {/* ── Deposit history ───────────────────────────── */}
       <div>
@@ -258,7 +395,6 @@ const WalletPage = () => {
                   }}
                   className="hover:border-[rgba(255,255,255,0.15)]"
                 >
-                  {/* Left — status badge + auction link + date */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
@@ -325,7 +461,6 @@ const WalletPage = () => {
                     </div>
                   </div>
 
-                  {/* Right — amount + view button */}
                   <div
                     style={{
                       display: "flex",

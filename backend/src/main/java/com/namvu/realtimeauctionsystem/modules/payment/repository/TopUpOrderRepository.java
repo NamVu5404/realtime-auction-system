@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface TopUpOrderRepository extends JpaRepository<TopUpOrder, Long> {
     Optional<TopUpOrder> findByInvoiceNumberAndStatus(String invoiceNumber, TopUpOrderStatus status);
+
+    Optional<TopUpOrder> findFirstByUser_IdAndStatusOrderByCreatedAtDesc(Long userId, TopUpOrderStatus status);
 }

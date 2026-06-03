@@ -703,3 +703,19 @@ export interface HeroSlide {
   position: number;
   active: boolean;
 }
+
+export interface CheckoutFormResponse {
+  checkoutUrl: string;
+  merchant: string;
+  operation: string;
+  paymentMethod: string;
+  orderAmount: string;
+  currency: string;
+  orderInvoiceNumber: string;
+  orderDescription: string;
+  customerId: string;
+  successUrl: string;
+  errorUrl: string;
+  cancelUrl: string;
+  signature: string;
+}
