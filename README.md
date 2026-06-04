@@ -18,7 +18,7 @@ AuctionPro is a real-time auction platform supporting three roles — **Buyer**,
 - **Real-time bidding** — live price updates via WebSocket (STOMP over SockJS) across all connected clients simultaneously
 - **Anti-snipe protection** — auctions automatically extend when a bid lands within the configured window before end time
 - **Bid bond (đặt cọc)** — deposit a percentage of the starting price to participate; funds locked in wallet, auto-refunded to losers when auction ends
-- **Wallet** — in-app balance with available and locked funds; top-up via SePay payment gateway (QR / bank transfer)
+- **Wallet** — in-app balance with available and locked funds; top-up via SePay payment gateway checkout
 - **Kafka fallback** — client switches to polling `/auctions/{id}/state` every 5 seconds when Kafka pipeline is detected as down
 - **Auction discovery** — browse by status (Live, Upcoming, Ended), search by keyword, filter by seller
 - **Wishlist** — save auctions and receive notifications on activity
@@ -156,7 +156,7 @@ ArchUnit tests verify at build time that cross-module calls only go through serv
 A heartbeat WebSocket topic updates `isKafkaAlive` in the Zustand UI store. When `false`, `AuctionDetailPage` automatically switches from WebSocket updates to polling `/auctions/{id}/state` every 5 seconds.
 
 **SePay payment integration**
-Wallet top-up supports two flows. Checkout flow: user requests a top-up amount → backend creates a `TopUpOrder`, generates an HMAC-SHA256 signature, and returns form params to the frontend → frontend POSTs the form to SePay's checkout page → SePay fires a webhook → backend matches by `invoiceNumber`, credits the wallet, and marks the order completed. Manual transfer flow: user transfers directly with their personal code (`AP{userId}`) in the description → SePay fires a webhook → backend matches by code pattern and credits. Both flows share the same webhook handler with dedup via a `UNIQUE` constraint on `sePayId`.
+Wallet top-up via SePay checkout: user requests a top-up amount → backend creates a `TopUpOrder` (PENDING), generates an HMAC-SHA256 signature over 11 fixed fields, and returns form params to the frontend → frontend POSTs the form to SePay's checkout page → SePay fires a webhook containing a nested `customer.customer_id` field → backend looks up the user's latest PENDING order, credits the wallet, and marks it COMPLETED. Each user can have at most one PENDING order at a time (previous PENDING is expired on new creation), making `customer_id` an unambiguous lookup key. Dedup is enforced via a `UNIQUE` constraint on `sePayId`.
 
 **AI review pipeline**
 Auction submissions trigger an async review on a dedicated `aiReviewExecutor` thread pool. Confidence ≥ 0.85 is a final decision; 0.70–0.84 routes to admin; below 0.70 auto-rejects. All decisions are persisted to `AiReviewLog` and `AuctionAudit`.
