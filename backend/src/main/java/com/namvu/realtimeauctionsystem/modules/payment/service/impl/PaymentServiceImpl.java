@@ -97,9 +97,9 @@ public class PaymentServiceImpl implements PaymentService {
         formFields.put("order_invoice_number", invoiceNumber);
         formFields.put("order_description", "Top up to wallet " + email);
         formFields.put("customer_id", String.valueOf(userId));
-        formFields.put("success_url", frontendUrl + "/account/wallet?topup=success");
-        formFields.put("error_url", frontendUrl + "/account/wallet?topup=error");
-        formFields.put("cancel_url", frontendUrl + "/account/wallet?topup=cancelled");
+        formFields.put("success_url", frontendUrl + "/account/wallet?tab=topup&topup=success");
+        formFields.put("error_url", frontendUrl + "/account/wallet?tab=topup&topup=error");
+        formFields.put("cancel_url", frontendUrl + "/account/wallet?tab=topup&topup=cancelled");
 
         String signature = buildSignature(formFields);
 

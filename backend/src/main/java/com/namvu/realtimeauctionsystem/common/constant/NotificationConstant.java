@@ -181,7 +181,7 @@ public enum NotificationConstant {
         }
 
         public static final String HOME_URL = "/";
-        public static final String WALLET_URL = "/account/wallet";
+        public static final String WALLET_URL = "/account/wallet?tab=topup";
         public static final String AUCTION_DETAIL_URL = "/auction/%d";
         public static final String SELLER_AUCTION_DETAIL_URL = "/seller/auctions/%d";
         public static final String SELLER_DASHBOARD_URL = "/seller";

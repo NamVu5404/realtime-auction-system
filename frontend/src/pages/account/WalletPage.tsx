@@ -1,4 +1,4 @@
-import { ArrowRightOutlined, WalletOutlined } from "@ant-design/icons";
+import { ArrowRightOutlined } from "@ant-design/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DatePicker,
@@ -107,8 +107,11 @@ const WalletPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
+  const activeTab = searchParams.get("tab") ?? "deposits";
+
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [amount, setAmount] = useState<number | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Top-up history filters
   const [historyStatus, setHistoryStatus] = useState<TopUpOrderStatus | undefined>(undefined);
@@ -141,7 +144,7 @@ const WalletPage = () => {
     } else if (status === "cancelled") {
       message.warning("Top-up cancelled.");
     }
-    setSearchParams({}, { replace: true });
+    setSearchParams(activeTab !== "deposits" ? { tab: activeTab } : {}, { replace: true });
   }, []);
 
   const { data: wallet, isLoading: walletLoading } = useQuery({
@@ -159,6 +162,8 @@ const WalletPage = () => {
   const checkoutMutation = useMutation({
     mutationFn: (amt: number) => paymentApi.createTopUpOrder(amt),
     onSuccess: (data) => {
+      setIsRedirecting(true);
+      setTopUpOpen(false);
       submitSePayForm(data);
     },
     onError: (err: Error) => {
@@ -169,6 +174,10 @@ const WalletPage = () => {
   const handleProceedToCheckout = () => {
     if (!amount || amount < 10000) {
       message.error("Minimum top-up amount is 10,000 VND");
+      return;
+    }
+    if (amount > 500_000_000) {
+      message.error("Maximum top-up amount is 500,000,000 VND");
       return;
     }
     checkoutMutation.mutate(amount);
@@ -267,7 +276,8 @@ const WalletPage = () => {
 
           <div style={{ marginTop: "20px" }}>
             <button
-              onClick={() => setTopUpOpen(true)}
+              onClick={() => !isRedirecting && setTopUpOpen(true)}
+              disabled={isRedirecting}
               style={{
                 padding: "7px 18px",
                 background: "rgba(254,212,105,0.1)",
@@ -276,11 +286,12 @@ const WalletPage = () => {
                 color: "#FED469",
                 fontSize: "13px",
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: isRedirecting ? "not-allowed" : "pointer",
                 fontFamily: "inherit",
+                opacity: isRedirecting ? 0.5 : 1,
               }}
             >
-              Top Up
+              {isRedirecting ? "Redirecting..." : "Top Up"}
             </button>
           </div>
         </div>
@@ -318,24 +329,25 @@ const WalletPage = () => {
                 marginBottom: "6px",
               }}
             >
-              Amount (VND)
+              Amount (1 VND {"->"} 1 USD)
             </div>
             <InputNumber
               value={amount}
               onChange={(val) => setAmount(val)}
               min={10000}
+              max={500_000_000}
               step={10000}
               formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
               parser={(v) =>
                 Number(v?.replace(/,/g, "") ?? 0) as unknown as 10000
               }
               style={{ width: "100%" }}
-              placeholder="Minimum 10,000 VND"
+              placeholder="10,000 – 500,000,000 VND"
             />
           </div>
           <button
             onClick={handleProceedToCheckout}
-            disabled={checkoutMutation.isPending}
+            disabled={checkoutMutation.isPending || isRedirecting}
             style={{
               width: "100%",
               padding: "9px 0",
@@ -345,18 +357,19 @@ const WalletPage = () => {
               color: "#FED469",
               fontSize: "14px",
               fontWeight: 700,
-              cursor: checkoutMutation.isPending ? "not-allowed" : "pointer",
+              cursor: (checkoutMutation.isPending || isRedirecting) ? "not-allowed" : "pointer",
               fontFamily: "inherit",
             }}
           >
-            {checkoutMutation.isPending ? "Redirecting..." : "Proceed to Checkout"}
+            {(checkoutMutation.isPending || isRedirecting) ? "Redirecting..." : "Proceed to Checkout"}
           </button>
         </div>
       </Modal>
 
       {/* ── History tabs ─────────────────────────────── */}
       <Tabs
-        defaultActiveKey="deposits"
+        activeKey={activeTab}
+        onChange={(key) => setSearchParams({ tab: key }, { replace: true })}
         style={{ color: "#fff" }}
         items={[
           {
