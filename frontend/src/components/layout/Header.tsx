@@ -83,16 +83,25 @@ export const Header = () => {
   const [loading, setLoading] = useState(false);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState<number | null>(null);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const checkoutMutation = useMutation({
     mutationFn: (amt: number) => paymentApi.createTopUpOrder(amt),
-    onSuccess: (data) => submitSePayForm(data),
+    onSuccess: (data) => {
+      setIsRedirecting(true);
+      setTopUpOpen(false);
+      submitSePayForm(data);
+    },
     onError: (err: Error) => message.error(err.message),
   });
 
   const handleTopUp = () => {
     if (!topUpAmount || topUpAmount < 10000) {
       message.error("Minimum top-up amount is 10,000 VND");
+      return;
+    }
+    if (topUpAmount > 500_000_000) {
+      message.error("Maximum top-up amount is 500,000,000 VND");
       return;
     }
     checkoutMutation.mutate(topUpAmount);
@@ -572,15 +581,18 @@ export const Header = () => {
                   {/* Actions */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => setTopUpOpen(true)}
-                      className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold font-[inherit] cursor-pointer transition-colors"
+                      onClick={() => !isRedirecting && setTopUpOpen(true)}
+                      disabled={isRedirecting}
+                      className="flex-1 py-1.5 rounded-lg text-[12px] font-semibold font-[inherit] transition-colors"
                       style={{
                         background: "rgba(254,212,105,0.1)",
                         border: "1px solid rgba(254,212,105,0.35)",
                         color: "#FED469",
+                        cursor: isRedirecting ? "not-allowed" : "pointer",
+                        opacity: isRedirecting ? 0.5 : 1,
                       }}
                     >
-                      Top Up
+                      {isRedirecting ? "Redirecting..." : "Top Up"}
                     </button>
                     <button
                       onClick={() => navigate("/account/wallet")}
@@ -708,16 +720,17 @@ export const Header = () => {
               value={topUpAmount}
               onChange={(val) => setTopUpAmount(val)}
               min={10000}
+              max={500_000_000}
               step={10000}
               formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
               parser={(v) => Number(v?.replace(/,/g, "") ?? 0) as unknown as 10000}
               style={{ width: "100%" }}
-              placeholder="Minimum 10,000 VND"
+              placeholder="10,000 – 500,000,000 VND"
             />
           </div>
           <button
             onClick={handleTopUp}
-            disabled={checkoutMutation.isPending}
+            disabled={checkoutMutation.isPending || isRedirecting}
             style={{
               width: "100%",
               padding: "9px 0",
@@ -727,11 +740,11 @@ export const Header = () => {
               color: "#FED469",
               fontSize: "14px",
               fontWeight: 700,
-              cursor: checkoutMutation.isPending ? "not-allowed" : "pointer",
+              cursor: (checkoutMutation.isPending || isRedirecting) ? "not-allowed" : "pointer",
               fontFamily: "inherit",
             }}
           >
-            {checkoutMutation.isPending ? "Redirecting..." : "Proceed to Checkout"}
+            {(checkoutMutation.isPending || isRedirecting) ? "Redirecting..." : "Proceed to Checkout"}
           </button>
         </div>
       </Modal>
