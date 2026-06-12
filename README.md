@@ -96,7 +96,6 @@ Spring Boot 3 / Java 21 — Port 8080
 
 ```
 POST /api/v2/auctions/{id}/bids
-  → FraudDetectionService      (5 pre-checks)
   → RedisLuaService.atomicBid  (compare-and-swap, single Lua operation)
       ├── deposit check: SISMEMBER auction:{id}:depositors bidderId (O(1), no extra round trip)
       └── price validation + anti-snipe extension
