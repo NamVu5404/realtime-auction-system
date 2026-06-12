@@ -95,6 +95,13 @@ public class AuctionServiceImpl implements AuctionService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResponse<AuctionResponse> getPublicAuctionsBySeller(Long sellerId, Pageable pageable) {
+        Page<Auction> auctionPage = auctionRepository.findPublicAuctionsBySeller(sellerId, pageable);
+        return getResponse(pageable, auctionPage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public AuctionResponse getAuctionDetail(Long id, String token) {
         Auction auction = auctionRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.AUCTION_NOT_FOUND));

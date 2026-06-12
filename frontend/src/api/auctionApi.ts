@@ -64,8 +64,8 @@ export const auctionApi = {
   ): Promise<PaginatedAuctions> => {
     try {
       const response = await axiosClient.get<ApiResponse<PaginatedAuctions>>(
-        "/auctions",
-        { params: { sellerId, page, size } },
+        `/auctions/seller/${sellerId}`,
+        { params: { page, size } },
       );
       return response.data.result!;
     } catch (error) {
