@@ -74,6 +74,13 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
             Pageable pageable
     );
 
+    @Query("SELECT a FROM Auction a WHERE " +
+            "a.seller.id = :sellerId AND " +
+            "a.privateMode = false AND " +
+            "a.status IN ('LIVE', 'SCHEDULED', 'ENDED', 'ENDED_NO_SALE') " +
+            "ORDER BY a.createdAt DESC")
+    Page<Auction> findPublicAuctionsBySeller(@Param("sellerId") Long sellerId, Pageable pageable);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Auction a WHERE a.id = :id")
     Optional<Auction> findByIdWithLock(Long id);

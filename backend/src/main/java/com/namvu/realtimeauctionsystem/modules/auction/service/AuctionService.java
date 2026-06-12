@@ -16,6 +16,8 @@ import java.util.List;
 public interface AuctionService {
     PageResponse<AuctionResponse> filterAuctionForUser(String q, AuctionStatus status, Pageable pageable);
 
+    PageResponse<AuctionResponse> getPublicAuctionsBySeller(Long sellerId, Pageable pageable);
+
     AuctionResponse getAuctionDetail(Long id, String token);
 
     AuctionResponse saveDraft(CreateAuctionRequest request);

@@ -47,6 +47,16 @@ public class AuctionControllerV1 {
         return ApiResponse.ok(auctionService.filterAuctionForUser(q, finalStatus, pageable));
     }
 
+    @GetMapping("/seller/{sellerId}")
+    public ApiResponse<PageResponse<AuctionResponse>> getAuctionsBySeller(
+            @PathVariable Long sellerId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        return ApiResponse.ok(auctionService.getPublicAuctionsBySeller(sellerId, pageable));
+    }
+
     @GetMapping("/{id}")
     public ApiResponse<AuctionResponse> getAuctionDetail(
             @PathVariable Long id,
